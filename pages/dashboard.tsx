@@ -6,13 +6,10 @@ import { GetStaticProps } from 'next';
 import { 
   TrophyIcon, 
   ChartBarIcon, 
-  FireIcon, 
   PlayIcon,
   ArrowRightIcon,
-  UsersIcon,
   HomeIcon,
-  CalendarIcon,
-  ArrowTrendingUpIcon
+  CalendarIcon
 } from '@heroicons/react/24/outline';
 import GameCard from '../components/GameCard';
 import CompetitionCard from '../components/CompetitionCard';
@@ -124,10 +121,8 @@ interface LastGamePerformance {
 }
 
 // Personal Stats Section
-const PersonalStatsSection = memo(({ stats, rankings, lastGamesPerformance }: { stats: UserStats | null; rankings: UserRankings | null; lastGamesPerformance: LastGamePerformance[] }) => {
+const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: UserStats | null; lastGamesPerformance: LastGamePerformance[] }) => {
   if (!stats) return null;
-
-  const { t } = useTranslation('dashboard');
 
   return (
     <div className="mb-8">
@@ -527,7 +522,7 @@ export default function Dashboard() {
             </span>
             Performance des 10 Derniers Matchs
           </h2>
-          <PersonalStatsSection stats={dashboardData?.stats || null} rankings={userRankings} lastGamesPerformance={lastGamesPerformance} />
+          <PersonalStatsSection stats={dashboardData?.stats || null} lastGamesPerformance={lastGamesPerformance} />
         </section>
 
         {gamesOfDay && gamesOfDay.length > 0 && (

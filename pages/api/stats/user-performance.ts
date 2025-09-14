@@ -31,12 +31,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 
     // Find the most recent competition that has finished games
+    // Only look for Champions League 25/26 and future competitions where user is participating
     const recentCompetition = await prisma.competition.findFirst({
       where: {
         OR: [
           { name: { contains: 'UEFA Champions League 25/26' } },
-          { name: { contains: 'Champions League 25/26' } },
-          { name: { contains: 'Champions League' } }
+          { name: { contains: 'Champions League 25/26' } }
         ],
         status: {
           in: ['ACTIVE', 'COMPLETED']
@@ -44,6 +44,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         games: {
           some: {
             status: 'FINISHED'
+          }
+        },
+        users: {
+          some: {
+            userId: session.user.id
           }
         }
       },
@@ -84,6 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Fetch the last 10 finished games from the Champions League 25/26
+    // Only from competitions where the user is participating
     const finishedGames = await prisma.game.findMany({
       where: {
         competitionId: recentCompetition.id,

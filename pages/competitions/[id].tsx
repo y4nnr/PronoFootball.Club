@@ -878,10 +878,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     });
 
     // OPTIMIZED: Single query to get all user bets for this competition
+    // Only count bets from finished games for the leaderboard
     const allUserBets = await prisma.bet.findMany({
       where: {
         game: {
-          competitionId: competition.id
+          competitionId: competition.id,
+          status: 'FINISHED' // Only count bets from finished games
         }
       },
       select: {

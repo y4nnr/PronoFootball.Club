@@ -171,110 +171,130 @@ export default async function handler(
       competitionsWon: competitionsWon,
     };
 
-    // Get last 10 games performance - Re-enable now that we have real betting
-    // Use a past date to include all user bets 
-    const cutoffDate = new Date('2020-01-01'); // Include all user bets from 2020 onwards
-    console.log('Dashboard API - Cutoff date:', cutoffDate);
-    
-    const lastGamesPerformance = await prisma.bet.findMany({
+    // Get last 10 games performance - Only from Champions League 25/26 and future competitions
+    // First, find the Champions League 25/26 competition where user is participating
+    const recentCompetition = await prisma.competition.findFirst({
       where: {
-        userId: user.id,
-        game: {
-          status: 'FINISHED'
+        OR: [
+          { name: { contains: 'UEFA Champions League 25/26' } },
+          { name: { contains: 'Champions League 25/26' } }
+        ],
+        status: {
+          in: ['ACTIVE', 'COMPLETED']
         },
-        // Only include bets created after the cutoff date (real user bets only)
-        createdAt: { gte: cutoffDate }
-      },
-      include: {
-        game: {
-          include: {
-            homeTeam: {
-              select: {
-                name: true,
-                logo: true
-              }
-            },
-            awayTeam: {
-              select: {
-                name: true,
-                logo: true
-              }
-            },
-            competition: {
-              select: {
-                name: true
-              }
-            }
+        games: {
+          some: {
+            status: 'FINISHED'
+          }
+        },
+        users: {
+          some: {
+            userId: user.id
           }
         }
       },
       orderBy: {
-        game: {
+        startDate: 'desc'
+      }
+    });
+
+    let formattedLastGames: LastGamePerformance[] = [];
+
+    if (recentCompetition) {
+      // Fetch the last 10 finished games from the Champions League 25/26
+      const finishedGames = await prisma.game.findMany({
+        where: {
+          competitionId: recentCompetition.id,
+          status: 'FINISHED'
+        },
+        include: {
+          homeTeam: true,
+          awayTeam: true,
+          competition: true,
+          bets: {
+            where: {
+              userId: user.id
+            }
+          }
+        },
+        orderBy: {
           date: 'desc'
+        },
+        take: 10
+      });
+
+      // Process games and calculate running totals
+      const gamesForRunningTotal = finishedGames.map(game => {
+        const actualScore = `${game.homeScore}-${game.awayScore}`;
+        const userBet = game.bets[0]; // Get the user's bet if it exists
+
+        if (!userBet) {
+          // No bet placed
+          return {
+            gameId: game.id,
+            date: game.date.toISOString(),
+            homeTeam: game.homeTeam.name,
+            awayTeam: game.awayTeam.name,
+            homeTeamLogo: game.homeTeam.logo,
+            awayTeamLogo: game.awayTeam.logo,
+            competition: game.competition.name,
+            actualScore,
+            predictedScore: 'N/A',
+            points: 0,
+            result: 'no_bet' as const,
+            runningTotal: 0,
+          };
         }
-      },
-      take: 10
-    });
 
-    console.log('Dashboard API - Found games:', lastGamesPerformance.length);
-    console.log('Dashboard API - Games data:', lastGamesPerformance.map(bet => ({
-      gameId: bet.game.id,
-      createdAt: bet.createdAt,
-      points: bet.points
-    })));
+        // Bet was placed
+        const predictedScore = `${userBet.score1}-${userBet.score2}`;
+        let result: 'exact' | 'correct' | 'wrong' = 'wrong';
+        let gamePoints = 0;
+        
+        if (userBet.score1 === game.homeScore && userBet.score2 === game.awayScore) {
+          result = 'exact';
+          gamePoints = 3;
+        } else if (
+          game.homeScore !== null && game.awayScore !== null && (
+            (userBet.score1 > userBet.score2 && game.homeScore > game.awayScore) ||
+            (userBet.score1 < userBet.score2 && game.homeScore < game.awayScore) ||
+            (userBet.score1 === userBet.score2 && game.homeScore === game.awayScore)
+          )
+        ) {
+          result = 'correct';
+          gamePoints = 1;
+        }
+        
+        return {
+          gameId: game.id,
+          date: game.date.toISOString(),
+          homeTeam: game.homeTeam.name,
+          awayTeam: game.awayTeam.name,
+          homeTeamLogo: game.homeTeam.logo,
+          awayTeamLogo: game.awayTeam.logo,
+          competition: game.competition.name,
+          actualScore,
+          predictedScore,
+          points: gamePoints,
+          result,
+          runningTotal: 0,
+        };
+      }).reverse(); // Reverse to calculate running total from oldest to newest
 
-    // Process games and calculate running totals
-    const gamesForRunningTotal = lastGamesPerformance.map(bet => {
-      const game = bet.game;
-      const actualScore = `${game.homeScore}-${game.awayScore}`;
-      const predictedScore = `${bet.score1}-${bet.score2}`;
-      
-      let result: 'exact' | 'correct' | 'wrong' = 'wrong';
-      let gamePoints = 0;
-      
-      if (bet.score1 === game.homeScore && bet.score2 === game.awayScore) {
-        result = 'exact';
-        gamePoints = 3;
-      } else if (
-        game.homeScore !== null && game.awayScore !== null && (
-          (bet.score1 > bet.score2 && game.homeScore > game.awayScore) ||
-          (bet.score1 < bet.score2 && game.homeScore < game.awayScore) ||
-          (bet.score1 === bet.score2 && game.homeScore === game.awayScore)
-        )
-      ) {
-        result = 'correct';
-        gamePoints = 1;
-      }
-      
-      return {
-        gameId: game.id,
-        date: game.date.toISOString(),
-        homeTeam: game.homeTeam.name,
-        awayTeam: game.awayTeam.name,
-        homeTeamLogo: game.homeTeam.logo,
-        awayTeamLogo: game.awayTeam.logo,
-        competition: game.competition.name,
-        actualScore,
-        predictedScore,
-        points: gamePoints,
-        result,
-        runningTotal: 0,
-      };
-    }).reverse(); // Reverse to calculate running total from oldest to newest
+      // Calculate running totals from oldest to newest
+      gamesForRunningTotal.forEach((game, index) => {
+        if (index === 0) {
+          game.runningTotal = game.points;
+        } else {
+          game.runningTotal = gamesForRunningTotal[index - 1].runningTotal + game.points;
+        }
+      });
 
-    // Calculate running totals from oldest to newest
-    gamesForRunningTotal.forEach((game, index) => {
-      if (index === 0) {
-        game.runningTotal = game.points;
-      } else {
-        game.runningTotal = gamesForRunningTotal[index - 1].runningTotal + game.points;
-      }
-    });
-
-    // Reverse back to show newest first and remove the temporary gameDate field
-    const formattedLastGames: LastGamePerformance[] = gamesForRunningTotal
-      .reverse()
-      .map(({ ...game }) => game);
+      // Reverse back to show newest first
+      formattedLastGames = gamesForRunningTotal
+        .reverse()
+        .map(({ ...game }) => game);
+    }
 
     // Get all active/upcoming competitions
     const allActiveCompetitions = await prisma.competition.findMany({

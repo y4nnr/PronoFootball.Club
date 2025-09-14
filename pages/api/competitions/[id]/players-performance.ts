@@ -101,8 +101,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       take: 10
     });
 
-    // Create a map of gameId -> game data for easy lookup
-    const gamesMap = new Map(finishedGames.map(game => [game.id, game]));
+    // Create a map of gameId -> game data for easy lookup (currently unused but kept for future use)
+    // const gamesMap = new Map(finishedGames.map(game => [game.id, game]));
 
     // For each player, create their last 10 games performance
     const playersPerformance: PlayerPerformance[] = competitionUsers.map(competitionUser => {
