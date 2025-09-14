@@ -1,0 +1,667 @@
+[
+  {
+    "id": "cmb8jp9gg0003hu2hcy385yxz",
+    "competitionId": "cmb8jp9gc0001hu2hc19e6342",
+    "userId": "cmb8hadde0000humtq0cyaiqi",
+    "createdAt": "2025-05-28T22:57:16.577Z",
+    "updatedAt": "2025-05-28T22:57:16.577Z"
+  },
+  {
+    "id": "cmb8jp9gl0005hu2h7hk1sz9b",
+    "competitionId": "cmb8jp9gc0001hu2hc19e6342",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-28T22:57:16.581Z",
+    "updatedAt": "2025-05-28T22:57:16.581Z"
+  },
+  {
+    "id": "cmb8jp9gm0007hu2hiwv2h856",
+    "competitionId": "cmb8jp9gc0001hu2hc19e6342",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-28T22:57:16.583Z",
+    "updatedAt": "2025-05-28T22:57:16.583Z"
+  },
+  {
+    "id": "cmb8jp9go0009hu2htagvkgx4",
+    "competitionId": "cmb8jp9gc0001hu2hc19e6342",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-28T22:57:16.584Z",
+    "updatedAt": "2025-05-28T22:57:16.584Z"
+  },
+  {
+    "id": "cmb8jp9gq000bhu2h4wfc89wd",
+    "competitionId": "cmb8jp9gc0001hu2hc19e6342",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-28T22:57:16.587Z",
+    "updatedAt": "2025-05-28T22:57:16.587Z"
+  },
+  {
+    "id": "cmb8jp9gs000dhu2hjldx7kqz",
+    "competitionId": "cmb8jp9gc0001hu2hc19e6342",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-28T22:57:16.589Z",
+    "updatedAt": "2025-05-28T22:57:16.589Z"
+  },
+  {
+    "id": "cmb8jp9gt000fhu2hwyhsqc29",
+    "competitionId": "cmb8jp9gc0001hu2hc19e6342",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-28T22:57:16.590Z",
+    "updatedAt": "2025-05-28T22:57:16.590Z"
+  },
+  {
+    "id": "cmb8jp9gu000hhu2h50w2fqm2",
+    "competitionId": "cmb8jp9gc0001hu2hc19e6342",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-28T22:57:16.590Z",
+    "updatedAt": "2025-05-28T22:57:16.590Z"
+  },
+  {
+    "id": "cmb8jp9gv000jhu2hkqqiuwzs",
+    "competitionId": "cmb8jp9gc0001hu2hc19e6342",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-28T22:57:16.591Z",
+    "updatedAt": "2025-05-28T22:57:16.591Z"
+  },
+  {
+    "id": "cmb8h8iw30004huguseknynlc",
+    "competitionId": "cmb8gibiv0000huegr49kjhue",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-28T21:48:16.419Z",
+    "updatedAt": "2025-05-28T21:48:16.419Z"
+  },
+  {
+    "id": "cmb8h8iwc0009hugufi79cys7",
+    "competitionId": "cmb8gibiv0000huegr49kjhue",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-28T21:48:16.429Z",
+    "updatedAt": "2025-05-28T21:48:16.429Z"
+  },
+  {
+    "id": "cmb8h8iwg000ehugubln36k1a",
+    "competitionId": "cmb8gibiv0000huegr49kjhue",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-28T21:48:16.433Z",
+    "updatedAt": "2025-05-28T21:48:16.433Z"
+  },
+  {
+    "id": "cmb8h8iwl000jhugugrgljyrr",
+    "competitionId": "cmb8gibiv0000huegr49kjhue",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-28T21:48:16.437Z",
+    "updatedAt": "2025-05-28T21:48:16.437Z"
+  },
+  {
+    "id": "cmb8h8iwq000ohuguurqe6j38",
+    "competitionId": "cmb8gibiv0000huegr49kjhue",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-28T21:48:16.442Z",
+    "updatedAt": "2025-05-28T21:48:16.442Z"
+  },
+  {
+    "id": "cmb8h8iwu000thugublk81zwq",
+    "competitionId": "cmb8gibiv0000huegr49kjhue",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-28T21:48:16.446Z",
+    "updatedAt": "2025-05-28T21:48:16.446Z"
+  },
+  {
+    "id": "cmb8h8iww000yhugu1npehqd8",
+    "competitionId": "cmb8gibiv0000huegr49kjhue",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-28T21:48:16.449Z",
+    "updatedAt": "2025-05-28T21:48:16.449Z"
+  },
+  {
+    "id": "cmb8h8iwz0013huguuewn2dbm",
+    "competitionId": "cmb8gibiv0000huegr49kjhue",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-28T21:48:16.452Z",
+    "updatedAt": "2025-05-28T21:48:16.452Z"
+  },
+  {
+    "id": "cmb8mc2u90001hu9y0vo30mr7",
+    "competitionId": "cmb8m7ho70000hud8gsj25o8u",
+    "userId": "cmb8hadde0000humtq0cyaiqi",
+    "createdAt": "2025-05-29T00:11:00.321Z",
+    "updatedAt": "2025-05-29T00:11:00.321Z"
+  },
+  {
+    "id": "cmb8mc2ud0003hu9yhlalyko0",
+    "competitionId": "cmb8m7ho70000hud8gsj25o8u",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-29T00:11:00.326Z",
+    "updatedAt": "2025-05-29T00:11:00.326Z"
+  },
+  {
+    "id": "cmb8mc2uf0005hu9ya47mvsmy",
+    "competitionId": "cmb8m7ho70000hud8gsj25o8u",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-29T00:11:00.327Z",
+    "updatedAt": "2025-05-29T00:11:00.327Z"
+  },
+  {
+    "id": "cmb8mc2ug0007hu9yksn23hnm",
+    "competitionId": "cmb8m7ho70000hud8gsj25o8u",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-29T00:11:00.329Z",
+    "updatedAt": "2025-05-29T00:11:00.329Z"
+  },
+  {
+    "id": "cmb8mc2ui0009hu9ysb7dmmla",
+    "competitionId": "cmb8m7ho70000hud8gsj25o8u",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-29T00:11:00.330Z",
+    "updatedAt": "2025-05-29T00:11:00.330Z"
+  },
+  {
+    "id": "cmb8mc2uk000bhu9ybt7yfp29",
+    "competitionId": "cmb8m7ho70000hud8gsj25o8u",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-29T00:11:00.333Z",
+    "updatedAt": "2025-05-29T00:11:00.333Z"
+  },
+  {
+    "id": "cmb8mc2um000dhu9ysjg53hcm",
+    "competitionId": "cmb8m7ho70000hud8gsj25o8u",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-29T00:11:00.334Z",
+    "updatedAt": "2025-05-29T00:11:00.334Z"
+  },
+  {
+    "id": "cmb8mc2un000fhu9y1vzct59f",
+    "competitionId": "cmb8m7ho70000hud8gsj25o8u",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-29T00:11:00.335Z",
+    "updatedAt": "2025-05-29T00:11:00.335Z"
+  },
+  {
+    "id": "cmb8mc2uo000hhu9yn5x4c5jv",
+    "competitionId": "cmb8m7ho70000hud8gsj25o8u",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-29T00:11:00.336Z",
+    "updatedAt": "2025-05-29T00:11:00.336Z"
+  },
+  {
+    "id": "cmb8mtg6l0002huct61b6vyog",
+    "competitionId": "cmb8mtg6d0000hucti6jf4coi",
+    "userId": "cmb8hadde0000humtq0cyaiqi",
+    "createdAt": "2025-05-29T00:24:30.766Z",
+    "updatedAt": "2025-05-29T00:24:30.766Z"
+  },
+  {
+    "id": "cmb8mtg6t0004huctlvg5yocb",
+    "competitionId": "cmb8mtg6d0000hucti6jf4coi",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-29T00:24:30.773Z",
+    "updatedAt": "2025-05-29T00:24:30.773Z"
+  },
+  {
+    "id": "cmb8mtg6z0006huct32d7nj87",
+    "competitionId": "cmb8mtg6d0000hucti6jf4coi",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-29T00:24:30.780Z",
+    "updatedAt": "2025-05-29T00:24:30.780Z"
+  },
+  {
+    "id": "cmb8mtg760008huctcqt5k14c",
+    "competitionId": "cmb8mtg6d0000hucti6jf4coi",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-29T00:24:30.786Z",
+    "updatedAt": "2025-05-29T00:24:30.786Z"
+  },
+  {
+    "id": "cmb8mtg79000ahuctkchauqcl",
+    "competitionId": "cmb8mtg6d0000hucti6jf4coi",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-29T00:24:30.789Z",
+    "updatedAt": "2025-05-29T00:24:30.789Z"
+  },
+  {
+    "id": "cmb8mtg7a000chuctew1tpb88",
+    "competitionId": "cmb8mtg6d0000hucti6jf4coi",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-29T00:24:30.791Z",
+    "updatedAt": "2025-05-29T00:24:30.791Z"
+  },
+  {
+    "id": "cmb8mtg7b000ehuct7jmrmbml",
+    "competitionId": "cmb8mtg6d0000hucti6jf4coi",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-29T00:24:30.792Z",
+    "updatedAt": "2025-05-29T00:24:30.792Z"
+  },
+  {
+    "id": "cmb8mtg7c000ghuct4miwzomp",
+    "competitionId": "cmb8mtg6d0000hucti6jf4coi",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-29T00:24:30.792Z",
+    "updatedAt": "2025-05-29T00:24:30.792Z"
+  },
+  {
+    "id": "cmb8mtg7c000ihuct1eq0w3gg",
+    "competitionId": "cmb8mtg6d0000hucti6jf4coi",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-29T00:24:30.793Z",
+    "updatedAt": "2025-05-29T00:24:30.793Z"
+  },
+  {
+    "id": "cmb94mbvh0002huenhfxkn6ct",
+    "competitionId": "cmb94mbvb0000huenkmh9a970",
+    "userId": "cmb8hadde0000humtq0cyaiqi",
+    "createdAt": "2025-05-29T08:42:51.678Z",
+    "updatedAt": "2025-05-29T08:42:51.678Z"
+  },
+  {
+    "id": "cmb94mbvj0004huen2nazgpep",
+    "competitionId": "cmb94mbvb0000huenkmh9a970",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-29T08:42:51.680Z",
+    "updatedAt": "2025-05-29T08:42:51.680Z"
+  },
+  {
+    "id": "cmb94mbvk0006huenvfit7099",
+    "competitionId": "cmb94mbvb0000huenkmh9a970",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-29T08:42:51.680Z",
+    "updatedAt": "2025-05-29T08:42:51.680Z"
+  },
+  {
+    "id": "cmb94mbvk0008huenlo8npf4c",
+    "competitionId": "cmb94mbvb0000huenkmh9a970",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-29T08:42:51.681Z",
+    "updatedAt": "2025-05-29T08:42:51.681Z"
+  },
+  {
+    "id": "cmb94mbvl000ahuen2vch8ukj",
+    "competitionId": "cmb94mbvb0000huenkmh9a970",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-29T08:42:51.682Z",
+    "updatedAt": "2025-05-29T08:42:51.682Z"
+  },
+  {
+    "id": "cmb94mbvm000chuena7p68oot",
+    "competitionId": "cmb94mbvb0000huenkmh9a970",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-29T08:42:51.682Z",
+    "updatedAt": "2025-05-29T08:42:51.682Z"
+  },
+  {
+    "id": "cmb94mbvn000ehuen02pqxgeo",
+    "competitionId": "cmb94mbvb0000huenkmh9a970",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-29T08:42:51.684Z",
+    "updatedAt": "2025-05-29T08:42:51.684Z"
+  },
+  {
+    "id": "cmb94mbvo000ghuenu1xxord3",
+    "competitionId": "cmb94mbvb0000huenkmh9a970",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-29T08:42:51.684Z",
+    "updatedAt": "2025-05-29T08:42:51.684Z"
+  },
+  {
+    "id": "cmb94mbvo000ihuen7cnr5fik",
+    "competitionId": "cmb94mbvb0000huenkmh9a970",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-29T08:42:51.685Z",
+    "updatedAt": "2025-05-29T08:42:51.685Z"
+  },
+  {
+    "id": "cmb97piwu0003hub1ycef4l43",
+    "competitionId": "cmb97piwo0001hub1i4rk11r3",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-29T10:09:19.614Z",
+    "updatedAt": "2025-05-29T10:09:19.614Z"
+  },
+  {
+    "id": "cmb97pix10005hub1zghtje08",
+    "competitionId": "cmb97piwo0001hub1i4rk11r3",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-29T10:09:19.621Z",
+    "updatedAt": "2025-05-29T10:09:19.621Z"
+  },
+  {
+    "id": "cmb97pix40007hub12tqaoap1",
+    "competitionId": "cmb97piwo0001hub1i4rk11r3",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-29T10:09:19.625Z",
+    "updatedAt": "2025-05-29T10:09:19.625Z"
+  },
+  {
+    "id": "cmb97pix70009hub1y856z25i",
+    "competitionId": "cmb97piwo0001hub1i4rk11r3",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-29T10:09:19.628Z",
+    "updatedAt": "2025-05-29T10:09:19.628Z"
+  },
+  {
+    "id": "cmb97pixa000bhub1tvdh00x5",
+    "competitionId": "cmb97piwo0001hub1i4rk11r3",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-29T10:09:19.631Z",
+    "updatedAt": "2025-05-29T10:09:19.631Z"
+  },
+  {
+    "id": "cmb97pixe000dhub145vqgdes",
+    "competitionId": "cmb97piwo0001hub1i4rk11r3",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-29T10:09:19.634Z",
+    "updatedAt": "2025-05-29T10:09:19.634Z"
+  },
+  {
+    "id": "cmb97pixh000fhub17qxxb8ni",
+    "competitionId": "cmb97piwo0001hub1i4rk11r3",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-29T10:09:19.637Z",
+    "updatedAt": "2025-05-29T10:09:19.637Z"
+  },
+  {
+    "id": "cmb97pixj000hhub1st86h32m",
+    "competitionId": "cmb97piwo0001hub1i4rk11r3",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-29T10:09:19.640Z",
+    "updatedAt": "2025-05-29T10:09:19.640Z"
+  },
+  {
+    "id": "cmb934sk50001huw1m5utnmmn",
+    "competitionId": "cmb93082x0000hu7i0zh875u1",
+    "userId": "cmb8hadde0000humtq0cyaiqi",
+    "createdAt": "2025-05-29T08:01:13.877Z",
+    "updatedAt": "2025-05-29T08:01:13.877Z"
+  },
+  {
+    "id": "cmb934sk70003huw1mki00lrt",
+    "competitionId": "cmb93082x0000hu7i0zh875u1",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-29T08:01:13.879Z",
+    "updatedAt": "2025-05-29T08:01:13.879Z"
+  },
+  {
+    "id": "cmb934sk70005huw16gplww6g",
+    "competitionId": "cmb93082x0000hu7i0zh875u1",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-29T08:01:13.880Z",
+    "updatedAt": "2025-05-29T08:01:13.880Z"
+  },
+  {
+    "id": "cmb934sk80007huw1rn4vsbva",
+    "competitionId": "cmb93082x0000hu7i0zh875u1",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-29T08:01:13.880Z",
+    "updatedAt": "2025-05-29T08:01:13.880Z"
+  },
+  {
+    "id": "cmb934sk90009huw1ze2vqtlh",
+    "competitionId": "cmb93082x0000hu7i0zh875u1",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-29T08:01:13.881Z",
+    "updatedAt": "2025-05-29T08:01:13.881Z"
+  },
+  {
+    "id": "cmb934sk9000bhuw1bww64a7i",
+    "competitionId": "cmb93082x0000hu7i0zh875u1",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-29T08:01:13.882Z",
+    "updatedAt": "2025-05-29T08:01:13.882Z"
+  },
+  {
+    "id": "cmb934ska000dhuw1xe3q8ge6",
+    "competitionId": "cmb93082x0000hu7i0zh875u1",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-29T08:01:13.882Z",
+    "updatedAt": "2025-05-29T08:01:13.882Z"
+  },
+  {
+    "id": "cmb934ska000fhuw1y7qlk6a8",
+    "competitionId": "cmb93082x0000hu7i0zh875u1",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-29T08:01:13.883Z",
+    "updatedAt": "2025-05-29T08:01:13.883Z"
+  },
+  {
+    "id": "cmb934skb000hhuw1rurrdm7t",
+    "competitionId": "cmb93082x0000hu7i0zh875u1",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-29T08:01:13.883Z",
+    "updatedAt": "2025-05-29T08:01:13.883Z"
+  },
+  {
+    "id": "cmb94figl0002huuu1lo71kv6",
+    "competitionId": "cmb94figi0000huuujtij89ce",
+    "userId": "cmb8hadde0000humtq0cyaiqi",
+    "createdAt": "2025-05-29T08:37:33.622Z",
+    "updatedAt": "2025-05-29T08:37:33.622Z"
+  },
+  {
+    "id": "cmb94figm0004huuuuxyhslzj",
+    "competitionId": "cmb94figi0000huuujtij89ce",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-29T08:37:33.623Z",
+    "updatedAt": "2025-05-29T08:37:33.623Z"
+  },
+  {
+    "id": "cmb94fign0006huuu5adubnya",
+    "competitionId": "cmb94figi0000huuujtij89ce",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-29T08:37:33.624Z",
+    "updatedAt": "2025-05-29T08:37:33.624Z"
+  },
+  {
+    "id": "cmb94figo0008huuuf1srpldc",
+    "competitionId": "cmb94figi0000huuujtij89ce",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-29T08:37:33.624Z",
+    "updatedAt": "2025-05-29T08:37:33.624Z"
+  },
+  {
+    "id": "cmb94figo000ahuuu9rryofsr",
+    "competitionId": "cmb94figi0000huuujtij89ce",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-29T08:37:33.625Z",
+    "updatedAt": "2025-05-29T08:37:33.625Z"
+  },
+  {
+    "id": "cmb94figp000chuuu8127jswd",
+    "competitionId": "cmb94figi0000huuujtij89ce",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-29T08:37:33.625Z",
+    "updatedAt": "2025-05-29T08:37:33.625Z"
+  },
+  {
+    "id": "cmb94figp000ehuuu2w7bo8x4",
+    "competitionId": "cmb94figi0000huuujtij89ce",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-29T08:37:33.626Z",
+    "updatedAt": "2025-05-29T08:37:33.626Z"
+  },
+  {
+    "id": "cmb94figq000ghuuu06d7xnfv",
+    "competitionId": "cmb94figi0000huuujtij89ce",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-29T08:37:33.626Z",
+    "updatedAt": "2025-05-29T08:37:33.626Z"
+  },
+  {
+    "id": "cmb94figq000ihuuut99beyvm",
+    "competitionId": "cmb94figi0000huuujtij89ce",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-29T08:37:33.627Z",
+    "updatedAt": "2025-05-29T08:37:33.627Z"
+  },
+  {
+    "id": "cmb94swin0002huxrv4irteus",
+    "competitionId": "cmb94swic0000huxre09j5z2n",
+    "userId": "cmb8hadde0000humtq0cyaiqi",
+    "createdAt": "2025-05-29T08:47:58.367Z",
+    "updatedAt": "2025-05-29T08:47:58.367Z"
+  },
+  {
+    "id": "cmb94swiq0004huxr32p2qin2",
+    "competitionId": "cmb94swic0000huxre09j5z2n",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-29T08:47:58.370Z",
+    "updatedAt": "2025-05-29T08:47:58.370Z"
+  },
+  {
+    "id": "cmb94swir0006huxrcva6rsay",
+    "competitionId": "cmb94swic0000huxre09j5z2n",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-29T08:47:58.372Z",
+    "updatedAt": "2025-05-29T08:47:58.372Z"
+  },
+  {
+    "id": "cmb94swis0008huxrniwholxs",
+    "competitionId": "cmb94swic0000huxre09j5z2n",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-29T08:47:58.373Z",
+    "updatedAt": "2025-05-29T08:47:58.373Z"
+  },
+  {
+    "id": "cmb94swit000ahuxr5psez4pp",
+    "competitionId": "cmb94swic0000huxre09j5z2n",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-29T08:47:58.374Z",
+    "updatedAt": "2025-05-29T08:47:58.374Z"
+  },
+  {
+    "id": "cmb94swiu000chuxrc1ze3geh",
+    "competitionId": "cmb94swic0000huxre09j5z2n",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-29T08:47:58.375Z",
+    "updatedAt": "2025-05-29T08:47:58.375Z"
+  },
+  {
+    "id": "cmb94swiv000ehuxr7brxhqxm",
+    "competitionId": "cmb94swic0000huxre09j5z2n",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-29T08:47:58.375Z",
+    "updatedAt": "2025-05-29T08:47:58.375Z"
+  },
+  {
+    "id": "cmb94swiv000ghuxrfss4dlk0",
+    "competitionId": "cmb94swic0000huxre09j5z2n",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-29T08:47:58.376Z",
+    "updatedAt": "2025-05-29T08:47:58.376Z"
+  },
+  {
+    "id": "cmb94swiw000ihuxry4v8gpq1",
+    "competitionId": "cmb94swic0000huxre09j5z2n",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-29T08:47:58.376Z",
+    "updatedAt": "2025-05-29T08:47:58.376Z"
+  },
+  {
+    "id": "cmb98b7750003hu4pumjuez79",
+    "competitionId": "cmb98b76u0001hu4pjofdi0k6",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-29T10:26:10.865Z",
+    "updatedAt": "2025-05-29T10:26:10.865Z"
+  },
+  {
+    "id": "cmb98b7780005hu4pra6sqpye",
+    "competitionId": "cmb98b76u0001hu4pjofdi0k6",
+    "userId": "cmb8hadde0000humtq0cyaiqi",
+    "createdAt": "2025-05-29T10:26:10.869Z",
+    "updatedAt": "2025-05-29T10:26:10.869Z"
+  },
+  {
+    "id": "cmb98b77b0007hu4p0ccyd3fs",
+    "competitionId": "cmb98b76u0001hu4pjofdi0k6",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-29T10:26:10.871Z",
+    "updatedAt": "2025-05-29T10:26:10.871Z"
+  },
+  {
+    "id": "cmb98b77d0009hu4pwyck5ban",
+    "competitionId": "cmb98b76u0001hu4pjofdi0k6",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-29T10:26:10.874Z",
+    "updatedAt": "2025-05-29T10:26:10.874Z"
+  },
+  {
+    "id": "cmb98b77g000bhu4p5ij6s3ip",
+    "competitionId": "cmb98b76u0001hu4pjofdi0k6",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-29T10:26:10.876Z",
+    "updatedAt": "2025-05-29T10:26:10.876Z"
+  },
+  {
+    "id": "cmb98b77h000dhu4pmurztbt9",
+    "competitionId": "cmb98b76u0001hu4pjofdi0k6",
+    "userId": "cmb8h8ivp0000hugu45flefik",
+    "createdAt": "2025-05-29T10:26:10.878Z",
+    "updatedAt": "2025-05-29T10:26:10.878Z"
+  },
+  {
+    "id": "cmb98b77k000fhu4pwkzzt7zz",
+    "competitionId": "cmb98b76u0001hu4pjofdi0k6",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-29T10:26:10.880Z",
+    "updatedAt": "2025-05-29T10:26:10.880Z"
+  },
+  {
+    "id": "cmb98b77m000hhu4p8lgsbkq9",
+    "competitionId": "cmb98b76u0001hu4pjofdi0k6",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-29T10:26:10.882Z",
+    "updatedAt": "2025-05-29T10:26:10.882Z"
+  },
+  {
+    "id": "cmb9bjhjc0002hu8yldvlwjos",
+    "competitionId": "cmb9bjhj80000hu8ygzo2ryzm",
+    "userId": "cmb8h8iw70005huguk7orxxd9",
+    "createdAt": "2025-05-29T11:56:36.360Z",
+    "updatedAt": "2025-05-29T11:56:36.360Z"
+  },
+  {
+    "id": "cmb9bjhje0004hu8yq3236e7g",
+    "competitionId": "cmb9bjhj80000hu8ygzo2ryzm",
+    "userId": "cmb8hadde0000humtq0cyaiqi",
+    "createdAt": "2025-05-29T11:56:36.363Z",
+    "updatedAt": "2025-05-29T11:56:36.363Z"
+  },
+  {
+    "id": "cmb9bjhjg0006hu8yb3cf8g6y",
+    "competitionId": "cmb9bjhj80000hu8ygzo2ryzm",
+    "userId": "cmb8h8iwo000khugudtoa9bqx",
+    "createdAt": "2025-05-29T11:56:36.364Z",
+    "updatedAt": "2025-05-29T11:56:36.364Z"
+  },
+  {
+    "id": "cmb9bjhjh0008hu8yvaoypfn1",
+    "competitionId": "cmb9bjhj80000hu8ygzo2ryzm",
+    "userId": "cmb8h8iws000phugutlb6m8nd",
+    "createdAt": "2025-05-29T11:56:36.365Z",
+    "updatedAt": "2025-05-29T11:56:36.365Z"
+  },
+  {
+    "id": "cmb9bjhji000ahu8ympz0thbf",
+    "competitionId": "cmb9bjhj80000hu8ygzo2ryzm",
+    "userId": "cmb8h8iwf000ahugu1y6t10p4",
+    "createdAt": "2025-05-29T11:56:36.367Z",
+    "updatedAt": "2025-05-29T11:56:36.367Z"
+  },
+  {
+    "id": "cmb9bjhjk000chu8yz6iw5kce",
+    "competitionId": "cmb9bjhj80000hu8ygzo2ryzm",
+    "userId": "cmb8h8iwy000zhuguoglwh09m",
+    "createdAt": "2025-05-29T11:56:36.368Z",
+    "updatedAt": "2025-05-29T11:56:36.368Z"
+  },
+  {
+    "id": "cmb9bjhjm000ehu8y5yb51n7r",
+    "competitionId": "cmb9bjhj80000hu8ygzo2ryzm",
+    "userId": "cmb8h8iwv000uhugulpqb7m9i",
+    "createdAt": "2025-05-29T11:56:36.370Z",
+    "updatedAt": "2025-05-29T11:56:36.370Z"
+  },
+  {
+    "id": "cmb9bjhjn000ghu8ycpvrnpeo",
+    "competitionId": "cmb9bjhj80000hu8ygzo2ryzm",
+    "userId": "cmb8h8iwi000fhugusxnig8f9",
+    "createdAt": "2025-05-29T11:56:36.371Z",
+    "updatedAt": "2025-05-29T11:56:36.371Z"
+  }
+]

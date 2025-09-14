@@ -1,0 +1,965 @@
+[
+  {
+    "id": "cmb8ge6fa0000hu05gyll80vb",
+    "name": "France",
+    "shortName": "FRA",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Flag_of_France.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.582Z",
+    "updatedAt": "2025-05-28T21:24:40.582Z"
+  },
+  {
+    "id": "cmb8ge6fp0001hu05o7tw8edn",
+    "name": "Romania",
+    "shortName": "ROU",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/7/73/Flag_of_Romania.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.597Z",
+    "updatedAt": "2025-05-28T21:24:40.597Z"
+  },
+  {
+    "id": "cmb8ge6fq0002hu05hy3tqaez",
+    "name": "Albania",
+    "shortName": "ALB",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/3/36/Flag_of_Albania.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.598Z",
+    "updatedAt": "2025-05-28T21:24:40.598Z"
+  },
+  {
+    "id": "cmb8ge6fr0003hu05be6iwxft",
+    "name": "Switzerland",
+    "shortName": "SUI",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Flag_of_Switzerland.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.600Z",
+    "updatedAt": "2025-05-28T21:24:40.600Z"
+  },
+  {
+    "id": "cmb8ge6fs0004hu058f6br15e",
+    "name": "Wales",
+    "shortName": "WAL",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/d/dc/Flag_of_Wales.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.601Z",
+    "updatedAt": "2025-05-28T21:24:40.601Z"
+  },
+  {
+    "id": "cmb8ge6fu0005hu05g4xaks7y",
+    "name": "Slovakia",
+    "shortName": "SVK",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Flag_of_Slovakia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.602Z",
+    "updatedAt": "2025-05-28T21:24:40.602Z"
+  },
+  {
+    "id": "cmb8ge6fv0006hu05z66n0zlq",
+    "name": "England",
+    "shortName": "ENG",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/b/be/Flag_of_England.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.603Z",
+    "updatedAt": "2025-05-28T21:24:40.603Z"
+  },
+  {
+    "id": "cmb8ge6fw0007hu05d8kjf38m",
+    "name": "Russia",
+    "shortName": "RUS",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Flag_of_Russia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.605Z",
+    "updatedAt": "2025-05-28T21:24:40.605Z"
+  },
+  {
+    "id": "cmb8ge6fz0009hu05kj5dvqe1",
+    "name": "Ukraine",
+    "shortName": "UKR",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/49/Flag_of_Ukraine.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.607Z",
+    "updatedAt": "2025-05-28T21:24:40.607Z"
+  },
+  {
+    "id": "cmb8ge6g0000ahu0588wtp59c",
+    "name": "Germany",
+    "shortName": "GER",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Flag_of_Germany.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.608Z",
+    "updatedAt": "2025-05-28T21:24:40.608Z"
+  },
+  {
+    "id": "cmb8ge6g0000bhu0520xsnjst",
+    "name": "Poland",
+    "shortName": "POL",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/1/12/Flag_of_Poland.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.609Z",
+    "updatedAt": "2025-05-28T21:24:40.609Z"
+  },
+  {
+    "id": "cmb8ge6g1000chu054w28fyha",
+    "name": "Turkey",
+    "shortName": "TUR",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.610Z",
+    "updatedAt": "2025-05-28T21:24:40.610Z"
+  },
+  {
+    "id": "cmb8ge6g2000dhu05l8ybylfu",
+    "name": "Croatia",
+    "shortName": "CRO",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Flag_of_Croatia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.610Z",
+    "updatedAt": "2025-05-28T21:24:40.610Z"
+  },
+  {
+    "id": "cmb8ge6g2000ehu05el5xbdvo",
+    "name": "Spain",
+    "shortName": "ESP",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Spain.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.611Z",
+    "updatedAt": "2025-05-28T21:24:40.611Z"
+  },
+  {
+    "id": "cmb8ge6g3000fhu05mcikl0ey",
+    "name": "Czech Republic",
+    "shortName": "CZE",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Flag_of_the_Czech_Republic.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.612Z",
+    "updatedAt": "2025-05-28T21:24:40.612Z"
+  },
+  {
+    "id": "cmb8ge6g4000ghu05bxzrdvmf",
+    "name": "Republic of Ireland",
+    "shortName": "IRL",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/45/Flag_of_Ireland.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.613Z",
+    "updatedAt": "2025-05-28T21:24:40.613Z"
+  },
+  {
+    "id": "cmb8ge6g5000hhu05whphq0vi",
+    "name": "Sweden",
+    "shortName": "SWE",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Flag_of_Sweden.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.613Z",
+    "updatedAt": "2025-05-28T21:24:40.613Z"
+  },
+  {
+    "id": "cmb8ge6g5000ihu055e993cnt",
+    "name": "Belgium",
+    "shortName": "BEL",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/6/65/Flag_of_Belgium.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.614Z",
+    "updatedAt": "2025-05-28T21:24:40.614Z"
+  },
+  {
+    "id": "cmb8ge6g6000jhu051zmpucd2",
+    "name": "Italy",
+    "shortName": "ITA",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/03/Flag_of_Italy.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.614Z",
+    "updatedAt": "2025-05-28T21:24:40.614Z"
+  },
+  {
+    "id": "cmb8ge6g6000khu05k6l55blx",
+    "name": "Austria",
+    "shortName": "AUT",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/41/Flag_of_Austria.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.615Z",
+    "updatedAt": "2025-05-28T21:24:40.615Z"
+  },
+  {
+    "id": "cmb8ge6g7000lhu05csnsacv2",
+    "name": "Hungary",
+    "shortName": "HUN",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Flag_of_Hungary.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.615Z",
+    "updatedAt": "2025-05-28T21:24:40.615Z"
+  },
+  {
+    "id": "cmb8ge6g7000mhu05p1h047ci",
+    "name": "Portugal",
+    "shortName": "POR",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Portugal.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.616Z",
+    "updatedAt": "2025-05-28T21:24:40.616Z"
+  },
+  {
+    "id": "cmb8ge6g8000nhu05zo2amlr3",
+    "name": "Iceland",
+    "shortName": "ISL",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Flag_of_Iceland.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.616Z",
+    "updatedAt": "2025-05-28T21:24:40.616Z"
+  },
+  {
+    "id": "cmb8j6sex000mhupcvcp2ckzp",
+    "name": "Saudi Arabia",
+    "shortName": "KSA",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Flag_of_Saudi_Arabia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.681Z",
+    "updatedAt": "2025-05-28T22:42:54.681Z"
+  },
+  {
+    "id": "cmb8j6sf4000nhupcupzn9v7o",
+    "name": "Egypt",
+    "shortName": "EGY",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Flag_of_Egypt.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.689Z",
+    "updatedAt": "2025-05-28T22:42:54.689Z"
+  },
+  {
+    "id": "cmb8j6sf7000ohupcdjpprpi1",
+    "name": "Uruguay",
+    "shortName": "URU",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Flag_of_Uruguay.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.692Z",
+    "updatedAt": "2025-05-28T22:42:54.692Z"
+  },
+  {
+    "id": "cmb8j6sfe000phupccaaphuw2",
+    "name": "Morocco",
+    "shortName": "MAR",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Flag_of_Morocco.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.698Z",
+    "updatedAt": "2025-05-28T22:42:54.698Z"
+  },
+  {
+    "id": "cmb8j6sfn000qhupcruo0cjbm",
+    "name": "Iran",
+    "shortName": "IRN",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.707Z",
+    "updatedAt": "2025-05-28T22:42:54.707Z"
+  },
+  {
+    "id": "cmb8j6sfw000rhupci13g7l70",
+    "name": "Australia",
+    "shortName": "AUS",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/8/88/Flag_of_Australia_%28converted%29.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.716Z",
+    "updatedAt": "2025-05-28T22:42:54.716Z"
+  },
+  {
+    "id": "cmb8j6sg0000shupc5he51mqw",
+    "name": "Peru",
+    "shortName": "PER",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Peru.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.721Z",
+    "updatedAt": "2025-05-28T22:42:54.721Z"
+  },
+  {
+    "id": "cmb8j6sg2000thupcvs5aibn1",
+    "name": "Denmark",
+    "shortName": "DEN",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Flag_of_Denmark.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.723Z",
+    "updatedAt": "2025-05-28T22:42:54.723Z"
+  },
+  {
+    "id": "cmb8j6sg5000uhupc4dqpboix",
+    "name": "Argentina",
+    "shortName": "ARG",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.725Z",
+    "updatedAt": "2025-05-28T22:42:54.725Z"
+  },
+  {
+    "id": "cmb8j6sgd000vhupc9n8fzwxh",
+    "name": "Nigeria",
+    "shortName": "NGA",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/7/79/Flag_of_Nigeria.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.734Z",
+    "updatedAt": "2025-05-28T22:42:54.734Z"
+  },
+  {
+    "id": "cmb8j6sgj000whupc41ntk54j",
+    "name": "Brazil",
+    "shortName": "BRA",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/0/05/Flag_of_Brazil.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.740Z",
+    "updatedAt": "2025-05-28T22:42:54.740Z"
+  },
+  {
+    "id": "cmb8j6sgn000xhupcl8u1bo24",
+    "name": "Costa Rica",
+    "shortName": "CRC",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Flag_of_Costa_Rica_%28state%29.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.744Z",
+    "updatedAt": "2025-05-28T22:42:54.744Z"
+  },
+  {
+    "id": "cmb8j6sgr000yhupcanlp6efb",
+    "name": "Serbia",
+    "shortName": "SRB",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Flag_of_Serbia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.747Z",
+    "updatedAt": "2025-05-28T22:42:54.747Z"
+  },
+  {
+    "id": "cmb8j6sgt000zhupcz1ihcoee",
+    "name": "Mexico",
+    "shortName": "MEX",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Flag_of_Mexico.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.750Z",
+    "updatedAt": "2025-05-28T22:42:54.750Z"
+  },
+  {
+    "id": "cmb8j6sgy0010hupc6yd1nckg",
+    "name": "South Korea",
+    "shortName": "KOR",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.755Z",
+    "updatedAt": "2025-05-28T22:42:54.755Z"
+  },
+  {
+    "id": "cmb8j6sh10011hupc6ufjscmc",
+    "name": "Panama",
+    "shortName": "PAN",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Flag_of_Panama.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.758Z",
+    "updatedAt": "2025-05-28T22:42:54.758Z"
+  },
+  {
+    "id": "cmb8j6sh50012hupc6p6zc1ld",
+    "name": "Tunisia",
+    "shortName": "TUN",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Flag_of_Tunisia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.761Z",
+    "updatedAt": "2025-05-28T22:42:54.761Z"
+  },
+  {
+    "id": "cmb8j6sh90013hupc5i9cs39u",
+    "name": "Senegal",
+    "shortName": "SEN",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.765Z",
+    "updatedAt": "2025-05-28T22:42:54.765Z"
+  },
+  {
+    "id": "cmb8ge6g8000ohu05x7gez75g",
+    "name": "Paris Saint-Germain",
+    "shortName": "PSG",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T21:24:40.617Z",
+    "updatedAt": "2025-05-28T23:48:16.984Z"
+  },
+  {
+    "id": "cmb8ge6gb000shu05nf2uapms",
+    "name": "Bayern Munich",
+    "shortName": "BAY",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T21:24:40.619Z",
+    "updatedAt": "2025-05-28T23:48:17.002Z"
+  },
+  {
+    "id": "cmb8ge6g9000phu054e2pspu6",
+    "name": "Real Madrid",
+    "shortName": "RMA",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T21:24:40.617Z",
+    "updatedAt": "2025-05-28T23:48:17.018Z"
+  },
+  {
+    "id": "cmb8ge6ga000rhu05vdirx0yn",
+    "name": "Manchester United",
+    "shortName": "MUN",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T21:24:40.619Z",
+    "updatedAt": "2025-05-28T23:48:17.028Z"
+  },
+  {
+    "id": "cmb8ge6ga000qhu056fvj1vdz",
+    "name": "FC Barcelona",
+    "shortName": "BAR",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T21:24:40.618Z",
+    "updatedAt": "2025-05-28T23:48:17.031Z"
+  },
+  {
+    "id": "cmb8j6shf0014hupctmn5b22i",
+    "name": "Colombia",
+    "shortName": "COL",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/21/Flag_of_Colombia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.771Z",
+    "updatedAt": "2025-05-28T22:42:54.771Z"
+  },
+  {
+    "id": "cmb8j6shn0015hupc3wribkzc",
+    "name": "Japan",
+    "shortName": "JPN",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T22:42:54.779Z",
+    "updatedAt": "2025-05-28T22:42:54.779Z"
+  },
+  {
+    "id": "cmb8ge6fy0008hu05ykrtgawh",
+    "name": "Northern Ireland",
+    "shortName": "NIR",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/43/Flag_of_Northern_Ireland_%281953%E2%80%931972%29.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-28T21:24:40.607Z",
+    "updatedAt": "2025-05-28T23:44:11.441Z"
+  },
+  {
+    "id": "cmb8mtg7u000rhuctqv3kzsmj",
+    "name": "RB Leipzig",
+    "shortName": "RBL",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/0/04/RB_Leipzig_2014_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.810Z",
+    "updatedAt": "2025-05-29T00:24:30.810Z"
+  },
+  {
+    "id": "cmb8lbxvl0009hu9kcrozqfqw",
+    "name": "Liverpool",
+    "shortName": "LIV",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.273Z",
+    "updatedAt": "2025-05-28T23:48:16.986Z"
+  },
+  {
+    "id": "cmb8lbxw9000mhu9kpornx6eg",
+    "name": "Hoffenheim",
+    "shortName": "HOF",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Logo_TSG_Hoffenheim.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.297Z",
+    "updatedAt": "2025-05-29T00:03:15.769Z"
+  },
+  {
+    "id": "cmb8lbxvn000ahu9ktk9qhbqr",
+    "name": "Napoli",
+    "shortName": "NAP",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2d/SSC_Neapel.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.275Z",
+    "updatedAt": "2025-05-28T23:48:16.988Z"
+  },
+  {
+    "id": "cmb8lbxwb000nhu9k9euypzja",
+    "name": "AS Roma",
+    "shortName": "ROM",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/f/f7/AS_Roma_logo_%282017%29.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.299Z",
+    "updatedAt": "2025-05-28T23:48:17.020Z"
+  },
+  {
+    "id": "cmb8lbxuz0001hu9ky56uqyvu",
+    "name": "Atlético Madrid",
+    "shortName": "ATM",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/f/f9/Atletico_Madrid_Logo_2024.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.251Z",
+    "updatedAt": "2025-05-28T23:48:16.954Z"
+  },
+  {
+    "id": "cmb8lbxv60003hu9k6fbes772",
+    "name": "AS Monaco",
+    "shortName": "MON",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/c/cf/LogoASMonacoFC2021.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.259Z",
+    "updatedAt": "2025-05-28T23:48:16.964Z"
+  },
+  {
+    "id": "cmb8lbxv90004hu9k7xdw9n98",
+    "name": "Club Brugge",
+    "shortName": "CLB",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/d/d0/Club_Brugge_KV_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.262Z",
+    "updatedAt": "2025-05-28T23:48:16.966Z"
+  },
+  {
+    "id": "cmb8lbxve0006hu9ke9bs9eoj",
+    "name": "Tottenham",
+    "shortName": "TOT",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.267Z",
+    "updatedAt": "2025-05-28T23:48:16.972Z"
+  },
+  {
+    "id": "cmb8lbxvg0007hu9kbsn3csx0",
+    "name": "PSV Eindhoven",
+    "shortName": "PSV",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/0/05/PSV_Eindhoven.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.269Z",
+    "updatedAt": "2025-05-28T23:48:16.980Z"
+  },
+  {
+    "id": "cmb8lbxvi0008hu9kmze3ev3o",
+    "name": "Inter Milan",
+    "shortName": "INT",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.271Z",
+    "updatedAt": "2025-05-28T23:48:16.982Z"
+  },
+  {
+    "id": "cmb8lbxwi000qhu9kfb16orhb",
+    "name": "Juventus",
+    "shortName": "JUV",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Juventus_FC_-_logo_black_%28Italy%2C_2020%29.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.306Z",
+    "updatedAt": "2025-05-29T00:03:34.596Z"
+  },
+  {
+    "id": "cmb8lbxvq000chu9k7yq5nagd",
+    "name": "Porto",
+    "shortName": "POR",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/f/f1/FC_Porto.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.279Z",
+    "updatedAt": "2025-05-28T23:48:16.995Z"
+  },
+  {
+    "id": "cmb8lbxvs000dhu9kw6weqazq",
+    "name": "Schalke 04",
+    "shortName": "S04",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/6/6d/FC_Schalke_04_Logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.280Z",
+    "updatedAt": "2025-05-28T23:48:16.997Z"
+  },
+  {
+    "id": "cmb8lbxvv000fhu9kjxhprxge",
+    "name": "Lokomotiv Moscow",
+    "shortName": "LOK",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/9/93/FC_Lokomotiv_Moscow_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.284Z",
+    "updatedAt": "2025-05-29T00:04:04.529Z"
+  },
+  {
+    "id": "cmb8mtg7u000shuctaet9apgj",
+    "name": "Chelsea",
+    "shortName": "CHE",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.811Z",
+    "updatedAt": "2025-05-29T00:24:30.811Z"
+  },
+  {
+    "id": "cmb8lbxvz000ghu9kxcz8dhr0",
+    "name": "Benfica",
+    "shortName": "BEN",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/a/a2/SL_Benfica_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.288Z",
+    "updatedAt": "2025-05-28T23:48:17.005Z"
+  },
+  {
+    "id": "cmb8lbxw2000hhu9kkqzmxoic",
+    "name": "Ajax",
+    "shortName": "AJA",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/7/79/Ajax_Amsterdam.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.290Z",
+    "updatedAt": "2025-05-28T23:48:17.007Z"
+  },
+  {
+    "id": "cmb8lbxw4000ihu9kwm3yf63z",
+    "name": "AEK Athens",
+    "shortName": "AEK",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/0/04/AEK_Athens_FC_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.292Z",
+    "updatedAt": "2025-05-28T23:48:17.010Z"
+  },
+  {
+    "id": "cmb8lbxw5000jhu9k4k0q2txb",
+    "name": "Manchester City",
+    "shortName": "MCI",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.294Z",
+    "updatedAt": "2025-05-28T23:48:17.011Z"
+  },
+  {
+    "id": "cmb8lbxw6000khu9kkq80s084",
+    "name": "Shakhtar Donetsk",
+    "shortName": "SHA",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/a/a1/FC_Shakhtar_Donetsk.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.295Z",
+    "updatedAt": "2025-05-28T23:48:17.013Z"
+  },
+  {
+    "id": "cmb8lbxw8000lhu9kx4gb20ya",
+    "name": "Lyon",
+    "shortName": "LYO",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/1/1c/Olympique_Lyonnais_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.296Z",
+    "updatedAt": "2025-05-29T00:04:23.825Z"
+  },
+  {
+    "id": "placeholder-home",
+    "name": "Placeholder Home",
+    "shortName": "PH",
+    "logo": "https://via.placeholder.com/50",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-29T00:45:30.428Z",
+    "updatedAt": "2025-05-29T00:45:30.428Z"
+  },
+  {
+    "id": "cmb8lbxwk000rhu9kvtzvelcn",
+    "name": "Valencia",
+    "shortName": "VAL",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/c/ce/Valenciacf.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.308Z",
+    "updatedAt": "2025-05-28T23:48:17.029Z"
+  },
+  {
+    "id": "cmb8lbxwd000ohu9kser5vh61",
+    "name": "CSKA Moscow",
+    "shortName": "CSK",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/2/26/PFK_CSKA_Logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.301Z",
+    "updatedAt": "2025-05-28T23:50:57.060Z"
+  },
+  {
+    "id": "cmb8lbxvt000ehu9kklejykrs",
+    "name": "Galatasaray",
+    "shortName": "GAL",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Galatasaray_AS_logo_2025.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.281Z",
+    "updatedAt": "2025-05-28T23:51:36.920Z"
+  },
+  {
+    "id": "cmb8lbxvp000bhu9k3h3qfpqi",
+    "name": "Red Star Belgrade",
+    "shortName": "RSB",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/c/c2/Red_Star_Belgrade_crest.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.277Z",
+    "updatedAt": "2025-05-28T23:51:57.691Z"
+  },
+  {
+    "id": "cmb8lbxwg000phu9kq5ewj2px",
+    "name": "Viktoria Plzen",
+    "shortName": "PLZ",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/e/e3/Viktoria_Plzen_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.305Z",
+    "updatedAt": "2025-05-29T00:02:41.140Z"
+  },
+  {
+    "id": "cmb8lbxwl000shu9kcm1qv0ad",
+    "name": "Young Boys",
+    "shortName": "YB",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/c/c2/BSC_Young_Boys.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-28T23:42:54.309Z",
+    "updatedAt": "2025-05-29T00:02:58.573Z"
+  },
+  {
+    "id": "cmb8mtg7n000mhuct2an1690r",
+    "name": "Bayer Leverkusen",
+    "shortName": "B04",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/5/59/Bayer_04_Leverkusen_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.803Z",
+    "updatedAt": "2025-05-29T00:24:30.803Z"
+  },
+  {
+    "id": "placeholder-away",
+    "name": "Placeholder Away",
+    "shortName": "PA",
+    "logo": "https://via.placeholder.com/50",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-29T00:45:30.455Z",
+    "updatedAt": "2025-05-29T00:45:30.455Z"
+  },
+  {
+    "id": "cmb8mtg7k000khuctmqx5vmr1",
+    "name": "Dinamo Zagreb",
+    "shortName": "DZG",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/5/53/GNK_Dinamo_Zagreb_crest.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.801Z",
+    "updatedAt": "2025-05-29T07:52:37.061Z"
+  },
+  {
+    "id": "cmb8mtg7i000jhuctbc2uygp1",
+    "name": "Olympiacos",
+    "shortName": "OLY",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/a/a2/Olympiacos_FC_crest.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.798Z",
+    "updatedAt": "2025-05-29T07:53:01.411Z"
+  },
+  {
+    "id": "cmb8mtg7p000ohuctbxfjkbg6",
+    "name": "Genk",
+    "shortName": "GNK",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/7/77/Logo_KRC_Genk.png",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.806Z",
+    "updatedAt": "2025-05-29T07:53:20.093Z"
+  },
+  {
+    "id": "cmb8mtg7s000qhuctqj35wc1a",
+    "name": "Zenit",
+    "shortName": "ZEN",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/0b/FC_Zenit_2_star_2023_logo.png",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.809Z",
+    "updatedAt": "2025-05-29T07:53:41.875Z"
+  },
+  {
+    "id": "cmb8mtg7r000phuct03tt3i39",
+    "name": "Slavia Prague",
+    "shortName": "SLP",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2b/SK_Slavia_Praha_full_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.808Z",
+    "updatedAt": "2025-05-29T07:54:01.924Z"
+  },
+  {
+    "id": "cmb8mtg7p000nhuctodezyhoe",
+    "name": "Red Bull Salzburg",
+    "shortName": "RBS",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/7/77/FC_Red_Bull_Salzburg_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.805Z",
+    "updatedAt": "2025-05-29T07:54:25.898Z"
+  },
+  {
+    "id": "cmb8mtg7l000lhuctt35sfg24",
+    "name": "Atalanta",
+    "shortName": "ATA",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/6/66/AtalantaBC.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.802Z",
+    "updatedAt": "2025-05-29T07:54:52.471Z"
+  },
+  {
+    "id": "cmb8mtg7w000thucto3xb6edw",
+    "name": "Lille",
+    "shortName": "LIL",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/3/3f/Lille_OSC_2018_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T00:24:30.812Z",
+    "updatedAt": "2025-05-29T07:55:11.703Z"
+  },
+  {
+    "id": "cmb97p1z5000ihu8pmiwc420u",
+    "name": "Netherlands",
+    "shortName": "NET",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/20/Flag_of_the_Netherlands.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-29T10:08:57.665Z",
+    "updatedAt": "2025-05-29T10:11:36.000Z"
+  },
+  {
+    "id": "cmb97p1zb000jhu8pm1cwmlx7",
+    "name": "Slovenia",
+    "shortName": "SLO",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Flag_of_Slovenia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-29T10:08:57.672Z",
+    "updatedAt": "2025-05-29T10:12:24.016Z"
+  },
+  {
+    "id": "cmb97p1zd000khu8pegyvvlo8",
+    "name": "Georgia",
+    "shortName": "GEO",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Flag_of_Georgia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-29T10:08:57.673Z",
+    "updatedAt": "2025-05-29T10:11:11.832Z"
+  },
+  {
+    "id": "cmb97p1ze000lhu8pzo4fftzy",
+    "name": "Scotland",
+    "shortName": "SCO",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/1/10/Flag_of_Scotland.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-29T10:08:57.675Z",
+    "updatedAt": "2025-05-29T10:11:58.743Z"
+  },
+  {
+    "id": "cmb9bjhkm001bhu8y0kmkvu2c",
+    "name": "Girona",
+    "shortName": "GIR",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/f/f7/Girona_FC_Logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.407Z",
+    "updatedAt": "2025-05-29T12:49:12.166Z"
+  },
+  {
+    "id": "cmb9bjhke0012hu8y8mf07vki",
+    "name": "Arsenal",
+    "shortName": "ARS",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.399Z",
+    "updatedAt": "2025-05-29T12:49:27.925Z"
+  },
+  {
+    "id": "cmb9bjhkp001ehu8yzzi2zsk6",
+    "name": "Bologna",
+    "shortName": "BOL",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Bologna_F.C._1909_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.409Z",
+    "updatedAt": "2025-05-29T12:49:53.502Z"
+  },
+  {
+    "id": "cmb9bjhjv000phu8yj2l8rzhb",
+    "name": "Brest",
+    "shortName": "BRE",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/0/05/Stade_Brestois_29_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.380Z",
+    "updatedAt": "2025-05-29T12:50:09.038Z"
+  },
+  {
+    "id": "cmb9bjhkq001ghu8yxqriz8gw",
+    "name": "Celtic",
+    "shortName": "CEL",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/7/71/Celtic_FC_crest.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.411Z",
+    "updatedAt": "2025-05-29T12:50:31.666Z"
+  },
+  {
+    "id": "cmb9bjhki0016hu8ylyyj6jwq",
+    "name": "Feyenoord",
+    "shortName": "FEY",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Feyenoord_logo_since_2024.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.403Z",
+    "updatedAt": "2025-05-29T12:50:48.968Z"
+  },
+  {
+    "id": "cmb9bjhkj0017hu8yx31qk442",
+    "name": "Sporting CP",
+    "shortName": "SCP",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/e/e1/Sporting_Clube_de_Portugal_%28Logo%29.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.403Z",
+    "updatedAt": "2025-05-29T12:51:18.975Z"
+  },
+  {
+    "id": "cmb9bjhkm001ahu8yi6pr18pa",
+    "name": "Sturm Graz",
+    "shortName": "STG",
+    "logo": "https://upload.wikimedia.org/wikipedia/en/9/91/SK_Sturm_Graz_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.406Z",
+    "updatedAt": "2025-05-29T12:51:40.082Z"
+  },
+  {
+    "id": "cmb98b787000jhu4p16fw1amd",
+    "name": "North Macedonia",
+    "shortName": "NOR",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/7/79/Flag_of_North_Macedonia.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-29T10:26:10.904Z",
+    "updatedAt": "2025-05-29T12:35:21.415Z"
+  },
+  {
+    "id": "cmb98b782000ihu4p9q3yoll2",
+    "name": "Finland",
+    "shortName": "FIN",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Flag_of_Finland.svg",
+    "category": "NATIONAL",
+    "createdAt": "2025-05-29T10:26:10.898Z",
+    "updatedAt": "2025-05-29T12:35:42.244Z"
+  },
+  {
+    "id": "cmb9bjhjt000mhu8yd53if1rq",
+    "name": "Aston Villa",
+    "shortName": "AVL",
+    "logo": "https://logos-world.net/wp-content/uploads/2020/06/Aston-Villa-Logo.png",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.378Z",
+    "updatedAt": "2025-05-29T12:36:04.636Z"
+  },
+  {
+    "id": "cmb9bjhjs000khu8ypnrfs823",
+    "name": "Slovan Bratislava",
+    "shortName": "SLB",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/01/SK_Slovan_Bratislava_logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.376Z",
+    "updatedAt": "2025-05-29T12:41:48.575Z"
+  },
+  {
+    "id": "cmb9bjhkh0015hu8ykf7m2gkk",
+    "name": "AC Milan",
+    "shortName": "MIL",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.402Z",
+    "updatedAt": "2025-05-29T12:42:10.273Z"
+  },
+  {
+    "id": "cmb9bjhjv000ohu8ylpafyjmn",
+    "name": "Sparta Prague",
+    "shortName": "SPP",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/d/dd/AC-Sparta-LOGO2021.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.379Z",
+    "updatedAt": "2025-05-29T12:43:29.034Z"
+  },
+  {
+    "id": "cmb9bjhjr000jhu8yuq9b5x5o",
+    "name": "VfB Stuttgart",
+    "shortName": "VFB",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/e/eb/VfB_Stuttgart_1893_Logo.svg",
+    "category": "CLUB",
+    "createdAt": "2025-05-29T11:56:36.375Z",
+    "updatedAt": "2025-05-29T12:47:36.354Z"
+  }
+]

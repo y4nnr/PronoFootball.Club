@@ -1,0 +1,861 @@
+{
+  "competition": "UEFA Champions League",
+  "season": "2025-26",
+  "timezone_note": "Kickoffs listed in CET/CEST per UEFA; Europe/Warsaw matches CET/CEST for these dates.",
+  "teams": [
+    "Ajax",
+    "Arsenal",
+    "Atalanta",
+    "Athletic Club",
+    "Atlético de Madrid",
+    "Barcelona",
+    "Bayer Leverkusen",
+    "Bayern München",
+    "Benfica",
+    "Bodø/Glimt",
+    "Borussia Dortmund",
+    "Chelsea",
+    "Club Brugge",
+    "Copenhagen",
+    "Eintracht Frankfurt",
+    "Galatasaray",
+    "Inter",
+    "Juventus",
+    "Kairat Almaty",
+    "Liverpool",
+    "Manchester City",
+    "Marseille",
+    "Monaco",
+    "Napoli",
+    "Newcastle United",
+    "Olympiacos",
+    "PSV Eindhoven",
+    "Pafos",
+    "Paris Saint-Germain",
+    "Qarabağ",
+    "Real Madrid",
+    "Slavia Praha",
+    "Sporting CP",
+    "Tottenham",
+    "Union Saint-Gilloise",
+    "Villarreal"
+  ],
+  "fixtures": [
+    {
+      "matchday": 1,
+      "date": "2025-09-16",
+      "matches": [
+        {
+          "home": "Athletic Club",
+          "away": "Arsenal",
+          "time": "18:45"
+        },
+        {
+          "home": "PSV Eindhoven",
+          "away": "Union Saint-Gilloise",
+          "time": "18:45"
+        },
+        {
+          "home": "Juventus",
+          "away": "Borussia Dortmund",
+          "time": "21:00"
+        },
+        {
+          "home": "Real Madrid",
+          "away": "Marseille",
+          "time": "21:00"
+        },
+        {
+          "home": "Benfica",
+          "away": "Qarabağ",
+          "time": "21:00"
+        },
+        {
+          "home": "Tottenham",
+          "away": "Villarreal",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 1,
+      "date": "2025-09-17",
+      "matches": [
+        {
+          "home": "Olympiacos",
+          "away": "Pafos",
+          "time": "18:45"
+        },
+        {
+          "home": "Slavia Praha",
+          "away": "Bodø/Glimt",
+          "time": "18:45"
+        },
+        {
+          "home": "Ajax",
+          "away": "Inter",
+          "time": "21:00"
+        },
+        {
+          "home": "Bayern München",
+          "away": "Chelsea",
+          "time": "21:00"
+        },
+        {
+          "home": "Liverpool",
+          "away": "Atlético de Madrid",
+          "time": "21:00"
+        },
+        {
+          "home": "Paris Saint-Germain",
+          "away": "Atalanta",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 1,
+      "date": "2025-09-18",
+      "matches": [
+        {
+          "home": "Club Brugge",
+          "away": "Monaco",
+          "time": "18:45"
+        },
+        {
+          "home": "Copenhagen",
+          "away": "Bayer Leverkusen",
+          "time": "18:45"
+        },
+        {
+          "home": "Eintracht Frankfurt",
+          "away": "Galatasaray",
+          "time": "21:00"
+        },
+        {
+          "home": "Manchester City",
+          "away": "Napoli",
+          "time": "21:00"
+        },
+        {
+          "home": "Newcastle United",
+          "away": "Barcelona",
+          "time": "21:00"
+        },
+        {
+          "home": "Sporting CP",
+          "away": "Kairat Almaty",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 2,
+      "date": "2025-09-30",
+      "matches": [
+        {
+          "home": "Atalanta",
+          "away": "Club Brugge",
+          "time": "18:45"
+        },
+        {
+          "home": "Kairat Almaty",
+          "away": "Real Madrid",
+          "time": "18:45"
+        },
+        {
+          "home": "Atlético de Madrid",
+          "away": "Eintracht Frankfurt",
+          "time": "21:00"
+        },
+        {
+          "home": "Chelsea",
+          "away": "Benfica",
+          "time": "21:00"
+        },
+        {
+          "home": "Inter",
+          "away": "Slavia Praha",
+          "time": "21:00"
+        },
+        {
+          "home": "Bodø/Glimt",
+          "away": "Tottenham",
+          "time": "21:00"
+        },
+        {
+          "home": "Galatasaray",
+          "away": "Liverpool",
+          "time": "21:00"
+        },
+        {
+          "home": "Marseille",
+          "away": "Ajax",
+          "time": "21:00"
+        },
+        {
+          "home": "Pafos",
+          "away": "Bayern München",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 2,
+      "date": "2025-10-01",
+      "matches": [
+        {
+          "home": "Qarabağ",
+          "away": "Copenhagen",
+          "time": "18:45"
+        },
+        {
+          "home": "Union Saint-Gilloise",
+          "away": "Newcastle United",
+          "time": "18:45"
+        },
+        {
+          "home": "Arsenal",
+          "away": "Olympiacos",
+          "time": "21:00"
+        },
+        {
+          "home": "Monaco",
+          "away": "Manchester City",
+          "time": "21:00"
+        },
+        {
+          "home": "Bayer Leverkusen",
+          "away": "PSV Eindhoven",
+          "time": "21:00"
+        },
+        {
+          "home": "Borussia Dortmund",
+          "away": "Athletic Club",
+          "time": "21:00"
+        },
+        {
+          "home": "Barcelona",
+          "away": "Paris Saint-Germain",
+          "time": "21:00"
+        },
+        {
+          "home": "Napoli",
+          "away": "Sporting CP",
+          "time": "21:00"
+        },
+        {
+          "home": "Villarreal",
+          "away": "Juventus",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 3,
+      "date": "2025-10-21",
+      "matches": [
+        {
+          "home": "Barcelona",
+          "away": "Olympiacos",
+          "time": "18:45"
+        },
+        {
+          "home": "Kairat Almaty",
+          "away": "Pafos",
+          "time": "18:45"
+        },
+        {
+          "home": "Arsenal",
+          "away": "Atlético de Madrid",
+          "time": "21:00"
+        },
+        {
+          "home": "Bayer Leverkusen",
+          "away": "Paris Saint-Germain",
+          "time": "21:00"
+        },
+        {
+          "home": "Copenhagen",
+          "away": "Borussia Dortmund",
+          "time": "21:00"
+        },
+        {
+          "home": "Newcastle United",
+          "away": "Benfica",
+          "time": "21:00"
+        },
+        {
+          "home": "PSV Eindhoven",
+          "away": "Napoli",
+          "time": "21:00"
+        },
+        {
+          "home": "Union Saint-Gilloise",
+          "away": "Inter",
+          "time": "21:00"
+        },
+        {
+          "home": "Villarreal",
+          "away": "Manchester City",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 3,
+      "date": "2025-10-22",
+      "matches": [
+        {
+          "home": "Athletic Club",
+          "away": "Qarabağ",
+          "time": "18:45"
+        },
+        {
+          "home": "Galatasaray",
+          "away": "Bodø/Glimt",
+          "time": "18:45"
+        },
+        {
+          "home": "Monaco",
+          "away": "Tottenham",
+          "time": "21:00"
+        },
+        {
+          "home": "Atalanta",
+          "away": "Slavia Praha",
+          "time": "21:00"
+        },
+        {
+          "home": "Chelsea",
+          "away": "Ajax",
+          "time": "21:00"
+        },
+        {
+          "home": "Eintracht Frankfurt",
+          "away": "Liverpool",
+          "time": "21:00"
+        },
+        {
+          "home": "Bayern München",
+          "away": "Club Brugge",
+          "time": "21:00"
+        },
+        {
+          "home": "Real Madrid",
+          "away": "Juventus",
+          "time": "21:00"
+        },
+        {
+          "home": "Sporting CP",
+          "away": "Marseille",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 4,
+      "date": "2025-11-04",
+      "matches": [
+        {
+          "home": "Slavia Praha",
+          "away": "Arsenal",
+          "time": "18:45"
+        },
+        {
+          "home": "Napoli",
+          "away": "Eintracht Frankfurt",
+          "time": "18:45"
+        },
+        {
+          "home": "Atlético de Madrid",
+          "away": "Union Saint-Gilloise",
+          "time": "21:00"
+        },
+        {
+          "home": "Bodø/Glimt",
+          "away": "Monaco",
+          "time": "21:00"
+        },
+        {
+          "home": "Juventus",
+          "away": "Sporting CP",
+          "time": "21:00"
+        },
+        {
+          "home": "Liverpool",
+          "away": "Real Madrid",
+          "time": "21:00"
+        },
+        {
+          "home": "Olympiacos",
+          "away": "PSV Eindhoven",
+          "time": "21:00"
+        },
+        {
+          "home": "Paris Saint-Germain",
+          "away": "Bayern München",
+          "time": "21:00"
+        },
+        {
+          "home": "Tottenham",
+          "away": "Copenhagen",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 4,
+      "date": "2025-11-05",
+      "matches": [
+        {
+          "home": "Pafos",
+          "away": "Villarreal",
+          "time": "18:45"
+        },
+        {
+          "home": "Qarabağ",
+          "away": "Chelsea",
+          "time": "18:45"
+        },
+        {
+          "home": "Ajax",
+          "away": "Galatasaray",
+          "time": "21:00"
+        },
+        {
+          "home": "Club Brugge",
+          "away": "Barcelona",
+          "time": "21:00"
+        },
+        {
+          "home": "Inter",
+          "away": "Kairat Almaty",
+          "time": "21:00"
+        },
+        {
+          "home": "Manchester City",
+          "away": "Borussia Dortmund",
+          "time": "21:00"
+        },
+        {
+          "home": "Newcastle United",
+          "away": "Athletic Club",
+          "time": "21:00"
+        },
+        {
+          "home": "Marseille",
+          "away": "Atalanta",
+          "time": "21:00"
+        },
+        {
+          "home": "Benfica",
+          "away": "Bayer Leverkusen",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 5,
+      "date": "2025-11-25",
+      "matches": [
+        {
+          "home": "Ajax",
+          "away": "Benfica",
+          "time": "18:45"
+        },
+        {
+          "home": "Galatasaray",
+          "away": "Union Saint-Gilloise",
+          "time": "18:45"
+        },
+        {
+          "home": "Borussia Dortmund",
+          "away": "Villarreal",
+          "time": "21:00"
+        },
+        {
+          "home": "Chelsea",
+          "away": "Barcelona",
+          "time": "21:00"
+        },
+        {
+          "home": "Bodø/Glimt",
+          "away": "Juventus",
+          "time": "21:00"
+        },
+        {
+          "home": "Manchester City",
+          "away": "Bayer Leverkusen",
+          "time": "21:00"
+        },
+        {
+          "home": "Marseille",
+          "away": "Newcastle United",
+          "time": "21:00"
+        },
+        {
+          "home": "Slavia Praha",
+          "away": "Athletic Club",
+          "time": "21:00"
+        },
+        {
+          "home": "Napoli",
+          "away": "Qarabağ",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 5,
+      "date": "2025-11-26",
+      "matches": [
+        {
+          "home": "Copenhagen",
+          "away": "Kairat Almaty",
+          "time": "18:45"
+        },
+        {
+          "home": "Pafos",
+          "away": "Monaco",
+          "time": "18:45"
+        },
+        {
+          "home": "Arsenal",
+          "away": "Bayern München",
+          "time": "21:00"
+        },
+        {
+          "home": "Atlético de Madrid",
+          "away": "Inter",
+          "time": "21:00"
+        },
+        {
+          "home": "Eintracht Frankfurt",
+          "away": "Atalanta",
+          "time": "21:00"
+        },
+        {
+          "home": "Liverpool",
+          "away": "PSV Eindhoven",
+          "time": "21:00"
+        },
+        {
+          "home": "Olympiacos",
+          "away": "Real Madrid",
+          "time": "21:00"
+        },
+        {
+          "home": "Paris Saint-Germain",
+          "away": "Tottenham",
+          "time": "21:00"
+        },
+        {
+          "home": "Sporting CP",
+          "away": "Club Brugge",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 6,
+      "date": "2025-12-09",
+      "matches": [
+        {
+          "home": "Kairat Almaty",
+          "away": "Olympiacos",
+          "time": "16:30"
+        },
+        {
+          "home": "Bayern München",
+          "away": "Sporting CP",
+          "time": "18:45"
+        },
+        {
+          "home": "Monaco",
+          "away": "Galatasaray",
+          "time": "21:00"
+        },
+        {
+          "home": "Atalanta",
+          "away": "Chelsea",
+          "time": "21:00"
+        },
+        {
+          "home": "Barcelona",
+          "away": "Eintracht Frankfurt",
+          "time": "21:00"
+        },
+        {
+          "home": "Inter",
+          "away": "Liverpool",
+          "time": "21:00"
+        },
+        {
+          "home": "PSV Eindhoven",
+          "away": "Atlético de Madrid",
+          "time": "21:00"
+        },
+        {
+          "home": "Union Saint-Gilloise",
+          "away": "Marseille",
+          "time": "21:00"
+        },
+        {
+          "home": "Tottenham",
+          "away": "Slavia Praha",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 6,
+      "date": "2025-12-10",
+      "matches": [
+        {
+          "home": "Qarabağ",
+          "away": "Ajax",
+          "time": "18:45"
+        },
+        {
+          "home": "Villarreal",
+          "away": "Copenhagen",
+          "time": "18:45"
+        },
+        {
+          "home": "Athletic Club",
+          "away": "Paris Saint-Germain",
+          "time": "21:00"
+        },
+        {
+          "home": "Bayer Leverkusen",
+          "away": "Newcastle United",
+          "time": "21:00"
+        },
+        {
+          "home": "Borussia Dortmund",
+          "away": "Bodø/Glimt",
+          "time": "21:00"
+        },
+        {
+          "home": "Club Brugge",
+          "away": "Arsenal",
+          "time": "21:00"
+        },
+        {
+          "home": "Juventus",
+          "away": "Pafos",
+          "time": "21:00"
+        },
+        {
+          "home": "Real Madrid",
+          "away": "Manchester City",
+          "time": "21:00"
+        },
+        {
+          "home": "Benfica",
+          "away": "Napoli",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 7,
+      "date": "2026-01-20",
+      "matches": [
+        {
+          "home": "Kairat Almaty",
+          "away": "Club Brugge",
+          "time": "16:30"
+        },
+        {
+          "home": "Bodø/Glimt",
+          "away": "Manchester City",
+          "time": "18:45"
+        },
+        {
+          "home": "Copenhagen",
+          "away": "Napoli",
+          "time": "21:00"
+        },
+        {
+          "home": "Inter",
+          "away": "Arsenal",
+          "time": "21:00"
+        },
+        {
+          "home": "Olympiacos",
+          "away": "Bayer Leverkusen",
+          "time": "21:00"
+        },
+        {
+          "home": "Real Madrid",
+          "away": "Monaco",
+          "time": "21:00"
+        },
+        {
+          "home": "Sporting CP",
+          "away": "Paris Saint-Germain",
+          "time": "21:00"
+        },
+        {
+          "home": "Tottenham",
+          "away": "Borussia Dortmund",
+          "time": "21:00"
+        },
+        {
+          "home": "Villarreal",
+          "away": "Ajax",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 7,
+      "date": "2026-01-21",
+      "matches": [
+        {
+          "home": "Galatasaray",
+          "away": "Atlético de Madrid",
+          "time": "18:45"
+        },
+        {
+          "home": "Qarabağ",
+          "away": "Eintracht Frankfurt",
+          "time": "18:45"
+        },
+        {
+          "home": "Atalanta",
+          "away": "Athletic Club",
+          "time": "21:00"
+        },
+        {
+          "home": "Chelsea",
+          "away": "Pafos",
+          "time": "21:00"
+        },
+        {
+          "home": "Bayern München",
+          "away": "Union Saint-Gilloise",
+          "time": "21:00"
+        },
+        {
+          "home": "Juventus",
+          "away": "Benfica",
+          "time": "21:00"
+        },
+        {
+          "home": "Newcastle United",
+          "away": "PSV Eindhoven",
+          "time": "21:00"
+        },
+        {
+          "home": "Marseille",
+          "away": "Liverpool",
+          "time": "21:00"
+        },
+        {
+          "home": "Slavia Praha",
+          "away": "Barcelona",
+          "time": "21:00"
+        }
+      ]
+    },
+    {
+      "matchday": 8,
+      "date": "2026-01-28",
+      "matches": [
+        {
+          "home": "Ajax",
+          "away": "Olympiacos",
+          "time": "21:00"
+        },
+        {
+          "home": "Arsenal",
+          "away": "Kairat Almaty",
+          "time": "21:00"
+        },
+        {
+          "home": "Monaco",
+          "away": "Juventus",
+          "time": "21:00"
+        },
+        {
+          "home": "Athletic Club",
+          "away": "Sporting CP",
+          "time": "21:00"
+        },
+        {
+          "home": "Atlético de Madrid",
+          "away": "Bodø/Glimt",
+          "time": "21:00"
+        },
+        {
+          "home": "Bayer Leverkusen",
+          "away": "Villarreal",
+          "time": "21:00"
+        },
+        {
+          "home": "Borussia Dortmund",
+          "away": "Inter",
+          "time": "21:00"
+        },
+        {
+          "home": "Club Brugge",
+          "away": "Marseille",
+          "time": "21:00"
+        },
+        {
+          "home": "Eintracht Frankfurt",
+          "away": "Tottenham",
+          "time": "21:00"
+        },
+        {
+          "home": "Barcelona",
+          "away": "Copenhagen",
+          "time": "21:00"
+        },
+        {
+          "home": "Liverpool",
+          "away": "Qarabağ",
+          "time": "21:00"
+        },
+        {
+          "home": "Manchester City",
+          "away": "Galatasaray",
+          "time": "21:00"
+        },
+        {
+          "home": "Pafos",
+          "away": "Slavia Praha",
+          "time": "21:00"
+        },
+        {
+          "home": "Paris Saint-Germain",
+          "away": "Newcastle United",
+          "time": "21:00"
+        },
+        {
+          "home": "PSV Eindhoven",
+          "away": "Bayern München",
+          "time": "21:00"
+        },
+        {
+          "home": "Union Saint-Gilloise",
+          "away": "Atalanta",
+          "time": "21:00"
+        },
+        {
+          "home": "Benfica",
+          "away": "Real Madrid",
+          "time": "21:00"
+        },
+        {
+          "home": "Napoli",
+          "away": "Chelsea",
+          "time": "21:00"
+        }
+      ]
+    }
+  ]
+}

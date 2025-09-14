@@ -1,0 +1,18 @@
+Checking Champions League 2020/21 status...
+✅ Found: UEFA Champions League 2020/21 (ID: cmb93082x0000hu7i0zh875u1)
+📊 Current state:
+   Games: 125
+   Bets: 0
+   Users: 9
+   National team games: 0
+
+👥 User points:
+   Francky: 0 points, 0 bets
+   Steph: 0 points, 0 bets
+   Benouz: 0 points, 0 bets
+   Renato: 0 points, 0 bets
+   Keke: 0 points, 0 bets
+   Baptiste: 0 points, 0 bets
+   Fifi: 0 points, 0 bets
+   Nono: 0 points, 0 bets
+   Yann: 0 points, 0 bets

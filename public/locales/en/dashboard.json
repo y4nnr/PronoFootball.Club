@@ -1,0 +1,22 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Welcome to your personal dashboard",
+  "statsOverview": "Your Performance Overview",
+  "statsOverviewSubtitle": "Track your progress and achievements",
+  "competitions": {
+    "active": "Active Competitions",
+    "noActive": "No active competitions at the moment",
+    "view": "View"
+  },
+  "bettingGames": {
+    "title": "Upcoming Games",
+    "noGames": "No upcoming games at the moment",
+    "placedBets": "Placed Bets"
+  },
+  "stats": {
+    "points": "Points",
+    "averagePerMatch": "Average per match",
+    "ranking": "Ranking",
+    "predictions": "Predictions"
+  }
+} 

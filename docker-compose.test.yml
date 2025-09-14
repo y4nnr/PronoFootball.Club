@@ -1,0 +1,23 @@
+services:
+  app:
+    image: pronofootball-app-ready:latest
+    ports:
+      - '3002:3000'
+    depends_on:
+      - db
+    environment:
+      - NEXTAUTH_URL=http://localhost:3002
+      - NEXTAUTH_SECRET=your-secret-key-here
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/pronofootball?schema=public
+    command: npm start
+    restart: unless-stopped
+
+  db:
+    image: pronofootball-db-with-data:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pronofootball
+    ports:
+      - "5433:5432"
+    restart: unless-stopped 

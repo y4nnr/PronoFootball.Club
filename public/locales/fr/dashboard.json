@@ -1,0 +1,34 @@
+{
+  "title": "Tableau de bord",
+  "statsOverview": "Performances All-Time",
+  "competitions": {
+    "active": "Compétitions actives",
+    "noActive": "Aucune compétition active pour le moment",
+    "view": "Voir"
+  },
+  "availableCompetitions": {
+    "title": "Compétitions disponibles",
+    "noAvailable": "Aucune compétition disponible pour le moment"
+  },
+  "bettingGames": {
+    "title": "Matchs à venir",
+    "noGames": "Aucun match à venir pour le moment",
+    "placedBets": "Pronostics placés"
+  },
+  "gamesOfDay": {
+    "title": "Matchs du jour",
+    "noGames": "Aucun match aujourd'hui"
+  },
+  "stats": {
+    "points": "Points",
+    "averagePerMatch": "Moyenne par match",
+    "ranking": "Classement",
+    "predictions": "Pronostics"
+  },
+  "gamesPlayed": "Matchs joués",
+  "currentStreak": "Série de Prédictions Correctes",
+  "bestStreak": "Meilleure Série de Prédictions Correctes",
+  "common": {
+    "retry": "Réessayer"
+  }
+} 

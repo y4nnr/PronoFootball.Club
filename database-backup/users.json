@@ -1,0 +1,123 @@
+[
+  {
+    "id": "cmb8hadde0000humtq0cyaiqi",
+    "name": "Francky",
+    "email": "kiki@kiki.com",
+    "hashedPassword": "$2b$10$f8E25RdwC6P9REUiM5UmEebpb.ZyXisSUa02r4wYjLXdvb.KyC4dG",
+    "role": "user",
+    "createdAt": "2025-05-28T21:49:42.570Z",
+    "updatedAt": "2025-05-28T21:49:42.570Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t39.30808-6/285644828_10227183198110159_4762676465162053915_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=fSIyJSzyydcQ7kNvwF-UZ-M&_nc_oc=AdmYpKeGGM269yiIeKG2XiV15XxyKwzw4Cui9nN1sEqgsMGrvQ6k0YUwUocNN22in-0&_nc_zt=23&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=LXPFKUljxtUItV0aVZ_hMQ&oh=00_AfKxwcGJXhn_gfAbwY-0HQQ1VkhMBjfyFB_1tl8-zcJLrQ&oe=683D53FE",
+    "needsPasswordChange": false
+  },
+  {
+    "id": "cmb8h8iwy000zhuguoglwh09m",
+    "name": "Steph",
+    "email": "steph@euro2016.com",
+    "hashedPassword": "$2b$10$CTYGnF4xLb9S2VmvPPY4bOPvzONXBt5JyqtyG2r3pHMVx5jBcSJGK",
+    "role": "user",
+    "createdAt": "2025-05-28T21:48:16.450Z",
+    "updatedAt": "2025-05-28T21:50:17.468Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t39.30808-6/269593566_10158561804040835_6131770268548937429_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=sFxzrIJd8oEQ7kNvwE0qGgX&_nc_oc=AdmgqNpFLlShdJTSMtHFuOVQaMMPer6FK-faOnqCaErLM9giUT6-MZJirrQVEWifCHE&_nc_zt=23&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=SpnaoenmNMWLG5z4GbW88g&oh=00_AfKhO-q7cCKjE2jVW8qH8mPIwicz263GXwMM2ZlMKtZvIw&oe=683D6578",
+    "needsPasswordChange": true
+  },
+  {
+    "id": "cmb8h8iwv000uhugulpqb7m9i",
+    "name": "Benouz",
+    "email": "benouz@euro2016.com",
+    "hashedPassword": "$2b$10$0CUmOIWb.85D0VoCPT8yyOIG/UiaEth4HqVz6t74IkQ3QEtz1y0eS",
+    "role": "user",
+    "createdAt": "2025-05-28T21:48:16.448Z",
+    "updatedAt": "2025-05-28T21:50:41.510Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t39.30808-6/348270444_1143016623758312_3289771348323190350_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=avVXBMg7AYoQ7kNvwF72IO-&_nc_oc=AdnghFuZWrdzC-s6P7OBzd-N5rUCHDJ6UqFu36k8mo-dSc9Qf5oOc1uFdDWEkfnk9FM&_nc_zt=23&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=m7HN5aKbJ6zIQmlUkdfQFg&oh=00_AfJx7Z5AE98qbwkZmDBcBrJpE1vfrlx64se7YeTB3272NA&oe=683D3CDB",
+    "needsPasswordChange": true
+  },
+  {
+    "id": "cmb8h8ivp0000hugu45flefik",
+    "name": "Renato",
+    "email": "renato@euro2016.com",
+    "hashedPassword": "$2b$10$bUjKdflNvPdYYRcsoV8bZ.YA.bFqvROyFJy5Kei/MPOby6pA74P6.",
+    "role": "user",
+    "createdAt": "2025-05-28T21:48:16.406Z",
+    "updatedAt": "2025-05-28T21:51:06.965Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t1.6435-9/186950397_10159125446701183_3061625113971079098_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=nbPBIZui-UkQ7kNvwFV-83w&_nc_oc=Adn7a8AHFKO6fpjJ6cMTIs_pYF636iEUrd4dpY0hRpQKaUTKKEIkt7NIH6sLePLfSrk&_nc_zt=23&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=wt1gR-CfSPXnIQVwuqiebw&oh=00_AfIFI6dagSk-DG_pBoL8PBwEnUB3vQA-cwVCX2YBQT4XBg&oe=685F0AA4",
+    "needsPasswordChange": true
+  },
+  {
+    "id": "cmb8h8iw70005huguk7orxxd9",
+    "name": "Keke",
+    "email": "keke@euro2016.com",
+    "hashedPassword": "$2b$10$HEVNdJtmx/1ISt0Jaf8BeueMJmqr9ndMBgj5ni/fiEO5D854cq2rm",
+    "role": "user",
+    "createdAt": "2025-05-28T21:48:16.424Z",
+    "updatedAt": "2025-05-28T21:51:27.436Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t39.30808-6/288749875_10226480668430628_2130634247573872911_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=t1wsnq_sEzcQ7kNvwE3WOyG&_nc_oc=AdnMOmYAou3BM8BEbxjpH3ZDJsuMKf0CuZQS9fbtmjrGWN0NuxO4CQqz7r9rhKkqMEY&_nc_zt=23&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=9VQzqPpJVQs3V1iGwy6xbw&oh=00_AfKW2RRw_ORp3ToGS4Hbu-hmH8zijVom-mjeQaqmf3VVUA&oe=683D5C07",
+    "needsPasswordChange": true
+  },
+  {
+    "id": "cmb8h8iwo000khugudtoa9bqx",
+    "name": "Baptiste",
+    "email": "baptiste@euro2016.com",
+    "hashedPassword": "$2b$10$p6dVwmPmAIY0IHLKOp2zs.iNYnX4wQAei6Q4WepfMf8xSVdkWGqQK",
+    "role": "user",
+    "createdAt": "2025-05-28T21:48:16.440Z",
+    "updatedAt": "2025-05-28T21:51:51.307Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t1.6435-9/104329210_10158610868376738_1075331199655761748_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=wR7o3-5bcJoQ7kNvwEUKcP4&_nc_oc=AdmuZssobH21x_6zY8Ukp9NjjDwWOSjTw9xsw_XHHXJsSCmXGky_jpC4-4SHqdNYa_E&_nc_zt=23&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=vbsXld_ZnEVYv4H53jV8kw&oh=00_AfJZosdVBkvN7vqvlnk8a2r62SfxIzcc91iWK6sdBeo9RA&oe=685F0247",
+    "needsPasswordChange": true
+  },
+  {
+    "id": "cmb8h8iwf000ahugu1y6t10p4",
+    "name": "Fifi",
+    "email": "fifi@euro2016.com",
+    "hashedPassword": "$2b$10$KoistYghCn0/XvEafrWb7ePWcbjzvQDECjfFBmPtOVOdC1QCpkTZa",
+    "role": "user",
+    "createdAt": "2025-05-28T21:48:16.431Z",
+    "updatedAt": "2025-05-28T21:52:12.016Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t39.30808-6/462622833_3766039176988646_5316419587072077982_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=I2rbFa4fQ8cQ7kNvwHC-xgC&_nc_oc=AdmxcWS_lD5Qt9Pzh3gVrJr_tlI2Eep-2Cne-ofZGpQM06i-Rco9UK6Zrjpgfw-LoHI&_nc_zt=23&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=zJOoDCpIQ695V7Qz2aIGog&oh=00_AfI4hHc9U8jfU5rymoS5rRFEpHNIUvy8Mm9hZQOEYcsHiQ&oe=683D6BAC",
+    "needsPasswordChange": true
+  },
+  {
+    "id": "cmb8h8iws000phugutlb6m8nd",
+    "name": "Nono",
+    "email": "nono@euro2016.com",
+    "hashedPassword": "$2b$10$GTi9yviHOgnKRJlQ5r/BVeSSfKztyNLdRUSJQTbJFH1Fhs.1JzSHK",
+    "role": "user",
+    "createdAt": "2025-05-28T21:48:16.444Z",
+    "updatedAt": "2025-05-28T21:52:37.892Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t39.30808-6/467430601_10231629783102169_2405204419334480032_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=ApdGGG24CT0Q7kNvwEq1E6L&_nc_oc=AdmH4QGjsBRgKK7kzuV6_zw6fZsJUTmKG5rBWwkiWY9v9Wo9Qq-xWA5VlLEDR4LIcPE&_nc_zt=23&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=CXTcprc-Tq1f_ZHXci4A3w&oh=00_AfJHxFECWv3yazH1Xoes_71gtqaZC-cHXA7hZBrRe-Filg&oe=683D6624",
+    "needsPasswordChange": true
+  },
+  {
+    "id": "cmb8h8iwi000fhugusxnig8f9",
+    "name": "Yann",
+    "email": "yann@euro2016.com",
+    "hashedPassword": "$2b$10$gr2kfGszGE.cA54rfQ3UW.fSqPR3uIBcOJPHm1aoHgq4Xxxr17FJ2",
+    "role": "user",
+    "createdAt": "2025-05-28T21:48:16.434Z",
+    "updatedAt": "2025-05-28T21:53:01.920Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t39.30808-1/467665605_10233589062097754_4805349436589735758_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=108&ccb=1-7&_nc_sid=e99d92&_nc_ohc=yrWDtYqrT6MQ7kNvwF-dLQw&_nc_oc=AdnC1JCD18vQmMUR_XUHUuj7Xd8n-pjSmr3HEjcSWE4rWbYqkiE6gxwMvweHdQz1dcU&_nc_zt=24&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=AjaAZpNumN_MsM3sUG1n_A&oh=00_AfJU9sH7uoS8xx_jl4dNVSsKbze3eCnqp8TCs5-_oRqnwg&oe=683D5133",
+    "needsPasswordChange": true
+  },
+  {
+    "id": "cmb8gbzkv0000hune23wmpo1w",
+    "name": "Admin",
+    "email": "admin@admin",
+    "hashedPassword": "$2b$10$auxWLunErcmfXAelft57Ou7NAmwfWLMn.ryaMf7TF7qCwmOPOcg1K",
+    "role": "ADMIN",
+    "createdAt": "2025-05-28T21:22:58.399Z",
+    "updatedAt": "2025-05-28T21:22:58.399Z",
+    "profilePictureUrl": "https://i.pravatar.cc/150?u=admin",
+    "needsPasswordChange": false
+  },
+  {
+    "id": "cmb8j2vfp0000hu8v2vegzbfq",
+    "name": "Chacha",
+    "email": "chacha@worldcup2018.com",
+    "hashedPassword": "$2b$10$cscldheuM9FXjBUCpIsLoO5ES3Uz8uznXB1duA4e/ha4gNsAPTrfu",
+    "role": "USER",
+    "createdAt": "2025-05-28T22:39:51.973Z",
+    "updatedAt": "2025-05-28T22:42:48.561Z",
+    "profilePictureUrl": "https://scontent.fpoz5-1.fna.fbcdn.net/v/t39.30808-6/468057944_10234190397562688_2540414946884584589_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=tLLaw4aXeHcQ7kNvwGZKhV4&_nc_oc=AdlyfnI1nLNIttyJJmy2m6jiimR8If43oXrnvjhWFErVDByEqJT53b-lfVk8GqwpAC4&_nc_zt=23&_nc_ht=scontent.fpoz5-1.fna&_nc_gid=TvfDrxVvdCr7PkRxDcN9hQ&oh=00_AfJhrvLFQJx86nM7jbtgb2HBzxYMsvVpzn7acLvy9YgaVg&oe=683D515B",
+    "needsPasswordChange": false
+  }
+]

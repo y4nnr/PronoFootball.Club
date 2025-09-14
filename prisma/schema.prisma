@@ -1,0 +1,146 @@
+generator client {
+  provider      = "prisma-client-js"
+  //binaryTargets = ["native", "linux-musl", "linux-arm64-openssl-1.1.x"]
+  binaryTargets = ["native", "darwin-arm64", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String            @id @default(cuid())
+  email                 String            @unique
+  name                  String
+  hashedPassword        String
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  role                  String            @default("user")
+  profilePictureUrl     String?
+  needsPasswordChange   Boolean           @default(false)
+  bets                  Bet[]
+  competitionsLastPlace Competition[]     @relation("CompetitionLastPlace")
+  competitionsWon       Competition[]     @relation("CompetitionWinner")
+  competitions          CompetitionUser[]
+  stats                 UserStats?
+}
+
+model UserStats {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  totalPredictions Int      @default(0) // >= 0
+  totalPoints      Int      @default(0) // >= 0
+  accuracy         Float    @default(0) // 0-100
+  wins             Int      @default(0) // >= 0
+  longestStreak    Int      @default(0) // >= 0
+  exactScoreStreak Int      @default(0) // >= 0
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id])
+}
+
+model Competition {
+  id          String            @id @default(cuid())
+  name        String
+  description String
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  status      String            @default("upcoming")
+  lastPlaceId String?
+  logo        String?
+  winnerId    String?
+  lastPlace   User?             @relation("CompetitionLastPlace", fields: [lastPlaceId], references: [id])
+  winner      User?             @relation("CompetitionWinner", fields: [winnerId], references: [id])
+  users       CompetitionUser[]
+  games       Game[]
+}
+
+model CompetitionUser {
+  id            String      @id @default(cuid())
+  userId        String
+  competitionId String
+  shooters      Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([competitionId, userId])
+}
+
+model Team {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  shortName String?
+  logo      String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  category  TeamCategory @default(NATIONAL)
+  awayGames Game[]       @relation("AwayTeam")
+  homeGames Game[]       @relation("HomeTeam")
+}
+
+model Game {
+  id            String      @id @default(cuid())
+  competitionId String
+  date          DateTime
+  status        GameStatus  @default(UPCOMING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  awayScore     Int?
+  awayTeamId    String
+  homeScore     Int?
+  homeTeamId    String
+  bets          Bet[]
+  awayTeam      Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  homeTeam      Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+}
+
+model Bet {
+  id        String   @id @default(cuid())
+  userId    String
+  gameId    String
+  points    Int      @default(0) // 0-3 points
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  score1    Int      // 0-99
+  score2    Int      // 0-99
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, userId])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum CompetitionStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum GameStatus {
+  UPCOMING
+  LIVE
+  FINISHED
+  CANCELLED
+}
+
+enum BetStatus {
+  PENDING
+  WON
+  LOST
+  CANCELLED
+}
+
+enum TeamCategory {
+  NATIONAL
+  CLUB
+}
