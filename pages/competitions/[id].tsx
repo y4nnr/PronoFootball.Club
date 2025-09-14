@@ -7,6 +7,7 @@ import { prisma } from '../../lib/prisma';
 import { TrophyIcon, CalendarIcon, UsersIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import PlayersPerformanceWidget from '../../components/PlayersPerformanceWidget';
 
 interface CompetitionUser {
   id: string;
@@ -70,6 +71,27 @@ interface CompetitionStats {
   shooters?: number;
 }
 
+interface PlayerLastGamePerformance {
+  gameId: string;
+  date: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeTeamLogo: string | null;
+  awayTeamLogo: string | null;
+  competition: string;
+  actualScore: string;
+  predictedScore: string;
+  points: number | null;
+  result: 'exact' | 'correct' | 'wrong' | 'no_bet';
+}
+
+interface PlayerPerformance {
+  userId: string;
+  userName: string;
+  profilePictureUrl: string | null;
+  lastGamesPerformance: PlayerLastGamePerformance[];
+}
+
 interface CompetitionDetailsProps {
   competition: {
     id: string;
@@ -115,6 +137,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const [gamesWithBets, setGamesWithBets] = useState<Map<string, any[]>>(new Map());
   const [loadingBets, setLoadingBets] = useState<Set<string>>(new Set());
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
+  const [playersPerformance, setPlayersPerformance] = useState<PlayerPerformance[]>([]);
+  const [loadingPerformance, setLoadingPerformance] = useState(false);
 
   // Toggle game expansion
   const toggleGameExpansion = (gameId: string) => {
@@ -160,6 +184,28 @@ export default function CompetitionDetails({ competition, competitionStats, game
       });
     }
   };
+
+  const fetchPlayersPerformance = async () => {
+    if (loadingPerformance) return;
+    
+    setLoadingPerformance(true);
+    try {
+      const response = await fetch(`/api/competitions/${competition.id}/players-performance`);
+      if (response.ok) {
+        const data = await response.json();
+        setPlayersPerformance(data.playersPerformance || []);
+      }
+    } catch (error) {
+      console.error('Error fetching players performance:', error);
+    } finally {
+      setLoadingPerformance(false);
+    }
+  };
+
+  // Fetch players performance on component mount
+  useEffect(() => {
+    fetchPlayersPerformance();
+  }, [competition.id]);
 
 
   const getPositionColor = (position: number) => {
@@ -326,6 +372,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
         )}
 
+
         {/* Current Ranking Section - Always visible for better UX */}
         <div className="bg-white rounded-xl shadow-md border border-gray-300 overflow-hidden mb-8">
           <div className="px-6 py-4 border-b border-gray-200">
@@ -421,6 +468,16 @@ export default function CompetitionDetails({ competition, competitionStats, game
             </div>
           )}
         </div>
+
+        {/* Players Performance Widget - Only show if there are finished games */}
+        {playersPerformance.length > 0 && (
+          <PlayersPerformanceWidget
+            playersPerformance={playersPerformance}
+            competitionName={competition.name}
+            totalGames={playersPerformance[0]?.lastGamesPerformance.length || 0}
+            currentUserId={currentUserId}
+          />
+        )}
 
         {/* Games Section */}
         <div className="bg-white rounded-xl shadow-md border border-gray-300 overflow-hidden mb-8">
@@ -683,8 +740,6 @@ export default function CompetitionDetails({ competition, competitionStats, game
             })()}
           </div>
         </div>
-
-
 
         {/* Competition Summary */}
         <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6">
