@@ -393,8 +393,8 @@ const GamesOfDaySection = memo(({ games, t }: { games: BettingGame[]; t: (key: s
                   name: game.awayTeam.name,
                   logo: game.awayTeam.logo || undefined
                 },
-                homeScore: game.homeScore || undefined,
-                awayScore: game.awayScore || undefined,
+                homeScore: game.homeScore !== null ? game.homeScore : undefined,
+                awayScore: game.awayScore !== null ? game.awayScore : undefined,
                 bets: bets
               }} 
               currentUserId={currentUserId} 
