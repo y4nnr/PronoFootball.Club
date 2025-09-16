@@ -527,8 +527,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
               return sortedGames && sortedGames.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {sortedGames.map((game) => {
-                    // Allow betting on UPCOMING and LIVE games
-                    const isOpen = game.status === 'UPCOMING' || game.status === 'LIVE';
+                    // Only UPCOMING games are clickable for betting
+                    const isOpen = game.status === 'UPCOMING';
                     const userHasBet = game.bets.some(bet => bet.userId === currentUserId);
                     
                     // Determine border color based on user bet (same as home page)
@@ -549,11 +549,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     const cardContent = (
                       <div className={`${getBackgroundColor()} border rounded-2xl shadow flex flex-col items-stretch transition ${
                         isOpen ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 
-                        game.status === 'FINISHED' ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : ''
+                        game.status === 'FINISHED' ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 'cursor-default'
                       } p-5 gap-3 ${getBorderColor()}`}
                         onClick={() => {
                           if (isOpen) {
-                            // Navigate to betting page for upcoming/live games
+                            // Navigate to betting page for upcoming games only
                             window.location.href = `/betting/${game.id}`;
                           } else if (game.status === 'FINISHED') {
                             // Toggle expansion for finished games
@@ -563,6 +563,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                               fetchGameBets(game.id);
                             }
                           }
+                          // LIVE games are not clickable (no action)
                         }}
                         >
                           {/* Date & Status */}
