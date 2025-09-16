@@ -81,7 +81,7 @@ export default async function handler(
 
     // Get upcoming games from active competitions (excluding today's games)
     const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     
     const games = await prisma.game.findMany({
       where: {
@@ -90,7 +90,7 @@ export default async function handler(
         },
         status: 'UPCOMING', // Only games available for betting
         date: {
-          gt: startOfDay // Exclude today's games (they go to "Matchs du jour")
+          gte: endOfDay // Exclude today's games (they go to "Matchs du jour")
         }
       },
       include: {
@@ -131,7 +131,8 @@ export default async function handler(
       },
       orderBy: {
         date: 'asc'
-      }
+      },
+      take: 6 // Limit to 6 upcoming games after today
     });
 
     // Format the response
