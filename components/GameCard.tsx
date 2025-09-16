@@ -49,6 +49,7 @@ function formatDateTime(dateString: string) {
 export default function GameCard({ game, currentUserId, href, context = 'home' }: GameCardProps) {
   const { t } = useTranslation();
   const isOpen = game.status === 'UPCOMING';
+  const isClickable = game.status === 'UPCOMING'; // Only UPCOMING games are clickable
   
   // Check if user has placed a bet on this game
   const userHasBet = currentUserId ? game.bets.some(bet => bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) : false;
@@ -84,7 +85,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home' }
   };
   
   const cardContent = (
-    <div className={`${getBackgroundColor()} border rounded-2xl shadow flex flex-col items-stretch transition p-5 gap-3 ${getBorderColor()} ${isOpen ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : ''}`}>
+    <div className={`${getBackgroundColor()} border rounded-2xl shadow flex flex-col items-stretch transition p-5 gap-3 ${getBorderColor()} ${isClickable ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 'cursor-default'}`}>
       {/* Date & Status */}
       <div className="flex items-center w-full justify-between pb-3 border-b border-neutral-200">
         <span className="text-xs text-neutral-500">
@@ -175,8 +176,12 @@ export default function GameCard({ game, currentUserId, href, context = 'home' }
       )}
     </div>
   );
-  if (href) {
+  
+  // Only wrap in Link if the game is clickable (UPCOMING status)
+  if (href && isClickable) {
     return <Link href={href} className="block">{cardContent}</Link>;
   }
+  
+  // For non-clickable games (LIVE/FINISHED), return the card without Link wrapper
   return cardContent;
 } 
