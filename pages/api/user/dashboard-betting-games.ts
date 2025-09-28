@@ -132,7 +132,7 @@ export default async function handler(
       orderBy: {
         date: 'asc'
       },
-      take: 6 // Limit to 6 upcoming games after today
+      take: 9 // Limit to 9 upcoming games after today
     });
 
     // Format the response
@@ -179,7 +179,25 @@ export default async function handler(
       };
     });
 
-    return res.status(200).json(bettingGames);
+    // Add cache-busting headers
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    console.log('🎯 DASHBOARD BETTING GAMES API LOG:');
+    console.log('📊 Total games found:', games.length);
+    console.log('📅 Games details:', games.map(g => ({
+      id: g.id,
+      homeTeam: g.homeTeam.name,
+      awayTeam: g.awayTeam.name,
+      date: g.date,
+      status: g.status
+    })));
+    
+    return res.status(200).json({
+      games: bettingGames,
+      timestamp: Date.now() // Force cache invalidation
+    });
   } catch (error) {
     console.error('Dashboard betting games API error:', error);
     return res.status(500).json({ error: "Internal server error" });

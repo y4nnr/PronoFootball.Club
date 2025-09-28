@@ -290,6 +290,9 @@ AvailableCompetitionsSection.displayName = 'AvailableCompetitionsSection';
 const BettingGamesSection = memo(({ games, t }: { games: BettingGame[]; t: (key: string) => string }) => {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+  
+  console.log('🎯 BettingGamesSection - Received games:', games?.length || 0, 'games');
+  console.log('🎯 BettingGamesSection - Games data:', games);
   return (
     <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-6 mb-8">
       <div className="flex items-center justify-between mb-6">
@@ -303,7 +306,7 @@ const BettingGamesSection = memo(({ games, t }: { games: BettingGame[]; t: (key:
 
       {games && games.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {games.slice(0, 6).map((game) => {
+          {games.map((game) => {
             const bets = game.allUserBets.map((bet: UserBet) => {
               if (currentUserId && bet.userId === currentUserId && game.userBet) {
                 return {
@@ -430,7 +433,7 @@ export default function Dashboard() {
 
       const [dashboardRes, bettingRes, gamesOfDayRes, rankingsRes, performanceRes] = await Promise.all([
         fetch('/api/user/dashboard'),
-        fetch('/api/user/dashboard-betting-games'),
+        fetch('/api/user/dashboard-betting-games', { cache: 'no-store' }),
         fetch('/api/user/games-of-day'),
         fetch('/api/stats/user-rankings'),
         fetch('/api/stats/user-performance', { cache: 'no-store' })
@@ -448,11 +451,14 @@ export default function Dashboard() {
         performanceRes.json()
       ]);
 
-      console.log('Fetched betting games:', bettingData); // DEBUG LOG
-      console.log('Fetched games of the day:', gamesOfDayData); // DEBUG LOG
+      console.log('🎯 FRONTEND LOG - Fetched betting games:', bettingData); // DEBUG LOG
+      console.log('🎯 FRONTEND LOG - Games count:', bettingData.games?.length || bettingData.length); // DEBUG LOG
+      console.log('🎯 FRONTEND LOG - Fetched games of the day:', gamesOfDayData); // DEBUG LOG
 
       setDashboardData(dashboardData);
-      setBettingGames(bettingData);
+      const gamesToSet = bettingData.games || bettingData;
+      console.log('🎯 FRONTEND LOG - Setting betting games:', gamesToSet.length, 'games');
+      setBettingGames(gamesToSet); // Handle both old and new API format
       setGamesOfDay(gamesOfDayData);
       setUserRankings(rankingsData);
       setLastGamesPerformance(performanceData.lastGamesPerformance || []);
