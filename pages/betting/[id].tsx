@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../api/auth/[...nextauth]';
 import { prisma } from '@lib/prisma';
 import { useTranslation } from '../../hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -23,6 +25,11 @@ interface Game {
     id: string;
     name: string;
   };
+  bets: {
+    id: string;
+    score1: number;
+    score2: number;
+  }[];
 }
 
 interface BettingPageProps {
@@ -41,21 +48,128 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   const [success, setSuccess] = useState(false);
   const [existingBet, setExistingBet] = useState<{ score1: number; score2: number } | null>(null);
   const [isLoadingBet, setIsLoadingBet] = useState(false);
+  const [allGamesList, setAllGamesList] = useState<Game[]>(allGames);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreGames, setHasMoreGames] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  // Debug logging
+  console.log('🎯 FRONTEND LOG - Initial allGames:', allGames.length);
+  console.log('🎯 FRONTEND LOG - Initial allGamesList:', allGamesList.length);
+
+  // Function to load more games
+  const loadMoreGames = useCallback(async () => {
+    if (isLoadingMore || !hasMoreGames) return;
+    
+    setIsLoadingMore(true);
+    try {
+      const response = await fetch(`/api/user/dashboard-betting-games?page=${currentPage + 1}&limit=12`);
+      const data = await response.json();
+      
+      if (data.games && data.games.length > 0) {
+        setAllGamesList(prev => [...prev, ...data.games]);
+        setCurrentPage(prev => prev + 1);
+        setHasMoreGames(data.hasMore);
+      } else {
+        setHasMoreGames(false);
+      }
+    } catch (error) {
+      console.error('Error loading more games:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [currentPage, hasMoreGames, isLoadingMore]);
 
   // Navigation functions
   const goToPreviousGame = useCallback(() => {
-    if (allGames && currentGameIndex > 0) {
-      const previousGame = allGames[currentGameIndex - 1];
+    if (allGamesList && currentGameIndex > 0) {
+      const previousGame = allGamesList[currentGameIndex - 1];
       router.push(`/betting/${previousGame.id}`);
     }
-  }, [currentGameIndex, allGames, router]);
+  }, [currentGameIndex, allGamesList, router]);
 
   const goToNextGame = useCallback(() => {
-    if (allGames && currentGameIndex < allGames.length - 1) {
-      const nextGame = allGames[currentGameIndex + 1];
+    if (allGamesList && currentGameIndex < allGamesList.length - 1) {
+      const nextGame = allGamesList[currentGameIndex + 1];
       router.push(`/betting/${nextGame.id}`);
     }
-  }, [currentGameIndex, allGames, router]);
+  }, [currentGameIndex, allGamesList, router]);
+
+  // Scroll functions for carousel navigation
+  const scrollCarousel = useCallback((direction: 'left' | 'right') => {
+    const carousel = document.getElementById('games-carousel');
+    if (!carousel) return;
+    
+    const scrollAmount = 200; // Scroll by 200px
+    const currentScroll = carousel.scrollLeft;
+    const newScroll = direction === 'left' 
+      ? currentScroll - scrollAmount 
+      : currentScroll + scrollAmount;
+    
+    carousel.scrollTo({
+      left: newScroll,
+      behavior: 'smooth'
+    });
+  }, []);
+
+  // Scroll to center the selected game
+  const scrollToSelectedGame = useCallback(() => {
+    const carousel = document.getElementById('games-carousel');
+    if (!carousel) return;
+    
+    const gameCard = carousel.children[currentGameIndex] as HTMLElement;
+    if (!gameCard) return;
+    
+    const carouselRect = carousel.getBoundingClientRect();
+    const gameRect = gameCard.getBoundingClientRect();
+    const scrollLeft = carousel.scrollLeft + (gameRect.left - carouselRect.left) - (carouselRect.width / 2) + (gameRect.width / 2);
+    
+    carousel.scrollTo({
+      left: scrollLeft,
+      behavior: 'smooth'
+    });
+  }, [currentGameIndex]);
+
+  // Auto-scroll to selected game when it changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollToSelectedGame();
+    }, 100); // Small delay to ensure DOM is updated
+    
+    return () => clearTimeout(timer);
+  }, [currentGameIndex, scrollToSelectedGame]);
+
+  // Check scroll position and update arrow states
+  const updateScrollState = useCallback(() => {
+    const carousel = document.getElementById('games-carousel');
+    if (!carousel) return;
+    
+    const { scrollLeft, scrollWidth, clientWidth } = carousel;
+    const isAtStart = scrollLeft <= 0;
+    const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 10; // 10px threshold
+    
+    setCanScrollLeft(!isAtStart);
+    setCanScrollRight(!isAtEnd);
+    
+    // Check for infinite loading
+    const isNearEnd = scrollLeft + clientWidth >= scrollWidth - 100;
+    if (isNearEnd && hasMoreGames && !isLoadingMore) {
+      loadMoreGames();
+    }
+  }, [hasMoreGames, isLoadingMore, loadMoreGames]);
+
+  // Scroll detection for infinite loading and arrow states
+  useEffect(() => {
+    const carousel = document.getElementById('games-carousel');
+    if (carousel) {
+      carousel.addEventListener('scroll', updateScrollState);
+      // Initial state check
+      updateScrollState();
+      return () => carousel.removeEventListener('scroll', updateScrollState);
+    }
+  }, [updateScrollState]);
 
   useEffect(() => {
     const fetchExistingBet = async () => {
@@ -123,6 +237,22 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
       // Update existing bet state to reflect the new bet
       setExistingBet({ score1: parseInt(homeScore), score2: parseInt(awayScore) });
       
+      // Update the game card in the carousel to show the bet
+      setAllGamesList(prevGames => 
+        prevGames.map(gameItem => 
+          gameItem.id === game.id 
+            ? {
+                ...gameItem,
+                bets: [{ 
+                  id: data.id || 'temp-id', 
+                  score1: parseInt(homeScore), 
+                  score2: parseInt(awayScore) 
+                }]
+              }
+            : gameItem
+        )
+      );
+      
       // Show success message
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000); // Hide after 3 seconds
@@ -142,144 +272,183 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="p-6">
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {t('betting.placeYourBet')}
-              </h1>
-              <p className="text-gray-500">
-                {game.competition.name} - {new Date(game.date).toLocaleDateString('fr-FR')}
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Modern Status Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+                 <div className="flex items-center space-x-4">
+                   <div className={`px-4 py-2 rounded-full text-sm font-bold border-2 ${
+                     game.status === 'UPCOMING' 
+                       ? 'bg-orange-100 text-orange-800 border-orange-300' 
+                       : game.status === 'LIVE' 
+                       ? 'bg-red-100 text-red-800 border-red-300 animate-pulse' 
+                       : 'bg-gray-100 text-gray-800 border-gray-300'
+                   }`}>
+                     {game.status === 'UPCOMING' ? '⏰ À venir' : game.status === 'LIVE' ? '🔴 En direct' : '✅ Terminé'}
+                   </div>
+                 </div>
+            <div className="text-right">
+              <div className="text-sm font-medium text-gray-500 uppercase tracking-wide">Compétition</div>
+              <div className="text-xl font-bold text-gray-900">{game.competition.name}</div>
             </div>
+          </div>
+        </div>
 
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center space-x-4">
-                {game.homeTeam.logo && (
-                  <img
-                    src={game.homeTeam.logo}
-                    alt={game.homeTeam.name}
-                    className="w-12 h-12 object-contain"
-                  />
-                )}
-                <span className="text-lg font-medium">{game.homeTeam.name}</span>
-              </div>
-              <div className="text-gray-500">{t('betting.vs')}</div>
-              <div className="flex items-center space-x-4">
-                <span className="text-lg font-medium">{game.awayTeam.name}</span>
-                {game.awayTeam.logo && (
-                  <img
-                    src={game.awayTeam.logo}
-                    alt={game.awayTeam.name}
-                    className="w-12 h-12 object-contain"
-                  />
-                )}
-              </div>
-            </div>
+        <div className="bg-white rounded-3xl shadow-2xl border-2 border-gray-100 overflow-hidden">
+          <div className="p-8">
 
-            {/* Game Navigation Carousel */}
-            {allGames && allGames.length > 1 && (
+            {/* Game Navigation */}
+            {allGamesList && allGamesList.length > 1 && (
               <div className="mb-6">
-                {/* Navigation Controls */}
-                <div className="flex items-center justify-between mb-3">
+                {/* Game Carousel Container */}
+                <div className="relative bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200 shadow-md w-full group min-h-[200px]">
+                  {/* Mobile: Show 1-2 games, Desktop: Show 4-5 games */}
+                  {/* Left Arrow */}
                   <button
-                    onClick={goToPreviousGame}
-                    disabled={currentGameIndex === 0}
-                    className={`flex items-center px-3 py-2 rounded-md border text-sm transition-colors ${
-                      currentGameIndex === 0
-                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400'
+                    onClick={() => scrollCarousel('left')}
+                    disabled={!canScrollLeft}
+                    className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
+                      canScrollLeft 
+                        ? 'opacity-100 hover:scale-110' 
+                        : 'opacity-0 pointer-events-none'
                     }`}
                   >
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Précédent
                   </button>
-                  
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-600 font-medium">
-                      {currentGameIndex + 1} / {allGames.length}
-                    </span>
-                    <div className="flex space-x-1">
-                      {allGames.slice(0, 12).map((_, index) => (
-                        <div
-                          key={index}
-                          className={`w-2 h-2 rounded-full ${
-                            index === currentGameIndex ? 'bg-blue-600' : 'bg-gray-300'
-                          }`}
-                        />
-                      ))}
-                      {allGames.length > 12 && (
-                        <span className="text-xs text-gray-400 ml-1">...</span>
-                      )}
-                    </div>
-                  </div>
-                  
+
+                  {/* Right Arrow */}
                   <button
-                    onClick={goToNextGame}
-                    disabled={currentGameIndex === allGames.length - 1}
-                    className={`flex items-center px-3 py-2 rounded-md border text-sm transition-colors ${
-                      currentGameIndex === allGames.length - 1
-                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400'
+                    onClick={() => scrollCarousel('right')}
+                    disabled={!canScrollRight}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
+                      canScrollRight 
+                        ? 'opacity-100 hover:scale-110' 
+                        : 'opacity-0 pointer-events-none'
                     }`}
                   >
-                    Suivant
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
-                </div>
-                
-                {/* Quick Game Preview List */}
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="text-xs text-gray-500 mb-2 text-center">
-                    Prochains 12 matchs disponibles
-                    <span className="block text-[10px] mt-1 opacity-75">
-                      Utilisez ← → ou cliquez pour naviguer
-                    </span>
-                  </div>
-                  <div className="flex space-x-2 overflow-x-auto pb-1">
-                    {allGames.map((gameItem, index) => (
+
+                  {/* Carousel Content */}
+                  <div 
+                    id="games-carousel"
+                    className="flex space-x-3 sm:space-x-4 overflow-x-auto pb-4 scroll-smooth px-2 py-4" 
+                    style={{ 
+                      scrollbarWidth: 'none', 
+                      msOverflowStyle: 'none',
+                      scrollSnapType: 'x mandatory'
+                    }}
+                  >
+                    {allGamesList.map((gameItem, index) => (
                       <button
                         key={gameItem.id}
                         onClick={() => router.push(`/betting/${gameItem.id}`)}
-                        className={`flex-shrink-0 px-2 py-2 rounded-md text-xs transition-colors min-w-[100px] ${
-                          index === currentGameIndex
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-200'
-                        }`}
+                     className={`relative p-3 sm:p-4 rounded-xl transition-all duration-300 flex-shrink-0 w-[140px] sm:w-[180px] min-w-[140px] sm:min-w-[180px] scroll-snap-start my-2 ${
+                       index === currentGameIndex
+                         ? 'bg-white text-gray-700 border-4 border-gray-400 shadow-2xl transform scale-105 z-10'
+                         : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 shadow-lg hover:shadow-xl hover:scale-102'
+                     }`}
                       >
+                        {/* Bet Status Indicator */}
+                        {gameItem.bets && gameItem.bets.length > 0 && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                        
                         <div className="text-center">
-                          <div className="font-medium truncate text-[10px] leading-tight">
-                            {gameItem.homeTeam.name.length > 8 
-                              ? gameItem.homeTeam.name.substring(0, 8) + '...' 
-                              : gameItem.homeTeam.name
-                            } vs {gameItem.awayTeam.name.length > 8 
-                              ? gameItem.awayTeam.name.substring(0, 8) + '...' 
-                              : gameItem.awayTeam.name
-                            }
+                          <div className="font-semibold text-xs sm:text-sm mb-1 truncate text-gray-900">
+                            {gameItem.homeTeam.name}
                           </div>
-                          <div className="text-[9px] opacity-75 mt-1">
-                            {new Date(gameItem.date).toLocaleDateString('fr-FR', { 
-                              day: '2-digit', 
-                              month: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                          <div className="text-xs mb-1 font-medium text-gray-500">VS</div>
+                          <div className="font-semibold text-xs sm:text-sm mb-2 truncate text-gray-900">
+                            {gameItem.awayTeam.name}
                           </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-center space-x-1 text-gray-600">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <span className="text-xs font-medium">{new Date(gameItem.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
+                            </div>
+                            <div className="flex items-center justify-center space-x-1 text-gray-600">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span className="text-xs font-medium">{new Date(gameItem.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+                          
+                          {gameItem.bets && gameItem.bets.length > 0 && (
+                            <div className="mt-2 p-1 sm:p-1.5 rounded bg-green-100">
+                              <div className="text-xs font-semibold text-green-700">
+                                {gameItem.bets[0].score1}-{gameItem.bets[0].score2}
+                              </div>
+                            </div>
+                          )}
                         </div>
+                        
+                     {index === currentGameIndex && (
+                       <div className="absolute -top-1 -right-1">
+                         <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gray-400 rounded-full flex items-center justify-center shadow-lg">
+                           <span className="text-white text-xs font-bold">✓</span>
+                         </div>
+                       </div>
+                     )}
                       </button>
                     ))}
+                    
+                    {/* Loading indicator */}
+                    {isLoadingMore && (
+                      <div className="flex items-center justify-center p-3 sm:p-4">
+                        <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600"></div>
+                        <span className="ml-2 text-xs sm:text-sm text-gray-600">Chargement...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
+                
+                {/* Navigation Arrows - Below the carousel (Mobile only) */}
+                {allGamesList && allGamesList.length > 1 && (
+                  <div className="flex sm:hidden justify-center space-x-4 mt-6">
+                    <button
+                      type="button"
+                      onClick={goToPreviousGame}
+                      disabled={currentGameIndex === 0}
+                      className={`px-6 py-3 rounded-xl text-base font-bold transition-all duration-200 ${
+                        currentGameIndex === 0
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105'
+                      }`}
+                    >
+                      ← Précédent
+                    </button>
+                    <button
+                      type="button"
+                      onClick={goToNextGame}
+                      disabled={currentGameIndex === allGamesList.length - 1}
+                      className={`px-6 py-3 rounded-xl text-base font-bold transition-all duration-200 ${
+                        currentGameIndex === allGamesList.length - 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105'
+                      }`}
+                    >
+                      Suivant →
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 transition-all duration-500 ease-in-out">
               {error && (
                 <div className="p-3 bg-red-100 text-red-700 rounded-md">
                   {error}
@@ -295,73 +464,142 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                 </div>
               )}
 
-              {/* Score Input Section with Clear Border */}
-              <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
-                <div className="text-center mb-3">
-                  <h3 className="text-lg font-semibold text-gray-800">Entrez votre pronostic</h3>
-                  <p className="text-sm text-gray-600">Prédisez le score final du match</p>
+              {/* Combined Game Display + Score Input Section */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-md">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Entrez votre pronostic</h3>
+                </div>
+
+                {/* Game Display */}
+                <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-6 mb-6 border border-gray-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 flex-1">
+                      {game.homeTeam.logo && (
+                        <div className="w-16 h-16 rounded-full bg-white p-2 shadow-md border border-gray-100">
+                          <img
+                            src={game.homeTeam.logo}
+                            alt={game.homeTeam.name}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-2xl font-bold text-gray-900">{game.homeTeam.name}</div>
+                        <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Domicile</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mx-6 text-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-lg mb-2">
+                        <span className="text-white text-xl font-bold">VS</span>
+                      </div>
+                      <div className="bg-white rounded-lg p-2 shadow-md border border-gray-200">
+                        <div className="text-xs font-semibold text-gray-600 mb-1">
+                          {new Date(game.date).toLocaleDateString('fr-FR', { 
+                            day: '2-digit', 
+                            month: '2-digit',
+                            year: '2-digit'
+                          })}
+                        </div>
+                        <div className="text-sm font-bold text-gray-800">
+                          {new Date(game.date).toLocaleTimeString('fr-FR', { 
+                            hour: '2-digit', 
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4 flex-1 justify-end">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900">{game.awayTeam.name}</div>
+                        <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Extérieur</div>
+                      </div>
+                      {game.awayTeam.logo && (
+                        <div className="w-16 h-16 rounded-full bg-white p-2 shadow-md border border-gray-100">
+                          <img
+                            src={game.awayTeam.logo}
+                            alt={game.awayTeam.name}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
+                {/* Score Input */}
                 {isLoadingBet ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     <span className="ml-3 text-gray-600">Chargement des données...</span>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between space-x-4">
-                    <div className="flex-1">
-                      <label htmlFor="homeScore" className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('betting.homeScore', { team: game.homeTeam.name })}
-                      </label>
-                      <input
-                        type="number"
-                        id="homeScore"
-                        min="0"
-                        value={homeScore}
-                        onChange={(e) => setHomeScore(e.target.value)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-center text-lg font-semibold"
-                        placeholder="0"
-                        required
-                      />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-500 mx-2">-</div>
-                    <div className="flex-1">
-                      <label htmlFor="awayScore" className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('betting.awayScore', { team: game.awayTeam.name })}
-                      </label>
-                      <input
-                        type="number"
-                        id="awayScore"
-                        min="0"
-                        value={awayScore}
-                        onChange={(e) => setAwayScore(e.target.value)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-center text-lg font-semibold"
-                        placeholder="0"
-                        required
-                      />
+                  <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-md">
+                    <div className="flex items-center justify-between space-x-6">
+                      <div className="flex-1">
+                        <input
+                          type="number"
+                          id="homeScore"
+                          min="0"
+                          value={homeScore}
+                          onChange={(e) => setHomeScore(e.target.value)}
+                          className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-center text-2xl font-bold py-4 transition-all duration-200"
+                          placeholder="0"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="text-2xl font-bold text-gray-400 px-4">-</div>
+                      
+                      <div className="flex-1">
+                        <input
+                          type="number"
+                          id="awayScore"
+                          min="0"
+                          value={awayScore}
+                          onChange={(e) => setAwayScore(e.target.value)}
+                          className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-center text-2xl font-bold py-4 transition-all duration-200"
+                          placeholder="0"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => router.push(`/competitions/${game.competition.id}`)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  {t('betting.cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  {isSubmitting ? 
-                    (existingBet ? t('betting.updatingBet') : t('betting.placingBet')) : 
-                    (existingBet ? t('betting.updateBet') : t('betting.placeBet'))
-                  }
-                </button>
+              {/* Form Action Buttons - Outside the betting box */}
+              <div className="mt-8">
+                <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/competitions/${game.competition.id}`)}
+                    className="px-8 py-4 text-lg font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    {t('betting.cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-10 py-4 text-lg font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 border-2 border-blue-600 rounded-xl hover:from-blue-700 hover:to-blue-800 hover:border-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:transform-none"
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                        <span className="text-lg font-bold">
+                          {existingBet ? t('betting.updatingBet') : t('betting.placingBet')}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span className="text-xl font-black">
+                          {existingBet ? t('betting.updateBet') : t('betting.placeBet')}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -373,6 +611,16 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const gameId = context.params?.id as string;
+  const session = await getServerSession(context.req, context.res, authOptions);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
+  }
 
   try {
     const game = await prisma.game.findUnique({
@@ -417,13 +665,28 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    // Fetch the 12 closest upcoming games for betting from the same competition, sorted by date
+    // Get active competitions (same logic as API)
+    const activeCompetitions = await prisma.competition.findMany({
+      where: {
+        status: { 
+          in: ['ACTIVE', 'active', 'UPCOMING', 'upcoming'] 
+        },
+      },
+      select: { id: true }
+    });
+
+    // Fetch the 12 closest upcoming games for betting from all active competitions, sorted by date
+    const today = new Date();
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    
     const allGames = await prisma.game.findMany({
       where: {
-        competitionId: game.competition.id,
+        competitionId: {
+          in: activeCompetitions.map(comp => comp.id)
+        },
         status: 'UPCOMING',
         date: {
-          gte: new Date() // Only future games
+          gte: endOfDay // Exclude today's games (they go to "Matchs du jour")
         }
       },
       include: {
@@ -446,6 +709,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             id: true,
             name: true
           }
+        },
+        bets: {
+          where: {
+            userId: session.user.id
+          },
+          select: {
+            id: true,
+            score1: true,
+            score2: true
+          }
         }
       },
       orderBy: {
@@ -454,8 +727,25 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       take: 12 // Limit to 12 closest games
     });
 
+    // Ensure the current game is in the list (in case it's not in the next 12)
+    const currentGameInList = allGames.find(g => g.id === gameId);
+    if (!currentGameInList) {
+      // Add the current game to the beginning of the list
+      allGames.unshift(game);
+    }
+
     // Find current game index
     const currentGameIndex = allGames.findIndex(g => g.id === gameId);
+
+    console.log('🎯 GETSERVERPROPS LOG:');
+    console.log('📊 Total games found:', allGames.length);
+    console.log('📅 Games details:', allGames.map(g => ({
+      id: g.id,
+      homeTeam: g.homeTeam.name,
+      awayTeam: g.awayTeam.name,
+      date: g.date,
+      status: g.status
+    })));
 
     return {
       props: {

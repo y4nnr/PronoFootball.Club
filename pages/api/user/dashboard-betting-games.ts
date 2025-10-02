@@ -42,11 +42,17 @@ interface BettingGame {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<BettingGame[] | { error: string }>
+  res: NextApiResponse<{ games: BettingGame[], hasMore: boolean, total: number } | { error: string }>
 ) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  // Get pagination parameters
+  const { page = '1', limit = '12' } = req.query;
+  const pageNum = parseInt(page as string, 10);
+  const limitNum = parseInt(limit as string, 10);
+  const offset = (pageNum - 1) * limitNum;
 
   const session = await getServerSession(req, res, authOptions);
 
@@ -76,13 +82,27 @@ export default async function handler(
     });
 
     if (activeCompetitions.length === 0) {
-      return res.status(200).json([]);
+      return res.status(200).json({ games: [], hasMore: false, total: 0 });
     }
 
     // Get upcoming games from active competitions (excluding today's games)
     const today = new Date();
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     
+    // First, get total count for pagination
+    const totalCount = await prisma.game.count({
+      where: {
+        competitionId: {
+          in: activeCompetitions.map(comp => comp.id)
+        },
+        status: 'UPCOMING',
+        date: {
+          gte: endOfDay
+        }
+      }
+    });
+
+    // Get paginated games
     const games = await prisma.game.findMany({
       where: {
         competitionId: {
@@ -132,7 +152,8 @@ export default async function handler(
       orderBy: {
         date: 'asc'
       },
-      take: 9 // Limit to 9 upcoming games after today
+      skip: offset,
+      take: limitNum
     });
 
     // Format the response
@@ -179,13 +200,17 @@ export default async function handler(
       };
     });
 
+    // Calculate if there are more games
+    const hasMore = offset + games.length < totalCount;
+    
     // Add cache-busting headers
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     
     console.log('🎯 DASHBOARD BETTING GAMES API LOG:');
-    console.log('📊 Total games found:', games.length);
+    console.log('📊 Page:', pageNum, 'Limit:', limitNum, 'Offset:', offset);
+    console.log('📊 Games returned:', games.length, 'Total available:', totalCount, 'Has more:', hasMore);
     console.log('📅 Games details:', games.map(g => ({
       id: g.id,
       homeTeam: g.homeTeam.name,
@@ -196,6 +221,8 @@ export default async function handler(
     
     return res.status(200).json({
       games: bettingGames,
+      hasMore,
+      total: totalCount,
       timestamp: Date.now() // Force cache invalidation
     });
   } catch (error) {
