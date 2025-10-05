@@ -107,31 +107,10 @@ export default async function handler(
     });
     const competitionsWon = competitions.length;
 
-    // Get user's all-time ranking among all users
-    const allUsers = await prisma.user.findMany({
-      include: {
-        bets: {
-          include: {
-            game: true
-          }
-        }
-      }
-    });
-
-    const userRankings = allUsers
-      .map((u) => {
-        // Only count bets from finished games for ranking
-        const finishedGameBets = u.bets.filter((bet: any) => 
-          bet.game.status === 'FINISHED' || bet.game.status === 'LIVE'
-        );
-        return {
-          id: u.id,
-          totalPoints: finishedGameBets.reduce((sum, bet) => sum + bet.points, 0)
-        };
-      })
-      .sort((a, b) => b.totalPoints - a.totalPoints);
-
-    const userRank = userRankings.findIndex((u) => u.id === user.id) + 1;
+    // Heavy global ranking computation removed to speed up dashboard.
+    // If needed later, compute asynchronously in a background job.
+    const totalUsers = await prisma.user.count();
+    const userRank = 0; // not computed here for performance
 
     // Calculate average points per game
     const averagePointsPerGame = totalBets > 0 
@@ -166,7 +145,7 @@ export default async function handler(
       currentStreak: currentStreak,
       bestStreak: bestStreak,
       rank: userRank,
-      totalUsers: allUsers.length,
+      totalUsers: totalUsers,
       averagePoints: averagePointsPerGame,
       competitionsWon: competitionsWon,
     };
@@ -337,46 +316,32 @@ export default async function handler(
     const processCompetitions = async (competitions: any[]) => {
       return Promise.all(
         competitions.map(async (competition) => {
-          // Get all users in this competition with their bets for this specific competition
-          const competitionUsersWithBets = await Promise.all(
-            competition.users.map(async (cu) => {
-              const userBetsForCompetition = await prisma.bet.findMany({
-                where: {
-                  userId: cu.user.id,
-                  game: {
-                    competitionId: competition.id
-                  }
-                }
-              });
-              
-              const competitionPoints = userBetsForCompetition.reduce((sum, bet) => sum + bet.points, 0);
-              
-              return {
-                ...cu.user,
-                competitionPoints
-              };
-            })
-          );
-          
-          // Calculate user's ranking in this competition (only for active competitions)
-          const userInCompetition = competitionUsersWithBets.find(u => u.id === user.id);
-          let userRanking: number | undefined;
-          let userPoints: number | undefined;
-          
-          if (userInCompetition) {
-            const sortedUsers = competitionUsersWithBets.sort((a, b) => 
-              b.competitionPoints - a.competitionPoints
-            );
-            userRanking = sortedUsers.findIndex(u => u.id === user.id) + 1;
-            userPoints = userInCompetition.competitionPoints;
-          }
-
-          // Calculate remaining games in this competition
-          const remainingGames = await prisma.game.count({
+          // Aggregate points per user for this competition in a single query
+          const pointsByUser = await prisma.bet.groupBy({
+            by: ['userId'],
             where: {
-              competitionId: competition.id,
-              status: 'UPCOMING'
-            }
+              game: { competitionId: competition.id }
+            },
+            _sum: { points: true }
+          });
+
+          const pointsMap = new Map<string, number>(
+            pointsByUser.map((row: any) => [row.userId, row._sum.points || 0])
+          );
+
+          // Determine current user's ranking and points
+          const rankingArray = Array.from(pointsMap.entries())
+            .map(([userId, pts]) => ({ userId, pts }))
+            .sort((a, b) => b.pts - a.pts);
+
+          const userPoints = pointsMap.get(user.id) ?? undefined;
+          const userRanking = userPoints !== undefined
+            ? (rankingArray.findIndex((r) => r.userId === user.id) + 1)
+            : undefined;
+
+          // Remaining upcoming games for this competition
+          const remainingGames = await prisma.game.count({
+            where: { competitionId: competition.id, status: 'UPCOMING' }
           });
 
           return {
