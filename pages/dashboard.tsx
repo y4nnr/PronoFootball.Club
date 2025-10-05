@@ -100,15 +100,7 @@ interface DashboardData {
   news: News[];
 }
 
-interface UserRankings {
-  pointsRank: number;
-  averageRank: number;
-  predictionsRank: number;
-  winsRank: number;
-  longestStreakRank: number;
-  exactScoreStreakRank: number;
-  totalUsers: number;
-}
+// Removed unused UserRankings interface
 
 interface LastGamePerformance {
   gameId: string;
@@ -426,7 +418,7 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [bettingGames, setBettingGames] = useState<BettingGame[] | null>(null);
   const [gamesOfDay, setGamesOfDay] = useState<BettingGame[] | null>(null);
-  const [userRankings, setUserRankings] = useState<UserRankings | null>(null);
+  // Removed unused userRankings state
   const [lastGamesPerformance, setLastGamesPerformance] = useState<LastGamePerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -440,11 +432,10 @@ export default function Dashboard() {
       console.log('🔄 Session:', session?.user?.email);
 
       console.log('🔄 Making API calls...');
-      const [dashboardRes, bettingRes, gamesOfDayRes, rankingsRes, performanceRes] = await Promise.all([
+      const [dashboardRes, bettingRes, gamesOfDayRes, performanceRes] = await Promise.all([
         fetch('/api/user/dashboard'),
         fetch('/api/user/dashboard-betting-games', { cache: 'no-store' }),
         fetch('/api/user/games-of-day'),
-        fetch('/api/stats/user-rankings'),
         fetch('/api/stats/user-performance', { cache: 'no-store' })
       ]);
       console.log('🔄 API calls completed');
@@ -462,20 +453,15 @@ export default function Dashboard() {
         console.error('Games of day API failed:', gamesOfDayRes.status, gamesOfDayRes.statusText);
         throw new Error(`Games of day API failed: ${gamesOfDayRes.status}`);
       }
-      if (!rankingsRes.ok) {
-        console.error('Rankings API failed:', rankingsRes.status, rankingsRes.statusText);
-        throw new Error(`Rankings API failed: ${rankingsRes.status}`);
-      }
       if (!performanceRes.ok) {
         console.error('Performance API failed:', performanceRes.status, performanceRes.statusText);
         throw new Error(`Performance API failed: ${performanceRes.status}`);
       }
 
-      const [dashboardData, bettingData, gamesOfDayData, rankingsData, performanceData] = await Promise.all([
+      const [dashboardData, bettingData, gamesOfDayData, performanceData] = await Promise.all([
         dashboardRes.json(),
         bettingRes.json(),
         gamesOfDayRes.json(),
-        rankingsRes.json(),
         performanceRes.json()
       ]);
 
@@ -488,7 +474,6 @@ export default function Dashboard() {
       console.log('🎯 FRONTEND LOG - Setting betting games:', gamesToSet.length, 'games');
       setBettingGames(gamesToSet); // Handle both old and new API format
       setGamesOfDay(gamesOfDayData);
-      setUserRankings(rankingsData);
       setLastGamesPerformance(performanceData.lastGamesPerformance || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
