@@ -61,27 +61,28 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   console.log('🎯 FRONTEND LOG - Current game ID:', game.id);
   console.log('🎯 FRONTEND LOG - Current game index:', currentGameIndex);
 
-  // CRITICAL FIX: Sync allGamesList when game prop changes
+  // CRITICAL FIX: Sync allGamesList from SSR list on route change (no merge), keep deterministic order
   useEffect(() => {
-    console.log('🔄 GAME CHANGE DETECTED - Syncing state');
-    console.log('🔄 New game ID:', game.id);
-    console.log('🔄 Current allGamesList length:', allGamesList.length);
-    
-    // Check if current game is in the list
-    const gameInList = allGamesList.find(g => g.id === game.id);
-    if (!gameInList) {
-      console.log('🔄 Current game not in list, updating allGamesList');
-      setAllGamesList(allGames);
-    }
-  }, [game.id, allGames, allGamesList]);
+    const sorted = [...allGames].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    setAllGamesList(sorted);
+  }, [allGames, game.id]);
+
+  // (moved) re-center effect declared after scrollToSelectedGame
 
   // CRITICAL FIX: Ensure currentGameIndex is always correct
   const actualCurrentGameIndex = allGamesList.findIndex(g => g.id === game.id);
   console.log('🎯 ACTUAL CURRENT GAME INDEX:', actualCurrentGameIndex, 'vs PROPS:', currentGameIndex);
 
   // Function to load more games
+  const MAX_CAROUSEL_GAMES = 24;
+
   const loadMoreGames = useCallback(async () => {
     if (isLoadingMore || !hasMoreGames) return;
+    // Hard cap: do not load beyond MAX_CAROUSEL_GAMES
+    if (allGamesList.length >= MAX_CAROUSEL_GAMES) {
+      setHasMoreGames(false);
+      return;
+    }
     
     setIsLoadingMore(true);
     try {
@@ -89,9 +90,18 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
       const data = await response.json();
       
       if (data.games && data.games.length > 0) {
-        setAllGamesList(prev => [...prev, ...data.games]);
+        setAllGamesList(prev => {
+          // Merge, de-duplicate by id, then sort by date asc to match competition page order
+          const merged = [...prev, ...data.games];
+          const uniqueById = Array.from(new Map(merged.map(g => [g.id, g])).values());
+          uniqueById.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          // Enforce MAX_CAROUSEL_GAMES cap
+          const limited = uniqueById.slice(0, MAX_CAROUSEL_GAMES);
+          return limited;
+        });
         setCurrentPage(prev => prev + 1);
-        setHasMoreGames(data.hasMore);
+        // Update hasMore based on cap and API
+        setHasMoreGames(data.hasMore && (allGamesList.length + data.games.length) < MAX_CAROUSEL_GAMES);
       } else {
         setHasMoreGames(false);
       }
@@ -100,22 +110,26 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
     } finally {
       setIsLoadingMore(false);
     }
-  }, [currentPage, hasMoreGames, isLoadingMore]);
+  }, [currentPage, hasMoreGames, isLoadingMore, allGamesList.length]);
 
   // Navigation functions
   const goToPreviousGame = useCallback(() => {
-    if (allGamesList && currentGameIndex > 0) {
-      const previousGame = allGamesList[currentGameIndex - 1];
+    // Use calculated index to avoid mismatch after sorting
+    const idx = allGamesList.findIndex(g => g.id === game.id);
+    if (allGamesList && idx > 0) {
+      const previousGame = allGamesList[idx - 1];
       router.push(`/betting/${previousGame.id}`);
     }
-  }, [currentGameIndex, allGamesList, router]);
+  }, [allGamesList, router, game.id]);
 
   const goToNextGame = useCallback(() => {
-    if (allGamesList && currentGameIndex < allGamesList.length - 1) {
-      const nextGame = allGamesList[currentGameIndex + 1];
+    // Use calculated index to avoid mismatch after sorting
+    const idx = allGamesList.findIndex(g => g.id === game.id);
+    if (allGamesList && idx > -1 && idx < allGamesList.length - 1) {
+      const nextGame = allGamesList[idx + 1];
       router.push(`/betting/${nextGame.id}`);
     }
-  }, [currentGameIndex, allGamesList, router]);
+  }, [allGamesList, router, game.id]);
 
   // Scroll functions for carousel navigation
   const scrollCarousel = useCallback((direction: 'left' | 'right') => {
@@ -139,7 +153,9 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
     const carousel = document.getElementById('games-carousel');
     if (!carousel) return;
     
-    const gameCard = carousel.children[currentGameIndex] as HTMLElement;
+    // Use the calculated index for stability after re-sorts
+    const indexToUse = allGamesList.findIndex(g => g.id === game.id);
+    const gameCard = carousel.children[indexToUse] as HTMLElement;
     if (!gameCard) return;
     
     const carouselRect = carousel.getBoundingClientRect();
@@ -150,7 +166,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
       left: scrollLeft,
       behavior: 'smooth'
     });
-  }, [currentGameIndex]);
+  }, [allGamesList, game.id]);
 
   // Auto-scroll to selected game when it changes
   useEffect(() => {
@@ -159,7 +175,18 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
     }, 100); // Small delay to ensure DOM is updated
     
     return () => clearTimeout(timer);
-  }, [currentGameIndex, scrollToSelectedGame]);
+  }, [allGamesList, game.id, scrollToSelectedGame]);
+
+  // Re-center after list updates that include the current game (declared after scrollToSelectedGame)
+  useEffect(() => {
+    if (!allGamesList || allGamesList.length === 0) return;
+    const hasCurrent = allGamesList.some(g => g.id === game.id);
+    if (!hasCurrent) return;
+    const timer = setTimeout(() => {
+      scrollToSelectedGame();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [allGamesList, game.id, scrollToSelectedGame]);
 
   // Check scroll position and update arrow states
   const updateScrollState = useCallback(() => {
@@ -727,7 +754,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       select: { id: true }
     });
 
-    // Fetch the 12 closest upcoming games for betting from all active competitions, sorted by date
+    // Fetch the closest upcoming games for betting from all active competitions, sorted by date
     const today = new Date();
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     
@@ -776,17 +803,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       orderBy: {
         date: 'asc'
       },
-      take: 12 // Limit to 12 closest games
+      take: 24 // Limit to 24 closest games (carousel cap)
     });
 
     // Ensure the current game is in the list (in case it's not in the next 12)
     const currentGameInList = allGames.find(g => g.id === gameId);
     if (!currentGameInList) {
-      // Add the current game to the beginning of the list
+      // Add the current game, then re-sort by date asc to match competition page
       allGames.unshift(game);
     }
 
-    // Find current game index
+    // Ensure order is chronologically ascending (competition page uses chronological for betting list)
+    allGames.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Find current game index after sorting
     const currentGameIndex = allGames.findIndex(g => g.id === gameId);
 
     console.log('🎯 GETSERVERPROPS LOG:');
