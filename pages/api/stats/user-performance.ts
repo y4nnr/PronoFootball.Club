@@ -1,8 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getSession } from 'next-auth/react';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
+import { prisma } from '../../../lib/prisma';
 
 interface LastGamePerformance {
   gameId: string;
@@ -24,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const session = await getSession({ req });
+    const session = await getServerSession(req, res, authOptions);
     if (!session) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -178,7 +177,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     console.error('Error fetching user performance:', error);
     res.status(500).json({ error: 'Internal server error' });
-  } finally {
-    await prisma.$disconnect();
   }
 } 

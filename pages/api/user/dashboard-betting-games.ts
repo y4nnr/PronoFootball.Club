@@ -17,10 +17,6 @@ interface BettingGame {
     name: string;
     logo: string | null;
   };
-  competition: {
-    id: string;
-    name: string;
-  };
   userBet: {
     id: string;
     score1: number;
@@ -29,8 +25,13 @@ interface BettingGame {
   allUserBets: {
     id: string;
     userId: string;
-    // No user object, no timestamps, no scores for payload minimization
+    user: {
+      id: string;
+      name: string;
+      profilePictureUrl?: string;
+    };
   }[];
+  betCount: number;
 }
 
 export default async function handler(
@@ -112,8 +113,7 @@ export default async function handler(
         status: true,
         homeTeam: { select: { id: true, name: true, logo: true } },
         awayTeam: { select: { id: true, name: true, logo: true } },
-        competition: { select: { id: true, name: true } },
-        bets: { select: { id: true, userId: true, user: { select: { id: true, name: true, profilePictureUrl: true } } } },
+        bets: { select: { id: true, userId: true } },
       },
       orderBy: {
         date: 'asc'
@@ -125,6 +125,8 @@ export default async function handler(
     // Format the response
     const bettingGames: BettingGame[] = games.map(game => {
       const currentUserBet = game.bets.find(bet => bet.userId === user.id);
+      const betCount = game.bets.length;
+      // No avatars on dashboard to minimize payload size
       
       return {
         id: game.id,
@@ -140,10 +142,6 @@ export default async function handler(
           name: game.awayTeam.name,
           logo: game.awayTeam.logo
         },
-        competition: {
-          id: game.competition.id,
-          name: game.competition.name
-        },
         userBet: currentUserBet ? {
           id: currentUserBet.id,
           // Scores are not returned in bets selection; keep existing UI behavior:
@@ -152,16 +150,9 @@ export default async function handler(
           score1: 0,
           score2: 0
         } : null,
-        // All users' bets - minimized to just ids for presence/marker logic on UI
-        allUserBets: game.bets.map(bet => ({
-          id: bet.id,
-          userId: bet.userId,
-          user: {
-            id: bet.user.id,
-            name: bet.user.name,
-            profilePictureUrl: bet.user.profilePictureUrl || undefined,
-          },
-        }))
+        // No per-bet user payload to keep response small
+        allUserBets: [],
+        betCount,
       };
     });
 
@@ -176,13 +167,7 @@ export default async function handler(
     console.log('🎯 DASHBOARD BETTING GAMES API LOG:');
     console.log('📊 Page:', pageNum, 'Limit:', limitNum, 'Offset:', offset);
     console.log('📊 Games returned:', games.length, 'Total available:', totalCount, 'Has more:', hasMore);
-    console.log('📅 Games details:', games.map(g => ({
-      id: g.id,
-      homeTeam: g.homeTeam.name,
-      awayTeam: g.awayTeam.name,
-      date: g.date,
-      status: g.status
-    })));
+    // Reduce verbose logging to avoid heavy server logs
     
     return res.status(200).json({
       games: bettingGames,
