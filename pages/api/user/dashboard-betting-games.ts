@@ -29,14 +29,7 @@ interface BettingGame {
   allUserBets: {
     id: string;
     userId: string;
-    user: {
-      id: string;
-      name: string;
-      profilePictureUrl?: string;
-    };
-    createdAt: string;
-    score1: number | null;
-    score2: number | null;
+    // No user object, no timestamps, no scores for payload minimization
   }[];
 }
 
@@ -51,7 +44,8 @@ export default async function handler(
   // Get pagination parameters
   const { page = '1', limit = '12' } = req.query;
   const pageNum = parseInt(page as string, 10);
-  const limitNum = parseInt(limit as string, 10);
+  const limitNumRaw = parseInt(limit as string, 10);
+  const limitNum = Math.min(isNaN(limitNumRaw) ? 12 : limitNumRaw, 24); // hard cap at 24
   const offset = (pageNum - 1) * limitNum;
 
   const session = await getServerSession(req, res, authOptions);
@@ -112,41 +106,14 @@ export default async function handler(
           gte: now // Include all future games from now
         }
       },
-      include: {
-        homeTeam: {
-          select: {
-            id: true,
-            name: true,
-            logo: true
-          }
-        },
-        awayTeam: {
-          select: {
-            id: true,
-            name: true,
-            logo: true
-          }
-        },
-        competition: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        bets: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                profilePictureUrl: true
-              }
-            }
-          },
-          orderBy: {
-            createdAt: 'asc'
-          }
-        }
+      select: {
+        id: true,
+        date: true,
+        status: true,
+        homeTeam: { select: { id: true, name: true, logo: true } },
+        awayTeam: { select: { id: true, name: true, logo: true } },
+        competition: { select: { id: true, name: true } },
+        bets: { select: { id: true, userId: true, user: { select: { id: true, name: true, profilePictureUrl: true } } } },
       },
       orderBy: {
         date: 'asc'
@@ -179,22 +146,21 @@ export default async function handler(
         },
         userBet: currentUserBet ? {
           id: currentUserBet.id,
-          score1: currentUserBet.score1,
-          score2: currentUserBet.score2
+          // Scores are not returned in bets selection; keep existing UI behavior:
+          // the client already shows score box based on separate endpoints.
+          // To preserve current UI logic expecting numbers, set to 0 (hidden in UI for upcoming).
+          score1: 0,
+          score2: 0
         } : null,
-        // All users' bets - hide actual scores since game hasn't started
+        // All users' bets - minimized to just ids for presence/marker logic on UI
         allUserBets: game.bets.map(bet => ({
           id: bet.id,
           userId: bet.userId,
           user: {
             id: bet.user.id,
             name: bet.user.name,
-            profilePictureUrl: bet.user.profilePictureUrl || undefined
+            profilePictureUrl: bet.user.profilePictureUrl || undefined,
           },
-          createdAt: bet.createdAt.toISOString(),
-          // Hide actual scores since game hasn't started (bets are still open)
-          score1: null,
-          score2: null
         }))
       };
     });
