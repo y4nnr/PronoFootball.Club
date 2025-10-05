@@ -134,7 +134,7 @@ export default async function handler(
     const bettingGames: BettingGame[] = games.map(game => {
       const currentUserBet = game.bets.find(bet => bet.userId === user.id);
       const betCount = game.bets.length;
-      // Keep payload minimal: only include the current user's bet in allUserBets (if any)
+      // Include all bets with minimal user info; hide scores until LIVE/FINISHED
       
       return {
         id: game.id,
@@ -155,15 +155,17 @@ export default async function handler(
           score1: currentUserBet.score1 ?? 0,
           score2: currentUserBet.score2 ?? 0
         } : null,
-        allUserBets: currentUserBet ? [{
-          id: currentUserBet.id,
-          userId: currentUserBet.userId,
+        allUserBets: game.bets.map(bet => ({
+          id: bet.id,
+          userId: bet.userId,
           user: {
-            id: currentUserBet.user.id,
-            name: currentUserBet.user.name,
-            profilePictureUrl: currentUserBet.user.profilePictureUrl || undefined
-          }
-        }] : [],
+            id: bet.user.id,
+            name: bet.user.name,
+            profilePictureUrl: bet.user.profilePictureUrl || undefined
+          },
+          // Only reveal scores for LIVE/FINISHED; current user's score always merged on client via userBet
+          // We do not send createdAt here to keep payload small
+        })),
         betCount,
       };
     });
