@@ -113,7 +113,15 @@ export default async function handler(
         status: true,
         homeTeam: { select: { id: true, name: true, logo: true } },
         awayTeam: { select: { id: true, name: true, logo: true } },
-        bets: { select: { id: true, userId: true } },
+        bets: { 
+          select: { 
+            id: true, 
+            userId: true,
+            score1: true,
+            score2: true,
+            user: { select: { id: true, name: true, profilePictureUrl: true } }
+          } 
+        },
       },
       orderBy: {
         date: 'asc'
@@ -126,7 +134,7 @@ export default async function handler(
     const bettingGames: BettingGame[] = games.map(game => {
       const currentUserBet = game.bets.find(bet => bet.userId === user.id);
       const betCount = game.bets.length;
-      // No avatars on dashboard to minimize payload size
+      // Keep payload minimal: only include the current user's bet in allUserBets (if any)
       
       return {
         id: game.id,
@@ -144,14 +152,18 @@ export default async function handler(
         },
         userBet: currentUserBet ? {
           id: currentUserBet.id,
-          // Scores are not returned in bets selection; keep existing UI behavior:
-          // the client already shows score box based on separate endpoints.
-          // To preserve current UI logic expecting numbers, set to 0 (hidden in UI for upcoming).
-          score1: 0,
-          score2: 0
+          score1: currentUserBet.score1 ?? 0,
+          score2: currentUserBet.score2 ?? 0
         } : null,
-        // No per-bet user payload to keep response small
-        allUserBets: [],
+        allUserBets: currentUserBet ? [{
+          id: currentUserBet.id,
+          userId: currentUserBet.userId,
+          user: {
+            id: currentUserBet.user.id,
+            name: currentUserBet.user.name,
+            profilePictureUrl: currentUserBet.user.profilePictureUrl || undefined
+          }
+        }] : [],
         betCount,
       };
     });
