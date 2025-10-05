@@ -85,9 +85,8 @@ export default async function handler(
       return res.status(200).json({ games: [], hasMore: false, total: 0 });
     }
 
-    // Get upcoming games from active competitions (excluding today's games)
-    const today = new Date();
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    // Get upcoming games from active competitions (including today's games)
+    const now = new Date();
     
     // First, get total count for pagination
     const totalCount = await prisma.game.count({
@@ -97,7 +96,7 @@ export default async function handler(
         },
         status: 'UPCOMING',
         date: {
-          gte: endOfDay
+          gte: now // Include all future games from now
         }
       }
     });
@@ -110,7 +109,7 @@ export default async function handler(
         },
         status: 'UPCOMING', // Only games available for betting
         date: {
-          gte: endOfDay // Exclude today's games (they go to "Matchs du jour")
+          gte: now // Include all future games from now
         }
       },
       include: {
@@ -222,8 +221,7 @@ export default async function handler(
     return res.status(200).json({
       games: bettingGames,
       hasMore,
-      total: totalCount,
-      timestamp: Date.now() // Force cache invalidation
+      total: totalCount
     });
   } catch (error) {
     console.error('Dashboard betting games API error:', error);

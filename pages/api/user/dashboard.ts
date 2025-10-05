@@ -26,7 +26,7 @@ interface LastGamePerformance {
   actualScore: string;
   predictedScore: string;
   points: number;
-  result: 'exact' | 'correct' | 'wrong';
+  result: 'exact' | 'correct' | 'wrong' | 'no_bet';
   runningTotal: number;
 }
 
@@ -201,7 +201,7 @@ export default async function handler(
     let formattedLastGames: LastGamePerformance[] = [];
 
     if (recentCompetition) {
-      // Fetch the last 10 finished games from the Champions League 25/26
+      // Fetch ALL finished games from the Champions League 25/26
       const finishedGames = await prisma.game.findMany({
         where: {
           competitionId: recentCompetition.id,
@@ -219,8 +219,8 @@ export default async function handler(
         },
         orderBy: {
           date: 'desc'
-        },
-        take: 10
+        }
+        // Removed take: 10 to get ALL finished games
       });
 
       // Process games and calculate running totals
@@ -248,7 +248,7 @@ export default async function handler(
 
         // Bet was placed
         const predictedScore = `${userBet.score1}-${userBet.score2}`;
-        let result: 'exact' | 'correct' | 'wrong' = 'wrong';
+        let result: 'exact' | 'correct' | 'wrong' | 'no_bet' = 'wrong';
         let gamePoints = 0;
         
         if (userBet.score1 === game.homeScore && userBet.score2 === game.awayScore) {
@@ -308,17 +308,7 @@ export default async function handler(
       include: {
         users: {
           include: {
-            user: {
-              include: {
-                bets: {
-                  where: {
-                    game: {
-                      competitionId: { in: [] } // We'll fix this below
-                    }
-                  }
-                }
-              }
-            }
+            user: true
           }
         }
       },

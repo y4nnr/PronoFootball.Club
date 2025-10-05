@@ -13,7 +13,8 @@ import {
   StarIcon,
   CheckCircleIcon,
   UserIcon,
-  ArrowTrendingUpIcon
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import React from 'react';
 import axios from 'axios';
@@ -82,19 +83,7 @@ interface CurrentUserStats {
 }
 
 
-interface LastGamePerformance {
-  gameId: string;
-  date: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeTeamLogo: string | null;
-  awayTeamLogo: string | null;
-  competition: string;
-  actualScore: string;
-  predictedScore: string;
-  points: number | null; // null means no bet
-  result: 'exact' | 'correct' | 'wrong' | 'no_bet';
-}
+
 
 export default function Stats({ currentUser }: { currentUser: LeaderboardUser }) {
   const { t } = useTranslation('common');
@@ -103,10 +92,6 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
   const [loading, setLoading] = useState(true);
   const [userProfilePictures, setUserProfilePictures] = useState<UserProfilePicture>({});
   const [currentUserStats, setCurrentUserStats] = useState<CurrentUserStats | null>(null);
-  const [lastGamesPerformance, setLastGamesPerformance] = useState<LastGamePerformance[]>([]);
-  const [performanceStartDate, setPerformanceStartDate] = useState<string | null>(null);
-  const [performanceStartGame, setPerformanceStartGame] = useState<string | null>(null);
-  const [, setPerformanceLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<LeaderboardUser | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [expandedUser, setExpandedUser] = useState<LeaderboardUser | null>(null);
@@ -117,7 +102,6 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
   useEffect(() => {
     fetchLeaderboardData();
     fetchUserProfilePictures();
-    fetchLastGamesPerformance();
   }, []);
 
   // Fetch personal stats after leaderboard data is loaded
@@ -194,21 +178,6 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
     }
   };
 
-  const fetchLastGamesPerformance = async () => {
-    try {
-      const response = await fetch('/api/stats/user-performance');
-      if (response.ok) {
-        const data = await response.json();
-        setLastGamesPerformance(data.lastGamesPerformance);
-        setPerformanceStartDate(data.startDate);
-        setPerformanceStartGame(data.startGame);
-      }
-    } catch (error) {
-      console.error('Error fetching last games performance:', error);
-    } finally {
-      setPerformanceLoading(false);
-    }
-  };
 
 
   // Function to get user profile picture or generate avatar
@@ -400,79 +369,6 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             </div>
           )}
 
-          {/* Performance des 10 Derniers Matchs */}
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
-            <div className="flex items-center mb-2">
-              <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
-                <ArrowTrendingUpIcon className="h-6 w-6 text-white" />
-              </span>
-              <div className="flex flex-col flex-1">
-                <div className="text-base text-gray-800 mb-2">{t('stats.lastGamesPerformance')}</div>
-                <div className="flex space-x-2">
-                  {Array.from({ length: 10 }).map((_, index) => {
-                    const game = lastGamesPerformance[index];
-                    return game ? (
-                      <div
-                        key={game.gameId}
-                        className={`flex-1 h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 font-bold text-sm shadow-modern p-2 bg-white border-2 ${
-                          game.result === 'no_bet' ? 'border-blue-300' :
-                          game.points === 3 ? 'border-yellow-400' :
-                          game.points === 1 ? 'border-green-400' :
-                          'border-red-400'
-                        }`}
-                        title={game.result === 'no_bet' ? 
-                          `${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore} (No bet placed)` :
-                          `${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore} (predicted: ${game.predictedScore}) - ${game.points} points`
-                        }
-                      >
-                        {/* Team logos and codes */}
-                        <div className="flex items-center space-x-2 mb-1">
-                          <div className="flex flex-col items-center">
-                            {game.homeTeamLogo && (
-                              <img 
-                                src={game.homeTeamLogo} 
-                                alt={game.homeTeam}
-                                className="w-5 h-5 object-contain mb-0.5"
-                              />
-                            )}
-                            <span className="text-[10px] font-medium">{game.homeTeam.substring(0, 3).toUpperCase()}</span>
-                          </div>
-                          <span className="text-xs font-medium">vs</span>
-                          <div className="flex flex-col items-center">
-                            {game.awayTeamLogo && (
-                              <img 
-                                src={game.awayTeamLogo} 
-                                alt={game.awayTeam}
-                                className="w-5 h-5 object-contain mb-0.5"
-                              />
-                            )}
-                            <span className="text-[10px] font-medium">{game.awayTeam.substring(0, 3).toUpperCase()}</span>
-                          </div>
-                        </div>
-                        {/* Points and Date */}
-                        <div className="flex flex-col items-center">
-                          <div className="text-base font-bold">
-                            {game.result === 'no_bet' ? 'shooter!' : game.points}
-                          </div>
-                          <div className="text-[10px] text-gray-600">
-                            {new Date(game.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        key={`empty-${index}`}
-                        className="flex-1 h-18 rounded-xl flex items-center justify-center text-gray-400 font-bold text-sm shadow-modern border-2 border-dashed border-gray-300 bg-white"
-                        title="No data"
-                      >
-                        ?
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
         </section>
 
         {/* Statistiques Globales */}

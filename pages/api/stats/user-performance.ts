@@ -15,7 +15,7 @@ interface LastGamePerformance {
   actualScore: string;
   predictedScore: string;
   points: number;
-  result: 'exact' | 'correct' | 'wrong';
+  result: 'exact' | 'correct' | 'wrong' | 'no_bet';
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -88,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Fetch the last 10 finished games from the Champions League 25/26
+    // Fetch ALL finished games from the Champions League 25/26
     // Only from competitions where the user is participating
     const finishedGames = await prisma.game.findMany({
       where: {
@@ -107,8 +107,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       orderBy: {
         date: 'desc'
-      },
-      take: 10
+      }
+      // Removed take: 10 to get ALL finished games
     });
 
 
@@ -128,20 +128,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           competition: game.competition.name,
           actualScore,
           predictedScore: 'N/A',
-          points: null,
+          points: 0,
           result: 'no_bet'
         };
       }
 
-      // Bet was placed
+      // Bet was placed - calculate points the same way as dashboard API
       const predictedScore = `${userBet.score1}-${userBet.score2}`;
-      let result: 'exact' | 'correct' | 'wrong';
-      if (userBet.points === 3) {
+        let result: 'exact' | 'correct' | 'wrong' | 'no_bet' = 'wrong';
+      let gamePoints = 0;
+      
+      if (userBet.score1 === game.homeScore && userBet.score2 === game.awayScore) {
         result = 'exact';
-      } else if (userBet.points > 0) {
+        gamePoints = 3;
+      } else if (
+        game.homeScore !== null && game.awayScore !== null && (
+          (userBet.score1 > userBet.score2 && game.homeScore > game.awayScore) ||
+          (userBet.score1 < userBet.score2 && game.homeScore < game.awayScore) ||
+          (userBet.score1 === userBet.score2 && game.homeScore === game.awayScore)
+        )
+      ) {
         result = 'correct';
-      } else {
-        result = 'wrong';
+        gamePoints = 1;
       }
 
       return {
@@ -154,7 +162,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         competition: game.competition.name,
         actualScore,
         predictedScore,
-        points: userBet.points,
+        points: gamePoints,
         result
       };
     });

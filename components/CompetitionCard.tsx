@@ -62,7 +62,7 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
                 <p><span className="font-medium">End:</span> {formatDate(competition.endDate)}</p>
               </div>
               {typeof userRanking === 'number' && (
-                <span className="px-3 py-1 rounded-full bg-accent-500 text-accent-700 text-base font-medium shadow-md">
+                <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-base font-medium shadow-md">
                   {t('competition.yourPosition')}: #{userRanking}
                 </span>
               )}

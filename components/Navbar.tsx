@@ -4,7 +4,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
-import { HomeIcon, PencilSquareIcon, ChartBarIcon, CalendarIcon, UserGroupIcon, ShieldCheckIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, PencilSquareIcon, ChartBarIcon, CalendarIcon, UserGroupIcon, ShieldCheckIcon, ArrowLeftIcon, UserIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -156,7 +156,7 @@ export default function Navbar() {
   );
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-primary-600 backdrop-blur-lg shadow-2xl border-b border-primary-700 z-50" style={{ minHeight: 96 }}>
+    <nav className="fixed top-0 left-0 w-full bg-gray-800 backdrop-blur-lg shadow-2xl border-b border-gray-700 z-50" style={{ minHeight: 96 }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-24 py-2">
           {/* Left: User Profile + Separator + Back Button + Navigation */}
@@ -200,7 +200,7 @@ export default function Navbar() {
                       alt={session.user.name || 'User'}
                       width={48}
                       height={48}
-                      className="rounded-full border-2 border-zinc-700 object-cover shadow-md"
+                      className="rounded-full border-2 border-white object-cover shadow-md"
                     />
                   </div>
                 </button>
@@ -212,14 +212,14 @@ export default function Navbar() {
                       className="flex items-center gap-2 px-4 py-2 text-gray-200 hover:bg-white/10 rounded-md transition"
                       onClick={() => setProfileOpen(false)}
                     >
-                      <span className="shrink-0">👤</span>
+                      <UserIcon className="w-4 h-4 shrink-0" />
                       <span className="flex-1 min-w-0 break-words">{t('dashboard.nav.profile')}</span>
                     </Link>
                     <button
                       onClick={() => { setProfileOpen(false); signOut({ callbackUrl: '/login' }); }}
                       className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-200 hover:bg-white/10 rounded-md transition"
                     >
-                      <span className="shrink-0">🚪</span>
+                      <ArrowRightOnRectangleIcon className="w-4 h-4 shrink-0" />
                       <span className="flex-1 min-w-0 break-words">{t('dashboard.logout')}</span>
                     </button>
                   </div>

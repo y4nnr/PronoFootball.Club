@@ -58,6 +58,26 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   // Debug logging
   console.log('🎯 FRONTEND LOG - Initial allGames:', allGames.length);
   console.log('🎯 FRONTEND LOG - Initial allGamesList:', allGamesList.length);
+  console.log('🎯 FRONTEND LOG - Current game ID:', game.id);
+  console.log('🎯 FRONTEND LOG - Current game index:', currentGameIndex);
+
+  // CRITICAL FIX: Sync allGamesList when game prop changes
+  useEffect(() => {
+    console.log('🔄 GAME CHANGE DETECTED - Syncing state');
+    console.log('🔄 New game ID:', game.id);
+    console.log('🔄 Current allGamesList length:', allGamesList.length);
+    
+    // Check if current game is in the list
+    const gameInList = allGamesList.find(g => g.id === game.id);
+    if (!gameInList) {
+      console.log('🔄 Current game not in list, updating allGamesList');
+      setAllGamesList(allGames);
+    }
+  }, [game.id, allGames, allGamesList]);
+
+  // CRITICAL FIX: Ensure currentGameIndex is always correct
+  const actualCurrentGameIndex = allGamesList.findIndex(g => g.id === game.id);
+  console.log('🎯 ACTUAL CURRENT GAME INDEX:', actualCurrentGameIndex, 'vs PROPS:', currentGameIndex);
 
   // Function to load more games
   const loadMoreGames = useCallback(async () => {
@@ -266,7 +286,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   if (!game) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
@@ -344,20 +364,39 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                       scrollSnapType: 'x mandatory'
                     }}
                   >
-                    {allGamesList.map((gameItem, index) => (
-                      <button
-                        key={gameItem.id}
-                        onClick={() => router.push(`/betting/${gameItem.id}`)}
-                     className={`relative p-3 sm:p-4 rounded-xl transition-all duration-300 flex-shrink-0 w-[140px] sm:w-[180px] min-w-[140px] sm:min-w-[180px] scroll-snap-start my-2 ${
-                       index === currentGameIndex
-                         ? 'bg-white text-gray-700 border-4 border-gray-400 shadow-2xl transform scale-105 z-10'
-                         : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 shadow-lg hover:shadow-xl hover:scale-102'
-                     }`}
-                      >
+                    {allGamesList.map((gameItem, index) => {
+                      const handleGameClick = () => {
+                        console.log('🎯 GAME CARD CLICKED:', gameItem.id, 'Index:', index);
+                        console.log('🎯 Current game ID:', game.id);
+                        console.log('🎯 All games list length:', allGamesList.length);
+                        
+                        // Only navigate if it's a different game
+                        if (gameItem.id !== game.id) {
+                          console.log('🎯 Navigating to new game:', gameItem.id);
+                          router.push(`/betting/${gameItem.id}`);
+                        } else {
+                          console.log('🎯 Same game clicked, no navigation needed');
+                        }
+                      };
+
+                      return (
+                        <button
+                          key={gameItem.id}
+                          onClick={handleGameClick}
+                          className={`relative p-3 sm:p-4 rounded-xl transition-all duration-300 flex-shrink-0 w-[140px] sm:w-[180px] min-w-[140px] sm:min-w-[180px] scroll-snap-start my-2 ${
+                            index === actualCurrentGameIndex
+                              ? gameItem.bets && gameItem.bets.length > 0
+                                ? 'bg-white text-gray-700 border-4 border-blue-500 shadow-2xl transform scale-105 z-10'
+                                : 'bg-white text-gray-700 border-4 border-gray-400 shadow-2xl transform scale-105 z-10'
+                              : gameItem.bets && gameItem.bets.length > 0
+                                ? 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-blue-400 hover:border-blue-500 shadow-lg hover:shadow-xl hover:scale-102'
+                                : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 shadow-lg hover:shadow-xl hover:scale-102'
+                          }`}
+                        >
                         {/* Bet Status Indicator */}
                         {gameItem.bets && gameItem.bets.length > 0 && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           </div>
@@ -377,39 +416,40 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
-                              <span className="text-xs font-medium">{new Date(gameItem.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
+                              <span className="text-sm font-medium">{new Date(gameItem.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</span>
                             </div>
                             <div className="flex items-center justify-center space-x-1 text-gray-600">
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
-                              <span className="text-xs font-medium">{new Date(gameItem.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                              <span className="text-sm font-medium">{new Date(gameItem.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                           </div>
                           
                           {gameItem.bets && gameItem.bets.length > 0 && (
-                            <div className="mt-2 p-1 sm:p-1.5 rounded bg-green-100">
-                              <div className="text-xs font-semibold text-green-700">
+                            <div className="mt-2 p-1 sm:p-1.5 rounded bg-blue-100">
+                              <div className="text-xs font-semibold text-blue-700">
                                 {gameItem.bets[0].score1}-{gameItem.bets[0].score2}
                               </div>
                             </div>
                           )}
                         </div>
                         
-                     {index === currentGameIndex && (
-                       <div className="absolute -top-1 -right-1">
-                         <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gray-400 rounded-full flex items-center justify-center shadow-lg">
-                           <span className="text-white text-xs font-bold">✓</span>
-                         </div>
-                       </div>
-                     )}
-                      </button>
-                    ))}
+                          {index === actualCurrentGameIndex && (
+                            <div className="absolute -top-1 -right-1">
+                              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gray-400 rounded-full flex items-center justify-center shadow-lg">
+                                <span className="text-white text-xs font-bold">✓</span>
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                     
                     {/* Loading indicator */}
                     {isLoadingMore && (
                       <div className="flex items-center justify-center p-3 sm:p-4">
-                        <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-primary-600"></div>
                         <span className="ml-2 text-xs sm:text-sm text-gray-600">Chargement...</span>
                       </div>
                     )}
@@ -426,7 +466,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                       className={`px-6 py-3 rounded-xl text-base font-bold transition-all duration-200 ${
                         currentGameIndex === 0
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105'
+                          : 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:scale-105'
                       }`}
                     >
                       ← Précédent
@@ -438,7 +478,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                       className={`px-6 py-3 rounded-xl text-base font-bold transition-all duration-200 ${
                         currentGameIndex === allGamesList.length - 1
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105'
+                          : 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:scale-105'
                       }`}
                     >
                       Suivant →
@@ -456,7 +496,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
               )}
 
               {success && (
-                <div className="p-3 bg-green-100 text-green-700 rounded-md flex items-center">
+                <div className="p-3 bg-primary-100 text-primary-700 rounded-md flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
@@ -465,9 +505,36 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
               )}
 
               {/* Combined Game Display + Score Input Section */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-md">
+              <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 border border-primary-200 shadow-md">
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Entrez votre pronostic</h3>
+                  
+                  {/* Date/Time Display - Top Center */}
+                  <div className="flex items-center justify-center space-x-4 mb-6">
+                    <div className="flex items-center space-x-2 bg-white rounded-lg px-4 py-2 shadow-md border border-gray-200">
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-sm font-semibold text-gray-600">
+                        {new Date(game.date).toLocaleDateString('fr-FR', { 
+                          day: '2-digit', 
+                          month: '2-digit',
+                          year: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-white rounded-lg px-4 py-2 shadow-md border border-gray-200">
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm font-bold text-gray-800">
+                        {new Date(game.date).toLocaleTimeString('fr-FR', { 
+                          hour: '2-digit', 
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Game Display */}
@@ -490,23 +557,8 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                     </div>
                     
                     <div className="mx-6 text-center">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-lg mb-2">
-                        <span className="text-white text-xl font-bold">VS</span>
-                      </div>
-                      <div className="bg-white rounded-lg p-2 shadow-md border border-gray-200">
-                        <div className="text-xs font-semibold text-gray-600 mb-1">
-                          {new Date(game.date).toLocaleDateString('fr-FR', { 
-                            day: '2-digit', 
-                            month: '2-digit',
-                            year: '2-digit'
-                          })}
-                        </div>
-                        <div className="text-sm font-bold text-gray-800">
-                          {new Date(game.date).toLocaleTimeString('fr-FR', { 
-                            hour: '2-digit', 
-                            minute: '2-digit'
-                          })}
-                        </div>
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-blue-700 text-xl font-bold">VS</span>
                       </div>
                     </div>
                     
@@ -531,7 +583,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                 {/* Score Input */}
                 {isLoadingBet ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                     <span className="ml-3 text-gray-600">Chargement des données...</span>
                   </div>
                 ) : (
@@ -544,7 +596,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                           min="0"
                           value={homeScore}
                           onChange={(e) => setHomeScore(e.target.value)}
-                          className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-center text-2xl font-bold py-4 transition-all duration-200"
+                          className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 text-center text-2xl font-bold py-4 transition-all duration-200"
                           placeholder="0"
                           required
                         />
@@ -559,7 +611,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                           min="0"
                           value={awayScore}
                           onChange={(e) => setAwayScore(e.target.value)}
-                          className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-center text-2xl font-bold py-4 transition-all duration-200"
+                          className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 text-center text-2xl font-bold py-4 transition-all duration-200"
                           placeholder="0"
                           required
                         />
@@ -582,7 +634,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-10 py-4 text-lg font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 border-2 border-blue-600 rounded-xl hover:from-blue-700 hover:to-blue-800 hover:border-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:transform-none"
+                    className="px-10 py-4 text-lg font-bold text-white bg-gradient-to-r from-primary-600 to-primary-700 border-2 border-primary-600 rounded-xl hover:from-primary-700 hover:to-primary-800 hover:border-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:transform-none"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center">

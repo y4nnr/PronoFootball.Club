@@ -1,6 +1,7 @@
+import React from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useState, useCallback, memo, useRef } from "react";
 import { useTranslation } from '../hooks/useTranslation';
 import { GetStaticProps } from 'next';
 import { 
@@ -9,10 +10,13 @@ import {
   PlayIcon,
   ArrowRightIcon,
   HomeIcon,
-  CalendarIcon
+  CalendarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import GameCard from '../components/GameCard';
 import CompetitionCard from '../components/CompetitionCard';
+import CountdownTimer from '../components/CountdownTimer';
 
 type UserStats = {
   totalPredictions: number;
@@ -120,21 +124,22 @@ interface LastGamePerformance {
   result: 'exact' | 'correct' | 'wrong' | 'no_bet';
 }
 
+
 // Personal Stats Section
 const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: UserStats | null; lastGamesPerformance: LastGamePerformance[] }) => {
   if (!stats) return null;
 
   return (
     <div className="mb-8">
-      {/* Performance des 10 Derniers Matchs */}
+      {/* Performance des 9 Derniers Matchs */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
-        <div className="flex space-x-2">
-                     {Array.from({ length: 10 }).map((_, index) => {
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-2">
+                     {Array.from({ length: 9 }).map((_, index) => {
                        const game = lastGamesPerformance[index];
                        return game ? (
                          <div
                            key={game.gameId}
-                           className={`flex-1 h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 font-bold text-sm shadow-modern p-2 bg-white border-2 ${
+                           className={`h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 font-bold text-sm shadow-modern p-2 bg-white border-2 ${
                              game.result === 'no_bet' ? 'border-blue-300' :
                              game.points === 3 ? 'border-yellow-400' :
                              game.points === 1 ? 'border-green-400' :
@@ -182,7 +187,7 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
             ) : (
               <div
                 key={`empty-${index}`}
-                className="flex-1 h-18 rounded-xl flex items-center justify-center text-gray-400 font-bold text-sm shadow-modern border-2 border-dashed border-gray-300 bg-white"
+                className="h-18 rounded-xl flex items-center justify-center text-gray-400 font-bold text-sm shadow-modern border-2 border-dashed border-gray-300 bg-white"
                 title="No data"
               >
                 ?
@@ -246,7 +251,7 @@ const AvailableCompetitionsSection = memo(({ competitions, t }: { competitions: 
     <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <div className="p-3 bg-green-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+          <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <TrophyIcon className="h-6 w-6 text-white" />
           </div>
           <h2 className="text-xl font-bold text-neutral-900">{t('availableCompetitions.title')}</h2>
@@ -363,7 +368,7 @@ const GamesOfDaySection = memo(({ games, t }: { games: BettingGame[]; t: (key: s
     <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-6 mb-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <div className="p-3 bg-orange-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+          <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <CalendarIcon className="h-6 w-6 text-white" />
           </div>
           <h2 className="text-xl font-bold text-neutral-900">{t('gamesOfDay.title')}</h2>
@@ -431,6 +436,10 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
 
+      console.log('🔄 Fetching dashboard data...');
+      console.log('🔄 Session:', session?.user?.email);
+
+      console.log('🔄 Making API calls...');
       const [dashboardRes, bettingRes, gamesOfDayRes, rankingsRes, performanceRes] = await Promise.all([
         fetch('/api/user/dashboard'),
         fetch('/api/user/dashboard-betting-games', { cache: 'no-store' }),
@@ -438,9 +447,28 @@ export default function Dashboard() {
         fetch('/api/stats/user-rankings'),
         fetch('/api/stats/user-performance', { cache: 'no-store' })
       ]);
+      console.log('🔄 API calls completed');
 
-      if (!dashboardRes.ok || !bettingRes.ok || !gamesOfDayRes.ok || !rankingsRes.ok || !performanceRes.ok) {
-        throw new Error('Failed to fetch dashboard data');
+      // Check each API response individually for better error reporting
+      if (!dashboardRes.ok) {
+        console.error('Dashboard API failed:', dashboardRes.status, dashboardRes.statusText);
+        throw new Error(`Dashboard API failed: ${dashboardRes.status}`);
+      }
+      if (!bettingRes.ok) {
+        console.error('Betting games API failed:', bettingRes.status, bettingRes.statusText);
+        throw new Error(`Betting games API failed: ${bettingRes.status}`);
+      }
+      if (!gamesOfDayRes.ok) {
+        console.error('Games of day API failed:', gamesOfDayRes.status, gamesOfDayRes.statusText);
+        throw new Error(`Games of day API failed: ${gamesOfDayRes.status}`);
+      }
+      if (!rankingsRes.ok) {
+        console.error('Rankings API failed:', rankingsRes.status, rankingsRes.statusText);
+        throw new Error(`Rankings API failed: ${rankingsRes.status}`);
+      }
+      if (!performanceRes.ok) {
+        console.error('Performance API failed:', performanceRes.status, performanceRes.statusText);
+        throw new Error(`Performance API failed: ${performanceRes.status}`);
       }
 
       const [dashboardData, bettingData, gamesOfDayData, rankingsData, performanceData] = await Promise.all([
@@ -478,6 +506,8 @@ export default function Dashboard() {
     }
     fetchDashboardData();
   }, [session, status, router, fetchDashboardData]);
+
+  // No periodic refresh - only refresh when countdown ends or page loads
 
   if (status === "loading" || loading) {
     return (
@@ -521,12 +551,64 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Countdown Timer */}
+        {bettingGames && bettingGames.length > 0 && (() => {
+          const upcomingGames = bettingGames
+            .filter(game => game.status === 'UPCOMING' || game.status === 'LIVE')
+            .filter(game => new Date(game.date).getTime() > new Date().getTime())
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          
+          console.log('🕐 Countdown Debug - All betting games:', bettingGames.length);
+          console.log('🕐 Countdown Debug - Upcoming games found:', upcomingGames.length);
+          console.log('🕐 Countdown Debug - Upcoming games:', upcomingGames.map(g => ({
+            id: g.id,
+            homeTeam: g.homeTeam.name,
+            awayTeam: g.awayTeam.name,
+            date: g.date,
+            status: g.status,
+            timeToGame: new Date(g.date).getTime() - new Date().getTime()
+          })));
+          
+          const nextGame = upcomingGames[0];
+          
+          // If no upcoming games, don't show the countdown timer
+          if (!nextGame) {
+            console.log('🕐 Countdown Debug - No next game found');
+            return null;
+          }
+          
+          console.log('🕐 Countdown Debug - Next game selected:', {
+            id: nextGame.id,
+            homeTeam: nextGame.homeTeam.name,
+            awayTeam: nextGame.awayTeam.name,
+            date: nextGame.date,
+            timeToGame: new Date(nextGame.date).getTime() - new Date().getTime()
+          });
+          
+          
+          const handleCountdownComplete = () => {
+            // Refresh the dashboard data to get updated games
+            fetchDashboardData();
+          };
+
+          
+          return (
+            <div className="mb-8">
+              <CountdownTimer 
+                key={nextGame.id} // Force re-render when game changes
+                nextGameDate={nextGame.date}
+                onCountdownComplete={handleCountdownComplete}
+              />
+            </div>
+          );
+        })()}
+
         <section className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-1 flex items-center">
             <span className="p-2 bg-primary-600 rounded-full shadow-lg flex items-center justify-center mr-2">
               <ChartBarIcon className="h-6 w-6 text-white" />
             </span>
-            Performance des 10 Derniers Matchs
+            Performance des derniers matchs
           </h2>
           <PersonalStatsSection stats={dashboardData?.stats || null} lastGamesPerformance={lastGamesPerformance} />
         </section>

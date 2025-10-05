@@ -2,6 +2,122 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide scrollbars for carousel components */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar { 
+  display: none;  /* Safari and Chrome */
+}
+
+/* Custom scrollbar design - ALWAYS VISIBLE */
+.custom-scrollbar {
+  /* Firefox - Force thick scrollbar */
+  scrollbar-width: auto !important;
+  scrollbar-color: #1a535c #E5E7EB !important;
+  
+  /* Force scrollbar to always be visible */
+  overflow-x: scroll !important;
+  overflow-y: hidden !important;
+  
+  /* Force scrollbar to always show, not just on hover */
+  scrollbar-gutter: stable !important;
+}
+
+/* WebKit browsers (Chrome, Safari, Edge) - ALWAYS VISIBLE */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 14px !important;
+  display: block !important;
+  -webkit-appearance: none !important;
+  background: #E5E7EB !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  /* Force scrollbar to always be visible, not just on hover */
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #E5E7EB !important;
+  border-radius: 7px !important;
+  border: 2px solid #D1D5DB !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #1a535c !important;
+  border-radius: 7px !important;
+  border: 3px solid #E5E7EB !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  min-height: 20px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #154a52 !important;
+  border-color: #D1D5DB !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background: #104047 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4) !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: #E5E7EB !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Force scrollbar to always be visible on desktop */
+.custom-scrollbar:hover::-webkit-scrollbar {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-track {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Additional force visibility */
+.custom-scrollbar::-webkit-scrollbar-thumb:not(:hover) {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Desktop scrollbar - Even more visible */
+@media (min-width: 768px) {
+  .custom-scrollbar::-webkit-scrollbar {
+    height: 16px !important;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    border: 4px solid #E5E7EB !important;
+    min-height: 24px !important;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    border: 3px solid #D1D5DB !important;
+  }
+  
+  /* Force scrollbar to always be visible on desktop */
+  .custom-scrollbar {
+    /* Force the scrollbar to always be visible */
+    scrollbar-gutter: stable !important;
+    /* Add a subtle border to indicate scrollable area */
+    border-bottom: 2px solid #1a535c !important;
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
