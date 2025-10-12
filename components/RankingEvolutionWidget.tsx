@@ -180,8 +180,8 @@ const RankingEvolutionWidget = memo(({
   });
 
   // Calculate chart dimensions - fit within widget container
-  const chartHeight = 260;
-  const padding = { top: 8, right: 60, bottom: 32, left: 40 };
+  const chartHeight = 340;
+  const padding = { top: 20, right: 100, bottom: 40, left: 40 };
   const plotWidth = chartWidth - (padding.left + padding.right);
   const plotHeight = chartHeight - (padding.top + padding.bottom);
 
@@ -281,7 +281,7 @@ const RankingEvolutionWidget = memo(({
               return (
                 <text
                   key={`y-label-right-${i}`}
-                  x={padding.left + plotWidth + 12}
+                  x={padding.left + plotWidth + 25}
                   y={padding.top + (i * plotHeight) / maxPosition + 4}
                   textAnchor="start"
                   style={{ 
@@ -405,6 +405,68 @@ const RankingEvolutionWidget = memo(({
                   />
                 );
               });
+            })}
+
+            {/* Profile pictures at last data point */}
+            {allPlayers.map(player => {
+              const color = playerColorMap.get(player.userId) || '#6B7280';
+              const isSelected = selectedUserId === player.userId;
+              const lastDataPoint = rankingData[rankingData.length - 1];
+              const lastRanking = lastDataPoint?.rankings.find(r => r.userId === player.userId);
+              
+              if (!lastRanking) return null;
+              
+              // Calculate position for last data point
+              const x = rankingData.length === 1 
+                ? padding.left + (plotWidth / 2)
+                : padding.left + plotWidth;
+              const y = padding.top + ((lastRanking.position - 1) * plotHeight) / maxPosition;
+              
+              return (
+                <g key={`profile-${player.userId}`}>
+                  {/* Background circle */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={isSelected ? 16 : 14}
+                    fill="white"
+                    stroke={color}
+                    strokeWidth={isSelected ? 3 : 2}
+                    opacity={selectedUserId ? (isSelected ? 1 : 0.3) : 1}
+                    style={{
+                      transition: 'opacity 0.3s ease-in-out, r 0.3s ease-in-out',
+                      filter: isSelected ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.1))' : 'none',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                  />
+                  {/* Profile picture */}
+                  <image
+                    x={x - (isSelected ? 16 : 14)}
+                    y={y - (isSelected ? 16 : 14)}
+                    width={isSelected ? 32 : 28}
+                    height={isSelected ? 32 : 28}
+                    href={player.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userName}`}
+                    clipPath={`url(#profile-clip-${player.userId})`}
+                    style={{
+                      transition: 'opacity 0.3s ease-in-out',
+                      opacity: selectedUserId ? (isSelected ? 1 : 0.3) : 1,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                  />
+                  {/* Clip path for circular profile pictures */}
+                  <defs>
+                    <clipPath id={`profile-clip-${player.userId}`}>
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={isSelected ? 16 : 14}
+                      />
+                    </clipPath>
+                  </defs>
+                </g>
+              );
             })}
 
           </svg>
