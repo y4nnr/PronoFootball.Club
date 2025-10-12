@@ -49,14 +49,11 @@ const RankingEvolutionWidget = memo(({
     const fetchRankingEvolution = async () => {
       try {
         setLoading(true);
-        console.log('Fetching ranking evolution for competition:', competitionId);
         const response = await fetch(`/api/competitions/${competitionId}/ranking-evolution`);
         if (!response.ok) {
-          console.error('Ranking evolution API failed:', response.status, response.statusText);
           throw new Error('Failed to fetch ranking evolution');
         }
         const data = await response.json();
-        console.log('Ranking evolution data:', data);
         setRankingData(data.rankingEvolution || []);
       } catch (err) {
         console.error('Error fetching ranking evolution:', err);
