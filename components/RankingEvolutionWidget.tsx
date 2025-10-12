@@ -1,0 +1,462 @@
+import { memo, useState, useEffect, useRef } from 'react';
+import { useTranslation } from '../hooks/useTranslation';
+
+interface RankingDataPoint {
+  date: string;
+  rankings: {
+    userId: string;
+    userName: string;
+    profilePictureUrl: string | null;
+    position: number;
+    totalPoints: number;
+  }[];
+}
+
+interface RankingEvolutionWidgetProps {
+  competitionId: string;
+  currentUserId?: string;
+}
+
+// Color palette for different players (darker shades for better visibility)
+const PLAYER_COLORS = [
+  '#1D4ED8', // blue-700 (darker)
+  '#DC2626', // red-600 (darker)
+  '#059669', // emerald-600 (darker)
+  '#D97706', // amber-600 (darker)
+  '#7C3AED', // violet-600 (darker)
+  '#DB2777', // pink-600 (darker)
+  '#0891B2', // cyan-600 (darker)
+  '#65A30D', // lime-600 (darker)
+  '#EA580C', // orange-600 (darker)
+  '#4F46E5', // indigo-600 (darker)
+];
+
+const RankingEvolutionWidget = memo(({ 
+  competitionId, 
+  currentUserId 
+}: RankingEvolutionWidgetProps) => {
+  const { t } = useTranslation('dashboard');
+  const [rankingData, setRankingData] = useState<RankingDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [chartWidth, setChartWidth] = useState(400);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const fetchRankingEvolution = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/competitions/${competitionId}/ranking-evolution`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch ranking evolution');
+        }
+        const data = await response.json();
+        setRankingData(data.rankingEvolution || []);
+      } catch (err) {
+        console.error('Error fetching ranking evolution:', err);
+        setError('Failed to load ranking evolution');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRankingEvolution();
+  }, [competitionId]);
+
+  // Update chart width when container resizes
+  useEffect(() => {
+    let retryCount = 0;
+    const maxRetries = 10;
+    
+    const updateChartWidth = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        if (containerWidth > 0) {
+          console.log(`Chart width update: ${containerWidth}px for competition ${competitionId}`);
+          setChartWidth(containerWidth);
+          setIsMobile(containerWidth < 640); // sm breakpoint
+          retryCount = 0; // Reset retry count on success
+        } else if (retryCount < maxRetries) {
+          // Container exists but has no width yet, try again later
+          retryCount++;
+          setTimeout(updateChartWidth, 100);
+        }
+      } else if (retryCount < maxRetries) {
+        // Container ref not available yet, try again later
+        retryCount++;
+        setTimeout(updateChartWidth, 100);
+      }
+    };
+
+    // Initial attempt
+    updateChartWidth();
+    
+    // Use ResizeObserver for better performance
+    const resizeObserver = new ResizeObserver(updateChartWidth);
+    
+    // Try to observe the container with multiple attempts
+    const observeContainer = () => {
+      if (containerRef.current) {
+        resizeObserver.observe(containerRef.current);
+        return true;
+      }
+      return false;
+    };
+    
+    // Try to observe immediately and with delays
+    if (!observeContainer()) {
+      const observeTimeouts = [
+        setTimeout(() => observeContainer(), 100),
+        setTimeout(() => observeContainer(), 300),
+        setTimeout(() => observeContainer(), 600)
+      ];
+      
+      // Cleanup observe timeouts
+      return () => {
+        observeTimeouts.forEach(clearTimeout);
+      };
+    }
+    
+    // Fallback resize listener
+    window.addEventListener('resize', updateChartWidth);
+    
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateChartWidth);
+    };
+  }, [competitionId]);
+
+  if (loading) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+        <div className="text-center py-8">
+          <div className="text-red-500 text-4xl mb-3">⚠️</div>
+          <p className="text-red-500 mb-2">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="text-blue-500 text-sm hover:underline"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (rankingData.length === 0) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+        <div className="text-center py-8">
+          <div className="text-gray-400 text-4xl mb-3">📈</div>
+          <p className="text-gray-500">
+            Aucune donnée de classement disponible
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Get all unique players from the first ranking data point
+  const allPlayers = rankingData[0]?.rankings || [];
+  const maxPosition = Math.max(...allPlayers.map(p => p.position));
+
+  // Create color mapping for players
+  const playerColorMap = new Map<string, string>();
+  allPlayers.forEach((player, index) => {
+    playerColorMap.set(player.userId, PLAYER_COLORS[index % PLAYER_COLORS.length]);
+  });
+
+  // Calculate chart dimensions - fit within widget container
+  const chartHeight = 260;
+  const padding = { top: 8, right: 60, bottom: 32, left: 40 };
+  const plotWidth = chartWidth - (padding.left + padding.right);
+  const plotHeight = chartHeight - (padding.top + padding.bottom);
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-4 w-full">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <div className="p-2 bg-primary-600 rounded-full shadow mr-3 flex items-center justify-center">
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Évolution du Classement</h2>
+            <p className="text-sm text-gray-500">Cliquez sur un joueur pour mettre en évidence sa progression</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Chart Container */}
+      <div className="overflow-x-auto" ref={containerRef}>
+        <div className="relative w-full" style={{ height: chartHeight }}>
+          <svg 
+            ref={svgRef}
+            width={chartWidth} 
+            height={chartHeight} 
+            className="absolute inset-0"
+            style={{
+              textRendering: 'geometricPrecision',
+              shapeRendering: 'geometricPrecision'
+            }}
+          >
+            {/* Gradient definition */}
+            <defs>
+              <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="100%" stopColor="#F9FAFB" />
+              </linearGradient>
+            </defs>
+
+            {/* Chart background gradient */}
+            <rect
+              x={padding.left}
+              y={padding.top}
+              width={plotWidth}
+              height={plotHeight}
+              fill="url(#chartGradient)"
+            />
+
+            {/* Horizontal grid lines */}
+            {Array.from({ length: maxPosition + 1 }).map((_, i) => (
+              <line
+                key={`grid-${i}`}
+                x1={padding.left}
+                y1={padding.top + (i * plotHeight) / maxPosition}
+                x2={chartWidth - padding.right}
+                y2={padding.top + (i * plotHeight) / maxPosition}
+                stroke="#F5F5F5"
+                strokeWidth={1}
+              />
+            ))}
+
+            {/* Y-axis labels (positions) - Left side */}
+            {Array.from({ length: maxPosition + 1 }).map((_, i) => {
+              // On mobile, show fewer ticks (every other one if more than 6 positions)
+              if (isMobile && maxPosition > 6 && i % 2 !== 0 && i !== maxPosition) {
+                return null;
+              }
+              
+              return (
+                <text
+                  key={`y-label-left-${i}`}
+                  x={padding.left - 12}
+                  y={padding.top + (i * plotHeight) / maxPosition + 4}
+                  textAnchor="end"
+                  style={{ 
+                    fontSize: '13px', 
+                    fill: '#374151',
+                    fontWeight: 600,
+                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                    textRendering: 'geometricPrecision',
+                    shapeRendering: 'geometricPrecision'
+                  }}
+                >
+                  {i + 1 === 1 ? '1er' : i + 1 === 10 ? '' : `${i + 1}e`}
+                </text>
+              );
+            })}
+
+            {/* Y-axis labels (positions) - Right side */}
+            {Array.from({ length: maxPosition + 1 }).map((_, i) => {
+              // On mobile, show fewer ticks (every other one if more than 6 positions)
+              if (isMobile && maxPosition > 6 && i % 2 !== 0 && i !== maxPosition) {
+                return null;
+              }
+              
+              return (
+                <text
+                  key={`y-label-right-${i}`}
+                  x={padding.left + plotWidth + 12}
+                  y={padding.top + (i * plotHeight) / maxPosition + 4}
+                  textAnchor="start"
+                  style={{ 
+                    fontSize: '13px', 
+                    fill: '#374151',
+                    fontWeight: 600,
+                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                    textRendering: 'geometricPrecision',
+                    shapeRendering: 'geometricPrecision'
+                  }}
+                >
+                  {i + 1 === 1 ? '1er' : i + 1 === 10 ? '' : `${i + 1}e`}
+                </text>
+              );
+            })}
+
+            {/* X-axis labels (dates) */}
+            {rankingData.map((dataPoint, index) => {
+              // On mobile, show fewer ticks (every other one if more than 8 data points)
+              if (isMobile && rankingData.length > 8 && index % 2 !== 0 && index !== rankingData.length - 1) {
+                return null;
+              }
+              
+              // Fix: Use proper scaling for single data point
+              const x = rankingData.length === 1 
+                ? padding.left + (plotWidth / 2) // Center single point
+                : padding.left + ((index * plotWidth) / Math.max(1, rankingData.length - 1));
+              
+              // Check if labels would overlap (rough estimation)
+              const labelSpacing = plotWidth / Math.max(1, rankingData.length - 1);
+              const shouldRotate = labelSpacing < 40 || isMobile; // Rotate if spacing is too small or on mobile
+              
+              return (
+                <g key={`x-label-${index}`}>
+                  {/* Matchday label */}
+                  <text
+                    x={x}
+                    y={chartHeight - padding.bottom + 16}
+                    textAnchor={shouldRotate ? "end" : "middle"}
+                    style={{ 
+                      fontSize: '13px', 
+                      fill: '#374151',
+                      fontWeight: 600,
+                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                      textRendering: 'geometricPrecision',
+                      shapeRendering: 'geometricPrecision',
+                      transform: shouldRotate ? `rotate(-28 ${x} ${chartHeight - padding.bottom + 16})` : 'none',
+                      transformOrigin: `${x}px ${chartHeight - padding.bottom + 16}px`
+                    }}
+                  >
+                    J{index + 1}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Player lines */}
+            {allPlayers.map(player => {
+              const color = playerColorMap.get(player.userId) || '#6B7280';
+              const isSelected = selectedUserId === player.userId;
+              
+              return (
+                <polyline
+                  key={player.userId}
+                  points={rankingData.map((dataPoint, index) => {
+                    const playerRanking = dataPoint.rankings.find(r => r.userId === player.userId);
+                    const position = playerRanking?.position || maxPosition;
+                    // Fix: Use proper scaling for single data point
+                    const x = rankingData.length === 1 
+                      ? padding.left + (plotWidth / 2) // Center single point
+                      : padding.left + ((index * plotWidth) / Math.max(1, rankingData.length - 1));
+                    const y = padding.top + ((position - 1) * plotHeight) / maxPosition;
+                    return `${x},${y}`;
+                  }).join(' ')}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={isSelected ? 2.5 : 1.5}
+                  opacity={selectedUserId ? (isSelected ? 1 : 0.3) : 1}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{
+                    transition: 'opacity 0.3s ease-in-out, stroke-width 0.3s ease-in-out',
+                    cursor: 'pointer',
+                    filter: isSelected ? 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))' : 'none'
+                  }}
+                  onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                />
+              );
+            })}
+
+            {/* Data points */}
+            {allPlayers.map(player => {
+              const color = playerColorMap.get(player.userId) || '#6B7280';
+              const isSelected = selectedUserId === player.userId;
+              
+              return rankingData.map((dataPoint, index) => {
+                const playerRanking = dataPoint.rankings.find(r => r.userId === player.userId);
+                if (!playerRanking) return null;
+                
+                // Fix: Use proper scaling for single data point
+                const x = rankingData.length === 1 
+                  ? padding.left + (plotWidth / 2) // Center single point
+                  : padding.left + ((index * plotWidth) / Math.max(1, rankingData.length - 1));
+                const y = padding.top + ((playerRanking.position - 1) * plotHeight) / maxPosition;
+                
+                return (
+                  <circle
+                    key={`point-${player.userId}-${index}`}
+                    cx={x}
+                    cy={y}
+                    r={isSelected ? 5 : 3}
+                    fill={color}
+                    stroke="white"
+                    strokeWidth={isSelected ? 2 : 1}
+                    opacity={selectedUserId ? (isSelected ? 1 : 0.3) : 1}
+                    style={{
+                      transition: 'opacity 0.3s ease-in-out, r 0.3s ease-in-out',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                  />
+                );
+              });
+            })}
+
+          </svg>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-2 pt-2 border-t border-gray-100">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+          {allPlayers.map((player, index) => {
+            const color = playerColorMap.get(player.userId) || '#6B7280';
+            const isSelected = selectedUserId === player.userId;
+            
+            return (
+              <div 
+                key={player.userId}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                  isSelected 
+                    ? 'bg-blue-100 ring-2 ring-blue-400 shadow-md transform scale-105' 
+                    : 'hover:bg-gray-50 hover:shadow-sm'
+                }`}
+                onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+              >
+                <div 
+                  className={`w-4 h-4 rounded-full border-2 border-white transition-all ${
+                    isSelected ? 'ring-2 ring-blue-400 shadow-sm' : ''
+                  }`}
+                  style={{ backgroundColor: color }}
+                />
+                <img
+                  src={player.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player.userName.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
+                  alt={player.userName}
+                  className={`w-5 h-5 rounded-full border-2 border-gray-200 object-cover transition-all ${
+                    isSelected ? 'ring-2 ring-blue-400 shadow-sm' : ''
+                  }`}
+                />
+                <span className={`font-medium transition-all ${
+                  isSelected 
+                    ? 'text-blue-800 font-bold' 
+                    : 'text-gray-700'
+                }`}>
+                  {player.userName}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+RankingEvolutionWidget.displayName = 'RankingEvolutionWidget';
+
+export default RankingEvolutionWidget;

@@ -8,6 +8,7 @@ import { TrophyIcon, CalendarIcon, UsersIcon, ChartBarIcon } from '@heroicons/re
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import PlayersPerformanceWidget from '../../components/PlayersPerformanceWidget';
+import RankingEvolutionWidget from '../../components/RankingEvolutionWidget';
 
 interface CompetitionUser {
   id: string;
@@ -475,6 +476,14 @@ export default function CompetitionDetails({ competition, competitionStats, game
             playersPerformance={playersPerformance}
             competitionName={competition.name}
             totalGames={playersPerformance[0]?.lastGamesPerformance.length || 0}
+            currentUserId={currentUserId}
+          />
+        )}
+
+        {/* Ranking Evolution Widget - Only show if there are finished games */}
+        {playersPerformance.length > 0 && (
+          <RankingEvolutionWidget
+            competitionId={competition.id}
             currentUserId={currentUserId}
           />
         )}
