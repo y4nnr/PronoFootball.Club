@@ -194,7 +194,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
       const response = await fetch(`/api/competitions/${competition.id}/players-performance`);
       if (response.ok) {
         const data = await response.json();
+        console.log('Players performance data:', data);
         setPlayersPerformance(data.playersPerformance || []);
+      } else {
+        console.error('Players performance API failed:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching players performance:', error);
@@ -486,6 +489,22 @@ export default function CompetitionDetails({ competition, competitionStats, game
             competitionId={competition.id}
             currentUserId={currentUserId}
           />
+        )}
+        
+        {/* Debug info for production troubleshooting */}
+        {process.env.NODE_ENV === 'production' && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <h3 className="text-sm font-medium text-yellow-800 mb-2">Debug Info (Production)</h3>
+            <p className="text-xs text-yellow-700">
+              Players Performance Length: {playersPerformance.length}
+            </p>
+            <p className="text-xs text-yellow-700">
+              Competition ID: {competition.id}
+            </p>
+            <p className="text-xs text-yellow-700">
+              Current User ID: {currentUserId}
+            </p>
+          </div>
         )}
 
         {/* Games Section */}
