@@ -28,14 +28,14 @@ export default function ChangePasswordPage() {
 
   if (status === 'loading' || !needsPasswordChange) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f7f8fa' }}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 py-12">
+    <div className="min-h-screen py-12" style={{ backgroundColor: '#f7f8fa' }}>
       <div className="max-w-md mx-auto px-4">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold gradient-text">Change Your Password</h1>

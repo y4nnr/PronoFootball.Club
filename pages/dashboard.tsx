@@ -496,7 +496,7 @@ export default function Dashboard() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center py-32">
+      <div className="flex items-center justify-center py-32" style={{ backgroundColor: '#f7f8fa' }}>
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -508,7 +508,7 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="bg-gray-50 flex items-center justify-center py-32">
+      <div className="flex items-center justify-center py-32" style={{ backgroundColor: '#f7f8fa' }}>
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
@@ -524,7 +524,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="bg-gray-50">
+    <div style={{ backgroundColor: '#f7f8fa' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

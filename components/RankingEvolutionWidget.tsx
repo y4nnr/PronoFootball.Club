@@ -17,18 +17,18 @@ interface RankingEvolutionWidgetProps {
   currentUserId?: string;
 }
 
-// Color palette for different players (darker shades for better visibility)
+// Color palette for different players (distinct, curated — no near-duplicates)
+// Based on a high-contrast categorical set
 const PLAYER_COLORS = [
-  '#1D4ED8', // blue-700 (darker)
-  '#DC2626', // red-600 (darker)
-  '#059669', // emerald-600 (darker)
-  '#D97706', // amber-600 (darker)
-  '#7C3AED', // violet-600 (darker)
-  '#DB2777', // pink-600 (darker)
-  '#0891B2', // cyan-600 (darker)
-  '#65A30D', // lime-600 (darker)
-  '#EA580C', // orange-600 (darker)
-  '#4F46E5', // indigo-600 (darker)
+  '#1F77B4', // blue
+  '#FF7F0E', // orange
+  '#2CA02C', // green
+  '#D62728', // red
+  '#9467BD', // purple
+  '#8C564B', // brown/tan
+  '#BCBD22', // yellow-green
+  '#7F7F7F', // gray
+  '#17BECF', // teal/cyan
 ];
 
 const RankingEvolutionWidget = memo(({ 
@@ -181,7 +181,7 @@ const RankingEvolutionWidget = memo(({
 
   // Calculate chart dimensions - fit within widget container
   const chartHeight = 340;
-  const padding = { top: 20, right: 100, bottom: 40, left: 40 };
+  const padding = { top: 20, right: 56, bottom: 40, left: 40 };
   const plotWidth = chartWidth - (padding.left + padding.right);
   const plotHeight = chartHeight - (padding.top + padding.bottom);
 
@@ -281,7 +281,7 @@ const RankingEvolutionWidget = memo(({
               return (
                 <text
                   key={`y-label-right-${i}`}
-                  x={padding.left + plotWidth + 25}
+                  x={padding.left + plotWidth + 22}
                   y={padding.top + (i * plotHeight) / maxPosition + 4}
                   textAnchor="start"
                   style={{ 

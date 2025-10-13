@@ -192,7 +192,7 @@ export default function ProfilePage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f7f8fa' }}>
         <div className="text-xl text-neutral-700">{t('dashboard.loading') || 'Loading...'}</div>
       </div>
     );
@@ -200,14 +200,14 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f7f8fa' }}>
         <div className="text-xl text-red-600">{t('profile.messages.loadError')}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#f7f8fa' }}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
