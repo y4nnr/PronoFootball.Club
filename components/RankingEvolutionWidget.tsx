@@ -195,7 +195,7 @@ const RankingEvolutionWidget = memo(({
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Évolution du Classement</h2>
+            <h2 className="text-xl font-bold text-gray-900">Évolution du Classement</h2>
             <p className="text-sm text-gray-500">Cliquez sur un joueur pour mettre en évidence sa progression</p>
           </div>
         </div>

@@ -139,7 +139,7 @@ const PlayersPerformanceWidget = memo(({
             </svg>
           </div>
           <div>
-            <h2 className="text-base font-bold text-gray-900">Performance des 10 Derniers Matchs</h2>
+            <h2 className="text-xl font-bold text-gray-900">Performance des 10 Derniers Matchs</h2>
           </div>
         </div>
       </div>
