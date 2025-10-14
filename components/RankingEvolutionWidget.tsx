@@ -68,66 +68,84 @@ const RankingEvolutionWidget = memo(({
 
   // Update chart width when container resizes
   useEffect(() => {
-    let retryCount = 0;
-    const maxRetries = 10;
-    
-    const updateChartWidth = () => {
-      if (containerRef.current) {
-        const containerWidth = containerRef.current.clientWidth;
-        if (containerWidth > 0) {
-          console.log(`Chart width update: ${containerWidth}px for competition ${competitionId}`);
-          setChartWidth(containerWidth);
-          setIsMobile(containerWidth < 640); // sm breakpoint
-          retryCount = 0; // Reset retry count on success
-        } else if (retryCount < maxRetries) {
-          // Container exists but has no width yet, try again later
-          retryCount++;
-          setTimeout(updateChartWidth, 100);
-        }
-      } else if (retryCount < maxRetries) {
-        // Container ref not available yet, try again later
-        retryCount++;
-        setTimeout(updateChartWidth, 100);
+    // Wait until data is loaded and container exists
+    let rafId: number | null = null;
+    let checkInterval: ReturnType<typeof setInterval> | null = null;
+    const observer = new ResizeObserver((entries) => {
+      if (!entries || entries.length === 0) return;
+      const width = Math.floor(entries[0].contentRect.width);
+      if (width > 0) {
+        setChartWidth(width);
+        setIsMobile(width < 640);
       }
-    };
+    });
 
-    // Initial attempt
-    updateChartWidth();
-    
-    // Use ResizeObserver for better performance
-    const resizeObserver = new ResizeObserver(updateChartWidth);
-    
-    // Try to observe the container with multiple attempts
-    const observeContainer = () => {
-      if (containerRef.current) {
-        resizeObserver.observe(containerRef.current);
+    const measureNow = () => {
+      if (!containerRef.current) return false;
+      const width = containerRef.current.clientWidth;
+      if (width > 0) {
+        setChartWidth(width);
+        setIsMobile(width < 640);
         return true;
       }
       return false;
     };
-    
-    // Try to observe immediately and with delays
-    if (!observeContainer()) {
-      const observeTimeouts = [
-        setTimeout(() => observeContainer(), 100),
-        setTimeout(() => observeContainer(), 300),
-        setTimeout(() => observeContainer(), 600)
-      ];
-      
-      // Cleanup observe timeouts
-      return () => {
-        observeTimeouts.forEach(clearTimeout);
-      };
-    }
-    
-    // Fallback resize listener
-    window.addEventListener('resize', updateChartWidth);
-    
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', updateChartWidth);
+
+    const attachObserverWhenReady = () => {
+      if (containerRef.current) {
+        try {
+          observer.observe(containerRef.current);
+        } catch (_) {
+          // no-op
+        }
+        // Do an immediate measurement as well
+        measureNow();
+        return true;
+      }
+      return false;
     };
-  }, [competitionId]);
+
+    // Try immediate attach/measure
+    let attached = attachObserverWhenReady();
+
+    // If not attached, poll via rAF for a short period until container exists and has width
+    if (!attached) {
+      const tryAttach = () => {
+        attached = attachObserverWhenReady();
+        if (!attached) {
+          rafId = window.requestAnimationFrame(tryAttach);
+        }
+      };
+      rafId = window.requestAnimationFrame(tryAttach);
+    }
+
+    // As a safety net, also check periodically for late layout (e.g., after CSS/layout settles)
+    if (!measureNow()) {
+      checkInterval = setInterval(() => {
+        const ok = measureNow();
+        if (ok && checkInterval) {
+          clearInterval(checkInterval);
+          checkInterval = null;
+        }
+      }, 200);
+    }
+
+    const onResize = () => {
+      measureNow();
+    };
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+      observer.disconnect();
+      window.removeEventListener('resize', onResize);
+    };
+  }, [competitionId, loading, rankingData.length]);
 
   if (loading) {
     return (
