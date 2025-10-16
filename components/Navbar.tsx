@@ -55,13 +55,13 @@ export default function Navbar() {
   }, [session, isAdmin]);
 
   const navigationItems = [
-    { name: t('dashboard.nav.home'), href: '/dashboard', icon: <HomeIcon className="h-6 w-6" />, showFor: ['user', 'admin'] },
-    { name: t('dashboard.nav.competitions'), href: '/competitions', icon: <PencilSquareIcon className="h-6 w-6" />, showFor: ['user', 'admin'] },
-    { name: t('dashboard.nav.stats'), href: '/stats', icon: <ChartBarIcon className="h-6 w-6" />, showFor: ['user', 'admin'] },
+    { name: t('dashboard.nav.home'), href: '/dashboard', icon: <HomeIcon className="size-6" />, showFor: ['user', 'admin'] },
+    { name: t('dashboard.nav.competitions'), href: '/competitions', icon: <PencilSquareIcon className="size-6" />, showFor: ['user', 'admin'] },
+    { name: t('dashboard.nav.stats'), href: '/stats', icon: <ChartBarIcon className="size-6" />, showFor: ['user', 'admin'] },
     // Admin only
-    { name: t('admin.competitions.title'), href: '/admin/competitions', icon: <CalendarIcon className="h-6 w-6" />, showFor: ['admin'] },
-    { name: t('dashboard.admin.manageTeams'), href: '/admin/teams', icon: <ShieldCheckIcon className="h-6 w-6" />, showFor: ['admin'] },
-    { name: t('dashboard.admin.manageUsers'), href: '/admin/users', icon: <UserGroupIcon className="h-6 w-6" />, showFor: ['admin'] },
+    { name: t('admin.competitions.title'), href: '/admin/competitions', icon: <CalendarIcon className="size-6 text-orange-400" />, showFor: ['admin'] },
+    { name: t('dashboard.admin.manageTeams'), href: '/admin/teams', icon: <ShieldCheckIcon className="size-6 text-orange-400" />, showFor: ['admin'] },
+    { name: t('dashboard.admin.manageUsers'), href: '/admin/users', icon: <UserGroupIcon className="size-6 text-orange-400" />, showFor: ['admin'] },
   ];
 
   const filteredNavigation = navigationItems.filter(item => item.showFor.includes(isAdmin ? 'admin' : 'user'));
@@ -88,12 +88,12 @@ export default function Navbar() {
       <Link
         key={item.href}
         href={item.href}
-        className={`group flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 min-w-[80px] ${
+        className={`group inline-flex flex-col items-center justify-center gap-3 rounded-lg transition-all duration-200 w-[128px] h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
           isActive ? 'bg-white/10 text-white shadow-md' : 'text-gray-300 hover:text-white hover:bg-white/5'
         }`}
       >
-        <div className="mb-2">{item.icon}</div>
-        <span className="text-xs font-medium leading-tight text-center max-w-[80px] line-clamp-2">
+        <div className="mb-0">{item.icon}</div>
+        <span className={`whitespace-nowrap text-base font-medium leading-none tracking-[0.01em] text-center ${isActive ? 'text-white' : item.showFor.length === 1 && item.showFor.includes('admin') ? 'text-orange-400 group-hover:text-orange-300' : 'text-gray-100 group-hover:text-white'}`}>
           {item.name}
         </span>
       </Link>
@@ -104,15 +104,15 @@ export default function Navbar() {
   const BackButton = () => (
     <button
       onClick={handleGoBack}
-      className={`group flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 min-w-[80px] ${
+      className={`group inline-flex flex-col items-center justify-center gap-1 rounded-lg transition-all duration-200 w-[120px] h-[60px] shrink-0 ${
         canGoBack ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 cursor-not-allowed'
       }`}
       disabled={!canGoBack}
     >
-      <div className="mb-2">
-        <ArrowLeftIcon className="h-6 w-6" />
+      <div className="mb-0">
+        <ArrowLeftIcon className="h-5 w-5" />
       </div>
-      <span className="text-xs font-medium leading-tight text-center">
+      <span className={`${canGoBack ? 'text-[15px] font-medium tracking-wide text-gray-100 group-hover:text-white whitespace-nowrap' : 'text-[15px] font-medium tracking-wide text-gray-600 whitespace-nowrap'} leading-tight text-center`}>
         {t('back')}
       </span>
     </button>
@@ -176,7 +176,7 @@ export default function Navbar() {
               </svg>
             </button>
             {/* Back Button + Navigation with text labels (desktop only) */}
-            <div className="flex space-x-1 md:space-x-2 hidden md:flex">
+            <div className="flex items-center gap-0 hidden md:flex">
               <BackButton />
               {filteredNavigation.map(item => (
                 <NavItem key={item.href} item={item} />
