@@ -289,51 +289,88 @@ export default function CompetitionDetails({ competition, competitionStats, game
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Period */}
           <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 flex flex-col justify-between">
-            <div className="flex items-center space-x-3 mb-4">
+            <div className="flex items-center space-x-3 mb-2">
               <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-12 w-12">
                 <CalendarIcon className="h-8 w-8 text-white" />
               </div>
-              <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">{t('competition.period')}</span>
+              <div className="text-sm text-gray-900 text-center flex-1">
+                <div className="space-y-1">
+                  <p className="font-bold">{formatDate(competition.startDate)}</p>
+                  <p className="text-gray-500 text-xs">{t('competition.to')}</p>
+                  <p className="font-bold">{formatDate(competition.endDate)}</p>
+                </div>
+              </div>
             </div>
-            <div className="text-sm text-gray-900">
-              <p className="font-medium">{formatDate(competition.startDate)}</p>
-              <p className="text-gray-500">{t('competition.to')}</p>
-              <p className="font-medium">{formatDate(competition.endDate)}</p>
-            </div>
+            <h3 className="font-semibold text-gray-900">{t('competition.period')}</h3>
           </div>
 
           {/* Participants */}
           <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 flex flex-col justify-between">
-            <div className="flex items-center space-x-3 mb-4">
+            <div className="flex items-center space-x-3 mb-2">
               <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-12 w-12">
                 <UsersIcon className="h-8 w-8 text-white" />
               </div>
               <span className="text-2xl font-bold text-gray-900">{competition._count.users}</span>
             </div>
             <h3 className="font-semibold text-gray-900">{t('competition.participants')}</h3>
-            <p className="text-sm text-gray-600">{t('competition.playersJoined')}</p>
           </div>
 
           {/* Games */}
           <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 flex flex-col justify-between">
-            <div className="flex items-center space-x-3 mb-4">
+            <div className="flex items-center space-x-3 mb-2">
               <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-12 w-12">
                 <ChartBarIcon className="h-8 w-8 text-white" />
               </div>
               <span className="text-2xl font-bold text-gray-900">{competition._count.games}</span>
             </div>
             <h3 className="font-semibold text-gray-900">{t('competition.matches')}</h3>
-            <p className="text-sm text-gray-600">{t('competition.totalGames')}</p>
           </div>
 
           {/* Status */}
           <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 flex flex-col justify-between">
-            <div className="flex items-center space-x-3 mb-4 justify-center">
-              <span className="inline-block w-3 h-3 rounded-full bg-primary-600"></span>
-              <span className="text-base font-bold text-blue-700 uppercase tracking-wider">{translateCompetitionStatus(competition.status)}</span>
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-12 w-12">
+                <span className="text-white text-lg font-bold">
+                  {competition.status === 'ACTIVE' || competition.status === 'active' ? '▶' : 
+                   competition.status === 'UPCOMING' || competition.status === 'upcoming' ? '⏳' :
+                   competition.status === 'COMPLETED' || competition.status === 'completed' ? '✓' :
+                   competition.status === 'CANCELLED' || competition.status === 'cancelled' ? '✗' : '?'}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-gray-900">{translateCompetitionStatus(competition.status)}</span>
             </div>
             <h3 className="font-semibold text-gray-900">{t('competition.status')}</h3>
-            <p className="text-sm text-gray-600">{t('competition.competitionState')}</p>
+          </div>
+        </div>
+
+        {/* Competition Progress Bar */}
+        <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <div className="p-2 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+                <ChartBarIcon className="h-5 w-5 text-white" />
+              </div>
+              Progression de la compétition
+            </h3>
+            <div className="text-base text-gray-600 font-bold">
+              {games.filter(g => g.status === 'FINISHED').length} / {competition._count.games} matchs joués
+            </div>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-8 relative">
+            <div 
+              className="bg-gradient-to-r from-primary-500 to-primary-600 h-8 rounded-full transition-all duration-500 ease-out flex items-center justify-center relative"
+              style={{ 
+                width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 : 0}%` 
+              }}
+            >
+              <span className="text-white font-bold text-sm drop-shadow-sm">
+                {competition._count.games > 0 ? Math.round((games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100) : 0}%
+              </span>
+            </div>
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 mt-2">
+            <span className="font-bold">0%</span>
+            <span className="font-bold">100%</span>
           </div>
         </div>
 
