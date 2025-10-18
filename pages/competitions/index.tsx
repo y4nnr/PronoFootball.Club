@@ -53,7 +53,7 @@ const CompetitionCard = ({ competition, actionLabel, actionIcon, disabled = fals
 }) => (
   <Link
     href={`/competitions/${competition.id}`}
-    className={`bg-neutral-50 border border-neutral-200/50 rounded-2xl shadow-modern p-5 flex flex-col justify-between hover:shadow-modern-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
+    className={`bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-modern p-5 flex flex-col justify-between hover:shadow-modern-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
     tabIndex={disabled ? -1 : 0}
     aria-disabled={disabled}
     style={{ textDecoration: 'none', color: 'inherit' }}

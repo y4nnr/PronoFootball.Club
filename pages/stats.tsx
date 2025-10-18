@@ -325,7 +325,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
           {currentUserStats ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               {/* All-time Ranking with Total Points */}
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
                 <div className="flex items-center mb-2">
                   <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
                     <TrophyIcon className="h-6 w-6 text-white" />
@@ -336,7 +336,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 <div className="text-xs text-gray-500">{t('stats.outOfUsers', { count: leaderboardData?.totalUsers || 0 })}</div>
               </div>
               {/* Average Points per Game */}
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
                 <div className="flex items-center mb-2">
                   <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
                     <ChartBarIcon className="h-6 w-6 text-white" />
@@ -347,7 +347,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 <div className="text-xs text-gray-500">{t('stats.basedOnGames', { count: currentUserStats.totalPredictions })}</div>
               </div>
               {/* Competitions Won */}
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
                 <div className="flex items-center mb-2">
                   <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
                     <TrophyIcon className="h-6 w-6 text-white" />
@@ -381,7 +381,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* Meilleurs Marqueurs */}
-            <div className="bg-[#f9fafb] border border-gray-300 rounded-xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-xl p-6 shadow-xl flex flex-col justify-between">
               <h3 className="text-gray-900 mb-4 flex items-center">
                 {t('stats.topPlayersAllTime')}
               </h3>
@@ -398,9 +398,9 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   leaderboardData.topPlayersByPoints.slice(0, 10).map((player, index) => (
                     <React.Fragment key={player.id}>
                       <div
-                        className={"flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 cursor-pointer hover:bg-primary-50" + 
+                        className={"flex items-center justify-between p-3 rounded-xl border border-primary-300/60 cursor-pointer hover:bg-primary-50" + 
                           (expandedUserId === player.id ? " ring-2 ring-primary-400 bg-blue-100" : "") +
-                          (player.id === currentUser.id ? " bg-blue-50 ring-2 ring-blue-300 border-blue-300" : " bg-neutral-50")}
+                          (player.id === currentUser.id ? " bg-blue-50 ring-2 ring-blue-300 border-blue-300" : " bg-gradient-to-br from-primary-50 to-primary-100")}
                         onClick={() => handleUserClick(player)}
                         title="Voir le détail par compétition"
                       >
@@ -465,7 +465,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             </div>
 
             {/* Meilleure Moyenne */}
-            <div className="bg-[#f9fafb] border border-gray-300 rounded-xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-xl p-6 shadow-xl flex flex-col justify-between">
               <h3 className="text-gray-900 mb-4 flex items-center">
                 {t('stats.bestAverage')}
               </h3>
@@ -480,8 +480,8 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   </div>
                 ) : leaderboardData?.topPlayersByAverage ? (
                   leaderboardData.topPlayersByAverage.slice(0, 10).map((player, index) => (
-                    <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 ${
-                      player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-neutral-50"
+                    <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-primary-300/60 ${
+                      player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-gradient-to-br from-primary-50 to-primary-100"
                     }`}>
                       <div className="flex items-center space-x-3">
                         <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-500' : 'text-gray-700'}`}>{index + 1}.</span>
@@ -505,7 +505,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             </div>
 
             {/* Total 1-N-2 Corrects */}
-            <div className="bg-[#f9fafb] border border-gray-300 rounded-xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-xl p-6 shadow-xl flex flex-col justify-between">
               <h3 className="text-gray-900 mb-4 flex items-center">
                 Total 1-N-2 Corrects
               </h3>
@@ -548,7 +548,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             </div>
 
             {/* Most Exact Scores */}
-            <div className="bg-[#f9fafb] border border-gray-300 rounded-xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-xl p-6 shadow-xl flex flex-col justify-between">
               <h3 className="text-gray-900 mb-4 flex items-center">
                 {t('stats.mostExactScores')}
               </h3>
@@ -591,7 +591,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             </div>
 
             {/* No-Show (Shooters) */}
-            <div className="bg-[#f9fafb] border border-gray-300 rounded-xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-xl p-6 shadow-xl flex flex-col justify-between">
               <h3 className="text-gray-900 mb-4 flex items-center">
                 No-Show (Shooters)
               </h3>
@@ -634,7 +634,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             </div>
 
             {/* Most Competitions Won */}
-            <div className="bg-[#f9fafb] border border-gray-300 rounded-xl p-6 shadow-xl flex flex-col justify-between lg:col-span-3">
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-xl p-6 shadow-xl flex flex-col justify-between lg:col-span-3">
               <h3 className="text-gray-900 mb-4 flex items-center text-lg">
                 {t('stats.mostCompetitionsWon')}
               </h3>
@@ -713,7 +713,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
           <div className="bg-white rounded-xl shadow-md border border-neutral-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-neutral-200">
-                <thead className="bg-neutral-50">
+                <thead className="bg-gradient-to-br from-primary-100 to-primary-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                       {t('stats.competition')}
@@ -858,7 +858,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             
             {/* Competition Summary Stats */}
             {!loading && leaderboardData && (
-              <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200">
+              <div className="px-6 py-4 bg-gradient-to-br from-primary-100 to-primary-200 border-t border-primary-300/60">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
                     <div className="text-2xl font-bold text-blue-600">

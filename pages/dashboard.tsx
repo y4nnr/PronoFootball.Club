@@ -122,9 +122,9 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
   if (!stats) return null;
 
   return (
-    <div className="mb-8">
+    <div className="mb-0">
       {/* Performance des 9 Derniers Matchs */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-2">
                      {Array.from({ length: 9 }).map((_, index) => {
                        const game = lastGamesPerformance[index];
@@ -204,7 +204,7 @@ const ActiveCompetitionsSection = memo(({ competitions, t }: { competitions: Com
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-6 mb-8">
+    <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-5">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -291,7 +291,7 @@ const BettingGamesSection = memo(({ games, t }: { games: BettingGame[]; t: (key:
   console.log('🎯 BettingGamesSection - Received games:', games?.length || 0, 'games');
   console.log('🎯 BettingGamesSection - Games data:', games);
   return (
-    <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-6 mb-8">
+    <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-5 mb-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -533,64 +533,59 @@ export default function Dashboard() {
               <HomeIcon className="h-10 w-10 text-white" />
             </div>
             <h1 className="text-4xl font-bold text-gray-900">{t('title')}</h1>
-          </div>
+        </div>
         </div>
 
-        {/* Countdown Timer */}
-        {bettingGames && bettingGames.length > 0 && (() => {
-          const upcomingGames = bettingGames
-            .filter(game => game.status === 'UPCOMING' || game.status === 'LIVE')
-            .filter(game => new Date(game.date).getTime() > new Date().getTime())
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-          
-          console.log('🕐 Countdown Debug - All betting games:', bettingGames.length);
-          console.log('🕐 Countdown Debug - Upcoming games found:', upcomingGames.length);
-          console.log('🕐 Countdown Debug - Upcoming games:', upcomingGames.map(g => ({
-            id: g.id,
-            homeTeam: g.homeTeam.name,
-            awayTeam: g.awayTeam.name,
-            date: g.date,
-            status: g.status,
-            timeToGame: new Date(g.date).getTime() - new Date().getTime()
-          })));
-          
-          const nextGame = upcomingGames[0];
-          
-          // If no upcoming games, don't show the countdown timer
-          if (!nextGame) {
-            console.log('🕐 Countdown Debug - No next game found');
-            return null;
-          }
-          
-          console.log('🕐 Countdown Debug - Next game selected:', {
-            id: nextGame.id,
-            homeTeam: nextGame.homeTeam.name,
-            awayTeam: nextGame.awayTeam.name,
-            date: nextGame.date,
-            timeToGame: new Date(nextGame.date).getTime() - new Date().getTime()
-          });
-          
-          
-          const handleCountdownComplete = () => {
-            // Refresh the dashboard data to get updated games
-            fetchDashboardData();
-          };
+        <div className="mb-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            <div className="w-full flex flex-col">
+              {/* Countdown Timer */}
+              {bettingGames && bettingGames.length > 0 && (() => {
+                const upcomingGames = bettingGames
+                  .filter(game => game.status === 'UPCOMING' || game.status === 'LIVE')
+                  .filter(game => new Date(game.date).getTime() > new Date().getTime())
+                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-          
-          return (
-            <div className="mb-8">
-              <CountdownTimer 
-                key={nextGame.id} // Force re-render when game changes
-                nextGameDate={nextGame.date}
-                onCountdownComplete={handleCountdownComplete}
-              />
+                const nextGame = upcomingGames[0];
+
+                if (!nextGame) {
+                  return null;
+                }
+
+                const handleCountdownComplete = () => {
+                  fetchDashboardData();
+                };
+
+                return (
+                  <div className="h-full">
+                    <CountdownTimer 
+                      key={nextGame.id}
+                      nextGameDate={nextGame.date}
+                      onCountdownComplete={handleCountdownComplete}
+                      upcomingGames={upcomingGames.slice(0, 10)}
+                    />
+                  </div>
+                );
+              })()}
             </div>
-          );
+            <div className="w-full flex flex-col">
+              <div className="h-full">
+                <ActiveCompetitionsSection
+                  competitions={dashboardData?.activeCompetitions || []}
+                  t={t}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        {false && bettingGames && bettingGames.length > 0 && (() => {
+          // moved above into the first-row grid
+          return null;
         })()}
 
-        <section className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-1 flex items-center">
-            <span className="p-2 bg-primary-600 rounded-full shadow-lg flex items-center justify-center mr-2">
+        <section className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-[1.15rem] flex items-center">
+            <span className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center mr-3">
               <ChartBarIcon className="h-6 w-6 text-white" />
             </span>
             Performance des derniers matchs
@@ -614,22 +609,6 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="w-full">
-              <ActiveCompetitionsSection
-                competitions={dashboardData?.activeCompetitions || []}
-                t={t}
-              />
-            </div>
-            <div className="w-full">
-              <AvailableCompetitionsSection
-                competitions={dashboardData?.availableCompetitions || []}
-                t={t}
-              />
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -42,6 +42,9 @@ interface Competition {
   totalParticipants?: number;
   userPoints?: number;
   remainingGames?: number;
+  totalGames?: number;
+  gamesPlayed?: number;
+  progressPercentage?: number;
 }
 
 interface DashboardData {
@@ -339,10 +342,21 @@ export default async function handler(
             ? (rankingArray.findIndex((r) => r.userId === user.id) + 1)
             : undefined;
 
-          // Remaining upcoming games for this competition
-          const remainingGames = await prisma.game.count({
-            where: { competitionId: competition.id, status: 'UPCOMING' }
-          });
+          // Get total games and remaining games for this competition
+          const [totalGames, remainingGames, finishedGames] = await Promise.all([
+            prisma.game.count({
+              where: { competitionId: competition.id }
+            }),
+            prisma.game.count({
+              where: { competitionId: competition.id, status: 'UPCOMING' }
+            }),
+            prisma.game.count({
+              where: { 
+                competitionId: competition.id, 
+                status: { in: ['FINISHED', 'LIVE'] }
+              }
+            })
+          ]);
 
           return {
             id: competition.id,
@@ -356,6 +370,9 @@ export default async function handler(
             totalParticipants: competition.users.length,
             userPoints,
             remainingGames,
+            totalGames,
+            gamesPlayed: finishedGames,
+            progressPercentage: totalGames > 0 ? Math.round((finishedGames / totalGames) * 100) : 0,
           };
         })
       );

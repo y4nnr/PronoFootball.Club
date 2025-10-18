@@ -5,6 +5,12 @@ interface CountdownTimerProps {
   nextGameDate: string | null;
   className?: string;
   onCountdownComplete?: () => void;
+  upcomingGames?: Array<{
+    id: string;
+    date: string;
+    homeTeam: { name: string; logo?: string };
+    awayTeam: { name: string; logo?: string };
+  }>;
 }
 
 interface TimeLeft {
@@ -14,7 +20,7 @@ interface TimeLeft {
   seconds: number;
 }
 
-const CountdownTimer = memo(({ nextGameDate, className = '', onCountdownComplete }: CountdownTimerProps) => {
+const CountdownTimer = memo(({ nextGameDate, className = '', onCountdownComplete, upcomingGames = [] }: CountdownTimerProps) => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
@@ -74,40 +80,42 @@ const CountdownTimer = memo(({ nextGameDate, className = '', onCountdownComplete
   ];
 
   return (
-    <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-modern-lg border border-primary-200/50 ${className}`}>
+    <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-modern-lg border border-primary-200/50 ${className}`}>
       {/* Header */}
-      <div className="flex items-center space-x-3 mb-6">
+      <div className="flex items-center space-x-3 mb-4">
         <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center">
           <ClockIcon className="h-6 w-6 text-white" />
         </div>
-        <h3 className="text-xl font-bold text-neutral-900">Prochain matchs dans :</h3>
+        <h3 className="text-xl font-bold text-neutral-900">Prochain coup d'envoi</h3>
       </div>
 
       {/* Countdown Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
         {timeUnits.map((unit, index) => (
           <div
             key={unit.label}
-            className="relative bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-4 md:p-5 border border-primary-200/60 shadow-modern hover:shadow-modern-lg transition-all duration-300"
+            className="relative bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl p-3 md:p-4 border border-primary-300/60 shadow-modern hover:shadow-modern-lg transition-all duration-300"
           >
             {/* Number */}
             <div className="text-center">
-              <div className="text-2xl md:text-3xl font-black text-primary-800 mb-1">
+              <div className="text-xl md:text-2xl font-black text-primary-800 mb-0.5">
                 {unit.value.toString().padStart(2, '0')}
               </div>
               
               {/* Label */}
-              <div className="text-xs md:text-sm font-medium text-primary-600 uppercase tracking-wide">
+              <div className="text-xs font-medium text-primary-600 uppercase tracking-wide">
                 <span className="hidden md:inline">{unit.label}</span>
                 <span className="md:hidden">{unit.shortLabel}</span>
               </div>
             </div>
 
             {/* Subtle accent line */}
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-primary-400 to-primary-500 rounded-full"></div>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-primary-400 to-primary-500 rounded-full"></div>
           </div>
         ))}
       </div>
+
+
 
     </div>
   );

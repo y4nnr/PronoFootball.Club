@@ -69,6 +69,9 @@ export default function CompetitionDetail() {
   const [showDeleteGameModal, setShowDeleteGameModal] = useState(false);
   const [gameToDeleteId, setGameToDeleteId] = useState<string | null>(null);
   const [deleteGameConfirmationText, setDeleteGameConfirmationText] = useState('');
+  const [showDuplicateGameModal, setShowDuplicateGameModal] = useState(false);
+  const [gameToDuplicate, setGameToDuplicate] = useState<Game | null>(null);
+  const [duplicating, setDuplicating] = useState(false);
   const [deletingGame, setDeletingGame] = useState(false);
 
   // Pagination state for games
@@ -192,6 +195,35 @@ export default function CompetitionDetail() {
     setEditGame(game);
     setShowEditGameModal(true);
     setFormError(null);
+  };
+
+  const openDuplicateGameModal = (game: Game) => {
+    setGameToDuplicate(game);
+    setShowDuplicateGameModal(true);
+  };
+
+  const closeDuplicateGameModal = () => {
+    setShowDuplicateGameModal(false);
+    setGameToDuplicate(null);
+  };
+
+  const handleDuplicateGame = async () => {
+    if (!gameToDuplicate) return;
+    setDuplicating(true);
+    try {
+      const res = await fetch(`/api/admin/games/${gameToDuplicate.id}/duplicate`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to duplicate game');
+      }
+      closeDuplicateGameModal();
+      fetchCompetitionDetails();
+    } catch (e) {
+      console.error('Duplicate game error', e);
+      setFormError(e instanceof Error ? e.message : 'Failed to duplicate game');
+    } finally {
+      setDuplicating(false);
+    }
   };
 
   const handleUpdateGame = async () => {
@@ -692,6 +724,15 @@ export default function CompetitionDetail() {
                               </svg>
                               Delete
                             </button>
+                          <button
+                            className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
+                            onClick={() => openDuplicateGameModal(game)}
+                          >
+                            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h8m-8 4h8m-8 4h8M4 7h.01M4 11h.01M4 15h.01" />
+                            </svg>
+                            Duplicate
+                          </button>
                           </div>
                         </td>
                       </tr>
@@ -1079,6 +1120,22 @@ export default function CompetitionDetail() {
             </div>
           </div>
         )}
+
+  {showDuplicateGameModal && gameToDuplicate && (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Duplicate game</h3>
+        <p className="text-sm text-gray-600 mb-4">{gameToDuplicate.homeTeam?.name} vs {gameToDuplicate.awayTeam?.name}</p>
+        <p className="text-sm text-gray-700 mb-4">The duplicate will use the same date and time.</p>
+        <div className="flex justify-end gap-3">
+          <button onClick={closeDuplicateGameModal} className="px-4 py-2 rounded-lg border">Cancel</button>
+          <button onClick={handleDuplicateGame} disabled={duplicating} className="px-4 py-2 rounded-lg bg-primary-600 text-white">
+            {duplicating ? 'Duplicating...' : 'Duplicate'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
     </>
   );
 } 
