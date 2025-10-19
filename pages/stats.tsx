@@ -398,9 +398,9 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   leaderboardData.topPlayersByPoints.slice(0, 10).map((player, index) => (
                     <React.Fragment key={player.id}>
                       <div
-                        className={"flex items-center justify-between p-3 rounded-xl border border-primary-300/60 cursor-pointer hover:bg-primary-50" + 
+                        className={"flex items-center justify-between p-3 rounded-xl border border-primary-300/60 cursor-pointer hover:bg-gray-50" + 
                           (expandedUserId === player.id ? " ring-2 ring-primary-400 bg-blue-100" : "") +
-                          (player.id === currentUser.id ? " bg-blue-50 ring-2 ring-blue-300 border-blue-300" : " bg-gradient-to-br from-primary-50 to-primary-100")}
+                          (player.id === currentUser.id ? " bg-blue-50 ring-2 ring-blue-300 border-blue-300" : " bg-white")}
                         onClick={() => handleUserClick(player)}
                         title="Voir le détail par compétition"
                       >
@@ -481,7 +481,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 ) : leaderboardData?.topPlayersByAverage ? (
                   leaderboardData.topPlayersByAverage.slice(0, 10).map((player, index) => (
                     <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-primary-300/60 ${
-                      player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-gradient-to-br from-primary-50 to-primary-100"
+                      player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-white"
                     }`}>
                       <div className="flex items-center space-x-3">
                         <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-500' : 'text-gray-700'}`}>{index + 1}.</span>
@@ -524,7 +524,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     .slice(0, 10)
                     .map((player, index) => (
                       <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 ${
-                        player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-neutral-50"
+                        player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-white"
                       }`}>
                         <div className="flex items-center space-x-3">
                           <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-500' : 'text-gray-700'}`}>{index + 1}.</span>
@@ -567,7 +567,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     .slice(0, 10)
                     .map((player, index) => (
                       <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 ${
-                        player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-neutral-50"
+                        player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-white"
                       }`}>
                         <div className="flex items-center space-x-3">
                           <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-500' : 'text-gray-700'}`}>{index + 1}.</span>
@@ -610,7 +610,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     .slice(0, 10)
                     .map((player, index) => (
                       <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 ${
-                        player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-neutral-50"
+                        player.id === currentUser.id ? "bg-blue-50 ring-2 ring-blue-300 border-blue-300" : "bg-white"
                       }`}>
                         <div className="flex items-center space-x-3">
                           <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-red-500' : index === 1 ? 'text-orange-500' : index === 2 ? 'text-yellow-500' : 'text-gray-700'}`}>{index + 1}.</span>
