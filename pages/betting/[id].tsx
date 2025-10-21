@@ -755,17 +755,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     });
 
     // Fetch the closest upcoming games for betting from all active competitions, sorted by date
-    const today = new Date();
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-    
-    const allGames = await prisma.game.findMany({
+    // Get ALL games from active competitions, sorted by date
+    const allGamesQuery = await prisma.game.findMany({
       where: {
         competitionId: {
           in: activeCompetitions.map(comp => comp.id)
         },
-        status: 'UPCOMING',
-        date: {
-          gte: endOfDay // Exclude today's games (they go to "Matchs du jour")
+        status: {
+          in: ['UPCOMING', 'LIVE'] // Include both upcoming and live games
         }
       },
       include: {
@@ -788,36 +785,24 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             id: true,
             name: true
           }
-        },
-        bets: {
-          where: {
-            userId: session.user.id
-          },
-          select: {
-            id: true,
-            score1: true,
-            score2: true
-          }
         }
       },
       orderBy: {
         date: 'asc'
-      },
-      take: 24 // Limit to 24 closest games (carousel cap)
+      }
     });
 
-    // Ensure the current game is in the list (in case it's not in the next 12)
-    const currentGameInList = allGames.find(g => g.id === gameId);
-    if (!currentGameInList) {
-      // Add the current game, then re-sort by date asc to match competition page
-      allGames.unshift(game);
-    }
+    // Find the current game index
+    const currentGameIndex = allGamesQuery.findIndex(g => g.id === gameId);
+    
+    // Get 20 games before and 20 games after the current game
+    const startIndex = Math.max(0, currentGameIndex - 20);
+    const endIndex = Math.min(allGamesQuery.length, currentGameIndex + 21); // +21 to include current game
+    
+    const allGames = allGamesQuery.slice(startIndex, endIndex);
 
-    // Ensure order is chronologically ascending (competition page uses chronological for betting list)
-    allGames.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    // Find current game index after sorting
-    const currentGameIndex = allGames.findIndex(g => g.id === gameId);
+    // Find current game index in the sliced array
+    const slicedCurrentGameIndex = allGames.findIndex(g => g.id === gameId);
 
     console.log('🎯 GETSERVERPROPS LOG:');
     console.log('📊 Total games found:', allGames.length);
@@ -833,7 +818,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         game: JSON.parse(JSON.stringify(game)),
         allGames: JSON.parse(JSON.stringify(allGames)),
-        currentGameIndex,
+        currentGameIndex: slicedCurrentGameIndex,
         ...(await serverSideTranslations('fr', ['common']))
       }
     };
