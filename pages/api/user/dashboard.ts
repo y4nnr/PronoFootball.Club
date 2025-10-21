@@ -383,6 +383,9 @@ export default async function handler(
       processCompetitions(availableCompetitions)
     ]);
 
+    // Add caching headers to reduce database load
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    
     return res.status(200).json({
       stats,
       activeCompetitions: activeCompetitionsWithRanking,

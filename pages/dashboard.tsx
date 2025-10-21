@@ -434,9 +434,9 @@ export default function Dashboard() {
       console.log('🔄 Making API calls...');
       const [dashboardRes, bettingRes, gamesOfDayRes, performanceRes] = await Promise.all([
         fetch('/api/user/dashboard'),
-        fetch('/api/user/dashboard-betting-games', { cache: 'no-store' }),
+        fetch('/api/user/dashboard-betting-games'),
         fetch('/api/user/games-of-day'),
-        fetch('/api/stats/user-performance', { cache: 'no-store' })
+        fetch('/api/stats/user-performance')
       ]);
       console.log('🔄 API calls completed');
 
@@ -540,8 +540,31 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             <div className="w-full flex flex-col">
               {/* Countdown Timer */}
-              {bettingGames && bettingGames.length > 0 && (() => {
-                const upcomingGames = bettingGames
+              {(() => {
+                // Smart countdown logic: prioritize today's games, fallback to future games
+                let upcomingGames = [];
+                
+                if (gamesOfDay && gamesOfDay.length > 0) {
+                  // Check if there are upcoming games today
+                  const upcomingToday = gamesOfDay.filter(game => 
+                    game.status === 'UPCOMING' && 
+                    new Date(game.date).getTime() > new Date().getTime()
+                  );
+                  
+                  if (upcomingToday.length > 0) {
+                    // Use today's upcoming games
+                    upcomingGames = upcomingToday;
+                  } else {
+                    // Today's games are started/finished, use future games
+                    upcomingGames = bettingGames || [];
+                  }
+                } else {
+                  // No games today, use future games
+                  upcomingGames = bettingGames || [];
+                }
+
+                // Filter and sort upcoming games
+                upcomingGames = upcomingGames
                   .filter(game => game.status === 'UPCOMING' || game.status === 'LIVE')
                   .filter(game => new Date(game.date).getTime() > new Date().getTime())
                   .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

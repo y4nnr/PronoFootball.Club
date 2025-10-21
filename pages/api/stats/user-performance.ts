@@ -166,6 +166,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
+    // Add caching headers to reduce database load
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    
     res.status(200).json({
       lastGamesPerformance,
       startDate: recentCompetition.startDate.toISOString(),

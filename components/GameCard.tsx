@@ -113,6 +113,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home' }
           <span className={`inline-block px-2 py-1 text-xs rounded-full ${
             game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
             game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
+            game.status === 'LIVE' ? 'bg-red-100 text-red-800' :
             'bg-gray-100 text-gray-800'
           }`}>
             {game.status === 'UPCOMING' && t('upcoming')}

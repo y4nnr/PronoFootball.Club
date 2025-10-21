@@ -80,8 +80,9 @@ export default async function handler(
       return res.status(200).json({ games: [], hasMore: false, total: 0 });
     }
 
-    // Get upcoming games from active competitions (including today's games)
+    // Get upcoming games from active competitions (excluding today's games to avoid duplication)
     const now = new Date();
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     
     // First, get total count for pagination
     const totalCount = await prisma.game.count({
@@ -91,7 +92,7 @@ export default async function handler(
         },
         status: 'UPCOMING',
         date: {
-          gte: now // Include all future games from now
+          gte: endOfDay // Only future games (tomorrow onwards)
         }
       }
     });
@@ -104,7 +105,7 @@ export default async function handler(
         },
         status: 'UPCOMING', // Only games available for betting
         date: {
-          gte: now // Include all future games from now
+          gte: endOfDay // Only future games (tomorrow onwards)
         }
       },
       select: {
@@ -173,14 +174,13 @@ export default async function handler(
     // Calculate if there are more games
     const hasMore = offset + games.length < totalCount;
     
-    // Add cache-busting headers
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    // Add caching headers - shorter cache for betting games (can change status)
+    res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
     
     console.log('🎯 DASHBOARD BETTING GAMES API LOG:');
     console.log('📊 Page:', pageNum, 'Limit:', limitNum, 'Offset:', offset);
     console.log('📊 Games returned:', games.length, 'Total available:', totalCount, 'Has more:', hasMore);
+    console.log('📊 Showing future games only (tomorrow onwards) to avoid duplication with "Matchs du jour"');
     // Reduce verbose logging to avoid heavy server logs
     
     return res.status(200).json({

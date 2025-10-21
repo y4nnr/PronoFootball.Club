@@ -170,6 +170,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       };
     });
 
+    // Add caching headers - shorter cache for games of day (can change status)
+    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    
     return res.status(200).json(formattedGames);
   } catch (error) {
     console.error('Error fetching games of the day:', error);
