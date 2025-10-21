@@ -90,6 +90,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
+    // Add caching headers to reduce database load
+    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    
     // Return all UPCOMING games available for betting
     return res.status(200).json(gamesWithBetInfo);
   } catch (error) {
