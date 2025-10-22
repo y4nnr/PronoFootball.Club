@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState, useCallback, memo, useRef } from "react";
 import { useTranslation } from '../hooks/useTranslation';
+import { useLiveScores } from '../hooks/useLiveScores';
 import { GetStaticProps } from 'next';
 import { 
   TrophyIcon, 
@@ -284,7 +285,7 @@ const AvailableCompetitionsSection = memo(({ competitions, t }: { competitions: 
 AvailableCompetitionsSection.displayName = 'AvailableCompetitionsSection';
 
 // Betting Games Section
-const BettingGamesSection = memo(({ games, t }: { games: BettingGame[]; t: (key: string) => string }) => {
+const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: BettingGame[]; t: (key: string) => string; highlightedGames: Map<string, 'score' | 'status' | 'both'> }) => {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   
@@ -330,11 +331,15 @@ const BettingGamesSection = memo(({ games, t }: { games: BettingGame[]; t: (key:
                   },
                   homeScore: game.homeScore || undefined,
                   awayScore: game.awayScore || undefined,
+                  liveHomeScore: game.liveHomeScore || undefined,
+                  liveAwayScore: game.liveAwayScore || undefined,
                   bets: bets
                 }} 
                 currentUserId={currentUserId} 
                 href={`/betting/${game.id}`}
                 context="home"
+                isHighlighted={highlightedGames.has(game.id)}
+                highlightType={highlightedGames.get(game.id) || 'score'}
               />
             );
           })}
@@ -352,7 +357,7 @@ const BettingGamesSection = memo(({ games, t }: { games: BettingGame[]; t: (key:
 BettingGamesSection.displayName = 'BettingGamesSection';
 
 // Games of the Day Section
-const GamesOfDaySection = memo(({ games, t }: { games: BettingGame[]; t: (key: string) => string }) => {
+const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: BettingGame[]; t: (key: string) => string; highlightedGames: Map<string, 'score' | 'status' | 'both'> }) => {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   
@@ -395,11 +400,15 @@ const GamesOfDaySection = memo(({ games, t }: { games: BettingGame[]; t: (key: s
                 },
                 homeScore: game.homeScore !== null ? game.homeScore : undefined,
                 awayScore: game.awayScore !== null ? game.awayScore : undefined,
+                liveHomeScore: game.liveHomeScore !== null ? game.liveHomeScore : undefined,
+                liveAwayScore: game.liveAwayScore !== null ? game.liveAwayScore : undefined,
                 bets: bets
               }} 
               currentUserId={currentUserId} 
               href={game.status === 'UPCOMING' || game.status === 'LIVE' ? `/betting/${game.id}` : '#'}
               context="home"
+              isHighlighted={highlightedGames.has(game.id)}
+              highlightType={highlightedGames.get(game.id) || 'score'}
             />
           );
         })}
@@ -414,6 +423,10 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { t } = useTranslation('dashboard');
+  
+  // Live scores hook for SSE updates and animations
+  const { highlightedGames, hasChanges, lastUpdate } = useLiveScores();
+  
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [bettingGames, setBettingGames] = useState<BettingGame[] | null>(null);
@@ -433,10 +446,10 @@ export default function Dashboard() {
 
       console.log('🔄 Making API calls...');
       const [dashboardRes, bettingRes, gamesOfDayRes, performanceRes] = await Promise.all([
-        fetch('/api/user/dashboard'),
-        fetch('/api/user/dashboard-betting-games'),
-        fetch('/api/user/games-of-day'),
-        fetch('/api/stats/user-performance')
+        fetch('/api/user/dashboard', { cache: 'no-store' }),
+        fetch('/api/user/dashboard-betting-games', { cache: 'no-store' }),
+        fetch('/api/user/games-of-day', { cache: 'no-store' }),
+        fetch('/api/stats/user-performance', { cache: 'no-store' })
       ]);
       console.log('🔄 API calls completed');
 
@@ -536,6 +549,27 @@ export default function Dashboard() {
         </div>
         </div>
 
+        {/* Live Score Indicator - Only shows when there are changes */}
+        {hasChanges && (
+          <div className="mb-4 flex items-center justify-between bg-white rounded-lg p-3 shadow-sm border animate-pulse">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
+              <span className="text-sm text-gray-600 font-medium">
+                Live scores updated!
+              </span>
+            </div>
+            <span className="text-xs text-gray-500">
+              Updated: {lastUpdate?.toLocaleTimeString()}
+            </span>
+          </div>
+        )}
+
+
+
+
+
+
+
         <div className="mb-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             <div className="w-full flex flex-col">
@@ -621,6 +655,7 @@ export default function Dashboard() {
             <GamesOfDaySection 
               games={gamesOfDay}
               t={t}
+              highlightedGames={highlightedGames}
             />
           </div>
         )}
@@ -629,6 +664,7 @@ export default function Dashboard() {
           <BettingGamesSection 
             games={bettingGames || []}
             t={t}
+            highlightedGames={highlightedGames}
           />
         </div>
 
