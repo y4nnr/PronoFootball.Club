@@ -3,7 +3,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState, useCallback, memo, useRef } from "react";
 import { useTranslation } from '../hooks/useTranslation';
-import { useLiveScores } from '../hooks/useLiveScores';
 import { GetStaticProps } from 'next';
 import { 
   TrophyIcon, 
@@ -424,8 +423,10 @@ export default function Dashboard() {
   const router = useRouter();
   const { t } = useTranslation('dashboard');
   
-  // Live scores hook for SSE updates and animations
-  const { highlightedGames, hasChanges, lastUpdate } = useLiveScores();
+  // Live scores state (disabled in production)
+  const highlightedGames = new Map();
+  const hasChanges = false;
+  const lastUpdate = null;
   
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
