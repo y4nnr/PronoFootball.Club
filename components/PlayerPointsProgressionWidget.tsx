@@ -369,7 +369,7 @@ const PlayerPointsProgressionWidget = memo(({
           <h2 className="text-xl font-bold text-gray-900">
             Progression des Points par Joueur{selectedDay ? (
               <span 
-                className="ml-2 px-3 py-1.5 rounded text-gray-800 text-xl font-bold"
+                className="ml-2 px-2 py-1 rounded text-gray-800 text-lg font-semibold"
                 style={{ 
                   backgroundColor: getGameDayColor(selectedDay.date).bg,
                   borderColor: getGameDayColor(selectedDay.date).border
