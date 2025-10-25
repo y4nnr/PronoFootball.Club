@@ -22,28 +22,28 @@ interface PlayerData {
   rank: number;
 }
 
-// Color palette for game days - using existing app colors
+// Color palette for game days - more vibrant colors
 const GAME_DAY_COLORS = [
-  '#60A5FA', // blue-400 (sharper)
-  '#4ADE80', // emerald-400 (sharper)
-  '#FBBF24', // amber-400 (sharper)
-  '#F87171', // red-400 (sharper)
-  '#A78BFA', // violet-400 (sharper)
-  '#22D3EE', // cyan-400 (sharper)
-  '#A3E635', // lime-400 (sharper)
-  '#FB923C', // orange-400 (sharper)
-  '#F472B6', // pink-400 (sharper)
-  '#818CF8', // indigo-400 (sharper)
-  '#2DD4BF', // teal-400 (sharper)
-  '#FB7185', // rose-400 (sharper)
-  '#C084FC', // purple-400 (sharper)
-  '#38BDF8', // sky-400 (sharper)
-  '#4ADE80', // green-400 (sharper)
-  '#FACC15', // yellow-400 (sharper)
-  '#F87171', // red-400 (sharper)
-  '#A78BFA', // violet-400 (sharper)
-  '#22D3EE', // cyan-400 (sharper)
-  '#A3E635', // lime-400 (sharper)
+  { bg: '#BFDBFE', border: '#60A5FA' }, // blue-200 with blue-400 border
+  { bg: '#BBF7D0', border: '#4ADE80' }, // green-200 with green-400 border
+  { bg: '#FEF08A', border: '#FACC15' }, // yellow-200 with yellow-400 border
+  { bg: '#FECACA', border: '#F87171' }, // red-200 with red-400 border
+  { bg: '#DDD6FE', border: '#A78BFA' }, // violet-200 with violet-400 border
+  { bg: '#A5F3FC', border: '#22D3EE' }, // cyan-200 with cyan-400 border
+  { bg: '#D9F99D', border: '#84CC16' }, // lime-200 with lime-400 border
+  { bg: '#FED7AA', border: '#FB923C' }, // orange-200 with orange-400 border
+  { bg: '#FBCFE8', border: '#F472B6' }, // pink-200 with pink-400 border
+  { bg: '#C7D2FE', border: '#818CF8' }, // indigo-200 with indigo-400 border
+  { bg: '#99F6E4', border: '#2DD4BF' }, // teal-200 with teal-400 border
+  { bg: '#FECDD3', border: '#FB7185' }, // rose-200 with rose-400 border
+  { bg: '#E9D5FF', border: '#C084FC' }, // purple-200 with purple-400 border
+  { bg: '#BAE6FD', border: '#38BDF8' }, // sky-200 with sky-400 border
+  { bg: '#BBF7D0', border: '#4ADE80' }, // green-200 with green-400 border
+  { bg: '#FEF08A', border: '#FACC15' }, // yellow-200 with yellow-400 border
+  { bg: '#FECACA', border: '#F87171' }, // red-200 with red-400 border
+  { bg: '#DDD6FE', border: '#A78BFA' }, // violet-200 with violet-400 border
+  { bg: '#A5F3FC', border: '#22D3EE' }, // cyan-200 with cyan-400 border
+  { bg: '#D9F99D', border: '#84CC16' }, // lime-200 with lime-400 border
 ];
 
 const PlayerPointsProgressionWidget = memo(({ 
@@ -370,7 +370,10 @@ const PlayerPointsProgressionWidget = memo(({
             Progression des Points par Joueur{selectedDay ? (
               <span 
                 className="ml-2 px-3 py-1.5 rounded text-gray-800 text-xl font-bold"
-                style={{ backgroundColor: getGameDayColor(selectedDay.date) }}
+                style={{ 
+                  backgroundColor: getGameDayColor(selectedDay.date).bg,
+                  borderColor: getGameDayColor(selectedDay.date).border
+                }}
               >
                 {formatDate(selectedDay.date)}
               </span>
@@ -448,7 +451,7 @@ const PlayerPointsProgressionWidget = memo(({
                     }
                     
                     const width = Math.max((gameDay.points / effectiveMaxPoints) * 100, minSegmentWidth); // Percentage within the bar with minimum width
-                    const color = getGameDayColor(gameDay.date);
+                    const colorObj = getGameDayColor(gameDay.date);
                     
                     return (
                       <div
@@ -461,7 +464,8 @@ const PlayerPointsProgressionWidget = memo(({
                         style={{ 
                           width: `${width}%`,
                           opacity: selectedDay !== null && selectedDay.date !== gameDay.date ? 0.2 : 1,
-                          background: `linear-gradient(135deg, ${color} 0%, ${color}CC 100%)`,
+                          backgroundColor: colorObj.bg,
+                          border: `1px solid ${colorObj.border}`,
                           borderRight: '1px solid rgba(255, 255, 255, 0.25)'
                         }}
                         data-slice
@@ -490,7 +494,7 @@ const PlayerPointsProgressionWidget = memo(({
                               ))}
                             </div>
                           )}
-            <div className="text-sm font-bold text-gray-800 drop-shadow-sm relative z-10">
+            <div className="text-xs font-bold text-gray-800 relative z-10">
               +{gameDay.points}
             </div>
                         </div>
