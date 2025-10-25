@@ -1,0 +1,691 @@
+import { memo, useState, useEffect, useRef } from 'react';
+import { useTranslation } from '../hooks/useTranslation';
+
+interface RankingDataPoint {
+  date: string;
+  rankings: {
+    userId: string;
+    userName: string;
+    profilePictureUrl: string | null;
+    position: number;
+    totalPoints: number;
+  }[];
+}
+
+interface RankingEvolutionWidgetWithPointsProps {
+  competitionId: string;
+  currentUserId?: string;
+}
+
+// Color palette for different players (distinct, curated — no near-duplicates)
+// Based on a high-contrast categorical set
+const PLAYER_COLORS = [
+  '#1F77B4', // blue
+  '#FF7F0E', // orange
+  '#2CA02C', // green
+  '#D62728', // red
+  '#9467BD', // purple
+  '#8C564B', // brown/tan
+  '#BCBD22', // yellow-green
+  '#7F7F7F', // gray
+  '#17BECF', // teal/cyan
+];
+
+const RankingEvolutionWidgetWithPoints = memo(({ 
+  competitionId, 
+  currentUserId 
+}: RankingEvolutionWidgetWithPointsProps) => {
+  const { t } = useTranslation('dashboard');
+  const [rankingData, setRankingData] = useState<RankingDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [chartWidth, setChartWidth] = useState(400);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const fetchRankingEvolution = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/competitions/${competitionId}/ranking-evolution`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch ranking evolution');
+        }
+        const data = await response.json();
+        setRankingData(data.rankingEvolution || []);
+      } catch (err) {
+        console.error('Error fetching ranking evolution:', err);
+        setError('Failed to load ranking evolution');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRankingEvolution();
+  }, [competitionId]);
+
+  // Update chart width when container resizes
+  useEffect(() => {
+    // Wait until data is loaded and container exists
+    let rafId: number | null = null;
+    let checkInterval: ReturnType<typeof setInterval> | null = null;
+    const observer = new ResizeObserver((entries) => {
+      if (!entries || entries.length === 0) return;
+      const width = Math.floor(entries[0].contentRect.width);
+      if (width > 0) {
+        setChartWidth(width);
+        setIsMobile(width < 640);
+      }
+    });
+
+    const measureNow = () => {
+      if (!containerRef.current) return false;
+      const width = containerRef.current.clientWidth;
+      if (width > 0) {
+        setChartWidth(width);
+        setIsMobile(width < 640);
+        return true;
+      }
+      return false;
+    };
+
+    const attachObserverWhenReady = () => {
+      if (containerRef.current) {
+        try {
+          observer.observe(containerRef.current);
+        } catch (_) {
+          // no-op
+        }
+        // Do an immediate measurement as well
+        measureNow();
+        return true;
+      }
+      return false;
+    };
+
+    // Try immediate attach/measure
+    let attached = attachObserverWhenReady();
+
+    // If not attached, poll via rAF for a short period until container exists and has width
+    if (!attached) {
+      const tryAttach = () => {
+        attached = attachObserverWhenReady();
+        if (!attached) {
+          rafId = window.requestAnimationFrame(tryAttach);
+        }
+      };
+      rafId = window.requestAnimationFrame(tryAttach);
+    }
+
+    // As a safety net, also check periodically for late layout (e.g., after CSS/layout settles)
+    if (!measureNow()) {
+      checkInterval = setInterval(() => {
+        const ok = measureNow();
+        if (ok && checkInterval) {
+          clearInterval(checkInterval);
+          checkInterval = null;
+        }
+      }, 200);
+    }
+
+    const onResize = () => {
+      measureNow();
+    };
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+      observer.disconnect();
+      window.removeEventListener('resize', onResize);
+    };
+  }, [competitionId, loading, rankingData.length]);
+
+  if (loading) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+        <div className="text-center py-8">
+          <div className="text-red-500 text-4xl mb-3">⚠️</div>
+          <p className="text-red-500 mb-2">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="text-blue-500 text-sm hover:underline"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (rankingData.length === 0) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+        <div className="text-center py-8">
+          <div className="text-gray-400 text-4xl mb-3">📈</div>
+          <p className="text-gray-500">
+            Aucune donnée de classement disponible
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Get all unique players from the first ranking data point
+  const allPlayers = rankingData[0]?.rankings || [];
+  const maxPosition = Math.max(...allPlayers.map(p => p.position));
+
+  // Create color mapping for players
+  const playerColorMap = new Map<string, string>();
+  allPlayers.forEach((player, index) => {
+    playerColorMap.set(player.userId, PLAYER_COLORS[index % PLAYER_COLORS.length]);
+  });
+
+  // Calculate chart dimensions - fit within widget container
+  const chartHeight = 340;
+  const padding = { top: 20, right: 56, bottom: 40, left: 40 };
+  const plotWidth = chartWidth - (padding.left + padding.right);
+  const plotHeight = chartHeight - (padding.top + padding.bottom);
+
+  // Helper function to get point box styling
+  const getPointBoxStyle = (points: number, isHighest: boolean) => {
+    if (isHighest) {
+      return 'bg-blue-100 text-blue-800';
+    } else if (points > 0) {
+      return 'bg-gray-100 text-gray-700';
+    } else {
+      return 'bg-gray-50 text-gray-400';
+    }
+  };
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-4 w-full">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <div className="p-2 bg-primary-600 rounded-full shadow mr-3 flex items-center justify-center">
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Évolution du Classement (avec Points)</h2>
+            <p className="text-sm text-gray-500">Cliquez sur un joueur pour mettre en évidence sa progression</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Chart Container */}
+      <div className="overflow-x-auto" ref={containerRef}>
+        <div className="relative w-full" style={{ height: chartHeight }}>
+          <svg 
+            ref={svgRef}
+            width={chartWidth} 
+            height={chartHeight} 
+            className="absolute inset-0"
+            style={{
+              textRendering: 'geometricPrecision',
+              shapeRendering: 'geometricPrecision'
+            }}
+          >
+            {/* Gradient definition */}
+            <defs>
+              <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="100%" stopColor="#F9FAFB" />
+              </linearGradient>
+            </defs>
+
+            {/* Chart background gradient */}
+            <rect
+              x={padding.left}
+              y={padding.top}
+              width={plotWidth}
+              height={plotHeight}
+              fill="url(#chartGradient)"
+            />
+
+            {/* Horizontal grid lines */}
+            {Array.from({ length: maxPosition + 1 }).map((_, i) => (
+              <line
+                key={`grid-${i}`}
+                x1={padding.left}
+                y1={padding.top + (i * plotHeight) / maxPosition}
+                x2={chartWidth - padding.right}
+                y2={padding.top + (i * plotHeight) / maxPosition}
+                stroke="#F5F5F5"
+                strokeWidth={1}
+              />
+            ))}
+
+            {/* Y-axis labels (positions) - Left side */}
+            {Array.from({ length: maxPosition + 1 }).map((_, i) => {
+              // On mobile, show fewer ticks (every other one if more than 6 positions)
+              if (isMobile && maxPosition > 6 && i % 2 !== 0 && i !== maxPosition) {
+                return null;
+              }
+              
+              return (
+                <text
+                  key={`y-label-left-${i}`}
+                  x={padding.left - 12}
+                  y={padding.top + (i * plotHeight) / maxPosition + 4}
+                  textAnchor="end"
+                  style={{ 
+                    fontSize: '13px', 
+                    fill: '#374151',
+                    fontWeight: 600,
+                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                    textRendering: 'geometricPrecision',
+                    shapeRendering: 'geometricPrecision'
+                  }}
+                >
+                  {i + 1 === 1 ? '1er' : i + 1 === 10 ? '' : `${i + 1}e`}
+                </text>
+              );
+            })}
+
+            {/* Y-axis labels (positions) - Right side */}
+            {Array.from({ length: maxPosition + 1 }).map((_, i) => {
+              // On mobile, show fewer ticks (every other one if more than 6 positions)
+              if (isMobile && maxPosition > 6 && i % 2 !== 0 && i !== maxPosition) {
+                return null;
+              }
+              
+              return (
+                <text
+                  key={`y-label-right-${i}`}
+                  x={padding.left + plotWidth + 22}
+                  y={padding.top + (i * plotHeight) / maxPosition + 4}
+                  textAnchor="start"
+                  style={{ 
+                    fontSize: '13px', 
+                    fill: '#374151',
+                    fontWeight: 600,
+                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                    textRendering: 'geometricPrecision',
+                    shapeRendering: 'geometricPrecision'
+                  }}
+                >
+                  {i + 1 === 1 ? '1er' : i + 1 === 10 ? '' : `${i + 1}e`}
+                </text>
+              );
+            })}
+
+            {/* X-axis labels (dates) */}
+            {rankingData.map((dataPoint, index) => {
+              // On mobile, show fewer ticks (every other one if more than 8 data points)
+              if (isMobile && rankingData.length > 8 && index % 2 !== 0 && index !== rankingData.length - 1) {
+                return null;
+              }
+              
+              // Fix: Use proper scaling for single data point
+              const x = rankingData.length === 1 
+                ? padding.left + (plotWidth / 2) // Center single point
+                : padding.left + ((index * plotWidth) / Math.max(1, rankingData.length - 1));
+              
+              // Check if labels would overlap (rough estimation)
+              const labelSpacing = plotWidth / Math.max(1, rankingData.length - 1);
+              const shouldRotate = labelSpacing < 40 || isMobile; // Rotate if spacing is too small or on mobile
+              
+              // Format the date from the dataPoint
+              const date = new Date(dataPoint.date);
+              const day = String(date.getDate()).padStart(2, '0');
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const dateLabel = `${day}/${month}`;
+              
+              return (
+                <g key={`x-label-${index}`}>
+                  {/* Date label */}
+                  <text
+                    x={x}
+                    y={chartHeight - padding.bottom + 16}
+                    textAnchor={shouldRotate ? "end" : "middle"}
+                    style={{ 
+                      fontSize: '13px', 
+                      fill: '#374151',
+                      fontWeight: 600,
+                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                      textRendering: 'geometricPrecision',
+                      shapeRendering: 'geometricPrecision',
+                      transform: shouldRotate ? `rotate(-28 ${x} ${chartHeight - padding.bottom + 16})` : 'none',
+                      transformOrigin: `${x}px ${chartHeight - padding.bottom + 16}px`
+                    }}
+                  >
+                    {dateLabel}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Separators between dates */}
+            {rankingData.map((dataPoint, index) => {
+              // Don't show separator for the last data point
+              if (index === rankingData.length - 1) return null;
+              
+              // Calculate midpoint between current and next date
+              const currentX = rankingData.length === 1 
+                ? padding.left + (plotWidth / 2)
+                : padding.left + ((index * plotWidth) / Math.max(1, rankingData.length - 1));
+              
+              const nextX = rankingData.length === 1 
+                ? padding.left + (plotWidth / 2)
+                : padding.left + (((index + 1) * plotWidth) / Math.max(1, rankingData.length - 1));
+              
+              const separatorX = (currentX + nextX) / 2;
+              
+              // Check if labels would overlap (rough estimation)
+              const labelSpacing = plotWidth / Math.max(1, rankingData.length - 1);
+              const shouldRotate = labelSpacing < 40 || isMobile;
+              
+              return (
+                <text
+                  key={`separator-${index}`}
+                  x={separatorX}
+                  y={chartHeight - padding.bottom + 16}
+                  textAnchor="middle"
+                  style={{ 
+                    fontSize: '13px', 
+                    fill: '#E5E7EB',
+                    fontWeight: 300,
+                    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                    textRendering: 'geometricPrecision',
+                    shapeRendering: 'geometricPrecision',
+                    transform: shouldRotate ? `rotate(-28 ${separatorX} ${chartHeight - padding.bottom + 16})` : 'none',
+                    transformOrigin: `${separatorX}px ${chartHeight - padding.bottom + 16}px`
+                  }}
+                >
+                  |
+                </text>
+              );
+            })}
+
+            {/* Player lines */}
+            {allPlayers.map(player => {
+              const color = playerColorMap.get(player.userId) || '#6B7280';
+              const isSelected = selectedUserId === player.userId;
+              
+              return (
+                <polyline
+                  key={player.userId}
+                  points={rankingData.map((dataPoint, index) => {
+                    const playerRanking = dataPoint.rankings.find(r => r.userId === player.userId);
+                    const position = playerRanking?.position || maxPosition;
+                    // Fix: Use proper scaling for single data point
+                    const x = rankingData.length === 1 
+                      ? padding.left + (plotWidth / 2) // Center single point
+                      : padding.left + ((index * plotWidth) / Math.max(1, rankingData.length - 1));
+                    const y = padding.top + ((position - 1) * plotHeight) / maxPosition;
+                    return `${x},${y}`;
+                  }).join(' ')}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={isSelected ? 2.5 : 1.5}
+                  opacity={selectedUserId ? (isSelected ? 1 : 0.3) : 1}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{
+                    transition: 'opacity 0.3s ease-in-out, stroke-width 0.3s ease-in-out',
+                    cursor: 'pointer',
+                    filter: isSelected ? 'drop-shadow(0px 1px 1px rgba(0,0,0,0.1))' : 'none'
+                  }}
+                  onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                />
+              );
+            })}
+
+            {/* Data points with point boxes */}
+            {allPlayers.map(player => {
+              const color = playerColorMap.get(player.userId) || '#6B7280';
+              const isSelected = selectedUserId === player.userId;
+              
+              return rankingData.map((dataPoint, index) => {
+                const playerRanking = dataPoint.rankings.find(r => r.userId === player.userId);
+                if (!playerRanking) return null;
+                
+                // Fix: Use proper scaling for single data point
+                const x = rankingData.length === 1 
+                  ? padding.left + (plotWidth / 2) + 5 // Center single point, slightly to the right
+                  : padding.left + ((index * plotWidth) / Math.max(1, rankingData.length - 1)) + (index === 0 ? 5 : 0); // First point slightly to the right
+                const y = padding.top + ((playerRanking.position - 1) * plotHeight) / maxPosition;
+                
+                // Calculate day points from total points difference
+                let dayPoints = 0;
+                if (index === 0) {
+                  // First day: use total points
+                  dayPoints = playerRanking.totalPoints;
+                } else {
+                  // Subsequent days: difference from previous day
+                  const previousDataPoint = rankingData[index - 1];
+                  const previousRanking = previousDataPoint.rankings.find(r => r.userId === player.userId);
+                  if (previousRanking) {
+                    dayPoints = playerRanking.totalPoints - previousRanking.totalPoints;
+                  }
+                }
+                
+                // No highlighting - all circles the same size
+                
+                return (
+                  <g key={`point-${player.userId}-${index}`}>
+                    {/* Point circle background */}
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r={isSelected ? 12 : 10}
+                      fill="#E0F2FE"
+                      stroke="#0EA5E9"
+                      strokeWidth={1}
+                      opacity={selectedUserId ? (isSelected ? 1 : 0.3) : 1}
+                      style={{
+                        transition: 'opacity 0.3s ease-in-out, r 0.3s ease-in-out',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                    />
+                    {/* Point text */}
+                    <text
+                      x={x}
+                      y={y + 1}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        fill: '#0369A1',
+                        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                        textRendering: 'geometricPrecision',
+                        shapeRendering: 'geometricPrecision',
+                        opacity: selectedUserId ? (isSelected ? 1 : 0.3) : 1,
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                    >
+                      {dayPoints}
+                    </text>
+                  </g>
+                );
+              });
+            })}
+
+            {/* Profile pictures at last data point with point box to the left */}
+            {allPlayers.map(player => {
+              const color = playerColorMap.get(player.userId) || '#6B7280';
+              const isSelected = selectedUserId === player.userId;
+              const lastDataPoint = rankingData[rankingData.length - 1];
+              const lastRanking = lastDataPoint?.rankings.find(r => r.userId === player.userId);
+              
+              if (!lastRanking) return null;
+              
+              // Calculate position for last data point
+              const x = rankingData.length === 1 
+                ? padding.left + (plotWidth / 2)
+                : padding.left + plotWidth;
+              const y = padding.top + ((lastRanking.position - 1) * plotHeight) / maxPosition;
+              
+              // Calculate day points for the last day
+              const lastDayIndex = rankingData.length - 1;
+              let dayPoints = 0;
+              if (lastDayIndex === 0) {
+                // First day: use total points
+                dayPoints = lastRanking.totalPoints;
+              } else {
+                // Subsequent days: difference from previous day
+                const previousDataPoint = rankingData[lastDayIndex - 1];
+                const previousRanking = previousDataPoint.rankings.find(r => r.userId === player.userId);
+                if (previousRanking) {
+                  dayPoints = lastRanking.totalPoints - previousRanking.totalPoints;
+                }
+              }
+              
+              // No highlighting - all circles the same size
+              
+              return (
+                <g key={`profile-${player.userId}`}>
+                  {/* Point circle to the left of profile picture */}
+                  <circle
+                    cx={x - 35}
+                    cy={y}
+                    r={isSelected ? 12 : 10}
+                    fill="#E0F2FE"
+                    stroke="#0EA5E9"
+                    strokeWidth={1}
+                    opacity={selectedUserId ? (isSelected ? 1 : 0.3) : 1}
+                    style={{
+                      transition: 'opacity 0.3s ease-in-out, r 0.3s ease-in-out',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                  />
+                  <text
+                    x={x - 35}
+                    y={y + 1}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      fill: '#0369A1',
+                      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                      textRendering: 'geometricPrecision',
+                      shapeRendering: 'geometricPrecision',
+                      opacity: selectedUserId ? (isSelected ? 1 : 0.3) : 1,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                  >
+                    {dayPoints}
+                  </text>
+                  
+                  {/* Background circle */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={isSelected ? 16 : 14}
+                    fill="white"
+                    stroke={color}
+                    strokeWidth={isSelected ? 3 : 2}
+                    opacity={selectedUserId ? (isSelected ? 1 : 0.3) : 1}
+                    style={{
+                      transition: 'opacity 0.3s ease-in-out, r 0.3s ease-in-out',
+                      filter: isSelected ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.1))' : 'none',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                  />
+                  {/* Profile picture */}
+                  <image
+                    x={x - (isSelected ? 16 : 14)}
+                    y={y - (isSelected ? 16 : 14)}
+                    width={isSelected ? 32 : 28}
+                    height={isSelected ? 32 : 28}
+                    href={player.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userName}`}
+                    clipPath={`url(#profile-clip-${player.userId})`}
+                    style={{
+                      transition: 'opacity 0.3s ease-in-out',
+                      opacity: selectedUserId ? (isSelected ? 1 : 0.3) : 1,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+                  />
+                  {/* Clip path for circular profile pictures */}
+                  <defs>
+                    <clipPath id={`profile-clip-${player.userId}`}>
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={isSelected ? 16 : 14}
+                      />
+                    </clipPath>
+                  </defs>
+                </g>
+              );
+            })}
+
+          </svg>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-2 pt-2 border-t border-gray-100">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+          {allPlayers.map((player, index) => {
+            const color = playerColorMap.get(player.userId) || '#6B7280';
+            const isSelected = selectedUserId === player.userId;
+            
+            return (
+              <div 
+                key={player.userId}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                  isSelected 
+                    ? 'bg-blue-100 ring-2 ring-blue-400 shadow-md transform scale-105' 
+                    : 'hover:bg-gray-50 hover:shadow-sm'
+                }`}
+                onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
+              >
+                <div 
+                  className={`w-4 h-4 rounded-full border-2 border-white transition-all ${
+                    isSelected ? 'ring-2 ring-blue-400 shadow-sm' : ''
+                  }`}
+                  style={{ backgroundColor: color }}
+                />
+                <img
+                  src={player.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player.userName.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
+                  alt={player.userName}
+                  className={`w-5 h-5 rounded-full border-2 border-gray-200 object-cover transition-all ${
+                    isSelected ? 'ring-2 ring-blue-400 shadow-sm' : ''
+                  }`}
+                />
+                <span className={`font-medium transition-all ${
+                  isSelected 
+                    ? 'text-blue-800 font-bold' 
+                    : 'text-gray-700'
+                }`}>
+                  {player.userName}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+RankingEvolutionWidgetWithPoints.displayName = 'RankingEvolutionWidgetWithPoints';
+
+export default RankingEvolutionWidgetWithPoints;

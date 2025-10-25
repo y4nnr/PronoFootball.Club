@@ -7,6 +7,10 @@ interface BettingGame {
   id: string;
   date: string;
   status: string;
+  homeScore?: number | null;
+  awayScore?: number | null;
+  liveHomeScore?: number | null;
+  liveAwayScore?: number | null;
   homeTeam: {
     id: string;
     name: string;
@@ -112,6 +116,10 @@ export default async function handler(
         id: true,
         date: true,
         status: true,
+        homeScore: true,
+        awayScore: true,
+        liveHomeScore: true,
+        liveAwayScore: true,
         homeTeam: { select: { id: true, name: true, logo: true } },
         awayTeam: { select: { id: true, name: true, logo: true } },
         bets: { 
@@ -141,6 +149,10 @@ export default async function handler(
         id: game.id,
         date: game.date.toISOString(),
         status: game.status,
+        homeScore: game.homeScore,
+        awayScore: game.awayScore,
+        liveHomeScore: game.liveHomeScore,
+        liveAwayScore: game.liveAwayScore,
         homeTeam: {
           id: game.homeTeam.id,
           name: game.homeTeam.name,
@@ -180,8 +192,17 @@ export default async function handler(
     console.log('🎯 DASHBOARD BETTING GAMES API LOG:');
     console.log('📊 Page:', pageNum, 'Limit:', limitNum, 'Offset:', offset);
     console.log('📊 Games returned:', games.length, 'Total available:', totalCount, 'Has more:', hasMore);
+    console.log('📊 Active competitions:', activeCompetitions.length);
+    console.log('📊 Date filter: >=', endOfDay.toISOString());
     console.log('📊 Showing future games only (tomorrow onwards) to avoid duplication with "Matchs du jour"');
-    // Reduce verbose logging to avoid heavy server logs
+    
+    if (games.length === 0) {
+      console.log('⚠️ No betting games found - this might cause empty "Matchs à venir" section');
+      console.log('🔍 Debug info:');
+      console.log('  - Active competitions:', activeCompetitions.map(c => c.id));
+      console.log('  - Date filter:', endOfDay.toISOString());
+      console.log('  - Status filter: UPCOMING only');
+    }
     
     return res.status(200).json({
       games: bettingGames,

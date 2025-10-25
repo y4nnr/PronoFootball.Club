@@ -93,6 +93,15 @@ model Game {
   homeScore     Int?
   homeTeamId    String
   matchday      Int?
+  // Live score fields for external API integration
+  externalId    String?     // Football-Data.org game ID
+  liveHomeScore Int?        // Live home score from external API
+  liveAwayScore Int?        // Live away score from external API
+  lastSyncAt    DateTime?   // Last time we synced with external API
+  externalStatus String?    // External API status (IN_PLAY, FINISHED, etc.)
+  statusDetail  String?     // Status detail (HT, AET, PEN, PPD, SUS, etc.)
+  decidedBy     String?     // How the game was decided (FT, AET, PEN)
+  finishedAt    DateTime?   // When the game was first marked as finished
   bets          Bet[]
   awayTeam      Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
   competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)

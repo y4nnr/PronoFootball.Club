@@ -1,0 +1,12 @@
+HTTP/2 200 
+server: nginx/1.14.2
+date: Tue, 21 Oct 2025 18:10:31 GMT
+content-type: application/json;charset=UTF-8
+x-requests-available-minute: 19
+x-requestcounter-reset: 54
+x-api-version: v4
+x-authenticated-client: Yann
+access-control-allow-origin: http://localhost
+access-control-allow-methods: GET
+content-language: en-US
+

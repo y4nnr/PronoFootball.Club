@@ -33,6 +33,8 @@ interface GameCardProps {
   currentUserId?: string;
   href?: string;
   context?: 'home' | 'competition';
+  isHighlighted?: boolean;
+  highlightType?: 'score' | 'status' | 'both';
 }
 
 // Deterministic date formatting to avoid hydration errors
@@ -46,7 +48,7 @@ function formatDateTime(dateString: string) {
   return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
-export default function GameCard({ game, currentUserId, href, context = 'home' }: GameCardProps) {
+export default function GameCard({ game, currentUserId, href, context = 'home', isHighlighted = false, highlightType = 'score' }: GameCardProps) {
   const { t } = useTranslation();
   const isOpen = game.status === 'UPCOMING';
   const isClickable = game.status === 'UPCOMING'; // Only UPCOMING games are clickable
@@ -85,7 +87,12 @@ export default function GameCard({ game, currentUserId, href, context = 'home' }
   };
   
   const cardContent = (
-    <div className={`${getBackgroundColor()} border rounded-2xl shadow flex flex-col items-stretch transition p-5 gap-3 ${getBorderColor()} ${isClickable ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 'cursor-default'}`}>
+    <div className={`${getBackgroundColor()} border rounded-2xl shadow flex flex-col items-stretch transition p-5 gap-3 ${getBorderColor()} ${isClickable ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 'cursor-default'} ${
+      isHighlighted ? 
+        highlightType === 'status' ? 'animate-bounce ring-4 ring-blue-400 ring-opacity-75' :
+        highlightType === 'both' ? 'animate-pulse ring-4 ring-purple-400 ring-opacity-75' :
+        'animate-pulse ring-4 ring-yellow-400 ring-opacity-75' : ''
+    }`}>
       {/* Date & Status */}
       <div className="flex items-center w-full justify-between pb-3 border-b border-neutral-200">
         <span className="text-xs text-neutral-500">
@@ -110,11 +117,13 @@ export default function GameCard({ game, currentUserId, href, context = 'home' }
               )}
             </div>
           )}
-          <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+          <span className={`inline-block px-2 py-1 text-xs rounded-full transition-all duration-300 ${
             game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
             game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
-            game.status === 'LIVE' ? 'bg-red-100 text-red-800' :
+            game.status === 'LIVE' ? 'bg-red-100 text-red-800 animate-pulse' :
             'bg-gray-100 text-gray-800'
+          } ${
+            isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
           }`}>
             {game.status === 'UPCOMING' && t('upcoming')}
             {game.status === 'FINISHED' && t('finished')}
@@ -136,9 +145,13 @@ export default function GameCard({ game, currentUserId, href, context = 'home' }
         </div>
         {/* Score */}
         <div className="flex-1 flex justify-center">
-          <span className="text-lg font-bold text-gray-900">
+          <span className={`text-lg font-bold text-gray-900 transition-all duration-300 ${
+            isHighlighted && (highlightType === 'score' || highlightType === 'both') ? 'animate-pulse scale-110 text-yellow-600' : ''
+          }`}>
             {game.status === 'FINISHED' && typeof game.homeScore === 'number' && typeof game.awayScore === 'number'
               ? `${game.homeScore} - ${game.awayScore}`
+              : game.status === 'LIVE' && typeof game.liveHomeScore === 'number' && typeof game.liveAwayScore === 'number'
+              ? `${game.liveHomeScore} - ${game.liveAwayScore}`
               : '-'}
           </span>
         </div>

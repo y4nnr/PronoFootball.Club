@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import PlayersPerformanceWidget from '../../components/PlayersPerformanceWidget';
 import RankingEvolutionWidget from '../../components/RankingEvolutionWidget';
+import PlayerPointsProgressionWidget from '../../components/PlayerPointsProgressionWidget';
 
 interface CompetitionUser {
   id: string;
@@ -140,6 +141,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
   const [playersPerformance, setPlayersPerformance] = useState<PlayerPerformance[]>([]);
   const [loadingPerformance, setLoadingPerformance] = useState(false);
+  
 
   // Toggle game expansion
   const toggleGameExpansion = (gameId: string) => {
@@ -203,10 +205,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
     }
   };
 
+
   // Fetch players performance on component mount
   useEffect(() => {
     fetchPlayersPerformance();
   }, [competition.id]);
+
 
 
   const getPositionColor = (position: number) => {
@@ -520,6 +524,14 @@ export default function CompetitionDetails({ competition, competitionStats, game
         {/* Ranking Evolution Widget - Only show if there are finished games */}
         {playersPerformance.length > 0 && (
           <RankingEvolutionWidget
+            competitionId={competition.id}
+            currentUserId={currentUserId}
+          />
+        )}
+
+        {/* Player Points Progression Widget - Only show if there are finished games */}
+        {playersPerformance.length > 0 && (
+          <PlayerPointsProgressionWidget
             competitionId={competition.id}
             currentUserId={currentUserId}
           />

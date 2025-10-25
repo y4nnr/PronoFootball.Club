@@ -117,9 +117,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           }
         }
       },
-      orderBy: {
-        date: 'asc'
-      }
+      orderBy: [
+        { date: 'asc' },
+        { id: 'asc' } // Secondary sort by ID for stability
+      ]
     });
 
     // Format the response with same structure as dashboard-betting-games
@@ -132,6 +133,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         status: game.status,
         homeScore: game.homeScore,
         awayScore: game.awayScore,
+        liveHomeScore: game.liveHomeScore,
+        liveAwayScore: game.liveAwayScore,
         homeTeam: {
           id: game.homeTeam.id,
           name: game.homeTeam.name,
@@ -170,8 +173,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       };
     });
 
-    // Add caching headers - shorter cache for games of day (can change status)
-    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    // Disable caching for "Matchs du jour" to show live score updates in real-time
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     
     return res.status(200).json(formattedGames);
   } catch (error) {

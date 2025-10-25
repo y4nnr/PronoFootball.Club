@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState, useCallback, memo, useRef } from "react";
 import { useTranslation } from '../hooks/useTranslation';
+import { useLiveScores } from '../hooks/useLiveScores';
 import { GetStaticProps } from 'next';
 import { 
   TrophyIcon, 
@@ -423,10 +424,8 @@ export default function Dashboard() {
   const router = useRouter();
   const { t } = useTranslation('dashboard');
   
-  // Live scores state (disabled in production)
-  const highlightedGames = new Map();
-  const hasChanges = false;
-  const lastUpdate = null;
+  // Live scores hook for SSE updates and animations
+  const { highlightedGames, hasChanges, lastUpdate, signalCount, lastSignalId, registerRefreshFunction } = useLiveScores();
   
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -436,6 +435,72 @@ export default function Dashboard() {
   const [lastGamesPerformance, setLastGamesPerformance] = useState<LastGamePerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Function to refresh just the game data (for live updates)
+  const refreshGameData = useCallback(async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      console.log('🔄 Refreshing game data for live updates...');
+      
+      const [bettingRes, gamesOfDayRes] = await Promise.all([
+        fetch('/api/user/dashboard-betting-games', { cache: 'no-store' }),
+        fetch('/api/user/games-of-day', { cache: 'no-store' })
+      ]);
+
+      if (bettingRes.ok) {
+        const bettingData = await bettingRes.json();
+        
+        // Handle betting games data properly
+        let gamesToSet = [];
+        if (Array.isArray(bettingData)) {
+          // Old format - direct array
+          gamesToSet = bettingData;
+        } else if (bettingData && Array.isArray(bettingData.games)) {
+          // New format - object with games property
+          gamesToSet = bettingData.games;
+        } else {
+          console.warn('⚠️ Unexpected betting data format in refresh:', bettingData);
+          gamesToSet = [];
+        }
+        
+        if (gamesToSet.length > 0) {
+          // Stable sort to prevent cards from jumping around
+          const sortedBettingData = [...gamesToSet].sort((a, b) => {
+            // First sort by date, then by ID for stability
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            if (dateA !== dateB) return dateA - dateB;
+            return a.id.localeCompare(b.id);
+          });
+          setBettingGames(sortedBettingData);
+        } else {
+          setBettingGames([]);
+        }
+        console.log('✅ Betting games refreshed');
+      }
+
+      if (gamesOfDayRes.ok) {
+        const gamesOfDayData = await gamesOfDayRes.json();
+        if (Array.isArray(gamesOfDayData)) {
+          // Stable sort to prevent cards from jumping around
+          const sortedGamesOfDayData = [...gamesOfDayData].sort((a, b) => {
+            // First sort by date, then by ID for stability
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            if (dateA !== dateB) return dateA - dateB;
+            return a.id.localeCompare(b.id);
+          });
+          setGamesOfDay(sortedGamesOfDayData);
+        } else {
+          setGamesOfDay([]);
+        }
+        console.log('✅ Games of day refreshed');
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing game data:', error);
+    }
+  }, [session?.user?.id]);
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -484,9 +549,22 @@ export default function Dashboard() {
       console.log('🎯 FRONTEND LOG - Fetched games of the day:', gamesOfDayData); // DEBUG LOG
 
       setDashboardData(dashboardData);
-      const gamesToSet = bettingData.games || bettingData;
+      
+      // Handle betting games data properly
+      let gamesToSet = [];
+      if (Array.isArray(bettingData)) {
+        // Old format - direct array
+        gamesToSet = bettingData;
+      } else if (bettingData && Array.isArray(bettingData.games)) {
+        // New format - object with games property
+        gamesToSet = bettingData.games;
+      } else {
+        console.warn('⚠️ Unexpected betting data format:', bettingData);
+        gamesToSet = [];
+      }
+      
       console.log('🎯 FRONTEND LOG - Setting betting games:', gamesToSet.length, 'games');
-      setBettingGames(gamesToSet); // Handle both old and new API format
+      setBettingGames(gamesToSet);
       setGamesOfDay(gamesOfDayData);
       setLastGamesPerformance(performanceData.lastGamesPerformance || []);
     } catch (error) {
@@ -505,6 +583,11 @@ export default function Dashboard() {
     }
     fetchDashboardData();
   }, [session, status, router, fetchDashboardData]);
+
+  // Register the refresh function with the live scores hook
+  useEffect(() => {
+    registerRefreshFunction(refreshGameData);
+  }, [registerRefreshFunction, refreshGameData]);
 
   // No periodic refresh - only refresh when countdown ends or page loads
 
@@ -550,18 +633,28 @@ export default function Dashboard() {
         </div>
         </div>
 
-        {/* Live Score Indicator - Only shows when there are changes */}
-        {hasChanges && (
+        {/* Live Score Indicator - Shows when there are changes OR when signals are received */}
+        {(hasChanges || signalCount > 0) && (
           <div className="mb-4 flex items-center justify-between bg-white rounded-lg p-3 shadow-sm border animate-pulse">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
               <span className="text-sm text-gray-600 font-medium">
-                Live scores updated!
+                {hasChanges ? 'Live scores updated!' : 'Refresh signal received'}
               </span>
+              {signalCount > 0 && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  Signal #{signalCount}
+                </span>
+              )}
             </div>
-            <span className="text-xs text-gray-500">
-              Updated: {lastUpdate?.toLocaleTimeString()}
-            </span>
+            <div className="text-xs text-gray-500">
+              {hasChanges && lastUpdate && (
+                <span>Updated: {lastUpdate.toLocaleTimeString()}</span>
+              )}
+              {lastSignalId && (
+                <span className="ml-2">ID: {lastSignalId}</span>
+              )}
+            </div>
           </div>
         )}
 
@@ -598,8 +691,8 @@ export default function Dashboard() {
                   upcomingGames = bettingGames || [];
                 }
 
-                // Filter and sort upcoming games
-                upcomingGames = upcomingGames
+                // Filter and sort upcoming games (ensure upcomingGames is an array)
+                upcomingGames = (Array.isArray(upcomingGames) ? upcomingGames : [])
                   .filter(game => game.status === 'UPCOMING' || game.status === 'LIVE')
                   .filter(game => new Date(game.date).getTime() > new Date().getTime())
                   .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
