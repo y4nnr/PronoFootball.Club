@@ -32,11 +32,6 @@ A modern football prediction platform with real-time live scores, interactive an
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+ and npm
-- Docker and Docker Compose
-- Git
-
 ### Installation
 
 1. **Clone the repository**
