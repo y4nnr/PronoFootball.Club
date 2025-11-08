@@ -66,12 +66,17 @@ export default async function handler(
         
         const updatedGames = [];
         for (const game of oldLiveGames) {
+          // Preserve existing final scores if they exist, otherwise use live scores
+          // This prevents resetting scores to 0 when games already have final scores
+          const finalHomeScore = game.homeScore !== null ? game.homeScore : (game.liveHomeScore || 0);
+          const finalAwayScore = game.awayScore !== null ? game.awayScore : (game.liveAwayScore || 0);
+          
           const updatedGame = await prisma.game.update({
             where: { id: game.id },
             data: {
               status: 'FINISHED',
-              homeScore: game.liveHomeScore || 0,
-              awayScore: game.liveAwayScore || 0,
+              homeScore: finalHomeScore,
+              awayScore: finalAwayScore,
               decidedBy: 'FT',
               finishedAt: new Date(),
               lastSyncAt: new Date()
@@ -86,8 +91,8 @@ export default async function handler(
             id: updatedGame.id,
             homeTeam: updatedGame.homeTeam.name,
             awayTeam: updatedGame.awayTeam.name,
-            oldHomeScore: game.liveHomeScore || 0,
-            oldAwayScore: game.liveAwayScore || 0,
+            oldHomeScore: game.homeScore !== null ? game.homeScore : (game.liveHomeScore || 0),
+            oldAwayScore: game.awayScore !== null ? game.awayScore : (game.liveAwayScore || 0),
             newHomeScore: updatedGame.homeScore || 0,
             newAwayScore: updatedGame.awayScore || 0,
             status: updatedGame.status,
@@ -189,6 +194,13 @@ export default async function handler(
 
         if (!matchingGame) {
           console.log(`⚠️ No matching game found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+          continue;
+        }
+        
+        // SAFETY: Skip games that are already FINISHED - API cannot update finished games
+        // This protects finished games from API bugs and gives admin full control
+        if (matchingGame.status === 'FINISHED') {
+          console.log(`⏭️ Skipping already-finished game: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} (score: ${matchingGame.homeScore}-${matchingGame.awayScore})`);
           continue;
         }
         
@@ -308,19 +320,20 @@ export default async function handler(
         if (hoursDiff > 2 && game.status === 'LIVE') {
           console.log(`⏰ Game ${game.homeTeam.name} vs ${game.awayTeam.name} started ${hoursDiff.toFixed(1)} hours ago, marking as FINISHED`);
           
-          const updateData = {
+          // Preserve existing final scores if they exist, otherwise use live scores
+          // This prevents resetting scores to 0 when games already have final scores
+          const finalHomeScore = game.homeScore !== null ? game.homeScore : (game.liveHomeScore !== null ? game.liveHomeScore : 0);
+          const finalAwayScore = game.awayScore !== null ? game.awayScore : (game.liveAwayScore !== null ? game.liveAwayScore : 0);
+          
+          const updateData: any = {
             status: 'FINISHED',
             externalStatus: 'FINISHED',
             decidedBy: 'FT',
             finishedAt: new Date(),
-            lastSyncAt: new Date()
+            lastSyncAt: new Date(),
+            homeScore: finalHomeScore,
+            awayScore: finalAwayScore
           };
-
-          // If we have live scores, use them as final scores
-          if (game.liveHomeScore !== null && game.liveAwayScore !== null) {
-            updateData.homeScore = game.liveHomeScore;
-            updateData.awayScore = game.liveAwayScore;
-          }
 
           const updatedGame = await prisma.game.update({
             where: { id: game.id },
@@ -335,10 +348,10 @@ export default async function handler(
             id: updatedGame.id,
             homeTeam: updatedGame.homeTeam.name,
             awayTeam: updatedGame.awayTeam.name,
-            oldHomeScore: game.liveHomeScore || 0,
-            oldAwayScore: game.liveAwayScore || 0,
-            newHomeScore: updatedGame.homeScore || updatedGame.liveHomeScore || 0,
-            newAwayScore: updatedGame.awayScore || updatedGame.liveAwayScore || 0,
+            oldHomeScore: game.homeScore !== null ? game.homeScore : (game.liveHomeScore || 0),
+            oldAwayScore: game.awayScore !== null ? game.awayScore : (game.liveAwayScore || 0),
+            newHomeScore: updatedGame.homeScore || 0,
+            newAwayScore: updatedGame.awayScore || 0,
             status: updatedGame.status,
             externalStatus: updatedGame.externalStatus,
             decidedBy: updatedGame.decidedBy,
