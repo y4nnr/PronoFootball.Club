@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../lib/prisma';
-import FootballDataAPI from '../../lib/football-data-api';
+import { FootballDataAPI } from '../../lib/football-data-api';
 
 // Helper function to normalize team names for better matching
 function normalizeTeamName(name: string): string {

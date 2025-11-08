@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../lib/prisma';
-import FootballDataAPI from '../../lib/football-data-api';
+import { FootballDataAPI } from '../../lib/football-data-api';
 
 export default async function handler(
   req: NextApiRequest,
