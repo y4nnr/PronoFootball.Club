@@ -275,8 +275,8 @@ export default async function handler(
 
         updatedGameIds.add(matchingGame.id);
 
-        // Only add to updatedGames if something actually changed
-        if (scoresChanged || newStatus !== matchingGame.status) {
+        // Only add to updatedGames if something actually changed AND we haven't already added this game
+        if ((scoresChanged || newStatus !== matchingGame.status) && !updatedGames.find(g => g.id === updatedGame.id)) {
           updatedGames.push({
             id: updatedGame.id,
             homeTeam: updatedGame.homeTeam.name,
@@ -311,10 +311,16 @@ export default async function handler(
     // (e.g., games that finished but aren't in today's external data)
     const remainingLiveGames = ourLiveGames.filter(game => !updatedGameIds.has(game.id));
     
-    // Also check recently finished games
-    const allGamesToCheck = [...remainingLiveGames, ...recentlyFinishedGames];
+    // Also check recently finished games, but exclude ones already processed
+    const remainingRecentlyFinished = recentlyFinishedGames.filter(game => !updatedGameIds.has(game.id));
     
-    for (const game of allGamesToCheck) {
+    // Combine and deduplicate by game ID to prevent processing the same game twice
+    const allGamesToCheck = [...remainingLiveGames, ...remainingRecentlyFinished];
+    const uniqueGamesToCheck = allGamesToCheck.filter((game, index, self) => 
+      index === self.findIndex(g => g.id === game.id)
+    );
+    
+    for (const game of uniqueGamesToCheck) {
       try {
         // Check if game should be finished based on time
         const gameDate = new Date(game.date);
@@ -350,21 +356,24 @@ export default async function handler(
             }
           });
 
-          updatedGames.push({
-            id: updatedGame.id,
-            homeTeam: updatedGame.homeTeam.name,
-            awayTeam: updatedGame.awayTeam.name,
-            oldHomeScore: game.homeScore !== null ? game.homeScore : (game.liveHomeScore || 0),
-            oldAwayScore: game.awayScore !== null ? game.awayScore : (game.liveAwayScore || 0),
-            newHomeScore: updatedGame.homeScore || 0,
-            newAwayScore: updatedGame.awayScore || 0,
-            status: updatedGame.status,
-            externalStatus: updatedGame.externalStatus,
-            decidedBy: updatedGame.decidedBy,
-            lastSyncAt: updatedGame.lastSyncAt?.toISOString(),
-            scoreChanged: false,
-            statusChanged: true
-          });
+          // Only add if not already in updatedGames (prevent duplicates)
+          if (!updatedGames.find(g => g.id === updatedGame.id)) {
+            updatedGames.push({
+              id: updatedGame.id,
+              homeTeam: updatedGame.homeTeam.name,
+              awayTeam: updatedGame.awayTeam.name,
+              oldHomeScore: game.homeScore !== null ? game.homeScore : (game.liveHomeScore || 0),
+              oldAwayScore: game.awayScore !== null ? game.awayScore : (game.liveAwayScore || 0),
+              newHomeScore: updatedGame.homeScore || 0,
+              newAwayScore: updatedGame.awayScore || 0,
+              status: updatedGame.status,
+              externalStatus: updatedGame.externalStatus,
+              decidedBy: updatedGame.decidedBy,
+              lastSyncAt: updatedGame.lastSyncAt?.toISOString(),
+              scoreChanged: false,
+              statusChanged: true
+            });
+          }
 
           console.log(`🏁 Auto-finished: ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} - ${updatedGame.status}`);
         }
