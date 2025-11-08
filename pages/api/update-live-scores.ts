@@ -197,6 +197,12 @@ export default async function handler(
           continue;
         }
         
+        // Skip if we already processed this game (prevents duplicate processing when same game appears in both live and finished matches)
+        if (updatedGameIds.has(matchingGame.id)) {
+          console.log(`⏭️ Skipping already-processed game: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+          continue;
+        }
+        
         // SAFETY: Skip games that are already FINISHED - API cannot update finished games
         // This protects finished games from API bugs and gives admin full control
         if (matchingGame.status === 'FINISHED') {
