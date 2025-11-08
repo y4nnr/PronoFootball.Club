@@ -25,6 +25,7 @@ export function useLiveScores() {
   const [signalCount, setSignalCount] = useState(0);
   const [lastSignalId, setLastSignalId] = useState<string | null>(null);
   const [refreshGameData, setRefreshGameData] = useState<(() => Promise<void>) | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
 
   // Function to check for game updates and highlight changes
   const checkLiveScores = useCallback(async () => {
@@ -70,13 +71,20 @@ export function useLiveScores() {
   // Listen for refresh signals from your scheduler
   useEffect(() => {
     console.log('🔌 Establishing SSE connection to /api/refresh-games-cards');
+    setConnectionStatus('connecting');
     const eventSource = new EventSource('/api/refresh-games-cards');
     
     eventSource.onopen = () => {
       console.log('✅ SSE connection opened successfully');
+      setConnectionStatus('connected');
     };
     
     eventSource.onmessage = (event) => {
+      // Verify connection is still open when receiving messages
+      if (eventSource.readyState === EventSource.OPEN) {
+        setConnectionStatus('connected');
+      }
+      
       console.log('📨 SSE message received:', event.data);
       try {
         const data = JSON.parse(event.data);
@@ -95,10 +103,24 @@ export function useLiveScores() {
     eventSource.onerror = (error) => {
       console.error('❌ Games refresh stream error:', error);
       console.error('❌ EventSource readyState:', eventSource.readyState);
+      
+      // Check readyState to determine connection status accurately
+      // EventSource.CONNECTING = 0, EventSource.OPEN = 1, EventSource.CLOSED = 2
+      if (eventSource.readyState === EventSource.CLOSED) {
+        // Connection is permanently closed, not reconnecting
+        setConnectionStatus('disconnected');
+      } else if (eventSource.readyState === EventSource.CONNECTING) {
+        // EventSource is trying to reconnect automatically
+        setConnectionStatus('connecting');
+      } else {
+        // Other error state
+        setConnectionStatus('error');
+      }
     };
 
     return () => {
       console.log('🔌 Closing SSE connection');
+      setConnectionStatus('disconnected');
       eventSource.close();
     };
   }, [checkLiveScores]);
@@ -116,5 +138,6 @@ export function useLiveScores() {
     signalCount,
     lastSignalId,
     registerRefreshFunction,
+    connectionStatus,
   };
 }

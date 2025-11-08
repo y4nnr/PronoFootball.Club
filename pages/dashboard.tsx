@@ -425,7 +425,7 @@ export default function Dashboard() {
   const { t } = useTranslation('dashboard');
   
   // Live scores hook for SSE updates and animations
-  const { highlightedGames, hasChanges, lastUpdate, signalCount, lastSignalId, registerRefreshFunction } = useLiveScores();
+  const { highlightedGames, hasChanges, lastUpdate, signalCount, lastSignalId, registerRefreshFunction, connectionStatus } = useLiveScores();
   
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -633,30 +633,6 @@ export default function Dashboard() {
         </div>
         </div>
 
-        {/* Live Score Indicator - Shows when there are changes OR when signals are received */}
-        {(hasChanges || signalCount > 0) && (
-          <div className="mb-4 flex items-center justify-between bg-white rounded-lg p-3 shadow-sm border animate-pulse">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
-              <span className="text-sm text-gray-600 font-medium">
-                {hasChanges ? 'Live scores updated!' : 'Refresh signal received'}
-              </span>
-              {signalCount > 0 && (
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                  Signal #{signalCount}
-                </span>
-              )}
-            </div>
-            <div className="text-xs text-gray-500">
-              {hasChanges && lastUpdate && (
-                <span>Updated: {lastUpdate.toLocaleTimeString()}</span>
-              )}
-              {lastSignalId && (
-                <span className="ml-2">ID: {lastSignalId}</span>
-              )}
-            </div>
-          </div>
-        )}
 
 
 
@@ -760,6 +736,58 @@ export default function Dashboard() {
             t={t}
             highlightedGames={highlightedGames}
           />
+        </div>
+
+        {/* SSE Connection Status Footer - Subtle, at bottom */}
+        <div className="mt-12 mb-4 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            {/* Connection Status - Left side only */}
+            <div className="flex items-center space-x-1.5">
+              {connectionStatus === 'connected' && (
+                <>
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                  <span>En ligne</span>
+                </>
+              )}
+              {connectionStatus === 'connecting' && (
+                <>
+                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                  <span>Connexion...</span>
+                </>
+              )}
+              {(connectionStatus === 'disconnected' || connectionStatus === 'error') && (
+                <>
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                  <span>Hors ligne</span>
+                </>
+              )}
+            </div>
+            
+            {/* All other info - Right side */}
+            <div className="flex items-center space-x-4">
+              {/* Live Updates - Only show when active */}
+              {(hasChanges || signalCount > 0) && (
+                <div className="flex items-center space-x-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                  <span>
+                    {hasChanges ? 'Mise à jour' : `Signal ${signalCount}`}
+                  </span>
+                  {lastSignalId && (
+                    <span className="font-mono text-xs text-gray-400 ml-1">
+                      ({lastSignalId})
+                    </span>
+                  )}
+                </div>
+              )}
+              
+              {/* Timestamp - Shows when last update occurred */}
+              {lastUpdate && (
+                <span className="text-gray-400 font-mono text-xs">
+                  {lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
       </div>
