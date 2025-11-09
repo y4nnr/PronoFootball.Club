@@ -287,7 +287,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
     if (position === 1) return '🏆';
     if (position === 2) return '🥈';
     if (position === 3) return '🥉';
-    if (position === competitionStats.length) return '🍗';
+    if (position === competitionStats.length) return '🍕'; // Pizza (dinner host)
     return `#${position}`;
   };
 
@@ -612,7 +612,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     
                     if (isCurrentUser) {
                       rowBgClass = 'bg-blue-50';
-                      rowBorderClass = 'ring-2 ring-blue-300 border-blue-300';
+                      rowBorderClass = '';
                     } else if (isFirst) {
                       rowBgClass = 'bg-yellow-50/70';
                       rowBorderClass = '';
