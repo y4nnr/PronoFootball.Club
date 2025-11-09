@@ -24,11 +24,18 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [userStats, setUserStats] = useState<{
+    totalPoints: number;
+    totalPredictions: number;
+    accuracy: number;
+    competitionsWon: number;
+  } | null>(null);
   
   // Form states
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
   const [profilePictureMethod, setProfilePictureMethod] = useState<'url' | 'upload'>('url');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -59,6 +66,22 @@ export default function ProfilePage() {
       setName(data.name);
       setEmail(data.email);
       setProfilePictureUrl(data.profilePictureUrl || '');
+      
+      // Fetch user stats for display
+      try {
+        const statsResponse = await fetch('/api/user/dashboard');
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setUserStats({
+            totalPoints: statsData.stats?.totalPoints || 0,
+            totalPredictions: statsData.stats?.totalPredictions || 0,
+            accuracy: statsData.stats?.accuracy || 0,
+            competitionsWon: statsData.stats?.competitionsWon || 0,
+          });
+        }
+      } catch (statsError) {
+        console.error('Error fetching stats:', statsError);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
       setErrorMessage(t('profile.messages.loadError'));
@@ -97,6 +120,18 @@ export default function ProfilePage() {
       return;
     }
     
+    // Validate passwords if they are provided
+    if (password || confirmPassword) {
+      if (password !== confirmPassword) {
+        setErrorMessage('Les mots de passe ne correspondent pas');
+        return;
+      }
+      if (password.length < 6) {
+        setErrorMessage('Le mot de passe doit contenir au moins 6 caractères');
+        return;
+      }
+    }
+    
     setSaving(true);
     
     try {
@@ -133,6 +168,7 @@ export default function ProfilePage() {
       const updatedProfile = await response.json();
       setProfile(updatedProfile);
       setPassword(''); // Clear password field
+      setConfirmPassword(''); // Clear confirm password field
       setSelectedFile(null);
       setPreviewUrl('');
       setEditing(false);
@@ -163,6 +199,7 @@ export default function ProfilePage() {
       setProfilePictureUrl(profile.profilePictureUrl || '');
     }
     setPassword('');
+    setConfirmPassword('');
     setSelectedFile(null);
     setPreviewUrl('');
     setErrorMessage('');
@@ -207,194 +244,287 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#f7f8fa' }}>
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="p-2 bg-primary-500 rounded-xl shadow-modern">
-              <UserIcon className="h-6 w-6 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold gradient-text-profile">
-              {t('profile.title') || 'My Profile'}
-            </h1>
-          </div>
-          <p className="subtitle-text">
-            {t('profile.subtitle') || 'Manage your personal information and account settings'}
-          </p>
-        </div>
-
+    <div style={{ backgroundColor: '#f7f8fa' }}>
+      <div className="max-w-7xl mx-auto pt-8">
         {/* Success/Error Messages */}
         {successMessage && (
-          <div className="mb-6 p-4 bg-gradient-to-br from-accent-50 to-accent-100 border border-accent-200/50 rounded-2xl shadow-modern">
-            <p className="text-accent-800">{successMessage}</p>
+          <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg shadow-sm">
+            <p className="text-green-800 font-medium">{successMessage}</p>
           </div>
         )}
         
         {errorMessage && (
-          <div className="mb-6 p-4 bg-gradient-to-br from-warm-50 to-warm-100 border border-warm-200/50 rounded-2xl shadow-modern">
-            <p className="text-warm-800">{errorMessage}</p>
+          <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg shadow-sm">
+            <p className="text-red-800 font-medium">{errorMessage}</p>
           </div>
         )}
 
-        {/* Profile Card */}
-        <div className="bg-white shadow-modern-lg rounded-2xl overflow-hidden border border-neutral-200/50">
-          {/* Profile Header */}
-          <div className="bg-gradient-hero px-6 py-8">
-            <div className="flex items-center space-x-6">
+        {/* Facebook-style Cover Photo Section */}
+        <div className="bg-white rounded-t-2xl shadow-lg border border-gray-200 overflow-hidden mb-4">
+          {/* Cover Photo */}
+          <div className="relative h-64 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-700">
+            {/* Cover photo placeholder - can be made editable later */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-white/20">
+                <UserIcon className="h-32 w-32" />
+              </div>
+            </div>
+            
+            {/* Profile Picture - Positioned over cover */}
+            <div className="absolute bottom-0 left-8 transform translate-y-1/2">
               <div className="relative">
                 <Image
                   src={profile.profilePictureUrl || "https://i.pravatar.cc/150"}
                   alt="Profile"
-                  className="h-24 w-24 rounded-full border-4 border-white shadow-modern object-cover"
-                  width={96}
-                  height={96}
+                  className="h-40 w-40 rounded-full border-4 border-white shadow-2xl object-cover"
+                  width={160}
+                  height={160}
+                  unoptimized
                 />
                 {editing && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                    <PencilIcon className="h-6 w-6 text-white" />
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer">
+                    <PencilIcon className="h-8 w-8 text-white" />
                   </div>
                 )}
               </div>
-              <div className="text-white">
-                <h2 className="text-2xl font-bold">{profile.name}</h2>
-                <p className="text-primary-100">{profile.email}</p>
-                <p className="text-primary-200 text-sm capitalize">{profile.role}</p>
+            </div>
+
+            {/* Edit Button - Top Right */}
+            {!editing && (
+              <div className="absolute top-4 right-4">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="inline-flex items-center px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-md font-medium"
+                >
+                  <PencilIcon className="h-4 w-4 mr-2" />
+                  Modifier le profil
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Profile Info Section */}
+          <div className="pt-20 pb-6 px-8">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between">
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">{profile.name}</h1>
+                <div className="flex items-center space-x-4 text-gray-600">
+                  <span className="text-sm">{profile.email}</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-sm capitalize">{profile.role}</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-sm">
+                    Membre depuis {new Date(profile.createdAt).toLocaleDateString('fr-FR', { 
+                      month: 'long', 
+                      year: 'numeric' 
+                    })}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Profile Content */}
-          <div className="px-6 py-6">
+        {/* Stats Cards Row */}
+        {!editing && userStats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 text-center">
+              <div className="text-3xl font-bold text-primary-600 mb-1">{userStats.totalPoints}</div>
+              <div className="text-sm text-gray-600">Points totaux</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 text-center">
+              <div className="text-3xl font-bold text-primary-600 mb-1">{userStats.totalPredictions}</div>
+              <div className="text-sm text-gray-600">Pronostics</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 text-center">
+              <div className="text-3xl font-bold text-primary-600 mb-1">{userStats.accuracy.toFixed(1)}%</div>
+              <div className="text-sm text-gray-600">Précision</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 text-center">
+              <div className="text-3xl font-bold text-primary-600 mb-1">{userStats.competitionsWon}</div>
+              <div className="text-sm text-gray-600">Compétitions gagnées</div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Profile Information */}
+          <div className="lg:col-span-2">
             {!editing ? (
-              /* View Mode */
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-neutral-900">{t('profile.information')}</h3>
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-all duration-200 shadow-modern hover:shadow-modern-lg hover:scale-105"
-                  >
-                    <PencilIcon className="h-4 w-4 mr-2" />
-                    {t('profile.editProfile')}
-                  </button>
+              /* View Mode - Timeline/About Section */
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-6">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900">À propos</h2>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-800 mb-1">{t('profile.fullName')}</label>
-                    <p className="text-neutral-900 bg-neutral-50 px-3 py-2 rounded-xl border border-neutral-200/50">{profile.name}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-800 mb-1">{t('profile.emailAddress')}</label>
-                    <p className="text-neutral-900 bg-neutral-50 px-3 py-2 rounded-xl border border-neutral-200/50">{profile.email}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-800 mb-1">{t('profile.role')}</label>
-                    <p className="text-neutral-900 bg-neutral-50 px-3 py-2 rounded-xl border border-neutral-200/50 capitalize">{profile.role}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-800 mb-1">{t('profile.memberSince')}</label>
-                    <p className="text-neutral-900 bg-neutral-50 px-3 py-2 rounded-xl border border-neutral-200/50">
-                      {new Date(profile.createdAt).toLocaleDateString('fr-FR')}
-                    </p>
+                <div className="px-6 py-6">
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-500 mb-1">Nom complet</div>
+                      <div className="text-gray-900">{profile.name}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-500 mb-1">Adresse e-mail</div>
+                      <div className="text-gray-900">{profile.email}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-500 mb-1">Rôle</div>
+                      <div className="text-gray-900 capitalize">{profile.role}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-500 mb-1">Membre depuis</div>
+                      <div className="text-gray-900">
+                        {new Date(profile.createdAt).toLocaleDateString('fr-FR', { 
+                          day: 'numeric', 
+                          month: 'long', 
+                          year: 'numeric' 
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             ) : (
               /* Edit Mode */
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-semibold text-neutral-900">{t('profile.editMode')}</h3>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={handleCancel}
-                      disabled={saving}
-                      className="inline-flex items-center px-4 py-2 bg-neutral-600 text-white rounded-xl hover:bg-neutral-700 transition-all duration-200 disabled:opacity-50 shadow-modern"
-                    >
-                      <XMarkIcon className="h-4 w-4 mr-2" />
-                      {t('profile.cancel')}
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="inline-flex items-center px-4 py-2 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-all duration-200 disabled:opacity-50 shadow-modern hover:shadow-modern-lg hover:scale-105"
-                    >
-                      <CheckIcon className="h-4 w-4 mr-2" />
-                      {saving ? t('profile.saving') : t('profile.saveChanges')}
-                    </button>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-6">
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-gray-900">Modifier le profil</h2>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={handleCancel}
+                        disabled={saving}
+                        className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 disabled:opacity-50 shadow-sm font-medium"
+                      >
+                        <XMarkIcon className="h-4 w-4 mr-2" />
+                        {t('profile.cancel') || 'Annuler'}
+                      </button>
+                      <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-md font-medium"
+                      >
+                        <CheckIcon className="h-4 w-4 mr-2" />
+                        {saving ? (t('profile.saving') || 'Enregistrement...') : (t('profile.saveChanges') || 'Enregistrer')}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="px-6 py-6 space-y-6">
+                  {/* Personal Information Section */}
                   <div>
-                    <label className="block text-sm font-medium text-neutral-800 mb-1">{t('profile.fullName')} *</label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-neutral-900 transition-all duration-200"
-                      placeholder={t('profile.placeholders.fullName')}
-                    />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Informations personnelles</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('profile.fullName') || 'Nom complet'} <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 transition-all duration-200"
+                        placeholder={t('profile.placeholders.fullName') || 'Entrez votre nom complet'}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('profile.emailAddress') || 'Adresse e-mail'} <span className="text-red-500">*</span></label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 transition-all duration-200"
+                        placeholder={t('profile.placeholders.email') || 'Entrez votre e-mail'}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('profile.role') || 'Rôle'}</label>
+                      <input
+                        type="text"
+                        value={profile.role}
+                        disabled
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 capitalize cursor-not-allowed"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">{t('profile.helpText.role') || 'Le rôle ne peut pas être modifié'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('profile.memberSince') || 'Membre depuis'}</label>
+                      <input
+                        type="text"
+                        value={new Date(profile.createdAt).toLocaleDateString('fr-FR', { 
+                          day: 'numeric', 
+                          month: 'long', 
+                          year: 'numeric' 
+                        })}
+                        disabled
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-800 mb-1">{t('profile.emailAddress')} *</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-neutral-900 transition-all duration-200"
-                      placeholder={t('profile.placeholders.email')}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-800 mb-1">{t('profile.newPassword')}</label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-neutral-900 transition-all duration-200"
-                      placeholder={t('profile.placeholders.password')}
-                    />
-                    <p className="text-xs text-neutral-700 mt-1">{t('profile.helpText.password')}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-800 mb-1">{t('profile.role')}</label>
-                    <input
-                      type="text"
-                      value={profile.role}
-                      disabled
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-xl bg-neutral-100 text-neutral-600 capitalize"
-                    />
-                    <p className="text-xs text-neutral-700 mt-1">{t('profile.helpText.role')}</p>
+                </div>
+
+                {/* Security Section */}
+                <div className="pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Sécurité</h3>
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('profile.newPassword') || 'Nouveau mot de passe'}</label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 transition-all duration-200 ${
+                          password && confirmPassword && password !== confirmPassword ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                        placeholder={t('profile.placeholders.password') || 'Entrez votre nouveau mot de passe'}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Confirmer le mot de passe</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 transition-all duration-200 ${
+                          password && confirmPassword && password !== confirmPassword ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                        placeholder="Confirmez votre nouveau mot de passe"
+                      />
+                      {password && confirmPassword && password !== confirmPassword && (
+                        <p className="text-xs text-red-600 mt-1">Les mots de passe ne correspondent pas</p>
+                      )}
+                      {password && confirmPassword && password === confirmPassword && (
+                        <p className="text-xs text-green-600 mt-1">✓ Les mots de passe correspondent</p>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">{t('profile.helpText.password') || 'Laissez vide pour conserver votre mot de passe actuel'}</p>
                   </div>
                 </div>
 
                 {/* Profile Picture Section */}
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-neutral-800 mb-3">{t('profile.profilePicture')}</label>
+                <div className="pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">{t('profile.profilePicture') || 'Photo de profil'}</h3>
                   
                   {/* Method Selection */}
-                  <div className="flex space-x-4 mb-4">
-                    <label className="flex items-center text-neutral-800">
+                  <div className="flex space-x-6 mb-4">
+                    <label className="flex items-center text-gray-700 cursor-pointer">
                       <input
                         type="radio"
                         value="url"
                         checked={profilePictureMethod === 'url'}
                         onChange={(e) => setProfilePictureMethod(e.target.value as 'url' | 'upload')}
-                        className="mr-2"
+                        className="mr-2 text-primary-600 focus:ring-primary-500"
                       />
-                      {t('profile.useUrl')}
+                      {t('profile.useUrl') || 'Utiliser une URL'}
                     </label>
-                    <label className="flex items-center text-neutral-800">
+                    <label className="flex items-center text-gray-700 cursor-pointer">
                       <input
                         type="radio"
                         value="upload"
                         checked={profilePictureMethod === 'upload'}
                         onChange={(e) => setProfilePictureMethod(e.target.value as 'url' | 'upload')}
-                        className="mr-2"
+                        className="mr-2 text-primary-600 focus:ring-primary-500"
                       />
-                      {t('profile.uploadFile')}
+                      {t('profile.uploadFile') || 'Téléverser un fichier'}
                     </label>
                   </div>
 
@@ -404,24 +534,24 @@ export default function ProfilePage() {
                         type="url"
                         value={profilePictureUrl}
                         onChange={(e) => setProfilePictureUrl(e.target.value)}
-                        className="w-full px-3 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-neutral-900"
-                        placeholder={t('profile.placeholders.profileUrl')}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900"
+                        placeholder={t('profile.placeholders.profileUrl') || 'https://example.com/image.jpg'}
                       />
                     </div>
                   )}
 
                   {profilePictureMethod === 'upload' && (
                     <div>
-                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-neutral-300 border-dashed rounded-md hover:border-neutral-400 transition-colors">
+                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
                         <div className="space-y-1 text-center">
                           {!selectedFile ? (
                             <>
-                              <svg className="mx-auto h-12 w-12 text-neutral-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
-                              <div className="flex text-sm text-neutral-600">
+                              <div className="flex text-sm text-gray-600">
                                 <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
-                                  <span>{t('profile.uploadFileText')}</span>
+                                  <span>{t('profile.uploadFileText') || 'Téléverser un fichier'}</span>
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -429,9 +559,9 @@ export default function ProfilePage() {
                                     className="sr-only"
                                   />
                                 </label>
-                                <p className="pl-1">{t('profile.dragDrop')}</p>
+                                <p className="pl-1">{t('profile.dragDrop') || 'ou glisser-déposer'}</p>
                               </div>
-                              <p className="text-xs text-neutral-700">{t('profile.fileTypes')}</p>
+                              <p className="text-xs text-gray-500">{t('profile.fileTypes') || 'PNG, JPG, GIF jusqu\'à 2MB'}</p>
                             </>
                           ) : (
                             <div className="space-y-2">
@@ -442,9 +572,10 @@ export default function ProfilePage() {
                                   className="mx-auto h-20 w-20 rounded-full object-cover"
                                   width={80}
                                   height={80}
+                                  unoptimized
                                 />
                               )}
-                              <p className="text-sm text-neutral-800">{selectedFile.name}</p>
+                              <p className="text-sm text-gray-800">{selectedFile.name}</p>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -453,13 +584,49 @@ export default function ProfilePage() {
                                 }}
                                 className="text-sm text-red-600 hover:text-red-500"
                               >
-                                {t('profile.remove')}
+                                {t('profile.remove') || 'Supprimer'}
                               </button>
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
+                  )}
+                </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Sidebar (for future content) */}
+          <div className="lg:col-span-1">
+            {!editing && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900">Statistiques</h2>
+                </div>
+                <div className="px-6 py-6">
+                  {userStats ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Points totaux</span>
+                        <span className="font-bold text-gray-900">{userStats.totalPoints}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Pronostics</span>
+                        <span className="font-bold text-gray-900">{userStats.totalPredictions}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Précision</span>
+                        <span className="font-bold text-gray-900">{userStats.accuracy.toFixed(1)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Compétitions gagnées</span>
+                        <span className="font-bold text-gray-900">{userStats.competitionsWon}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">Chargement des statistiques...</div>
                   )}
                 </div>
               </div>

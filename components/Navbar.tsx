@@ -221,14 +221,14 @@ export default function Navbar() {
                       onClick={() => setProfileOpen(false)}
                     >
                       <UserIcon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 min-w-0 break-words">{t('dashboard.nav.profile')}</span>
+                      <span className="flex-1 min-w-0 break-words">Mon Profile</span>
                     </Link>
                     <button
                       onClick={() => { setProfileOpen(false); signOut({ callbackUrl: '/login' }); }}
                       className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-200 hover:bg-white/10 rounded-md transition"
                     >
                       <ArrowRightOnRectangleIcon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 min-w-0 break-words">{t('dashboard.logout')}</span>
+                      <span className="flex-1 min-w-0 break-words">Déconnexion</span>
                     </button>
                   </div>
                 )}
