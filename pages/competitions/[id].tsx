@@ -141,6 +141,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
   const [playersPerformance, setPlayersPerformance] = useState<PlayerPerformance[]>([]);
   const [loadingPerformance, setLoadingPerformance] = useState(false);
+  const [sortColumn, setSortColumn] = useState<string>('position');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
 
   // Toggle game expansion
@@ -155,6 +157,65 @@ export default function CompetitionDetails({ competition, competitionStats, game
       return newSet;
     });
   };
+
+  // Handle column sorting
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Toggle direction if clicking the same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to ascending
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Sort competition stats
+  const sortedStats = [...competitionStats].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortColumn) {
+      case 'position':
+        aValue = a.position;
+        bValue = b.position;
+        break;
+      case 'player':
+        aValue = a.userName.toLowerCase();
+        bValue = b.userName.toLowerCase();
+        break;
+      case 'points':
+        aValue = a.totalPoints;
+        bValue = b.totalPoints;
+        break;
+      case 'games':
+        aValue = a.totalPredictions;
+        bValue = b.totalPredictions;
+        break;
+      case 'average':
+        aValue = a.totalPredictions > 0 ? a.totalPoints / a.totalPredictions : 0;
+        bValue = b.totalPredictions > 0 ? b.totalPoints / b.totalPredictions : 0;
+        break;
+      case 'exactScores':
+        aValue = a.exactScores || 0;
+        bValue = b.exactScores || 0;
+        break;
+      case 'correctWinners':
+        aValue = a.correctWinners || 0;
+        bValue = b.correctWinners || 0;
+        break;
+      case 'shooters':
+        aValue = a.shooters || 0;
+        bValue = b.shooters || 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -226,6 +287,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
     if (position === 1) return '🏆';
     if (position === 2) return '🥈';
     if (position === 3) return '🥉';
+    if (position === competitionStats.length) return '🍗';
     return `#${position}`;
   };
 
@@ -427,67 +489,188 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
           <div className="overflow-x-auto">
             {competitionStats && competitionStats.length > 0 ? (
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('competition.position')}</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('competition.player')}</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('competition.points')}</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('competition.games')}</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('competition.average')}</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('competition.exactScores')}</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('competition.correctWinners')}</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('competition.shooters')}</th>
+                    <th 
+                      className="w-16 px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => handleSort('position')}
+                    >
+                      <div className="flex items-center justify-center space-x-1">
+                        <span>{t('competition.position')}</span>
+                        {sortColumn === 'position' && (
+                          <span className="text-gray-700">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="w-48 px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => handleSort('player')}
+                    >
+                      <div className="flex items-center justify-center space-x-1">
+                        <span>{t('competition.player')}</span>
+                        {sortColumn === 'player' && (
+                          <span className="text-gray-700">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="w-24 px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => handleSort('points')}
+                    >
+                      <div className="flex items-center justify-center space-x-1">
+                        <span>{t('competition.points')}</span>
+                        {sortColumn === 'points' && (
+                          <span className="text-gray-700">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="w-20 px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => handleSort('games')}
+                    >
+                      <div className="flex items-center justify-center space-x-1">
+                        <span>{t('competition.games')}</span>
+                        {sortColumn === 'games' && (
+                          <span className="text-gray-700">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="w-24 px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => handleSort('average')}
+                    >
+                      <div className="flex items-center justify-center space-x-1">
+                        <span>{t('competition.average')}</span>
+                        {sortColumn === 'average' && (
+                          <span className="text-gray-700">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="w-24 px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => handleSort('exactScores')}
+                    >
+                      <div className="flex items-center justify-center space-x-1">
+                        <span>{t('competition.exactScores')}</span>
+                        {sortColumn === 'exactScores' && (
+                          <span className="text-gray-700">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="w-28 px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => handleSort('correctWinners')}
+                    >
+                      <div className="flex items-center justify-center space-x-1">
+                        <span>{t('competition.correctWinners')}</span>
+                        {sortColumn === 'correctWinners' && (
+                          <span className="text-gray-700">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="w-20 px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => handleSort('shooters')}
+                    >
+                      <div className="flex items-center justify-center space-x-1">
+                        <span>{t('competition.shooters')}</span>
+                        {sortColumn === 'shooters' && (
+                          <span className="text-gray-700">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {competitionStats.slice(0, 10).map((player, index) => (
-                    <tr key={player.userId} className={`hover:bg-gray-50 ${
-                      player.userId === currentUserId 
-                        ? 'bg-blue-50 ring-2 ring-blue-300 border-blue-300' 
-                        : index < 3 ? 'bg-gradient-to-r from-gray-50 to-white' : ''
-                    }`}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                  {sortedStats.slice(0, 10).map((player, index) => {
+                    // Determine row highlighting based on original position
+                    const isFirst = player.position === 1;
+                    const isSecond = player.position === 2;
+                    const isThird = player.position === 3;
+                    const isLast = player.position === competitionStats.length;
+                    const isCurrentUser = player.userId === currentUserId;
+                    
+                    let rowBgClass = '';
+                    let rowBorderClass = '';
+                    
+                    if (isCurrentUser) {
+                      rowBgClass = 'bg-blue-50';
+                      rowBorderClass = 'ring-2 ring-blue-300 border-blue-300';
+                    } else if (isFirst) {
+                      rowBgClass = 'bg-yellow-50/70';
+                      rowBorderClass = '';
+                    } else if (isSecond) {
+                      rowBgClass = 'bg-gray-50/75';
+                      rowBorderClass = '';
+                    } else if (isThird) {
+                      rowBgClass = 'bg-orange-50/70';
+                      rowBorderClass = '';
+                    } else if (isLast) {
+                      rowBgClass = 'bg-red-50/70';
+                      rowBorderClass = '';
+                    }
+                    
+                    return (
+                    <tr key={player.userId} className={`hover:bg-gray-50 ${rowBgClass} ${rowBorderClass}`}>
+                      <td className="px-4 py-4 whitespace-nowrap text-center border-r border-gray-200">
                         <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full border-2 font-bold text-sm ${getPositionColor(player.position)}`}>
                           {getPositionIcon(player.position)}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
+                      <td className="px-4 py-4 whitespace-nowrap border-r border-gray-200">
+                        <div className="flex items-center min-w-0">
                           <img 
                             src={getUserAvatar(player.userName, player.profilePictureUrl)} 
                             alt={player.userName}
-                            className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-gray-200"
+                            className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-gray-200 flex-shrink-0"
                           />
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{player.userName}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-gray-900 truncate">{player.userName}</div>
                             {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-xs text-yellow-600 font-medium">{t('competition.champion')}</div>}
                             {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === competitionStats.length && <div className="text-xs text-red-600 font-medium">{t('competition.dinnerHost')}</div>}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-4 py-4 whitespace-nowrap text-center border-r border-gray-200">
                         <div className="text-lg font-bold text-gray-900">{player.totalPoints}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-4 py-4 whitespace-nowrap text-center border-r border-gray-200">
                         <div className="text-sm text-gray-900">{player.totalPredictions}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-4 py-4 whitespace-nowrap text-center border-r border-gray-200">
                         <div className="text-sm text-gray-900">
                           {player.totalPredictions > 0 ? (player.totalPoints / player.totalPredictions).toFixed(2) : '0.00'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-4 py-4 whitespace-nowrap text-center border-r border-gray-200">
                         <div className="text-sm text-gray-900">{player.exactScores || 0}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-4 py-4 whitespace-nowrap text-center border-r border-gray-200">
                         <div className="text-sm text-gray-900">{player.correctWinners || 0}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-4 py-4 whitespace-nowrap text-center">
                         <div className="text-sm text-gray-900">{player.shooters || 0}</div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (
