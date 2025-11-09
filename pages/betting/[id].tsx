@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import { getServerSession } from 'next-auth';
@@ -6,6 +6,7 @@ import { authOptions } from '../api/auth/[...nextauth]';
 import { prisma } from '@lib/prisma';
 import { useTranslation } from '../../hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface Game {
   id: string;
@@ -54,6 +55,8 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const isInternalNavigation = useRef(false);
 
   // Debug logging
   console.log('🎯 FRONTEND LOG - Initial allGames:', allGames.length);
@@ -65,7 +68,20 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   useEffect(() => {
     const sorted = [...allGames].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     setAllGamesList(sorted);
-  }, [allGames, game.id]);
+  }, [allGames]);
+
+  // Reset initial load flag when game changes (external navigation from dashboard/competition)
+  useEffect(() => {
+    // Only reset to initial load if this is NOT an internal navigation (carousel click)
+    if (isInternalNavigation.current) {
+      // Internal navigation - ensure we don't do initial load scroll
+      setIsInitialLoad(false);
+      isInternalNavigation.current = false;
+    } else {
+      // External navigation - do initial load scroll
+      setIsInitialLoad(true);
+    }
+  }, [game.id]);
 
   // (moved) re-center effect declared after scrollToSelectedGame
 
@@ -78,11 +94,6 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
 
   const loadMoreGames = useCallback(async () => {
     if (isLoadingMore || !hasMoreGames) return;
-    // Hard cap: do not load beyond MAX_CAROUSEL_GAMES
-    if (allGamesList.length >= MAX_CAROUSEL_GAMES) {
-      setHasMoreGames(false);
-      return;
-    }
     
     setIsLoadingMore(true);
     try {
@@ -91,26 +102,46 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
       
       if (data.games && data.games.length > 0) {
         setAllGamesList(prev => {
+          // Hard cap: do not load beyond MAX_CAROUSEL_GAMES
+          if (prev.length >= MAX_CAROUSEL_GAMES) {
+            setHasMoreGames(false);
+            return prev;
+          }
+          
+          // Transform API response to match Game interface (convert userBet to bets array)
+          const transformedGames = data.games.map((g: any) => ({
+            ...g,
+            bets: g.userBet ? [{
+              id: g.userBet.id,
+              score1: g.userBet.score1,
+              score2: g.userBet.score2
+            }] : []
+          }));
+          
           // Merge, de-duplicate by id, then sort by date asc to match competition page order
-          const merged = [...prev, ...data.games];
+          const merged = [...prev, ...transformedGames];
           const uniqueById = Array.from(new Map(merged.map(g => [g.id, g])).values());
           uniqueById.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
           // Enforce MAX_CAROUSEL_GAMES cap
           const limited = uniqueById.slice(0, MAX_CAROUSEL_GAMES);
+          
+          // Update hasMore based on cap and API response (using prev state, not stale closure)
+          const reachedCap = limited.length >= MAX_CAROUSEL_GAMES;
+          setHasMoreGames(data.hasMore && !reachedCap);
+          
           return limited;
         });
         setCurrentPage(prev => prev + 1);
-        // Update hasMore based on cap and API
-        setHasMoreGames(data.hasMore && (allGamesList.length + data.games.length) < MAX_CAROUSEL_GAMES);
       } else {
         setHasMoreGames(false);
       }
     } catch (error) {
       console.error('Error loading more games:', error);
+      setHasMoreGames(false);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [currentPage, hasMoreGames, isLoadingMore, allGamesList.length]);
+  }, [currentPage, hasMoreGames, isLoadingMore]);
 
   // Navigation functions
   const goToPreviousGame = useCallback(() => {
@@ -118,6 +149,8 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
     const idx = allGamesList.findIndex(g => g.id === game.id);
     if (allGamesList && idx > 0) {
       const previousGame = allGamesList[idx - 1];
+      // Mark as internal navigation to prevent initial load scroll
+      isInternalNavigation.current = true;
       router.push(`/betting/${previousGame.id}`);
     }
   }, [allGamesList, router, game.id]);
@@ -127,6 +160,8 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
     const idx = allGamesList.findIndex(g => g.id === game.id);
     if (allGamesList && idx > -1 && idx < allGamesList.length - 1) {
       const nextGame = allGamesList[idx + 1];
+      // Mark as internal navigation to prevent initial load scroll
+      isInternalNavigation.current = true;
       router.push(`/betting/${nextGame.id}`);
     }
   }, [allGamesList, router, game.id]);
@@ -148,45 +183,103 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
     });
   }, []);
 
-  // Scroll to center the selected game
-  const scrollToSelectedGame = useCallback(() => {
+  // Custom smooth scroll function with controlled speed
+  const smoothScrollTo = useCallback((element: HTMLElement, target: number, duration: number = 600) => {
+    const start = element.scrollLeft;
+    const distance = target - start;
+    const startTime = performance.now();
+
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
+
+    const animateScroll = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutCubic(progress);
+      
+      element.scrollLeft = start + distance * eased;
+      
+      if (progress < 1) {
+        requestAnimationFrame(animateScroll);
+      }
+    };
+
+    requestAnimationFrame(animateScroll);
+  }, []);
+
+  // Scroll to center the selected game with smooth animation
+  const scrollToSelectedGame = useCallback((useSmooth: boolean = true) => {
     const carousel = document.getElementById('games-carousel');
-    if (!carousel) return;
+    if (!carousel) {
+      console.log('🎯 scrollToSelectedGame: Carousel not found');
+      return;
+    }
     
     // Use the calculated index for stability after re-sorts
     const indexToUse = allGamesList.findIndex(g => g.id === game.id);
-    const gameCard = carousel.children[indexToUse] as HTMLElement;
-    if (!gameCard) return;
+    if (indexToUse === -1) {
+      console.log('🎯 scrollToSelectedGame: Game not found in list', game.id);
+      return;
+    }
     
+    const gameCard = carousel.children[indexToUse] as HTMLElement;
+    if (!gameCard) {
+      console.log('🎯 scrollToSelectedGame: Game card not found at index', indexToUse);
+      return;
+    }
+    
+    // Calculate target scroll position to center the card
     const carouselRect = carousel.getBoundingClientRect();
     const gameRect = gameCard.getBoundingClientRect();
-    const scrollLeft = carousel.scrollLeft + (gameRect.left - carouselRect.left) - (carouselRect.width / 2) + (gameRect.width / 2);
+    const targetScroll = gameCard.offsetLeft - (carouselRect.width / 2) + (gameRect.width / 2);
     
-    carousel.scrollTo({
-      left: scrollLeft,
-      behavior: 'smooth'
-    });
-  }, [allGamesList, game.id]);
-
-  // Auto-scroll to selected game when it changes
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollToSelectedGame();
-    }, 100); // Small delay to ensure DOM is updated
+    console.log('🎯 scrollToSelectedGame:', { useSmooth, indexToUse, targetScroll, currentScroll: carousel.scrollLeft });
     
-    return () => clearTimeout(timer);
-  }, [allGamesList, game.id, scrollToSelectedGame]);
+    if (useSmooth) {
+      // Use custom smooth scroll with controlled duration (600ms for smoother, slower animation)
+      smoothScrollTo(carousel, targetScroll, 600);
+    } else {
+      // Instant scroll for initial load
+      carousel.scrollLeft = targetScroll;
+    }
+  }, [allGamesList, game.id, smoothScrollTo]);
 
-  // Re-center after list updates that include the current game (declared after scrollToSelectedGame)
+  // Initial scroll - instant positioning when page loads or game changes from external navigation
   useEffect(() => {
-    if (!allGamesList || allGamesList.length === 0) return;
-    const hasCurrent = allGamesList.some(g => g.id === game.id);
-    if (!hasCurrent) return;
-    const timer = setTimeout(() => {
-      scrollToSelectedGame();
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [allGamesList, game.id, scrollToSelectedGame]);
+    if (isInitialLoad && allGamesList.length > 0) {
+      // Small delay just to ensure DOM is ready, then instant scroll
+      const timer = setTimeout(() => {
+        scrollToSelectedGame(false); // Instant scroll on initial load
+        setIsInitialLoad(false);
+      }, 50);
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [allGamesList, game.id, isInitialLoad, scrollToSelectedGame]);
+
+  // Smooth scroll for subsequent navigation within carousel
+  useEffect(() => {
+    // Only smooth scroll if not initial load (i.e., user clicked within carousel)
+    // When isInitialLoad is false, it means this is internal navigation
+    // We need to ensure we scroll whenever game.id changes and it's not the initial load
+    if (!isInitialLoad && allGamesList.length > 0) {
+      console.log('🎯 Smooth scroll effect triggered:', { gameId: game.id, isInitialLoad });
+      // Use a delay to ensure route change and DOM update are complete
+      const timer = setTimeout(() => {
+        console.log('🎯 Executing smooth scroll');
+        scrollToSelectedGame(true); // Smooth scroll for carousel navigation
+      }, 150);
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    } else {
+      console.log('🎯 Smooth scroll effect skipped:', { isInitialLoad, allGamesListLength: allGamesList.length });
+    }
+  }, [game.id, isInitialLoad, allGamesList.length, scrollToSelectedGame]);
 
   // Check scroll position and update arrow states
   const updateScrollState = useCallback(() => {
@@ -219,6 +312,8 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   }, [updateScrollState]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    
     const fetchExistingBet = async () => {
       // Reset form state first
       setHomeScore('');
@@ -229,7 +324,12 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
       setIsLoadingBet(true);
       
       try {
-        const response = await fetch(`/api/bets/${game.id}`);
+        const response = await fetch(`/api/bets/${game.id}`, {
+          signal: abortController.signal
+        });
+        
+        if (abortController.signal.aborted) return;
+        
         const data = await response.json();
         if (response.ok && data) {
           setExistingBet(data);
@@ -237,22 +337,34 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
           setAwayScore(data.score2.toString());
         }
       } catch (err) {
+        // Ignore abort errors
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
         console.error('Error fetching existing bet:', err);
       } finally {
-        setIsLoadingBet(false);
+        if (!abortController.signal.aborted) {
+          setIsLoadingBet(false);
+        }
       }
     };
 
     fetchExistingBet();
+    
+    // Cleanup: abort request if component unmounts or game.id changes
+    return () => {
+      abortController.abort();
+    };
   }, [game.id]);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (allGames && allGames.length > 1) {
-        if (event.key === 'ArrowLeft' && currentGameIndex > 0) {
+      if (allGamesList && allGamesList.length > 1) {
+        const currentIdx = allGamesList.findIndex(g => g.id === game.id);
+        if (event.key === 'ArrowLeft' && currentIdx > 0) {
           goToPreviousGame();
-        } else if (event.key === 'ArrowRight' && currentGameIndex < allGames.length - 1) {
+        } else if (event.key === 'ArrowRight' && currentIdx >= 0 && currentIdx < allGamesList.length - 1) {
           goToNextGame();
         }
       }
@@ -260,12 +372,30 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentGameIndex, allGames, goToPreviousGame, goToNextGame]);
+  }, [allGamesList, game.id, goToPreviousGame, goToNextGame]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
+
+    // Client-side validation
+    const homeScoreNum = parseInt(homeScore, 10);
+    const awayScoreNum = parseInt(awayScore, 10);
+
+    // Validate scores are valid numbers
+    if (isNaN(homeScoreNum) || isNaN(awayScoreNum)) {
+      setError('Veuillez entrer des scores valides');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate score range
+    if (homeScoreNum < 0 || homeScoreNum > 99 || awayScoreNum < 0 || awayScoreNum > 99) {
+      setError('Les scores doivent être entre 0 et 99');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/bets', {
@@ -273,8 +403,8 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           gameId: game.id,
-          score1: parseInt(homeScore),
-          score2: parseInt(awayScore)
+          score1: homeScoreNum,
+          score2: awayScoreNum
         })
       });
 
@@ -282,7 +412,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
       if (!response.ok) throw new Error(data.error);
 
       // Update existing bet state to reflect the new bet
-      setExistingBet({ score1: parseInt(homeScore), score2: parseInt(awayScore) });
+      setExistingBet({ score1: homeScoreNum, score2: awayScoreNum });
       
       // Update the game card in the carousel to show the bet
       setAllGamesList(prevGames => 
@@ -292,8 +422,8 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                 ...gameItem,
                 bets: [{ 
                   id: data.id || 'temp-id', 
-                  score1: parseInt(homeScore), 
-                  score2: parseInt(awayScore) 
+                  score1: homeScoreNum, 
+                  score2: awayScoreNum 
                 }]
               }
             : gameItem
@@ -384,11 +514,13 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                   {/* Carousel Content */}
                   <div 
                     id="games-carousel"
-                    className="flex space-x-3 sm:space-x-4 overflow-x-auto pb-4 scroll-smooth px-2 py-4" 
+                    className="flex space-x-3 sm:space-x-4 overflow-x-auto pb-4 px-2 py-4" 
                     style={{ 
                       scrollbarWidth: 'none', 
                       msOverflowStyle: 'none',
-                      scrollSnapType: 'x mandatory'
+                      scrollSnapType: 'x mandatory',
+                      scrollBehavior: 'smooth',
+                      scrollPadding: '0 1rem'
                     }}
                   >
                     {allGamesList.map((gameItem, index) => {
@@ -400,6 +532,8 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                         // Only navigate if it's a different game
                         if (gameItem.id !== game.id) {
                           console.log('🎯 Navigating to new game:', gameItem.id);
+                          // Mark as internal navigation to prevent initial load scroll
+                          isInternalNavigation.current = true;
                           router.push(`/betting/${gameItem.id}`);
                         } else {
                           console.log('🎯 Same game clicked, no navigation needed');
@@ -411,12 +545,12 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                           key={gameItem.id}
                           onClick={handleGameClick}
                           className={`relative p-3 sm:p-4 rounded-xl transition-all duration-300 flex-shrink-0 w-[140px] sm:w-[180px] min-w-[140px] sm:min-w-[180px] scroll-snap-start my-2 ${
-                            index === actualCurrentGameIndex
-                              ? gameItem.bets && gameItem.bets.length > 0
+                            gameItem.bets && gameItem.bets.length > 0
+                              ? index === actualCurrentGameIndex
                                 ? 'bg-white text-gray-700 border-4 border-blue-500 shadow-2xl transform scale-105 z-10'
-                                : 'bg-white text-gray-700 border-4 border-gray-400 shadow-2xl transform scale-105 z-10'
-                              : gameItem.bets && gameItem.bets.length > 0
-                                ? 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-blue-400 hover:border-blue-500 shadow-lg hover:shadow-xl hover:scale-102'
+                                : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-blue-500 shadow-lg hover:shadow-xl hover:scale-102'
+                              : index === actualCurrentGameIndex
+                                ? 'bg-white text-gray-700 border-4 border-gray-400 shadow-2xl transform scale-105 z-10'
                                 : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 shadow-lg hover:shadow-xl hover:scale-102'
                           }`}
                         >
@@ -489,9 +623,9 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                     <button
                       type="button"
                       onClick={goToPreviousGame}
-                      disabled={currentGameIndex === 0}
+                      disabled={actualCurrentGameIndex === 0}
                       className={`px-6 py-3 rounded-xl text-base font-bold transition-all duration-200 ${
-                        currentGameIndex === 0
+                        actualCurrentGameIndex === 0
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:scale-105'
                       }`}
@@ -501,9 +635,9 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                     <button
                       type="button"
                       onClick={goToNextGame}
-                      disabled={currentGameIndex === allGamesList.length - 1}
+                      disabled={actualCurrentGameIndex === allGamesList.length - 1 || actualCurrentGameIndex === -1}
                       className={`px-6 py-3 rounded-xl text-base font-bold transition-all duration-200 ${
-                        currentGameIndex === allGamesList.length - 1
+                        actualCurrentGameIndex === allGamesList.length - 1 || actualCurrentGameIndex === -1
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg hover:shadow-xl transform hover:scale-105'
                       }`}
@@ -532,7 +666,17 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
               )}
 
               {/* Combined Game Display + Score Input Section */}
-              <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 border border-primary-200 shadow-md">
+              <div className={`bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 border shadow-md relative ${
+                existingBet ? 'border-blue-500 border-2' : 'border-primary-200'
+              }`}>
+                {/* Checkmark indicator when bet is placed */}
+                {existingBet && (
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg z-10">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Entrez votre pronostic</h3>
                   
@@ -616,32 +760,92 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                 ) : (
                   <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-md">
                     <div className="flex items-center justify-between space-x-6">
+                      {/* Home Score */}
                       <div className="flex-1">
-                        <input
-                          type="number"
-                          id="homeScore"
-                          min="0"
-                          value={homeScore}
-                          onChange={(e) => setHomeScore(e.target.value)}
-                          className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 text-center text-2xl font-bold py-4 transition-all duration-200"
-                          placeholder="0"
-                          required
-                        />
+                        <div className="flex gap-2 items-stretch">
+                          <div className="flex-1">
+                            <label htmlFor="homeScore" className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                              {game.homeTeam.name}
+                            </label>
+                            <input
+                              type="number"
+                              id="homeScore"
+                              min="0"
+                              max="99"
+                              value={homeScore}
+                              onChange={(e) => setHomeScore(e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 text-center text-2xl font-bold py-4 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              placeholder="0"
+                              required
+                            />
+                          </div>
+                          <div className="relative flex-shrink-0 flex flex-col">
+                            <div className="h-6 mb-2"></div>
+                            <select
+                              id="homeScoreDropdown"
+                              value=""
+                              onChange={(e) => setHomeScore(e.target.value)}
+                              className="w-20 h-full rounded-lg border border-gray-300 bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 cursor-pointer appearance-none"
+                              title="Sélectionner un score"
+                              style={{ paddingTop: '1rem', paddingBottom: '1rem' }}
+                            >
+                              <option value=""></option>
+                              {Array.from({ length: 10 }, (_, i) => (
+                                <option key={i} value={i}>
+                                  {i}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <ChevronDownIcon className="w-6 h-6 text-gray-500" />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       
-                      <div className="text-2xl font-bold text-gray-400 px-4">-</div>
+                      <div className="text-2xl font-bold text-gray-400 px-4 self-end pb-4">-</div>
                       
+                      {/* Away Score */}
                       <div className="flex-1">
-                        <input
-                          type="number"
-                          id="awayScore"
-                          min="0"
-                          value={awayScore}
-                          onChange={(e) => setAwayScore(e.target.value)}
-                          className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 text-center text-2xl font-bold py-4 transition-all duration-200"
-                          placeholder="0"
-                          required
-                        />
+                        <div className="flex gap-2 items-stretch">
+                          <div className="flex-1">
+                            <label htmlFor="awayScore" className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                              {game.awayTeam.name}
+                            </label>
+                            <input
+                              type="number"
+                              id="awayScore"
+                              min="0"
+                              max="99"
+                              value={awayScore}
+                              onChange={(e) => setAwayScore(e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 text-center text-2xl font-bold py-4 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              placeholder="0"
+                              required
+                            />
+                          </div>
+                          <div className="relative flex-shrink-0 flex flex-col">
+                            <div className="h-6 mb-2"></div>
+                            <select
+                              id="awayScoreDropdown"
+                              value=""
+                              onChange={(e) => setAwayScore(e.target.value)}
+                              className="w-20 h-full rounded-lg border border-gray-300 bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 cursor-pointer appearance-none"
+                              title="Sélectionner un score"
+                              style={{ paddingTop: '1rem', paddingBottom: '1rem' }}
+                            >
+                              <option value=""></option>
+                              {Array.from({ length: 10 }, (_, i) => (
+                                <option key={i} value={i}>
+                                  {i}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <ChevronDownIcon className="w-6 h-6 text-gray-500" />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -651,13 +855,6 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
               {/* Form Action Buttons - Outside the betting box */}
               <div className="mt-8">
                 <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/competitions/${game.competition.id}`)}
-                    className="px-8 py-4 text-lg font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    {t('betting.cancel')}
-                  </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -677,6 +874,13 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                         </span>
                       </div>
                     )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/dashboard')}
+                    className="px-8 py-4 text-lg font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    {t('betting.cancel')}
                   </button>
                 </div>
               </div>
@@ -784,6 +988,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           select: {
             id: true,
             name: true
+          }
+        },
+        bets: {
+          where: {
+            userId: session.user?.id || ''
+          },
+          select: {
+            id: true,
+            score1: true,
+            score2: true
           }
         }
       },

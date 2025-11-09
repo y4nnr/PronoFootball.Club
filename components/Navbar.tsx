@@ -72,11 +72,15 @@ export default function Navbar() {
   }, [filteredNavigation]);
 
   // Check if we can show a back button (only on client side to prevent hydration mismatch)
+  const isOnBettingPage = router.pathname.startsWith('/betting');
   const canGoBack = isClient && router.pathname !== '/dashboard' && window.history.length > 1;
 
   // Back button handler
   const handleGoBack = () => {
-    if (canGoBack) {
+    if (isOnBettingPage) {
+      // On betting pages, always go to dashboard
+      router.push('/dashboard');
+    } else if (canGoBack) {
       router.back();
     }
   };
@@ -101,28 +105,31 @@ export default function Navbar() {
   };
 
   // Back button component
-  const BackButton = () => (
-    <button
-      onClick={handleGoBack}
-      className={`group inline-flex flex-col items-center justify-center gap-1 rounded-lg transition-all duration-200 w-[120px] h-[60px] shrink-0 ${
-        canGoBack ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 cursor-not-allowed'
-      }`}
-      disabled={!canGoBack}
-    >
-      <div className="mb-0">
-        <ArrowLeftIcon className="h-5 w-5" />
-      </div>
-      <span className={`${canGoBack ? 'text-[15px] font-medium tracking-wide text-gray-100 group-hover:text-white whitespace-nowrap' : 'text-[15px] font-medium tracking-wide text-gray-600 whitespace-nowrap'} leading-tight text-center`}>
-        {t('back')}
-      </span>
-    </button>
-  );
+  const BackButton = () => {
+    const isEnabled = isOnBettingPage || canGoBack;
+    return (
+      <button
+        onClick={handleGoBack}
+        className={`group inline-flex flex-col items-center justify-center gap-1 rounded-lg transition-all duration-200 w-[120px] h-[60px] shrink-0 ${
+          isEnabled ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 cursor-not-allowed'
+        }`}
+        disabled={!isEnabled}
+      >
+        <div className="mb-0">
+          <ArrowLeftIcon className="h-5 w-5" />
+        </div>
+        <span className={`${isEnabled ? 'text-[15px] font-medium tracking-wide text-gray-100 group-hover:text-white whitespace-nowrap' : 'text-[15px] font-medium tracking-wide text-gray-600 whitespace-nowrap'} leading-tight text-center`}>
+          {t('back')}
+        </span>
+      </button>
+    );
+  };
 
   // Mobile menu
   const MobileMenu = () => (
     <div className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-all ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
       <div className="bg-zinc-900/95 rounded-2xl shadow-xl p-8 flex flex-col space-y-6 w-72">
-        {canGoBack && (
+        {(isOnBettingPage || canGoBack) && (
           <button
             onClick={() => { handleGoBack(); setMobileMenuOpen(false); }}
             className="flex items-center space-x-3 px-4 py-3 rounded-xl text-lg font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200"
