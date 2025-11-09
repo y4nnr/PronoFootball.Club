@@ -50,6 +50,11 @@ const PlayerPerformanceRow = memo(({
   const { t } = useTranslation('dashboard');
   const isCurrentUser = currentUserId === player.userId;
 
+  // Calculate total points from last 10 games
+  const totalPoints = player.lastGamesPerformance.reduce((sum, game) => {
+    return sum + (game.points || 0);
+  }, 0);
+
   return (
     <div className={`flex items-center py-2 px-3 rounded-md transition-all ${
       isCurrentUser ? 'bg-blue-50 ring-1 ring-blue-200' : 'hover:bg-gray-50'
@@ -100,6 +105,15 @@ const PlayerPerformanceRow = memo(({
             </div>
           );
         })}
+      </div>
+
+      {/* Total Points */}
+      <div className="ml-3 w-16 flex-shrink-0">
+        <div className={`h-8 rounded-md flex items-center justify-center text-gray-800 font-bold text-sm border ${
+          isCurrentUser ? 'border-blue-300 bg-blue-50' : 'border-gray-300 bg-gray-50'
+        }`}>
+          {totalPoints}
+        </div>
       </div>
     </div>
   );
@@ -158,39 +172,55 @@ const PlayersPerformanceWidget = memo(({
               return game ? (
                 <div
                   key={game.gameId}
-                  className="flex-1 min-w-0 h-10 rounded-md flex flex-col items-center justify-center text-gray-700 text-xs border border-gray-300 bg-white"
+                  className="flex-1 min-w-0 h-16 rounded-md flex flex-col items-center justify-center text-gray-700 text-xs border border-gray-300 bg-white px-1 py-1"
                   title={`${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore}`}
                 >
-                  <div className="flex items-center space-x-0.5 mb-0.5">
+                  {/* Home Team */}
+                  <div className="flex items-center space-x-1 mb-0.5 w-full justify-center">
                     {game.homeTeamLogo && (
                       <img 
                         src={game.homeTeamLogo} 
                         alt={game.homeTeam}
-                        className="w-3 h-3 object-contain"
+                        className="w-4 h-4 object-contain flex-shrink-0"
                       />
                     )}
-                    <span className="font-bold text-[9px]">{game.homeTeam.substring(0, 2).toUpperCase()}</span>
+                    <span className="font-bold text-[10px] leading-tight truncate max-w-full">
+                      {game.homeTeam.length > 8 ? game.homeTeam.substring(0, 7) + '...' : game.homeTeam}
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-0.5">
+                  {/* Score */}
+                  <div className="text-[10px] text-gray-700 font-bold mb-0.5">
+                    {game.actualScore}
+                  </div>
+                  {/* Away Team */}
+                  <div className="flex items-center space-x-1 w-full justify-center">
                     {game.awayTeamLogo && (
                       <img 
                         src={game.awayTeamLogo} 
                         alt={game.awayTeam}
-                        className="w-3 h-3 object-contain"
+                        className="w-4 h-4 object-contain flex-shrink-0"
                       />
                     )}
-                    <span className="font-bold text-[9px]">{game.awayTeam.substring(0, 2).toUpperCase()}</span>
+                    <span className="font-bold text-[10px] leading-tight truncate max-w-full">
+                      {game.awayTeam.length > 8 ? game.awayTeam.substring(0, 7) + '...' : game.awayTeam}
+                    </span>
                   </div>
                 </div>
               ) : (
                 <div
                   key={`empty-${index}`}
-                  className="flex-1 min-w-0 h-10 rounded-md flex items-center justify-center text-gray-400 text-xs border border-dashed border-gray-300 bg-white"
+                  className="flex-1 min-w-0 h-16 rounded-md flex items-center justify-center text-gray-400 text-xs border border-dashed border-gray-300 bg-white"
                 >
                   ?
                 </div>
               );
             })}
+          </div>
+          {/* Total Points Header */}
+          <div className="ml-3 w-16 flex-shrink-0">
+            <div className="h-16 rounded-md flex items-center justify-center text-gray-700 text-xs font-semibold border border-gray-300 bg-white">
+              Total
+            </div>
           </div>
         </div>
       </div>
