@@ -291,7 +291,7 @@ export default function Navbar() {
                 >
                   {/* Profile Picture - Bigger, half overlapping (positioned at bottom of navbar) */}
                   <Image
-                    src={profilePictureUrl || session.user.image || 'https://i.pravatar.cc/150'}
+                    src={profilePictureUrl || session.user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent((session.user.name || session.user.email || 'user').toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
                     alt={session.user.name || 'User'}
                     width={140}
                     height={140}
