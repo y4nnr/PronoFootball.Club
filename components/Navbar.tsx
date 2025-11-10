@@ -14,12 +14,26 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   // Handle client-side mounting
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Handle scroll event to animate profile picture
+  useEffect(() => {
+    if (!isClient) return;
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      setIsScrolled(scrollY > 50); // Start animation after 50px of scroll
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isClient]);
 
   // Fetch user profile picture separately
   useEffect(() => {
@@ -163,58 +177,61 @@ export default function Navbar() {
   );
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-gray-800 backdrop-blur-lg shadow-2xl border-b border-gray-700 z-50" style={{ minHeight: 96 }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24 py-2">
-          {/* Left: User Profile + Separator + Back Button + Navigation */}
-          <div className="flex items-center space-x-4">
-            {/* Site Name */}
-            <Link href="/" className="text-white font-bold text-2xl tracking-tight mr-4 hover:text-white transition-colors select-none" style={{ letterSpacing: '0.01em' }}>
-              PronoFootball.Club
-            </Link>
-            {/* Mobile hamburger menu */}
-            <button
-              className="md:hidden p-2 rounded-full hover:bg-white/10 transition"
-              onClick={() => setMobileMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            {/* Back Button + Navigation with text labels (desktop only) */}
-            <div className="flex items-center gap-0 hidden md:flex">
-              <BackButton />
-              {filteredNavigation.map(item => (
-                <NavItem key={item.href} item={item} />
-              ))}
+    <>
+      <nav className="fixed top-0 left-0 w-full bg-gray-800 backdrop-blur-lg shadow-2xl border-b border-gray-700 z-50" style={{ minHeight: 96 }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-24 py-2">
+            {/* Left: User Profile + Separator + Back Button + Navigation */}
+            <div className="flex items-center space-x-4">
+              {/* Site Name */}
+              <Link href="/" className="text-white font-bold text-2xl tracking-tight mr-4 hover:text-white transition-colors select-none" style={{ letterSpacing: '0.01em' }}>
+                PronoFootball.Club
+              </Link>
+              {/* Mobile hamburger menu */}
+              <button
+                className="md:hidden p-2 rounded-full hover:bg-white/10 transition"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open menu"
+              >
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              {/* Back Button + Navigation with text labels (desktop only) */}
+              <div className="flex items-center gap-0 hidden md:flex">
+                <BackButton />
+                {filteredNavigation.map(item => (
+                  <NavItem key={item.href} item={item} />
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Right: Language Flags with Labels and User Profile */}
-          <div className="flex items-center gap-4">
-            {/* User Profile Picture (now before language switcher) */}
+            {/* Right: User Profile Picture - Half on banner, half below */}
             {session?.user && (
-              <div className="relative" ref={profileRef}>
+              <div className="relative" ref={profileRef} style={{ height: '96px', display: 'flex', alignItems: isScrolled ? 'center' : 'flex-end' }}>
                 <button
                   onClick={() => setProfileOpen(v => !v)}
-                  className="flex flex-col items-center justify-center group hover:bg-white/5 p-3 rounded-lg transition-all duration-200 min-w-[80px]"
+                  className="relative z-10 group transition-all duration-300 ease-in-out"
                   aria-label="Open profile menu"
+                  style={{ 
+                    marginBottom: isScrolled ? '0' : '-70px',
+                    transform: isScrolled ? 'scale(0.4)' : 'scale(1)',
+                    transformOrigin: 'center center'
+                  }}
                 >
-                  <div>
-                    <Image
-                      src={profilePictureUrl || session.user.image || 'https://i.pravatar.cc/150'}
-                      alt={session.user.name || 'User'}
-                      width={48}
-                      height={48}
-                      unoptimized
-                      className="rounded-full border-2 border-white object-cover shadow-md"
-                    />
-                  </div>
+                  {/* Profile Picture - Bigger, half overlapping (positioned at bottom of navbar) */}
+                  <Image
+                    src={profilePictureUrl || session.user.image || 'https://i.pravatar.cc/150'}
+                    alt={session.user.name || 'User'}
+                    width={140}
+                    height={140}
+                    unoptimized
+                    className="rounded-full border-4 border-white object-cover shadow-2xl transition-all duration-300"
+                  />
                 </button>
                 {/* Profile dropdown */}
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-44 bg-zinc-900/95 rounded-xl shadow-lg border border-zinc-800 py-2 z-50 animate-fade-in">
+                  <div className="absolute right-0 w-44 bg-zinc-900/95 rounded-xl shadow-lg border border-zinc-800 py-2 z-50 animate-fade-in" style={{ top: isScrolled ? '100%' : 'calc(100% + 70px)' }}>
                     <Link
                       href="/profile"
                       className="flex items-center gap-2 px-4 py-2 text-gray-200 hover:bg-white/10 rounded-md transition"
@@ -234,12 +251,11 @@ export default function Navbar() {
                 )}
               </div>
             )}
-            {/* Language switcher removed for FR-only */}
           </div>
         </div>
-      </div>
-      {/* Mobile menu overlay */}
-      <MobileMenu />
-    </nav>
+        {/* Mobile menu overlay */}
+        <MobileMenu />
+      </nav>
+    </>
   );
 } 

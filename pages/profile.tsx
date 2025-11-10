@@ -259,67 +259,36 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Facebook-style Cover Photo Section */}
-        <div className="bg-white rounded-t-2xl shadow-lg border border-gray-200 overflow-hidden mb-4">
-          {/* Cover Photo */}
-          <div className="relative h-64 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-700">
-            {/* Cover photo placeholder - can be made editable later */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-white/20">
-                <UserIcon className="h-32 w-32" />
-              </div>
-            </div>
-            
-            {/* Profile Picture - Positioned over cover */}
-            <div className="absolute bottom-0 left-8 transform translate-y-1/2">
-              <div className="relative">
-                <Image
-                  src={profile.profilePictureUrl || "https://i.pravatar.cc/150"}
-                  alt="Profile"
-                  className="h-40 w-40 rounded-full border-4 border-white shadow-2xl object-cover"
-                  width={160}
-                  height={160}
-                  unoptimized
-                />
-                {editing && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer">
-                    <PencilIcon className="h-8 w-8 text-white" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Edit Button - Top Right */}
-            {!editing && (
-              <div className="absolute top-4 right-4">
-                <button
-                  onClick={() => setEditing(true)}
-                  className="inline-flex items-center px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-md font-medium"
-                >
-                  <PencilIcon className="h-4 w-4 mr-2" />
-                  Modifier le profil
-                </button>
-              </div>
-            )}
+        {/* Edit Button - Centered */}
+        {!editing && (
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={() => setEditing(true)}
+              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 shadow-md font-medium"
+            >
+              <PencilIcon className="h-4 w-4 mr-2" />
+              Modifier le profil
+            </button>
           </div>
+        )}
 
-          {/* Profile Info Section */}
-          <div className="pt-20 pb-6 px-8">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">{profile.name}</h1>
-                <div className="flex items-center space-x-4 text-gray-600">
-                  <span className="text-sm">{profile.email}</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-sm capitalize">{profile.role}</span>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-sm">
-                    Membre depuis {new Date(profile.createdAt).toLocaleDateString('fr-FR', { 
-                      month: 'long', 
-                      year: 'numeric' 
-                    })}
-                  </span>
-                </div>
+        {/* Profile Header Section */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-4">
+          <div className="px-8 py-6">
+            {/* User Name and Info */}
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">{profile.name}</h1>
+              <div className="flex items-center space-x-4 text-gray-600">
+                <span className="text-sm">{profile.email}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-sm capitalize">{profile.role}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-sm">
+                  Membre depuis {new Date(profile.createdAt).toLocaleDateString('fr-FR', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </span>
               </div>
             </div>
           </div>
