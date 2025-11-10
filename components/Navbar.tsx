@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useRouter } from 'next/router';
-import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { HomeIcon, PencilSquareIcon, ChartBarIcon, CalendarIcon, UserGroupIcon, ShieldCheckIcon, ArrowLeftIcon, UserIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 
@@ -43,11 +42,18 @@ export default function Navbar() {
       fetch('/api/user/profile-picture')
         .then(res => res.json())
         .then(data => {
+          // Only update if we have a real profile picture URL
           if (data.profilePictureUrl) {
             setProfilePictureUrl(data.profilePictureUrl);
+          } else {
+            // Explicitly set to null if no profile picture
+            setProfilePictureUrl(null);
           }
         })
-        .catch(err => console.error('Failed to fetch profile picture:', err));
+        .catch(err => {
+          console.error('Failed to fetch profile picture:', err);
+          setProfilePictureUrl(null);
+        });
     }
   }, [session?.user?.id]);
 
@@ -290,14 +296,17 @@ export default function Navbar() {
                   }}
                 >
                   {/* Profile Picture - Bigger, half overlapping (positioned at bottom of navbar) */}
-                  <Image
-                    src={profilePictureUrl || session.user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent((session.user.name || session.user.email || 'user').toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
-                    alt={session.user.name || 'User'}
-                    width={140}
-                    height={140}
-                    unoptimized
-                    className="rounded-full border-4 border-white object-cover shadow-2xl transition-all duration-300"
-                  />
+                  {profilePictureUrl && (
+                    <img
+                      src={profilePictureUrl}
+                      alt={session.user.name || 'User'}
+                      width={140}
+                      height={140}
+                      className="rounded-full border-4 border-white object-cover shadow-2xl transition-all duration-300"
+                      style={{ width: '140px', height: '140px' }}
+                      loading="eager"
+                    />
+                  )}
                 </button>
                 {/* Profile dropdown */}
                 {profileOpen && (
