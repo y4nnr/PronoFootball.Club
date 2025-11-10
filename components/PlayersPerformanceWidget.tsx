@@ -131,7 +131,7 @@ const PlayersPerformanceWidget = memo(({
 
   if (playersPerformance.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 mb-8">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
         <div className="text-center py-8">
           <div className="text-gray-400 text-4xl mb-3">📊</div>
           <p className="text-gray-500">Aucune donnée de performance disponible</p>
@@ -144,7 +144,7 @@ const PlayersPerformanceWidget = memo(({
   const games = playersPerformance[0]?.lastGamesPerformance || [];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-2xl p-3 mb-8 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center">
           <div className="p-1.5 bg-primary-600 rounded-full shadow mr-2 flex items-center justify-center">

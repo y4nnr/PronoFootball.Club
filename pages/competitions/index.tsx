@@ -34,7 +34,7 @@ type CompetitionsPageProps = {
 };
 
 const SectionCard = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
-  <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-6 mb-8">
+  <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
     <div className="flex items-center mb-6">
       <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
         {icon}

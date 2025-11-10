@@ -154,6 +154,11 @@ html, body {
   background: #fff !important;
 }
 
+/* Footer white border - ensure it's always visible */
+footer.footer-with-border {
+  border-top: 4px solid white !important;
+}
+
 @layer components {
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-accent-500;

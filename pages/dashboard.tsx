@@ -205,7 +205,7 @@ const ActiveCompetitionsSection = memo(({ competitions, t }: { competitions: Com
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-5">
+    <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-5" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -292,7 +292,7 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
   console.log('🎯 BettingGamesSection - Received games:', games?.length || 0, 'games');
   console.log('🎯 BettingGamesSection - Games data:', games);
   return (
-    <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-5 mb-8">
+    <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -362,7 +362,7 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
   const currentUserId = session?.user?.id;
   
   return (
-    <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-6 mb-8">
+    <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -640,7 +640,7 @@ export default function Dashboard() {
 
 
 
-        <div className="mb-5">
+        <div className="mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             <div className="w-full flex flex-col">
               {/* Countdown Timer */}
@@ -710,7 +710,7 @@ export default function Dashboard() {
           return null;
         })()}
 
-        <section className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 mb-6">
+        <section className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <h2 className="text-xl font-bold text-gray-900 mb-[1.15rem] flex items-center">
             <span className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center mr-3">
               <ChartBarIcon className="h-6 w-6 text-white" />

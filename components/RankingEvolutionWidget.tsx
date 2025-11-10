@@ -204,7 +204,7 @@ const RankingEvolutionWidget = memo(({
   const plotHeight = chartHeight - (padding.top + padding.bottom);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-4 w-full">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-2xl p-4 mb-8 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <div className="p-2 bg-primary-600 rounded-full shadow mr-3 flex items-center justify-center">

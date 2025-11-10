@@ -354,7 +354,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
         {/* Competition Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Period */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-3 mb-2">
               <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-12 w-12">
                 <CalendarIcon className="h-8 w-8 text-white" />
@@ -371,7 +371,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
 
           {/* Participants */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-3 mb-2">
               <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-12 w-12">
                 <UsersIcon className="h-8 w-8 text-white" />
@@ -382,7 +382,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
 
           {/* Games */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-3 mb-2">
               <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-12 w-12">
                 <ChartBarIcon className="h-8 w-8 text-white" />
@@ -393,7 +393,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
 
           {/* Status */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-3 mb-2">
               <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-12 w-12">
                 <span className="text-white text-lg font-bold">
@@ -410,7 +410,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
         </div>
 
         {/* Competition Progress Bar */}
-        <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6 mb-8">
+        <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <div className="p-2 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -478,7 +478,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
 
         {/* Current Ranking Section - Always visible for better UX */}
-        <div className="bg-white rounded-xl shadow-md border border-gray-300 overflow-hidden mb-8">
+        <div className="bg-white rounded-xl shadow-2xl border border-gray-300 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 flex items-center">
               <div className="p-2 bg-primary-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
@@ -721,7 +721,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
         )}
 
         {/* Games Section */}
-        <div className="bg-white rounded-xl shadow-md border border-gray-300 overflow-hidden mb-8">
+        <div className="bg-white rounded-2xl border border-gray-300 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)', overflow: 'hidden' }}>
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900 flex items-center">
@@ -984,7 +984,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
         </div>
 
         {/* Competition Summary */}
-        <div className="bg-white rounded-xl shadow-md border border-gray-300 p-6">
+        <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
             <ChartBarIcon className="h-6 w-6 text-primary-600 mr-2" />
             {t('competition.competitionSummary')}

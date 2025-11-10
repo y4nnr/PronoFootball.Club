@@ -80,7 +80,7 @@ const CountdownTimer = memo(({ nextGameDate, className = '', onCountdownComplete
   ];
 
   return (
-    <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-modern-lg border border-primary-200/50 ${className}`}>
+    <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200/50 ${className}`} style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       {/* Header */}
       <div className="flex items-center space-x-3 mb-4">
         <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center">
