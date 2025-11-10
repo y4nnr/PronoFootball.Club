@@ -179,14 +179,16 @@ export default function AdminCompetitions() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">{t('admin.competitions.title')}</h1>
-          <button
-            onClick={openNewCompetitionModal}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            {t('admin.competitions.new')}
-          </button>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('admin.competitions.title')}</h1>
+          <div className="flex justify-center">
+            <button
+              onClick={openNewCompetitionModal}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              {t('admin.competitions.new')}
+            </button>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">

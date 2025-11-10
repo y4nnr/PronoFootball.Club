@@ -12,10 +12,12 @@ export default function Navbar() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [adminEditOpen, setAdminEditOpen] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const adminEditRef = useRef<HTMLDivElement>(null);
 
   // Handle client-side mounting
   useEffect(() => {
@@ -55,6 +57,9 @@ export default function Navbar() {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setProfileOpen(false);
       }
+      if (adminEditRef.current && !adminEditRef.current.contains(event.target as Node)) {
+        setAdminEditOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -72,10 +77,13 @@ export default function Navbar() {
     { name: t('dashboard.nav.home'), href: '/dashboard', icon: <HomeIcon className="size-6" />, showFor: ['user', 'admin'] },
     { name: t('dashboard.nav.competitions'), href: '/competitions', icon: <PencilSquareIcon className="size-6" />, showFor: ['user', 'admin'] },
     { name: t('dashboard.nav.stats'), href: '/stats', icon: <ChartBarIcon className="size-6" />, showFor: ['user', 'admin'] },
-    // Admin only
-    { name: t('admin.competitions.title'), href: '/admin/competitions', icon: <CalendarIcon className="size-6 text-orange-400" />, showFor: ['admin'] },
-    { name: t('dashboard.admin.manageTeams'), href: '/admin/teams', icon: <ShieldCheckIcon className="size-6 text-orange-400" />, showFor: ['admin'] },
-    { name: t('dashboard.admin.manageUsers'), href: '/admin/users', icon: <UserGroupIcon className="size-6 text-orange-400" />, showFor: ['admin'] },
+  ];
+
+  // Admin edit menu items (separate from main navigation)
+  const adminEditItems = [
+    { name: t('admin.competitions.title'), href: '/admin/competitions', icon: <CalendarIcon className="size-6 text-orange-400" /> },
+    { name: t('dashboard.admin.manageTeams'), href: '/admin/teams', icon: <ShieldCheckIcon className="size-6 text-orange-400" /> },
+    { name: t('dashboard.admin.manageUsers'), href: '/admin/users', icon: <UserGroupIcon className="size-6 text-orange-400" /> },
   ];
 
   const filteredNavigation = navigationItems.filter(item => item.showFor.includes(isAdmin ? 'admin' : 'user'));
@@ -166,6 +174,21 @@ export default function Navbar() {
             <span>{item.name}</span>
           </Link>
         ))}
+        {/* Admin Edit Menu Items in Mobile */}
+        {isAdmin && adminEditItems.map(item => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-lg font-medium transition-all duration-200 ${
+              router.pathname.startsWith(item.href)
+                ? 'bg-white/10 text-white shadow-md' : 'text-gray-300 hover:bg-white/10 hover:text-white'
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <span className="text-2xl">{item.icon}</span>
+            <span>{item.name}</span>
+          </Link>
+        ))}
         <button
           onClick={() => setMobileMenuOpen(false)}
           className="mt-4 px-4 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
@@ -184,7 +207,7 @@ export default function Navbar() {
             {/* Left: User Profile + Separator + Back Button + Navigation */}
             <div className="flex items-center space-x-4">
               {/* Site Name */}
-              <Link href="/" className="text-white font-bold text-2xl tracking-tight mr-4 hover:text-white transition-colors select-none" style={{ letterSpacing: '0.01em' }}>
+              <Link href="/" className="text-white font-bold text-3xl tracking-tight mr-1 ml-4 hover:text-white transition-colors select-none" style={{ letterSpacing: '0.01em' }}>
                 PronoFootball.Club
               </Link>
               {/* Mobile hamburger menu */}
@@ -198,11 +221,58 @@ export default function Navbar() {
                 </svg>
               </button>
               {/* Back Button + Navigation with text labels (desktop only) */}
-              <div className="flex items-center gap-0 hidden md:flex">
+              <div className="flex items-center gap-0 hidden md:flex -ml-2">
                 <BackButton />
                 {filteredNavigation.map(item => (
                   <NavItem key={item.href} item={item} />
                 ))}
+                {/* Admin Edit Button */}
+                {isAdmin && (
+                  <div className="relative" ref={adminEditRef}>
+                    <button
+                      onClick={() => setAdminEditOpen(v => !v)}
+                      className={`group inline-flex flex-col items-center justify-center gap-3 rounded-lg transition-all duration-200 w-[128px] h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
+                        router.pathname.startsWith('/admin/competitions') || router.pathname.startsWith('/admin/teams') || router.pathname.startsWith('/admin/users')
+                          ? 'bg-white/10 text-orange-400 shadow-md' 
+                          : 'text-orange-400 hover:text-orange-300 hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="mb-0">
+                        <PencilSquareIcon className="size-6" />
+                      </div>
+                      <span className="whitespace-nowrap text-base font-medium leading-none tracking-[0.01em] text-center">
+                        Edit
+                      </span>
+                    </button>
+                    {/* Admin Edit Dropdown */}
+                    {adminEditOpen && (
+                      <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-fade-in">
+                        {adminEditItems.map(item => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                              router.pathname.startsWith(item.href)
+                                ? 'bg-primary-50 text-primary-600 shadow-sm' : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                            onClick={() => setAdminEditOpen(false)}
+                          >
+                            <span className="text-xl">{item.icon}</span>
+                            <span>{item.name}</span>
+                          </Link>
+                        ))}
+                        <div className="border-t border-gray-200 my-2"></div>
+                        <button
+                          onClick={() => { setAdminEditOpen(false); signOut({ callbackUrl: '/login' }); }}
+                          className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                        >
+                          <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0" />
+                          <span>Déconnexion</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

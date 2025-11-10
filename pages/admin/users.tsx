@@ -217,14 +217,16 @@ export default function AdminUsers() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Users</h1>
-          <button
-            onClick={openAddModal}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
-          >
-            New User
-          </button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Users</h1>
+          <div className="flex justify-center">
+            <button
+              onClick={openAddModal}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
+            >
+              New User
+            </button>
+          </div>
         </div>
         {loading ? (
           <div className="flex justify-center items-center h-32">

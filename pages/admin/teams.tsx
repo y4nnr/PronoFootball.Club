@@ -159,14 +159,16 @@ export default function TeamsAdmin() {
   return (
     <div className="min-h-screen bg-[#18181b]">
       <div className="max-w-7xl mx-auto py-8 px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Teams</h1>
-          <button
-            onClick={openAddModal}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
-          >
-            New Team
-          </button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-4">Teams</h1>
+          <div className="flex justify-center">
+            <button
+              onClick={openAddModal}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
+            >
+              New Team
+            </button>
+          </div>
         </div>
 
         {/* Search Bar */}
