@@ -16,6 +16,7 @@ interface Bet {
 interface Team {
   name: string;
   logo?: string | null;
+  shortName?: string | null;
 }
 
 interface Game {
@@ -46,6 +47,33 @@ function formatDateTime(dateString: string) {
   const hour = String(date.getHours()).padStart(2, '0');
   const minute = String(date.getMinutes()).padStart(2, '0');
   return `${day}/${month}/${year} ${hour}:${minute}`;
+}
+
+// Abbreviate team names for mobile display - always use shortName if available
+function abbreviateTeamName(team: Team): string {
+  // Always use shortName from database if available
+  if (team.shortName) {
+    return team.shortName;
+  }
+  
+  // Fallback: if no shortName, use automatic abbreviation
+  const teamName = team.name;
+  
+  // If name is short (8 chars or less), return as is
+  if (teamName.length <= 8) {
+    return teamName;
+  }
+  
+  // Split by spaces and common separators
+  const words = teamName.split(/[\s-]+/);
+  
+  // If multiple words, take first letter of each word (e.g., "Paris Saint-Germain" -> "PSG")
+  if (words.length > 1) {
+    return words.map(word => word.charAt(0).toUpperCase()).join('');
+  }
+  
+  // For single word teams, take first 4-5 characters
+  return teamName.substring(0, 5).toUpperCase();
 }
 
 export default function GameCard({ game, currentUserId, href, context = 'home', isHighlighted = false, highlightType = 'score' }: GameCardProps) {
@@ -87,23 +115,23 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   };
   
   const cardContent = (
-    <div className={`${getBackgroundColor()} border rounded-2xl shadow flex flex-col items-stretch transition p-5 gap-3 ${getBorderColor()} ${isClickable ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 'cursor-default'} ${
+    <div className={`${getBackgroundColor()} border rounded-xl md:rounded-2xl shadow flex flex-col items-stretch transition p-3 md:p-4 lg:p-5 gap-2 md:gap-3 ${getBorderColor()} ${isClickable ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 'cursor-default'} ${
       isHighlighted ? 
         highlightType === 'status' ? 'animate-bounce ring-4 ring-blue-400 ring-opacity-75' :
         highlightType === 'both' ? 'animate-pulse ring-4 ring-purple-400 ring-opacity-75' :
         'animate-pulse ring-4 ring-yellow-400 ring-opacity-75' : ''
     }`}>
       {/* Date & Status */}
-      <div className="flex items-center w-full justify-between pb-3 border-b border-neutral-200">
-        <span className="text-xs text-neutral-500">
+      <div className="flex items-center w-full justify-between pb-2 md:pb-3 border-b border-neutral-200">
+        <span className="text-[9px] md:text-[10px] lg:text-xs text-neutral-500">
           {formatDateTime(game.date)}
         </span>
         <div className="flex items-center gap-2">
           {userHasBet && (
             <div className="flex items-center gap-1">
               {context === 'home' ? (
-                <div className="flex items-center justify-center w-5 h-5 bg-blue-100 rounded-full">
-                  <span className="text-blue-600 text-xs font-bold">✓</span>
+                <div className="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 bg-blue-100 rounded-full">
+                  <span className="text-blue-600 text-[10px] md:text-xs font-bold">✓</span>
                 </div>
               ) : (
                 <div 
@@ -117,7 +145,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               )}
             </div>
           )}
-          <span className={`inline-block px-2 py-1 text-xs rounded-full transition-all duration-300 ${
+          <span className={`inline-block px-1.5 md:px-2 py-0.5 md:py-1 text-[9px] md:text-[10px] lg:text-xs rounded-full transition-all duration-300 ${
             game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
             game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
             game.status === 'LIVE' ? 'bg-red-100 text-red-800 animate-pulse' :
@@ -133,19 +161,33 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       </div>
       {/* Teams & Score */}
-      <div className="flex items-center w-full justify-between py-3 border-b border-neutral-200">
+      <div className="flex items-center w-full justify-between py-2 md:py-3 border-b border-neutral-200">
         {/* Home Team */}
-        <div className="flex items-center min-w-0 w-2/5 justify-end pr-2">
-          <span className="text-gray-900 font-medium text-sm text-right truncate max-w-[90px]">{game.homeTeam.name}</span>
-          {game.homeTeam.logo ? (
-            <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-8 h-8 rounded-full ml-2 object-cover border border-gray-200" />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gray-200 ml-2 flex items-center justify-center text-xs text-gray-500">{game.homeTeam.name.substring(0,2)}</div>
-          )}
+        <div className="flex flex-col md:flex-row items-center min-w-0 w-2/5 justify-end pr-1 md:pr-2 gap-1 md:gap-0">
+          {/* Mobile: Logo on top, name below */}
+          <div className="md:hidden flex flex-col items-center w-full">
+            {game.homeTeam.logo ? (
+              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-8 h-8 rounded-full object-cover border border-gray-200 mb-1 flex-shrink-0" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 mb-1 flex-shrink-0">{game.homeTeam.name.substring(0,2)}</div>
+            )}
+            <div className="min-h-[32px] flex items-center justify-center w-full px-1">
+              <span className="text-gray-900 font-medium text-[10px] text-center leading-tight line-clamp-2">{abbreviateTeamName(game.homeTeam)}</span>
+            </div>
+          </div>
+          {/* Desktop: Name and logo side by side */}
+          <div className="hidden md:flex items-center">
+            <span className="text-gray-900 font-medium text-xs lg:text-sm text-right truncate max-w-[90px]">{game.homeTeam.name}</span>
+            {game.homeTeam.logo ? (
+              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-8 h-8 rounded-full ml-2 object-cover border border-gray-200" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-200 ml-2 flex items-center justify-center text-xs text-gray-500">{game.homeTeam.name.substring(0,2)}</div>
+            )}
+          </div>
         </div>
         {/* Score */}
-        <div className="flex-1 flex justify-center">
-          <span className={`text-lg font-bold text-gray-900 transition-all duration-300 ${
+        <div className="flex-1 flex justify-center min-w-[50px] md:min-w-[60px]">
+          <span className={`text-sm md:text-base lg:text-lg font-bold text-gray-900 transition-all duration-300 ${
             isHighlighted && (highlightType === 'score' || highlightType === 'both') ? 'animate-pulse scale-110 text-yellow-600' : ''
           }`}>
             {game.status === 'FINISHED' && typeof game.homeScore === 'number' && typeof game.awayScore === 'number'
@@ -156,32 +198,46 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           </span>
         </div>
         {/* Away Team */}
-        <div className="flex items-center min-w-0 w-2/5 pl-2">
-          {game.awayTeam.logo ? (
-            <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-8 h-8 rounded-full mr-2 object-cover border border-gray-200" />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-xs text-gray-500">{game.awayTeam.name.substring(0,2)}</div>
-          )}
-          <span className="text-gray-900 font-medium text-sm text-left truncate max-w-[90px]">{game.awayTeam.name}</span>
+        <div className="flex flex-col md:flex-row items-center min-w-0 w-2/5 justify-start pl-1 md:pl-2 gap-1 md:gap-0">
+          {/* Mobile: Logo on top, name below */}
+          <div className="md:hidden flex flex-col items-center w-full">
+            {game.awayTeam.logo ? (
+              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-8 h-8 rounded-full object-cover border border-gray-200 mb-1 flex-shrink-0" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 mb-1 flex-shrink-0">{game.awayTeam.name.substring(0,2)}</div>
+            )}
+            <div className="min-h-[32px] flex items-center justify-center w-full px-1">
+              <span className="text-gray-900 font-medium text-[10px] text-center leading-tight line-clamp-2">{abbreviateTeamName(game.awayTeam)}</span>
+            </div>
+          </div>
+          {/* Desktop: Logo and name side by side */}
+          <div className="hidden md:flex items-center">
+            {game.awayTeam.logo ? (
+              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-8 h-8 rounded-full mr-2 object-cover border border-gray-200" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-xs text-gray-500">{game.awayTeam.name.substring(0,2)}</div>
+            )}
+            <span className="text-gray-900 font-medium text-xs lg:text-sm text-left truncate max-w-[90px]">{game.awayTeam.name}</span>
+          </div>
         </div>
       </div>
       {/* Bets List */}
       {game.bets && game.bets.length > 0 && (
-        <div className="w-full pt-3">
-          <div className="text-[11px] text-neutral-500 font-semibold mb-1 ml-1 tracking-wide uppercase">{t('placedBets')}</div>
+        <div className="w-full pt-2 md:pt-3">
+          <div className="text-[9px] md:text-[10px] lg:text-[11px] text-neutral-500 font-semibold mb-1 ml-1 tracking-wide uppercase">{t('placedBets')}</div>
           <ul className="divide-y divide-neutral-100">
             {game.bets.map((bet) => (
-              <li key={bet.id} className="flex items-center py-1 first:pt-0 last:pb-0">
+              <li key={bet.id} className="flex items-center py-0.5 md:py-1 first:pt-0 last:pb-0">
                 <img
                   src={bet.user.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(bet.user.name.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
                   alt={bet.user.name}
-                  className="w-6 h-6 rounded-full border border-gray-200 object-cover mr-2"
+                  className="w-5 h-5 md:w-6 md:h-6 rounded-full border border-gray-200 object-cover mr-1.5 md:mr-2"
                   title={bet.user.name}
                 />
-                <span className="text-xs text-gray-700 mr-2 truncate max-w-[80px]">{bet.user.name}</span>
+                <span className="text-[10px] md:text-xs text-gray-700 mr-1.5 md:mr-2 truncate max-w-[70px] md:max-w-[80px]">{bet.user.name}</span>
                 {((game.status === 'LIVE' || game.status === 'FINISHED') && bet.score1 !== null && bet.score2 !== null) || 
                   (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
-                  <span className="text-xs font-mono text-gray-900 bg-gray-100 rounded px-2 py-0.5 ml-auto">{bet.score1} - {bet.score2}</span>
+                  <span className="text-[10px] md:text-xs font-mono text-gray-900 bg-gray-100 rounded px-1.5 md:px-2 py-0.5 ml-auto">{bet.score1} - {bet.score2}</span>
                 ) : null}
               </li>
             ))}

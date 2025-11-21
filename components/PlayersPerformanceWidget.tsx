@@ -158,51 +158,52 @@ const PlayersPerformanceWidget = memo(({
         </div>
       </div>
 
-      {/* Games Header */}
-      <div className="mb-2">
+      {/* Games Header - Hidden on smaller screens when it doesn't fit */}
+      <div className="mb-2 hidden xl:block">
         <div className="flex items-center py-2 px-3 bg-gray-50 rounded-md">
           {/* Player Profile Area - Empty space to match player row structure */}
           <div className="flex items-center space-x-2 min-w-0 w-32">
             {/* Empty space to match avatar + name area */}
           </div>
           {/* Performance columns header */}
-          <div className="flex space-x-1 flex-1 justify-start">
+          <div className="flex space-x-1 flex-1 justify-start min-w-0">
             {Array.from({ length: 10 }).map((_, index) => {
               const game = games[index];
               return game ? (
                 <div
                   key={game.gameId}
-                  className="flex-1 min-w-0 h-16 rounded-md flex flex-col items-center justify-center text-gray-700 text-xs border border-gray-300 bg-white px-1 py-1"
+                  className="flex-1 min-w-0 h-16 rounded-md flex flex-col items-center justify-center text-gray-700 text-xs border border-gray-300 bg-white px-0.5 py-1"
                   title={`${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore}`}
+                  style={{ minWidth: '0', maxWidth: '100%' }}
                 >
                   {/* Home Team */}
-                  <div className="flex items-center space-x-1 mb-0.5 w-full justify-center">
+                  <div className="flex items-center space-x-0.5 mb-0.5 w-full justify-center min-w-0">
                     {game.homeTeamLogo && (
                       <img 
                         src={game.homeTeamLogo} 
                         alt={game.homeTeam}
-                        className="w-4 h-4 object-contain flex-shrink-0"
+                        className="w-3 h-3 xl:w-4 xl:h-4 object-contain flex-shrink-0"
                       />
                     )}
-                    <span className="font-bold text-[10px] leading-tight truncate max-w-full">
-                      {game.homeTeam.length > 8 ? game.homeTeam.substring(0, 7) + '...' : game.homeTeam}
+                    <span className="font-bold text-[9px] xl:text-[10px] leading-tight truncate max-w-full">
+                      {game.homeTeam.length > 6 ? game.homeTeam.substring(0, 5) + '...' : game.homeTeam}
                     </span>
                   </div>
                   {/* Score */}
-                  <div className="text-[10px] text-gray-700 font-bold mb-0.5">
+                  <div className="text-[9px] xl:text-[10px] text-gray-700 font-bold mb-0.5">
                     {game.actualScore}
                   </div>
                   {/* Away Team */}
-                  <div className="flex items-center space-x-1 w-full justify-center">
+                  <div className="flex items-center space-x-0.5 w-full justify-center min-w-0">
                     {game.awayTeamLogo && (
                       <img 
                         src={game.awayTeamLogo} 
                         alt={game.awayTeam}
-                        className="w-4 h-4 object-contain flex-shrink-0"
+                        className="w-3 h-3 xl:w-4 xl:h-4 object-contain flex-shrink-0"
                       />
                     )}
-                    <span className="font-bold text-[10px] leading-tight truncate max-w-full">
-                      {game.awayTeam.length > 8 ? game.awayTeam.substring(0, 7) + '...' : game.awayTeam}
+                    <span className="font-bold text-[9px] xl:text-[10px] leading-tight truncate max-w-full">
+                      {game.awayTeam.length > 6 ? game.awayTeam.substring(0, 5) + '...' : game.awayTeam}
                     </span>
                   </div>
                 </div>

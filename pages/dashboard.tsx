@@ -69,11 +69,13 @@ interface BettingGame {
     id: string;
     name: string;
     logo?: string | null;
+    shortName?: string | null;
   };
   awayTeam: {
     id: string;
     name: string;
     logo?: string | null;
+    shortName?: string | null;
   };
   date: string;
   status: string;
@@ -211,7 +213,7 @@ const ActiveCompetitionsSection = memo(({ competitions, t }: { competitions: Com
           <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <TrophyIcon className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-neutral-900">{t('competitions.active')}</h2>
+          <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('competitions.active')}</h2>
         </div>
       </div>
       {activeCompetitions.length > 0 ? (
@@ -247,7 +249,7 @@ const AvailableCompetitionsSection = memo(({ competitions, t }: { competitions: 
           <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <TrophyIcon className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-neutral-900">{t('availableCompetitions.title')}</h2>
+          <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('availableCompetitions.title')}</h2>
         </div>
       </div>
 
@@ -298,12 +300,12 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
           <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <PlayIcon className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-neutral-900">{t('bettingGames.title')}</h2>
+          <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('bettingGames.title')}</h2>
         </div>
       </div>
 
       {games && games.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
           {games.map((game) => {
             const bets = game.allUserBets.map((bet: UserBet) => {
               if (currentUserId && bet.userId === currentUserId && game.userBet) {
@@ -323,11 +325,13 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
                   date: game.date,
                   homeTeam: {
                     name: game.homeTeam.name,
-                    logo: game.homeTeam.logo || undefined
+                    logo: game.homeTeam.logo || undefined,
+                    shortName: game.homeTeam.shortName || undefined
                   },
                   awayTeam: {
                     name: game.awayTeam.name,
-                    logo: game.awayTeam.logo || undefined
+                    logo: game.awayTeam.logo || undefined,
+                    shortName: game.awayTeam.shortName || undefined
                   },
                   homeScore: game.homeScore || undefined,
                   awayScore: game.awayScore || undefined,
@@ -368,11 +372,11 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
           <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <CalendarIcon className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-neutral-900">{t('gamesOfDay.title')}</h2>
+          <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('gamesOfDay.title')}</h2>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
         {games.map((game) => {
           const bets = game.allUserBets.map((bet: UserBet) => {
             if (currentUserId && bet.userId === currentUserId && game.userBet) {
@@ -622,14 +626,14 @@ export default function Dashboard() {
 
   return (
     <div style={{ backgroundColor: '#f7f8fa' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-2">
             <div className="p-4 bg-primary-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
               <HomeIcon className="h-10 w-10 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900">{t('title')}</h1>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">{t('title')}</h1>
         </div>
         </div>
 
@@ -711,7 +715,7 @@ export default function Dashboard() {
         })()}
 
         <section className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <h2 className="text-xl font-bold text-gray-900 mb-[1.15rem] flex items-center">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-[1.15rem] flex items-center">
             <span className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center mr-3">
               <ChartBarIcon className="h-6 w-6 text-white" />
             </span>

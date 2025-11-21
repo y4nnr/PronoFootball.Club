@@ -3,24 +3,33 @@ import { useSession, signOut } from 'next-auth/react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect } from 'react';
-import { HomeIcon, PencilSquareIcon, ChartBarIcon, CalendarIcon, UserGroupIcon, ShieldCheckIcon, ArrowLeftIcon, UserIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, PencilSquareIcon, ChartBarIcon, CalendarIcon, UserGroupIcon, ShieldCheckIcon, ArrowLeftIcon, UserIcon, ArrowRightOnRectangleIcon, TrophyIcon } from '@heroicons/react/24/outline';
 
 export default function Navbar() {
   const { data: session } = useSession();
   const { t } = useTranslation('common');
   const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [adminEditOpen, setAdminEditOpen] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const adminEditRef = useRef<HTMLDivElement>(null);
 
   // Handle client-side mounting
   useEffect(() => {
     setIsClient(true);
+    
+    // Check if mobile on mount and resize
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Handle scroll event to animate profile picture
@@ -80,16 +89,16 @@ export default function Navbar() {
   }, [session, isAdmin]);
 
   const navigationItems = [
-    { name: t('dashboard.nav.home'), href: '/dashboard', icon: <HomeIcon className="size-6" />, showFor: ['user', 'admin'] },
-    { name: t('dashboard.nav.competitions'), href: '/competitions', icon: <PencilSquareIcon className="size-6" />, showFor: ['user', 'admin'] },
-    { name: t('dashboard.nav.stats'), href: '/stats', icon: <ChartBarIcon className="size-6" />, showFor: ['user', 'admin'] },
+    { name: t('dashboard.nav.home'), href: '/dashboard', icon: <HomeIcon className="h-4 w-4 md:h-4 md:w-4 lg:h-5 lg:w-5" />, showFor: ['user', 'admin'] },
+    { name: t('dashboard.nav.competitions'), href: '/competitions', icon: <TrophyIcon className="h-4 w-4 md:h-4 md:w-4 lg:h-5 lg:w-5" />, showFor: ['user', 'admin'] },
+    { name: t('dashboard.nav.stats'), href: '/stats', icon: <ChartBarIcon className="h-4 w-4 md:h-4 md:w-4 lg:h-5 lg:w-5" />, showFor: ['user', 'admin'] },
   ];
 
   // Admin edit menu items (separate from main navigation)
   const adminEditItems = [
-    { name: t('admin.competitions.title'), href: '/admin/competitions', icon: <CalendarIcon className="size-6 text-orange-400" /> },
-    { name: t('dashboard.admin.manageTeams'), href: '/admin/teams', icon: <ShieldCheckIcon className="size-6 text-orange-400" /> },
-    { name: t('dashboard.admin.manageUsers'), href: '/admin/users', icon: <UserGroupIcon className="size-6 text-orange-400" /> },
+    { name: t('admin.competitions.title'), href: '/admin/competitions', icon: <CalendarIcon className="size-5 text-orange-400" /> },
+    { name: t('dashboard.admin.manageTeams'), href: '/admin/teams', icon: <ShieldCheckIcon className="size-5 text-orange-400" /> },
+    { name: t('dashboard.admin.manageUsers'), href: '/admin/users', icon: <UserGroupIcon className="size-5 text-orange-400" /> },
   ];
 
   const filteredNavigation = navigationItems.filter(item => item.showFor.includes(isAdmin ? 'admin' : 'user'));
@@ -101,6 +110,7 @@ export default function Navbar() {
 
   // Check if we can show a back button (only on client side to prevent hydration mismatch)
   const isOnBettingPage = router.pathname.startsWith('/betting');
+  const isOnLoginPage = router.pathname === '/' || router.pathname === '/login';
   const canGoBack = isClient && router.pathname !== '/dashboard' && window.history.length > 1;
 
   // Back button handler
@@ -120,12 +130,12 @@ export default function Navbar() {
       <Link
         key={item.href}
         href={item.href}
-        className={`group inline-flex flex-col items-center justify-center gap-3 rounded-lg transition-all duration-200 w-[128px] h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
+        className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
           isActive ? 'bg-white/10 text-white shadow-md' : 'text-gray-300 hover:text-white hover:bg-white/5'
         }`}
       >
         <div className="mb-0">{item.icon}</div>
-        <span className={`whitespace-nowrap text-base font-medium leading-none tracking-[0.01em] text-center ${isActive ? 'text-white' : item.showFor.length === 1 && item.showFor.includes('admin') ? 'text-orange-400 group-hover:text-orange-300' : 'text-gray-100 group-hover:text-white'}`}>
+        <span className={`whitespace-nowrap text-[10px] md:text-xs lg:text-sm xl:text-base font-medium leading-none tracking-[0.01em] text-center ${isActive ? 'text-white' : item.showFor.length === 1 && item.showFor.includes('admin') ? 'text-orange-400 group-hover:text-orange-300' : 'text-gray-100 group-hover:text-white'}`}>
           {item.name}
         </span>
       </Link>
@@ -138,94 +148,75 @@ export default function Navbar() {
     return (
       <button
         onClick={handleGoBack}
-        className={`group inline-flex flex-col items-center justify-center gap-1 rounded-lg transition-all duration-200 w-[120px] h-[60px] shrink-0 ${
+        className={`group inline-flex flex-col items-center justify-center gap-1 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[110px] xl:w-[120px] h-[48px] md:h-[50px] lg:h-[55px] xl:h-[60px] shrink-0 ${
           isEnabled ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 cursor-not-allowed'
         }`}
         disabled={!isEnabled}
       >
         <div className="mb-0">
-          <ArrowLeftIcon className="h-5 w-5" />
+          <ArrowLeftIcon className="h-4 w-4 md:h-4 md:w-4 lg:h-5 lg:w-5" />
         </div>
-        <span className={`${isEnabled ? 'text-[15px] font-medium tracking-wide text-gray-100 group-hover:text-white whitespace-nowrap' : 'text-[15px] font-medium tracking-wide text-gray-600 whitespace-nowrap'} leading-tight text-center`}>
+        <span className={`${isEnabled ? 'text-[10px] md:text-xs lg:text-sm xl:text-[15px] font-medium tracking-wide text-gray-100 group-hover:text-white whitespace-nowrap' : 'text-[10px] md:text-xs lg:text-sm xl:text-[15px] font-medium tracking-wide text-gray-600 whitespace-nowrap'} leading-tight text-center`}>
           {t('back')}
         </span>
       </button>
     );
   };
 
-  // Mobile menu
-  const MobileMenu = () => (
-    <div className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center transition-all ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-      <div className="bg-zinc-900/95 rounded-2xl shadow-xl p-8 flex flex-col space-y-6 w-72">
-        {(isOnBettingPage || canGoBack) && (
-          <button
-            onClick={() => { handleGoBack(); setMobileMenuOpen(false); }}
-            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-lg font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200"
-          >
-            <ArrowLeftIcon className="h-6 w-6" />
-            <span>{t('back')}</span>
-          </button>
-        )}
-        {filteredNavigation.map(item => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-lg font-medium transition-all duration-200 ${
-              router.pathname.startsWith(item.href)
-                ? 'bg-white/10 text-white shadow-md' : 'text-gray-300 hover:bg-white/10 hover:text-white'
-            }`}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <span className="text-2xl">{item.icon}</span>
-            <span>{item.name}</span>
-          </Link>
-        ))}
-        {/* Admin Edit Menu Items in Mobile */}
-        {isAdmin && adminEditItems.map(item => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-lg font-medium transition-all duration-200 ${
-              router.pathname.startsWith(item.href)
-                ? 'bg-white/10 text-white shadow-md' : 'text-gray-300 hover:bg-white/10 hover:text-white'
-            }`}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <span className="text-2xl">{item.icon}</span>
-            <span>{item.name}</span>
-          </Link>
-        ))}
+  // Mobile bottom navigation bar
+  const MobileBottomNav = () => (
+    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-gray-800 backdrop-blur-lg border-t-2 border-white shadow-2xl" style={{ boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.5), 0 -4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
+      <div className="flex items-center justify-around px-2 py-2 safe-area-inset-bottom">
+        {filteredNavigation.map(item => {
+          const isActive = router.pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 flex-1 min-w-0 h-[64px] ${
+                isActive 
+                  ? 'text-white bg-white/10' 
+                  : 'text-gray-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <span className="text-xl flex-shrink-0">{item.icon}</span>
+              <span className="text-[10px] font-medium leading-tight text-center whitespace-nowrap flex-shrink-0">
+                {item.name}
+              </span>
+            </Link>
+          );
+        })}
+        {/* Back button for mobile - always show in normal color */}
         <button
-          onClick={() => setMobileMenuOpen(false)}
-          className="mt-4 px-4 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+          onClick={(isOnBettingPage || canGoBack) ? handleGoBack : undefined}
+          disabled={!(isOnBettingPage || canGoBack)}
+          className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 flex-1 min-w-0 h-[64px] text-gray-300 hover:text-white hover:bg-white/5"
         >
-          {t('cancel')}
+          <ArrowLeftIcon className="h-5 w-5 flex-shrink-0" />
+          <span className="text-[10px] font-medium leading-tight text-center whitespace-nowrap flex-shrink-0">
+            {t('back')}
+          </span>
         </button>
       </div>
     </div>
   );
 
+  // Don't render navbar on login page
+  if (isOnLoginPage) {
+    return null;
+  }
+
   return (
     <>
-      <nav className="fixed top-0 left-0 w-full bg-gray-800 backdrop-blur-lg shadow-2xl border-b-4 border-white z-50" style={{ minHeight: 96 }}>
+      <nav className="fixed top-0 left-0 w-full bg-gray-800 backdrop-blur-lg shadow-2xl border-b-2 md:border-b-3 lg:border-b-4 border-white z-40" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-24 py-2">
+          <div className="flex items-center justify-between h-16 md:h-20 lg:h-24 py-1 md:py-2">
             {/* Left: User Profile + Separator + Back Button + Navigation */}
             <div className="flex items-center space-x-4">
               {/* Site Name */}
-              <Link href="/" className="text-white font-bold text-3xl tracking-tight mr-1 ml-4 hover:text-white transition-colors select-none" style={{ letterSpacing: '0.01em' }}>
+              <Link href="/" className="text-white font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl tracking-tight mr-1 ml-2 md:ml-4 hover:text-white transition-colors select-none" style={{ letterSpacing: '0.01em' }}>
                 PronoFootball.Club
               </Link>
-              {/* Mobile hamburger menu */}
-              <button
-                className="md:hidden p-2 rounded-full hover:bg-white/10 transition"
-                onClick={() => setMobileMenuOpen(true)}
-                aria-label="Open menu"
-              >
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
               {/* Back Button + Navigation with text labels (desktop only) */}
               <div className="flex items-center gap-0 hidden md:flex -ml-2">
                 <BackButton />
@@ -237,16 +228,16 @@ export default function Navbar() {
                   <div className="relative" ref={adminEditRef}>
                     <button
                       onClick={() => setAdminEditOpen(v => !v)}
-                      className={`group inline-flex flex-col items-center justify-center gap-3 rounded-lg transition-all duration-200 w-[128px] h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
+                      className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
                         router.pathname.startsWith('/admin/competitions') || router.pathname.startsWith('/admin/teams') || router.pathname.startsWith('/admin/users')
                           ? 'bg-white/10 text-orange-400 shadow-md' 
                           : 'text-orange-400 hover:text-orange-300 hover:bg-white/5'
                       }`}
                     >
                       <div className="mb-0">
-                        <PencilSquareIcon className="size-6" />
+                        <PencilSquareIcon className="h-4 w-4 md:h-4 md:w-4 lg:h-5 lg:w-5" />
                       </div>
-                      <span className="whitespace-nowrap text-base font-medium leading-none tracking-[0.01em] text-center">
+                      <span className="whitespace-nowrap text-[10px] md:text-xs lg:text-sm xl:text-base font-medium leading-none tracking-[0.01em] text-center">
                         Edit
                       </span>
                     </button>
@@ -284,14 +275,24 @@ export default function Navbar() {
 
             {/* Right: User Profile Picture - Half on banner, half below */}
             {session?.user && (
-              <div className="relative" ref={profileRef} style={{ height: '96px', display: 'flex', alignItems: isScrolled ? 'center' : 'flex-end' }}>
+              <div 
+                className="relative h-16 md:h-20 lg:h-24" 
+                ref={profileRef} 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: (isOnBettingPage && isMobile) ? 'center' : (isScrolled ? 'center' : 'flex-end')
+                }}
+              >
                 <button
                   onClick={() => setProfileOpen(v => !v)}
-                  className="relative z-10 group transition-all duration-300 ease-in-out"
+                  className={`relative z-10 group transition-all duration-300 ease-in-out ${
+                    (isOnBettingPage && isMobile)
+                      ? 'mb-0' 
+                      : (isScrolled ? 'mb-0' : '-mb-12 md:-mb-14 lg:-mb-[70px]')
+                  }`}
                   aria-label="Open profile menu"
                   style={{ 
-                    marginBottom: isScrolled ? '0' : '-70px',
-                    transform: isScrolled ? 'scale(0.4)' : 'scale(1)',
+                    transform: (isOnBettingPage && isMobile) ? 'scale(1)' : (isScrolled ? 'scale(0.4)' : 'scale(1)'),
                     transformOrigin: 'center center'
                   }}
                 >
@@ -302,29 +303,32 @@ export default function Navbar() {
                       alt={session.user.name || 'User'}
                       width={140}
                       height={140}
-                      className="rounded-full border-4 border-white object-cover shadow-2xl transition-all duration-300"
-                      style={{ width: '140px', height: '140px' }}
+                      className={`rounded-full border-2 md:border-3 lg:border-4 border-white object-cover shadow-2xl transition-all duration-300 ${
+                        (isOnBettingPage && isMobile)
+                          ? 'w-12 h-12 md:w-20 md:h-20 lg:w-28 lg:h-28' 
+                          : 'w-20 h-20 md:w-28 md:h-28 lg:w-[140px] lg:h-[140px]'
+                      }`}
                       loading="eager"
                     />
                   )}
                 </button>
                 {/* Profile dropdown */}
                 {profileOpen && (
-                  <div className="absolute right-0 w-44 bg-zinc-900/95 rounded-xl shadow-lg border border-zinc-800 py-2 z-50 animate-fade-in" style={{ top: isScrolled ? '100%' : 'calc(100% + 70px)' }}>
+                  <div className={`absolute right-0 w-44 bg-zinc-900/95 rounded-xl shadow-lg border border-zinc-800 py-2 z-50 animate-fade-in ${isScrolled ? 'top-full' : 'top-[calc(100%+3rem)] md:top-[calc(100%+3.5rem)] lg:top-[calc(100%+70px)]'}`}>
                     <Link
                       href="/profile"
                       className="flex items-center gap-2 px-4 py-2 text-gray-200 hover:bg-white/10 rounded-md transition"
                       onClick={() => setProfileOpen(false)}
                     >
                       <UserIcon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 min-w-0 break-words">Mon Profile</span>
+                      <span className="flex-1 min-w-0 break-words text-sm md:text-base">Mon Profile</span>
                     </Link>
                     <button
                       onClick={() => { setProfileOpen(false); signOut({ callbackUrl: '/login' }); }}
                       className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-200 hover:bg-white/10 rounded-md transition"
                     >
                       <ArrowRightOnRectangleIcon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 min-w-0 break-words">Déconnexion</span>
+                      <span className="flex-1 min-w-0 break-words text-sm md:text-base">Déconnexion</span>
                     </button>
                   </div>
                 )}
@@ -332,9 +336,9 @@ export default function Navbar() {
             )}
           </div>
         </div>
-        {/* Mobile menu overlay */}
-        <MobileMenu />
       </nav>
+      {/* Mobile bottom navigation bar */}
+      {!isOnLoginPage && <MobileBottomNav />}
     </>
   );
 } 

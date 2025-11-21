@@ -13,11 +13,13 @@ interface BettingGame {
     id: string;
     name: string;
     logo: string | null;
+    shortName?: string | null;
   };
   awayTeam: {
     id: string;
     name: string;
     logo: string | null;
+    shortName?: string | null;
   };
   competition: {
     id: string;
@@ -138,12 +140,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         homeTeam: {
           id: game.homeTeam.id,
           name: game.homeTeam.name,
-          logo: game.homeTeam.logo
+          logo: game.homeTeam.logo,
+          shortName: game.homeTeam.shortName
         },
         awayTeam: {
           id: game.awayTeam.id,
           name: game.awayTeam.name,
-          logo: game.awayTeam.logo
+          logo: game.awayTeam.logo,
+          shortName: game.awayTeam.shortName
         },
         competition: {
           id: game.competition.id,

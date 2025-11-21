@@ -277,7 +277,7 @@ export default function ProfilePage() {
           <div className="px-8 py-6">
             {/* User Name and Info */}
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">{profile.name}</h1>
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{profile.name}</h1>
               <div className="flex items-center space-x-4 text-gray-600">
                 <span className="text-sm">{profile.email}</span>
                 <span className="text-gray-400">•</span>
@@ -298,19 +298,19 @@ export default function ProfilePage() {
         {!editing && userStats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 text-center">
-              <div className="text-3xl font-bold text-primary-600 mb-1">{userStats.totalPoints}</div>
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-600 mb-1">{userStats.totalPoints}</div>
               <div className="text-sm text-gray-600">Points totaux</div>
             </div>
             <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 text-center">
-              <div className="text-3xl font-bold text-primary-600 mb-1">{userStats.totalPredictions}</div>
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-600 mb-1">{userStats.totalPredictions}</div>
               <div className="text-sm text-gray-600">Pronostics</div>
             </div>
             <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 text-center">
-              <div className="text-3xl font-bold text-primary-600 mb-1">{userStats.accuracy.toFixed(1)}%</div>
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-600 mb-1">{userStats.accuracy.toFixed(1)}%</div>
               <div className="text-sm text-gray-600">Précision</div>
             </div>
             <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 text-center">
-              <div className="text-3xl font-bold text-primary-600 mb-1">{userStats.competitionsWon}</div>
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-600 mb-1">{userStats.competitionsWon}</div>
               <div className="text-sm text-gray-600">Compétitions gagnées</div>
             </div>
           </div>
@@ -324,7 +324,7 @@ export default function ProfilePage() {
               /* View Mode - Timeline/About Section */
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-6">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-xl font-bold text-gray-900">À propos</h2>
+                  <h2 className="text-lg md:text-xl font-bold text-gray-900">À propos</h2>
                 </div>
                 <div className="px-6 py-6">
                   <div className="space-y-4">
@@ -358,7 +358,7 @@ export default function ProfilePage() {
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-6">
                 <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
                   <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-gray-900">Modifier le profil</h2>
+                    <h2 className="text-lg md:text-xl font-bold text-gray-900">Modifier le profil</h2>
                     <div className="flex space-x-3">
                       <button
                         onClick={handleCancel}
@@ -572,7 +572,7 @@ export default function ProfilePage() {
             {!editing && (
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-xl font-bold text-gray-900">Statistiques</h2>
+                  <h2 className="text-lg md:text-xl font-bold text-gray-900">Statistiques</h2>
                 </div>
                 <div className="px-6 py-6">
                   {userStats ? (

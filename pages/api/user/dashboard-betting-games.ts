@@ -15,11 +15,13 @@ interface BettingGame {
     id: string;
     name: string;
     logo: string | null;
+    shortName: string | null;
   };
   awayTeam: {
     id: string;
     name: string;
     logo: string | null;
+    shortName: string | null;
   };
   userBet: {
     id: string;
@@ -120,8 +122,8 @@ export default async function handler(
         awayScore: true,
         liveHomeScore: true,
         liveAwayScore: true,
-        homeTeam: { select: { id: true, name: true, logo: true } },
-        awayTeam: { select: { id: true, name: true, logo: true } },
+        homeTeam: { select: { id: true, name: true, logo: true, shortName: true } },
+        awayTeam: { select: { id: true, name: true, logo: true, shortName: true } },
         bets: { 
           select: { 
             id: true, 
@@ -156,12 +158,14 @@ export default async function handler(
         homeTeam: {
           id: game.homeTeam.id,
           name: game.homeTeam.name,
-          logo: game.homeTeam.logo
+          logo: game.homeTeam.logo,
+          shortName: game.homeTeam.shortName
         },
         awayTeam: {
           id: game.awayTeam.id,
           name: game.awayTeam.name,
-          logo: game.awayTeam.logo
+          logo: game.awayTeam.logo,
+          shortName: game.awayTeam.shortName
         },
         userBet: currentUserBet ? {
           id: currentUserBet.id,

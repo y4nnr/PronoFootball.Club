@@ -278,14 +278,14 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
 
   return (
     <div className="bg-[#f3f4f6] min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-2">
             <div className="p-4 bg-primary-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
               <ChartBarIcon className="h-10 w-10 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
               {t('stats.title')}
             </h1>
           </div>
@@ -320,7 +320,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             <span className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
               <UserIcon className="h-6 w-6 text-white" />
             </span>
-            <h2 className="text-xl font-bold text-neutral-900">{t('stats.personalStats')}</h2>
+            <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('stats.personalStats')}</h2>
           </div>
           {currentUserStats ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -330,7 +330,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
                     <TrophyIcon className="h-6 w-6 text-white" />
                   </span>
-                  <span className="text-3xl text-gray-800">#{currentUserStats.ranking} <span className="text-2xl">({currentUserStats.totalPoints} points)</span></span>
+                  <span className="text-xl md:text-2xl lg:text-3xl text-gray-800">#{currentUserStats.ranking} <span className="text-lg md:text-xl lg:text-2xl">({currentUserStats.totalPoints} points)</span></span>
                 </div>
                 <div className="text-base text-gray-800">{t('stats.allTimeRanking')}</div>
                 <div className="text-xs text-gray-500">{t('stats.outOfUsers', { count: leaderboardData?.totalUsers || 0 })}</div>
@@ -341,7 +341,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
                     <ChartBarIcon className="h-6 w-6 text-white" />
                   </span>
-                  <span className="text-3xl text-gray-800">{Number(currentUserStats.averagePoints).toFixed(3)}</span>
+                  <span className="text-xl md:text-2xl lg:text-3xl text-gray-800">{Number(currentUserStats.averagePoints).toFixed(3)}</span>
                 </div>
                 <div className="text-base text-gray-800">{t('stats.avgPointsGame')}</div>
                 <div className="text-xs text-gray-500">{t('stats.basedOnGames', { count: currentUserStats.totalPredictions })}</div>
@@ -352,7 +352,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
                     <TrophyIcon className="h-6 w-6 text-white" />
                   </span>
-                  <span className="text-3xl text-gray-800">{currentUserStats.wins}</span>
+                  <span className="text-xl md:text-2xl lg:text-3xl text-gray-800">{currentUserStats.wins}</span>
                 </div>
                 <div className="text-base text-gray-800">{t('stats.competitionsWon')}</div>
                 <div className="text-xs text-gray-500">{t('stats.totalVictories')}</div>
@@ -377,7 +377,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             <span className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
               <UserGroupIcon className="h-6 w-6 text-white" />
             </span>
-            <h2 className="text-xl font-bold text-neutral-900">Statistiques Globales</h2>
+            <h2 className="text-lg md:text-xl font-bold text-neutral-900">Statistiques Globales</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* Meilleurs Marqueurs */}
@@ -708,7 +708,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
             <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
               <TrophyIcon className="h-6 w-6 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-neutral-900">Historique des Compétitions</h2>
+            <h2 className="text-lg md:text-xl font-bold text-neutral-900">Historique des Compétitions</h2>
           </div>
           <div className="bg-white rounded-xl shadow-md border border-neutral-200 overflow-hidden">
             <div className="overflow-x-auto">
@@ -861,19 +861,19 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               <div className="px-6 py-4 bg-gradient-to-br from-primary-100 to-primary-200 border-t border-primary-300/60">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-xl md:text-2xl font-bold text-blue-600">
                       {leaderboardData.competitions?.filter(comp => comp.status === 'COMPLETED' || comp.status === 'completed').length || 0}
                     </div>
                     <div className="text-sm text-neutral-600">{t('stats.completedCompetitions')}</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-xl md:text-2xl font-bold text-green-600">
                       {leaderboardData.topPlayersByPoints.reduce((sum, player) => sum + player.stats.totalPoints, 0)}
                     </div>
                     <div className="text-sm text-neutral-600">{t('stats.totalPointsScored')}</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-primary-600">
+                    <div className="text-xl md:text-2xl font-bold text-primary-600">
                       {leaderboardData.topPlayersByPoints.reduce((sum, player) => sum + player.stats.totalPredictions, 0)}
                     </div>
                     <div className="text-sm text-neutral-600">{t('stats.totalPredictions')}</div>
