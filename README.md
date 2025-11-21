@@ -51,10 +51,7 @@ A modern football prediction platform with real-time live scores, interactive an
    # Edit .env with your configuration
    ```
 
-4. **Start the database**
-   ```bash
-   docker-compose up -d postgres
-   ```
+   Ensure you have PostgreSQL running locally and a database named `pronofootball` created.
 
 5. **Run database migrations**
    ```bash
@@ -79,7 +76,7 @@ A modern football prediction platform with real-time live scores, interactive an
 - **Database**: PostgreSQL with Prisma ORM
 - **Real-time**: Server-Sent Events (SSE)
 - **External APIs**: Football-Data.org for live scores
-- **Infrastructure**: Docker, Docker Compose
+- **Infrastructure**: Vercel / Local Server
 
 ### Project Structure
 ```
@@ -176,13 +173,7 @@ npm run build
 npm start
 ```
 
-### Docker Deployment
-```bash
-# Build and run with Docker
-docker-compose up -d
 
-# Access at http://localhost:3000
-```
 
 ### Vercel Deployment
 1. Connect your GitHub repository to Vercel
@@ -199,10 +190,8 @@ docker-compose up -d
 # Restore from backup
 ./scripts/restore-database.sh
 
-# Reset database
-docker-compose down
-docker volume rm pronofootball_postgres_data
-docker-compose up -d postgres
+# Reset database (Caution: This deletes all data)
+npx prisma migrate reset
 ```
 
 ### Code Quality
@@ -248,7 +237,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Common Issues
 - **Port conflicts**: Application runs on port 3001 if 3000 is busy
-- **Database connection**: Ensure PostgreSQL container is running
+- **Database connection**: Ensure local PostgreSQL is running and credentials in .env are correct
 - **Live score API**: Check Football-Data.org API key configuration
 - **SSE connection**: Verify browser supports Server-Sent Events
 
