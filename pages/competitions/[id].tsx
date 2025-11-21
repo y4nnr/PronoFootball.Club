@@ -164,9 +164,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
       // Toggle direction if clicking the same column
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      // Set new column and default to ascending
+      // Set new column with appropriate default direction
       setSortColumn(column);
-      setSortDirection('asc');
+      // Position and Player default to ascending, all others default to descending
+      const defaultDirection: 'asc' | 'desc' = (column === 'position' || column === 'player') ? 'asc' : 'desc';
+      setSortDirection(defaultDirection);
     }
   };
 
