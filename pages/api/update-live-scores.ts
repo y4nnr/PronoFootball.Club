@@ -2,6 +2,52 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../lib/prisma';
 import { FootballDataAPI } from '../../lib/football-data-api';
 
+// Helper function to update shooters for all users in a competition
+async function updateShootersForCompetition(competitionId: string) {
+  try {
+    // Get all users in this competition
+    const competitionUsers = await prisma.competitionUser.findMany({
+      where: { competitionId },
+      include: { user: true }
+    });
+
+    // Get all finished/live games in this competition
+    const finishedGames = await prisma.game.findMany({
+      where: {
+        competitionId,
+        status: { in: ['FINISHED', 'LIVE'] }
+      }
+    });
+
+    const totalGames = finishedGames.length;
+
+    // Update shooters for each user
+    for (const competitionUser of competitionUsers) {
+      // Count how many games this user bet on in this competition
+      const userBets = await prisma.bet.count({
+        where: {
+          userId: competitionUser.userId,
+          game: {
+            competitionId,
+            status: { in: ['FINISHED', 'LIVE'] }
+          }
+        }
+      });
+
+      // Calculate shooters (forgotten bets)
+      const shooters = totalGames - userBets;
+
+      // Update the CompetitionUser record
+      await prisma.competitionUser.update({
+        where: { id: competitionUser.id },
+        data: { shooters }
+      });
+    }
+  } catch (error) {
+    console.error('Error updating shooters for competition:', error);
+  }
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -83,9 +129,33 @@ export default async function handler(
             },
             include: {
               homeTeam: true,
-              awayTeam: true
+              awayTeam: true,
+              competition: true
             }
           });
+
+          // If the game is now finished and scores are set, recalculate all bets
+          if (updatedGame.status === 'FINISHED' && finalHomeScore !== null && finalHomeScore !== undefined && finalAwayScore !== null && finalAwayScore !== undefined) {
+            const bets = await prisma.bet.findMany({ where: { gameId: game.id } });
+            for (const bet of bets) {
+              let points = 0;
+              if (bet.score1 === finalHomeScore && bet.score2 === finalAwayScore) {
+                points = 3;
+              } else {
+                const actualResult = finalHomeScore > finalAwayScore ? 'home' : finalHomeScore < finalAwayScore ? 'away' : 'draw';
+                const predictedResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
+                if (actualResult === predictedResult) {
+                  points = 1;
+                }
+              }
+              await prisma.bet.update({ where: { id: bet.id }, data: { points } });
+            }
+            
+            // Update shooters count for all users in this competition
+            await updateShootersForCompetition(updatedGame.competitionId);
+            
+            console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
+          }
 
           updatedGames.push({
             id: updatedGame.id,
@@ -269,9 +339,33 @@ export default async function handler(
           data: updateData,
           include: {
             homeTeam: true,
-            awayTeam: true
+            awayTeam: true,
+            competition: true
           }
         });
+
+        // If the game is now finished and scores are set, recalculate all bets
+        if (newStatus === 'FINISHED' && externalHomeScore !== null && externalHomeScore !== undefined && externalAwayScore !== null && externalAwayScore !== undefined) {
+          const bets = await prisma.bet.findMany({ where: { gameId: matchingGame.id } });
+          for (const bet of bets) {
+            let points = 0;
+            if (bet.score1 === externalHomeScore && bet.score2 === externalAwayScore) {
+              points = 3;
+            } else {
+              const actualResult = externalHomeScore > externalAwayScore ? 'home' : externalHomeScore < externalAwayScore ? 'away' : 'draw';
+              const predictedResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
+              if (actualResult === predictedResult) {
+                points = 1;
+              }
+            }
+            await prisma.bet.update({ where: { id: bet.id }, data: { points } });
+          }
+          
+          // Update shooters count for all users in this competition
+          await updateShootersForCompetition(updatedGame.competitionId);
+          
+          console.log(`💰 Calculated points for ${bets.length} bets in game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
+        }
 
         updatedGameIds.add(matchingGame.id);
 
@@ -352,9 +446,33 @@ export default async function handler(
             data: updateData,
             include: {
               homeTeam: true,
-              awayTeam: true
+              awayTeam: true,
+              competition: true
             }
           });
+
+          // If the game is now finished and scores are set, recalculate all bets
+          if (updatedGame.status === 'FINISHED' && finalHomeScore !== null && finalHomeScore !== undefined && finalAwayScore !== null && finalAwayScore !== undefined) {
+            const bets = await prisma.bet.findMany({ where: { gameId: game.id } });
+            for (const bet of bets) {
+              let points = 0;
+              if (bet.score1 === finalHomeScore && bet.score2 === finalAwayScore) {
+                points = 3;
+              } else {
+                const actualResult = finalHomeScore > finalAwayScore ? 'home' : finalHomeScore < finalAwayScore ? 'away' : 'draw';
+                const predictedResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
+                if (actualResult === predictedResult) {
+                  points = 1;
+                }
+              }
+              await prisma.bet.update({ where: { id: bet.id }, data: { points } });
+            }
+            
+            // Update shooters count for all users in this competition
+            await updateShootersForCompetition(updatedGame.competitionId);
+            
+            console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
+          }
 
           // Only add if not already in updatedGames (prevent duplicates)
           if (!updatedGames.find(g => g.id === updatedGame.id)) {
