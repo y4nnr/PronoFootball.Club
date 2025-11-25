@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-24 py-2">
             <p className="text-gray-300 text-sm">© {new Date().getFullYear()} PronoFootball.Club - Tous droits réservés</p>
-            <p className="text-gray-400 text-sm">Créé par Yann R.</p>
+            <p className="text-gray-400 text-sm">Developed and Maintained by Kuma Flynt</p>
           </div>
         </div>
       </footer>
