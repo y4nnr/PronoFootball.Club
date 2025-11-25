@@ -417,9 +417,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
               <div className="p-2 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
                 <ChartBarIcon className="h-5 w-5 text-white" />
               </div>
-              Progression de la compétition
+              <span className="md:hidden">Progression</span>
+              <span className="hidden md:inline">Progression de la compétition</span>
             </h3>
-            <div className="text-base text-gray-600 font-bold">
+            <div className="text-sm md:text-base text-gray-600 font-bold">
               {games.filter(g => g.status === 'FINISHED').length} / {competition._count.games} matchs joués
             </div>
           </div>
@@ -494,8 +495,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 <thead className="bg-gray-50">
                   <tr>
                     <th 
-                      className="w-8 md:w-16 px-1 md:px-4 py-1.5 md:py-2.5 text-center border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
-                      onClick={() => handleSort('position')}
+                      className="w-8 md:w-16 px-1 md:px-4 py-1.5 md:py-2.5 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => window.innerWidth >= 768 && handleSort('position')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
@@ -515,7 +516,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             </span>
                           ))}
                           {sortColumn === 'position' && (
-                            <span className="text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -523,8 +524,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-16 md:w-48 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
-                      onClick={() => handleSort('player')}
+                      className="w-16 md:w-48 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => window.innerWidth >= 768 && handleSort('player')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
@@ -544,7 +545,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             </span>
                           ))}
                           {sortColumn === 'player' && (
-                            <span className="text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -552,8 +553,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
-                      onClick={() => handleSort('points')}
+                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => window.innerWidth >= 768 && handleSort('points')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
@@ -573,7 +574,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             </span>
                           ))}
                           {sortColumn === 'points' && (
-                            <span className="text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -581,8 +582,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
-                      onClick={() => handleSort('games')}
+                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => window.innerWidth >= 768 && handleSort('games')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
@@ -602,7 +603,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             </span>
                           ))}
                           {sortColumn === 'games' && (
-                            <span className="text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -610,8 +611,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
-                      onClick={() => handleSort('average')}
+                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => window.innerWidth >= 768 && handleSort('average')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
@@ -631,7 +632,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             </span>
                           ))}
                           {sortColumn === 'average' && (
-                            <span className="text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -639,8 +640,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
-                      onClick={() => handleSort('exactScores')}
+                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => window.innerWidth >= 768 && handleSort('exactScores')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
@@ -660,7 +661,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             </span>
                           ))}
                           {sortColumn === 'exactScores' && (
-                            <span className="text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -668,8 +669,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-28 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors select-none"
-                      onClick={() => handleSort('correctWinners')}
+                      className="w-8 md:w-28 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => window.innerWidth >= 768 && handleSort('correctWinners')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
@@ -689,7 +690,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             </span>
                           ))}
                           {sortColumn === 'correctWinners' && (
-                            <span className="text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -697,8 +698,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center cursor-pointer hover:bg-gray-100 transition-colors select-none"
-                      onClick={() => handleSort('shooters')}
+                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      onClick={() => window.innerWidth >= 768 && handleSort('shooters')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
@@ -718,7 +719,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             </span>
                           ))}
                           {sortColumn === 'shooters' && (
-                            <span className="text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -963,20 +964,35 @@ export default function CompetitionDetails({ competition, competitionStats, game
                         >
                           {/* Date & Status */}
                           <div className="flex items-center w-full justify-between pb-2 md:pb-3 border-b border-neutral-200">
-                            <div className="flex items-center space-x-1 md:space-x-2">
-                              <span className="text-[9px] md:text-[10px] lg:text-xs text-neutral-500">
-                                {formatDateTime(game.date)}
-                              </span>
+                            <div className="flex flex-col md:flex-row md:items-center md:space-x-1 md:space-x-2">
+                              {(() => {
+                                const date = new Date(game.date);
+                                const day = String(date.getDate()).padStart(2, '0');
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const year = String(date.getFullYear()).slice(-2);
+                                const hour = String(date.getHours()).padStart(2, '0');
+                                const minute = String(date.getMinutes()).padStart(2, '0');
+                                return (
+                                  <>
+                                    <span className="text-[9px] md:text-[10px] lg:text-xs text-neutral-500">
+                                      {`${day}/${month}/${year}`}
+                                    </span>
+                                    <span className="text-[9px] md:text-[10px] lg:text-xs text-neutral-500 md:ml-1">
+                                      {`${hour}:${minute}`}
+                                    </span>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                            <div className="flex items-center gap-1">
                               {userHasBet && (
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center">
                                   <div className="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 bg-blue-100 rounded-full">
                                     <span className="text-blue-600 text-[10px] md:text-xs font-bold">✓</span>
                                   </div>
                                 </div>
                               )}
-                            </div>
-                            <div className="flex items-center space-x-1 md:space-x-2">
-                              <span className={`inline-block px-1.5 md:px-2 py-0.5 md:py-1 text-[9px] md:text-[10px] lg:text-xs rounded-full ${
+                              <span className={`inline-block px-2.5 md:px-2 py-1 md:py-1 text-[10px] md:text-[10px] lg:text-xs rounded-full whitespace-nowrap ${
                                 game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
                                 game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
                                 game.status === 'LIVE' ? 'bg-red-100 text-red-800' :
@@ -989,7 +1005,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                                 {!['UPCOMING', 'FINISHED', 'LIVE', 'CANCELLED'].includes(game.status) && game.status}
                               </span>
                               {game.status === 'FINISHED' && (
-                                <span className="hidden md:inline text-[9px] md:text-[10px] lg:text-xs text-primary-600 font-medium">
+                                <span className="hidden md:inline text-[9px] md:text-[10px] lg:text-xs text-primary-600 font-medium ml-1 md:ml-2">
                                   {loadingBets.has(game.id) ? 'Chargement...' : 'Voir les paris'}
                                 </span>
                               )}

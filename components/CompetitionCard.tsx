@@ -65,7 +65,7 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
                 <p><span className="font-medium">End:</span> {formatDate(competition.endDate)}</p>
               </div>
               {typeof userRanking === 'number' && (
-                <span className="px-3 py-1 rounded-full bg-primary-600 text-white text-sm font-bold">
+                <span className="px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-primary-600 text-white text-xs md:text-sm font-bold">
                   {t('competition.yourPosition')}: {userRanking}
                 </span>
               )}
@@ -74,9 +74,9 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
         </div>
         {/* Progress Bar */}
         {competition.totalGames !== undefined && competition.gamesPlayed !== undefined && competition.progressPercentage !== undefined ? (
-          <div className="mt-0">
+          <div className="mt-2 md:mt-0">
             <div className="flex items-center justify-center mb-0.5">
-              <span className="text-sm font-bold text-neutral-800">
+              <span className="text-xs md:text-sm font-bold text-neutral-800">
                 {competition.gamesPlayed}/{competition.totalGames} matchs
               </span>
             </div>

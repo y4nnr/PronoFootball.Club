@@ -126,9 +126,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         <span className="text-[9px] md:text-[10px] lg:text-xs text-neutral-500">
           {formatDateTime(game.date)}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {userHasBet && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center">
               {context === 'home' ? (
                 <div className="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 bg-blue-100 rounded-full">
                   <span className="text-blue-600 text-[10px] md:text-xs font-bold">✓</span>
@@ -145,7 +145,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               )}
             </div>
           )}
-          <span className={`inline-block px-1.5 md:px-2 py-0.5 md:py-1 text-[9px] md:text-[10px] lg:text-xs rounded-full transition-all duration-300 ${
+          <span className={`inline-block px-2.5 md:px-2 py-1 md:py-1 text-[10px] md:text-[10px] lg:text-xs rounded-full transition-all duration-300 whitespace-nowrap ${
             game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
             game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
             game.status === 'LIVE' ? 'bg-red-100 text-red-800 animate-pulse' :
