@@ -275,12 +275,8 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                                       highlight === 'green' ? 'border-green-400 border-2' :
                                       highlight === 'red' ? 'border-red-400 border-2' :
                                       'border-gray-300 border';
-                    const textColor = highlight === 'gold' ? 'text-yellow-700' :
-                                    highlight === 'green' ? 'text-green-700' :
-                                    highlight === 'red' ? 'text-red-700' :
-                                    'text-gray-900';
                     return (
-                      <span className={`text-[10px] md:text-xs font-mono ${textColor} bg-transparent ${borderColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                      <span className={`text-[10px] md:text-xs font-mono text-gray-900 bg-transparent ${borderColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
                         {bet.score1} - {bet.score2}
                       </span>
                     );
