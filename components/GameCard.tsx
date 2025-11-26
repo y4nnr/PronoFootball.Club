@@ -90,29 +90,38 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   const userBet = currentUserId ? game.bets.find(bet => bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) : null;
   const userPoints = userBet?.points;
 
-  // Helper function to determine bet highlight for LIVE games
+  // Helper function to determine bet highlight for LIVE and FINISHED games
   const getBetHighlight = (bet: Bet) => {
-    if (game.status !== 'LIVE') return null;
     if (bet.score1 === null || bet.score2 === null) return null;
     
-    const liveHomeScore = game.liveHomeScore;
-    const liveAwayScore = game.liveAwayScore;
+    let actualHomeScore: number | null | undefined;
+    let actualAwayScore: number | null | undefined;
     
-    if (liveHomeScore === null || liveHomeScore === undefined || 
-        liveAwayScore === null || liveAwayScore === undefined) {
+    if (game.status === 'LIVE') {
+      actualHomeScore = game.liveHomeScore;
+      actualAwayScore = game.liveAwayScore;
+    } else if (game.status === 'FINISHED') {
+      actualHomeScore = game.homeScore;
+      actualAwayScore = game.awayScore;
+    } else {
+      return null;
+    }
+    
+    if (actualHomeScore === null || actualHomeScore === undefined || 
+        actualAwayScore === null || actualAwayScore === undefined) {
       return null;
     }
     
     // Check for exact score match (gold)
-    if (bet.score1 === liveHomeScore && bet.score2 === liveAwayScore) {
+    if (bet.score1 === actualHomeScore && bet.score2 === actualAwayScore) {
       return 'gold';
     }
     
     // Check for correct result (green)
     const betResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
-    const liveResult = liveHomeScore > liveAwayScore ? 'home' : liveHomeScore < liveAwayScore ? 'away' : 'draw';
+    const actualResult = actualHomeScore > actualAwayScore ? 'home' : actualHomeScore < actualAwayScore ? 'away' : 'draw';
     
-    if (betResult === liveResult) {
+    if (betResult === actualResult) {
       return 'green';
     }
     
@@ -271,15 +280,35 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                   (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
                   (() => {
                     const highlight = getBetHighlight(bet);
-                    const borderColor = highlight === 'gold' ? 'border-yellow-400 border-2' :
-                                      highlight === 'green' ? 'border-green-400 border-2' :
-                                      highlight === 'red' ? 'border-red-400 border-2' :
-                                      'border-gray-300 border';
-                    return (
-                      <span className={`text-[10px] md:text-xs font-mono text-gray-900 bg-transparent ${borderColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
-                        {bet.score1} - {bet.score2}
-                      </span>
-                    );
+                    // For LIVE games: borders only, for FINISHED games: backgrounds
+                    if (game.status === 'LIVE' && highlight) {
+                      const borderColor = highlight === 'gold' ? 'border-yellow-400 border-2' :
+                                        highlight === 'green' ? 'border-green-400 border-2' :
+                                        highlight === 'red' ? 'border-red-400 border-2' :
+                                        'border-gray-300 border';
+                      return (
+                        <span className={`text-[10px] md:text-xs font-mono text-gray-900 bg-transparent ${borderColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                          {bet.score1} - {bet.score2}
+                        </span>
+                      );
+                    } else if (game.status === 'FINISHED' && highlight) {
+                      // For finished games: background color with border, black text
+                      const bgColor = highlight === 'gold' ? 'bg-yellow-200 border-yellow-400 border-2' :
+                                    highlight === 'green' ? 'bg-green-200 border-green-400 border-2' :
+                                    highlight === 'red' ? 'bg-red-200 border-red-400 border-2' :
+                                    'bg-gray-100';
+                      return (
+                        <span className={`text-[10px] md:text-xs font-mono text-gray-900 ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                          {bet.score1} - {bet.score2}
+                        </span>
+                      );
+                    } else {
+                      return (
+                        <span className="text-[10px] md:text-xs font-mono text-gray-900 bg-gray-100 rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold">
+                          {bet.score1} - {bet.score2}
+                        </span>
+                      );
+                    }
                   })()
                 ) : null}
               </li>
