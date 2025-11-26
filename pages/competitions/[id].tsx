@@ -1117,17 +1117,16 @@ export default function CompetitionDetails({ competition, competitionStats, game
                                       (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
                                       (() => {
                                         const highlight = getBetHighlight(bet, game);
-                                        const bgColor = highlight === 'gold' ? 'bg-green-200 border-yellow-400 border-2' :
-                                                       highlight === 'green' ? 'bg-green-200 border-green-400 border-2' :
-                                                       highlight === 'red' ? 'bg-red-200 border-red-400 border-2' :
-                                                       'bg-gray-100';
-                                        const textColor = highlight === 'gold' ? 'text-green-900' :
-                                                          highlight === 'green' ? 'text-green-900' :
-                                                          highlight === 'red' ? 'text-red-900' :
+                                        const borderColor = highlight === 'gold' ? 'border-yellow-400 border-2' :
+                                                           highlight === 'green' ? 'border-green-400 border-2' :
+                                                           highlight === 'red' ? 'border-red-400 border-2' :
+                                                           'border-gray-300 border';
+                                        const textColor = highlight === 'gold' ? 'text-yellow-700' :
+                                                          highlight === 'green' ? 'text-green-700' :
+                                                          highlight === 'red' ? 'text-red-700' :
                                                           'text-gray-900';
-                                        const animateClass = highlight === 'gold' ? 'animate-pulse' : '';
                                         return (
-                                          <span className={`text-[10px] md:text-xs font-mono ${textColor} ${bgColor} ${animateClass} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                                          <span className={`text-[10px] md:text-xs font-mono ${textColor} bg-transparent ${borderColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
                                             {bet.score1} - {bet.score2}
                                           </span>
                                         );
