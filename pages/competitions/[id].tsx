@@ -1117,11 +1117,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                                       (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
                                       (() => {
                                         const highlight = getBetHighlight(bet, game);
-                                        const bgColor = highlight === 'gold' ? 'bg-yellow-200 border-yellow-400 border-2' :
+                                        const bgColor = highlight === 'gold' ? 'bg-green-200 border-yellow-400 border-2' :
                                                        highlight === 'green' ? 'bg-green-200 border-green-400 border-2' :
                                                        highlight === 'red' ? 'bg-red-200 border-red-400 border-2' :
                                                        'bg-gray-100';
-                                        const textColor = highlight === 'gold' ? 'text-yellow-900' :
+                                        const textColor = highlight === 'gold' ? 'text-green-900' :
                                                           highlight === 'green' ? 'text-green-900' :
                                                           highlight === 'red' ? 'text-red-900' :
                                                           'text-gray-900';
