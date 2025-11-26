@@ -257,9 +257,11 @@ export class FootballDataAPI {
       .replace(/as\s+monaco/g, 'monaco')
       .replace(/monaco\s+fc/g, 'monaco')
       .replace(/^monaco$/g, 'monaco')
-      // Pafos variations
+      // Pafos/Paphos variations (external API uses "Paphos" but our DB has "Pafos")
+      .replace(/paphos\s+fc/g, 'pafos')
       .replace(/pafos\s+fc/g, 'pafos')
       .replace(/pafo\s+fc/g, 'pafos')
+      .replace(/^paphos$/g, 'pafos')
       .replace(/^pafo$/g, 'pafos')
       .replace(/^pafos$/g, 'pafos')
       // Handle special characters and accents
