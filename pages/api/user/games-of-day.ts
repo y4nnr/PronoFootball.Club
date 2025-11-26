@@ -87,14 +87,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           select: {
             id: true,
             name: true,
-            logo: true
+            logo: true,
+            shortName: true
           }
         },
         awayTeam: {
           select: {
             id: true,
             name: true,
-            logo: true
+            logo: true,
+            shortName: true
           }
         },
         competition: {

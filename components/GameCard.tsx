@@ -26,6 +26,8 @@ interface Game {
   awayTeam: Team;
   homeScore?: number;
   awayScore?: number;
+  liveHomeScore?: number;
+  liveAwayScore?: number;
   bets: Bet[];
 }
 
@@ -87,6 +89,35 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   // Get user's bet points for competition context
   const userBet = currentUserId ? game.bets.find(bet => bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) : null;
   const userPoints = userBet?.points;
+
+  // Helper function to determine bet highlight for LIVE games
+  const getBetHighlight = (bet: Bet) => {
+    if (game.status !== 'LIVE') return null;
+    if (bet.score1 === null || bet.score2 === null) return null;
+    
+    const liveHomeScore = game.liveHomeScore;
+    const liveAwayScore = game.liveAwayScore;
+    
+    if (liveHomeScore === null || liveHomeScore === undefined || 
+        liveAwayScore === null || liveAwayScore === undefined) {
+      return null;
+    }
+    
+    // Check for exact score match (gold)
+    if (bet.score1 === liveHomeScore && bet.score2 === liveAwayScore) {
+      return 'gold';
+    }
+    
+    // Check for correct result (green)
+    const betResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
+    const liveResult = liveHomeScore > liveAwayScore ? 'home' : liveHomeScore < liveAwayScore ? 'away' : 'draw';
+    
+    if (betResult === liveResult) {
+      return 'green';
+    }
+    
+    return null;
+  };
   
   // Determine border color based on context
   const getBorderColor = () => {
@@ -237,7 +268,20 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                 <span className="text-[10px] md:text-xs text-gray-700 mr-1.5 md:mr-2 truncate max-w-[70px] md:max-w-[80px]">{bet.user.name}</span>
                 {((game.status === 'LIVE' || game.status === 'FINISHED') && bet.score1 !== null && bet.score2 !== null) || 
                   (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
-                  <span className="text-[10px] md:text-xs font-mono text-gray-900 bg-gray-100 rounded px-1.5 md:px-2 py-0.5 ml-auto">{bet.score1} - {bet.score2}</span>
+                  (() => {
+                    const highlight = getBetHighlight(bet);
+                    const bgColor = highlight === 'gold' ? 'bg-yellow-200 border-yellow-400 border-2' :
+                                   highlight === 'green' ? 'bg-green-200 border-green-400 border-2' :
+                                   'bg-gray-100';
+                    const textColor = highlight === 'gold' ? 'text-yellow-900' :
+                                    highlight === 'green' ? 'text-green-900' :
+                                    'text-gray-900';
+                    return (
+                      <span className={`text-[10px] md:text-xs font-mono ${textColor} ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                        {bet.score1} - {bet.score2}
+                      </span>
+                    );
+                  })()
                 ) : null}
               </li>
             ))}

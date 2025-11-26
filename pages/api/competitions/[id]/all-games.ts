@@ -70,6 +70,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       return {
         ...game,
+        liveHomeScore: game.liveHomeScore,
+        liveAwayScore: game.liveAwayScore,
         // Current user's bet (for backward compatibility)
         bets: currentUserBet ? [{
           id: currentUserBet.id,

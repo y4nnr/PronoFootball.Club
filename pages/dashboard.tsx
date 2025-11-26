@@ -396,11 +396,13 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
                 date: game.date,
                 homeTeam: {
                   name: game.homeTeam.name,
-                  logo: game.homeTeam.logo || undefined
+                  logo: game.homeTeam.logo || undefined,
+                  shortName: game.homeTeam.shortName || undefined
                 },
                 awayTeam: {
                   name: game.awayTeam.name,
-                  logo: game.awayTeam.logo || undefined
+                  logo: game.awayTeam.logo || undefined,
+                  shortName: game.awayTeam.shortName || undefined
                 },
                 homeScore: game.homeScore !== null ? game.homeScore : undefined,
                 awayScore: game.awayScore !== null ? game.awayScore : undefined,

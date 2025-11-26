@@ -36,6 +36,8 @@ interface Game {
   status: string;
   homeScore?: number | null;
   awayScore?: number | null;
+  liveHomeScore?: number | null;
+  liveAwayScore?: number | null;
   homeTeam: {
     id: string;
     name: string;
@@ -1084,7 +1086,20 @@ export default function CompetitionDetails({ competition, competitionStats, game
                                     <span className="text-[10px] md:text-xs text-gray-700 mr-1.5 md:mr-2 truncate max-w-[70px] md:max-w-[80px]">{bet.user.name}</span>
                                     {((game.status === 'LIVE' || game.status === 'FINISHED') && bet.score1 !== null && bet.score2 !== null) || 
                                       (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
-                                      <span className="text-[10px] md:text-xs font-mono text-gray-900 bg-gray-100 rounded px-1.5 md:px-2 py-0.5 ml-auto">{bet.score1} - {bet.score2}</span>
+                                      (() => {
+                                        const highlight = getBetHighlight(bet, game);
+                                        const bgColor = highlight === 'gold' ? 'bg-yellow-200 border-yellow-400 border-2' :
+                                                       highlight === 'green' ? 'bg-green-200 border-green-400 border-2' :
+                                                       'bg-gray-100';
+                                        const textColor = highlight === 'gold' ? 'text-yellow-900' :
+                                                          highlight === 'green' ? 'text-green-900' :
+                                                          'text-gray-900';
+                                        return (
+                                          <span className={`text-[10px] md:text-xs font-mono ${textColor} ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                                            {bet.score1} - {bet.score2}
+                                          </span>
+                                        );
+                                      })()
                                     ) : null}
                                   </li>
                                 ))}
