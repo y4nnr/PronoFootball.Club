@@ -253,6 +253,15 @@ export class FootballDataAPI {
       .replace(/sporting\s+cp\s+portugal/g, 'sporting cp')
       .replace(/sporting\s+du\s+portugal/g, 'sporting cp')
       .replace(/sporting\s+portugal/g, 'sporting cp')
+      // Monaco variations
+      .replace(/as\s+monaco/g, 'monaco')
+      .replace(/monaco\s+fc/g, 'monaco')
+      .replace(/^monaco$/g, 'monaco')
+      // Pafos variations
+      .replace(/pafos\s+fc/g, 'pafos')
+      .replace(/pafo\s+fc/g, 'pafos')
+      .replace(/^pafo$/g, 'pafos')
+      .replace(/^pafos$/g, 'pafos')
       // Handle special characters and accents
       .replace(/[àáâãäå]/g, 'a')
       .replace(/[èéêë]/g, 'e')
