@@ -146,7 +146,36 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const [loadingPerformance, setLoadingPerformance] = useState(false);
   const [sortColumn, setSortColumn] = useState<string>('position');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  
+
+  // Helper function to determine bet highlight for LIVE games
+  const getBetHighlight = (bet: { score1: number | null; score2: number | null }, game: Game) => {
+    if (game.status !== 'LIVE') return null;
+    if (bet.score1 === null || bet.score2 === null) return null;
+    
+    const liveHomeScore = game.liveHomeScore;
+    const liveAwayScore = game.liveAwayScore;
+    
+    if (liveHomeScore === null || liveHomeScore === undefined || 
+        liveAwayScore === null || liveAwayScore === undefined) {
+      return null;
+    }
+    
+    // Check for exact score match (gold)
+    if (bet.score1 === liveHomeScore && bet.score2 === liveAwayScore) {
+      return 'gold';
+    }
+    
+    // Check for correct result (green)
+    const betResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
+    const liveResult = liveHomeScore > liveAwayScore ? 'home' : liveHomeScore < liveAwayScore ? 'away' : 'draw';
+    
+    if (betResult === liveResult) {
+      return 'green';
+    }
+    
+    // No match - red
+    return 'red';
+  };
 
   // Toggle game expansion
   const toggleGameExpansion = (gameId: string) => {
@@ -1090,12 +1119,15 @@ export default function CompetitionDetails({ competition, competitionStats, game
                                         const highlight = getBetHighlight(bet, game);
                                         const bgColor = highlight === 'gold' ? 'bg-yellow-200 border-yellow-400 border-2' :
                                                        highlight === 'green' ? 'bg-green-200 border-green-400 border-2' :
+                                                       highlight === 'red' ? 'bg-red-200 border-red-400 border-2' :
                                                        'bg-gray-100';
                                         const textColor = highlight === 'gold' ? 'text-yellow-900' :
                                                           highlight === 'green' ? 'text-green-900' :
+                                                          highlight === 'red' ? 'text-red-900' :
                                                           'text-gray-900';
+                                        const animateClass = highlight === 'gold' ? 'animate-pulse' : '';
                                         return (
-                                          <span className={`text-[10px] md:text-xs font-mono ${textColor} ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                                          <span className={`text-[10px] md:text-xs font-mono ${textColor} ${bgColor} ${animateClass} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
                                             {bet.score1} - {bet.score2}
                                           </span>
                                         );

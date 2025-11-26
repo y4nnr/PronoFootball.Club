@@ -116,7 +116,8 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
       return 'green';
     }
     
-    return null;
+    // No match - red
+    return 'red';
   };
   
   // Determine border color based on context
@@ -272,12 +273,15 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                     const highlight = getBetHighlight(bet);
                     const bgColor = highlight === 'gold' ? 'bg-yellow-200 border-yellow-400 border-2' :
                                    highlight === 'green' ? 'bg-green-200 border-green-400 border-2' :
+                                   highlight === 'red' ? 'bg-red-200 border-red-400 border-2' :
                                    'bg-gray-100';
                     const textColor = highlight === 'gold' ? 'text-yellow-900' :
                                     highlight === 'green' ? 'text-green-900' :
+                                    highlight === 'red' ? 'text-red-900' :
                                     'text-gray-900';
+                    const animateClass = highlight === 'gold' ? 'animate-pulse' : '';
                     return (
-                      <span className={`text-[10px] md:text-xs font-mono ${textColor} ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                      <span className={`text-[10px] md:text-xs font-mono ${textColor} ${bgColor} ${animateClass} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
                         {bet.score1} - {bet.score2}
                       </span>
                     );
