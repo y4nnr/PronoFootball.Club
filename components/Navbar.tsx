@@ -130,8 +130,8 @@ export default function Navbar() {
       <Link
         key={item.href}
         href={item.href}
-        className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
-          isActive ? 'bg-white/10 text-white shadow-md' : 'text-gray-300 hover:text-white hover:bg-white/5'
+        className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 select-none bg-white/[0.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
+          isActive ? 'bg-white/10 text-white shadow-md' : 'text-gray-300 hover:text-white hover:bg-white/10'
         }`}
       >
         <div className="mb-0">{item.icon}</div>
@@ -148,8 +148,10 @@ export default function Navbar() {
     return (
       <button
         onClick={handleGoBack}
-        className={`group inline-flex flex-col items-center justify-center gap-1 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[110px] xl:w-[120px] h-[48px] md:h-[50px] lg:h-[55px] xl:h-[60px] shrink-0 ${
-          isEnabled ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-gray-600 cursor-not-allowed'
+        className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 bg-white/[0.03] ${
+          isEnabled
+            ? 'text-gray-300 hover:text-white hover:bg-white/10'
+            : 'text-gray-600 cursor-not-allowed'
         }`}
         disabled={!isEnabled}
       >
@@ -214,7 +216,11 @@ export default function Navbar() {
             {/* Left: User Profile + Separator + Back Button + Navigation */}
             <div className="flex items-center space-x-4">
               {/* Site Name */}
-              <Link href="/" className="text-white font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl tracking-tight mr-1 ml-2 md:ml-4 hover:text-white transition-colors select-none" style={{ letterSpacing: '0.01em' }}>
+              <Link
+                href="/"
+                className="text-white font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl tracking-tight mr-1 ml-2 md:ml-4 hover:text-white transition-colors select-none"
+                style={{ letterSpacing: '0.01em' }}
+              >
                 PronoFootball.Club
               </Link>
               {/* Back Button + Navigation with text labels (desktop only) */}
@@ -285,10 +291,12 @@ export default function Navbar() {
               >
                 <button
                   onClick={() => setProfileOpen(v => !v)}
-                  className={`relative z-10 group transition-all duration-300 ease-in-out ${
+                  className={`relative z-10 group transition-all duration-500 ease-out ${
                     (isOnBettingPage && isMobile)
                       ? 'mb-0' 
                       : (isScrolled ? 'mb-0' : '-mb-12 md:-mb-14 lg:-mb-[70px]')
+                  } ${
+                    !isOnBettingPage && isScrolled ? 'avatar-shrink-bounce' : ''
                   }`}
                   aria-label="Open profile menu"
                   style={{ 

@@ -285,7 +285,7 @@ const PlayerPointsProgressionWidget = memo(({
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Progression des Points par Joueur</h2>
+              <h2 className="text-xl font-bold text-gray-900">Progression des Points par Journée</h2>
               <p className="text-sm text-gray-500">Cliquez sur une journée pour afficher le classement intermédiaire</p>
             </div>
           </div>
@@ -331,7 +331,7 @@ const PlayerPointsProgressionWidget = memo(({
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Progression des Points par Joueur</h2>
+              <h2 className="text-xl font-bold text-gray-900">Progression des Points par Journée</h2>
               <p className="text-sm text-gray-500">Cliquez sur une journée pour afficher le classement intermédiaire</p>
             </div>
           </div>
@@ -368,7 +368,7 @@ const PlayerPointsProgressionWidget = memo(({
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-900">
-              Progression des Points par Joueur{selectedDay ? (
+              Progression des Points par Journée{selectedDay ? (
                 <span 
                   className="ml-2 px-2 py-1 rounded text-gray-800 text-lg font-semibold"
                   style={{ 
