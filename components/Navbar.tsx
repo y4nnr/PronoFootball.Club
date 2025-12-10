@@ -1,9 +1,11 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect } from 'react';
 import { HomeIcon, PencilSquareIcon, ChartBarIcon, CalendarIcon, UserGroupIcon, ShieldCheckIcon, ArrowLeftIcon, UserIcon, ArrowRightOnRectangleIcon, TrophyIcon } from '@heroicons/react/24/outline';
+import logoPng from '../logo.png';
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -113,13 +115,16 @@ export default function Navbar() {
   const isOnLoginPage = router.pathname === '/' || router.pathname === '/login';
   const canGoBack = isClient && router.pathname !== '/dashboard' && window.history.length > 1;
 
-  // Back button handler
+  // Back button handler - always enabled, falls back to dashboard if no history
   const handleGoBack = () => {
     if (isOnBettingPage) {
       // On betting pages, always go to dashboard
       router.push('/dashboard');
     } else if (canGoBack) {
       router.back();
+    } else {
+      // Fallback to dashboard if no history
+      router.push('/dashboard');
     }
   };
 
@@ -142,23 +147,19 @@ export default function Navbar() {
     );
   };
 
-  // Back button component
+  // Back button component - always visible and enabled
   const BackButton = () => {
-    const isEnabled = isOnBettingPage || canGoBack;
+    // Always enabled - button is always visible and clickable
+    const isEnabled = true;
     return (
       <button
         onClick={handleGoBack}
-        className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 bg-white/[0.03] ${
-          isEnabled
-            ? 'text-gray-300 hover:text-white hover:bg-white/10'
-            : 'text-gray-600 cursor-not-allowed'
-        }`}
-        disabled={!isEnabled}
+        className="group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/10"
       >
         <div className="mb-0">
           <ArrowLeftIcon className="h-4 w-4 md:h-4 md:w-4 lg:h-5 lg:w-5" />
         </div>
-        <span className={`${isEnabled ? 'text-[10px] md:text-xs lg:text-sm xl:text-[15px] font-medium tracking-wide text-gray-100 group-hover:text-white whitespace-nowrap' : 'text-[10px] md:text-xs lg:text-sm xl:text-[15px] font-medium tracking-wide text-gray-600 whitespace-nowrap'} leading-tight text-center`}>
+        <span className="text-[10px] md:text-xs lg:text-sm xl:text-[15px] font-medium tracking-wide text-gray-100 group-hover:text-white whitespace-nowrap leading-tight text-center">
           {t('back')}
         </span>
       </button>
@@ -215,13 +216,25 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 md:h-20 lg:h-24 py-1 md:py-2">
             {/* Left: User Profile + Separator + Back Button + Navigation */}
             <div className="flex items-center space-x-4">
-              {/* Site Name */}
+              {/* Site Name with Logo - title aligned with bottom of logo */}
               <Link
                 href="/"
-                className="text-white font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl tracking-tight mr-1 ml-2 md:ml-4 hover:text-white transition-colors select-none"
+                className="flex items-end gap-0 text-white hover:text-white transition-colors select-none"
                 style={{ letterSpacing: '0.01em' }}
               >
-                PronoFootball.Club
+                <div className="flex items-center justify-center -mr-1">
+                  <Image
+                    src={logoPng}
+                    alt="PronoFootball.Club"
+                    width={72}
+                    height={72}
+                    priority
+                    className="w-16 h-16 md:w-20 md:h-20 object-contain transition-transform duration-200 hover:scale-105"
+                  />
+                </div>
+                <span className="font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl tracking-tight mb-2 md:mb-3">
+                  PronoFootball.Club
+                </span>
               </Link>
               {/* Back Button + Navigation with text labels (desktop only) */}
               <div className="flex items-center gap-0 hidden md:flex -ml-2">
