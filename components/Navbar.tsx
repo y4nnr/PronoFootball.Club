@@ -17,6 +17,9 @@ export default function Navbar() {
   const [isClient, setIsClient] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  // Initialize with scale that matches logo size
+  const [profileScale, setProfileScale] = useState(0.6); // Minimized scale (moderate for mobile)
+  const [profileExpandedScale, setProfileExpandedScale] = useState(1.0); // Expanded scale (base size)
   const profileRef = useRef<HTMLDivElement>(null);
   const adminEditRef = useRef<HTMLDivElement>(null);
 
@@ -24,26 +27,61 @@ export default function Navbar() {
   useEffect(() => {
     setIsClient(true);
     
-    // Check if mobile on mount and resize
-    const checkMobile = () => {
+    // Check if mobile on mount and resize, and calculate profile scale to match logo
+    const checkMobileAndScale = () => {
       setIsMobile(window.innerWidth < 768);
+      // Calculate scale to match logo size based on screen width
+      // When NOT scrolled: use larger scale (for overlap effect)
+      // When scrolled (minimized): scale DOWN but to a size bigger than before
+      // Logo: w-16 h-16 (64px) mobile, w-20 h-20 (80px) tablet+
+      // Profile base: w-20 h-20 (80px) mobile
+      // We want minimized size to be bigger, so when scrolled, scale should be > 1 but < the not-scrolled scale
+      const width = window.innerWidth;
+      if (width < 820) {
+        // Mobile: base 80px, make minimized moderate size
+        const minimizedScale = 0.6; // 80px * 0.6 = 48px (moderate size)
+        const expandedScale = 1.0; // Base size when not scrolled
+        setProfileScale(minimizedScale);
+        setProfileExpandedScale(expandedScale);
+      } else if (width < 1024) {
+        // Tablet: base 112px, make minimized smaller
+        const minimizedScale = 0.45; // 112px * 0.45 = 50px (smaller)
+        const expandedScale = 1.0;
+        setProfileScale(minimizedScale);
+        setProfileExpandedScale(expandedScale);
+      } else {
+        // Desktop: base 140px, make minimized slightly smaller
+        const minimizedScale = 0.5; // 140px * 0.5 = 70px (slightly smaller)
+        const expandedScale = 1.0;
+        setProfileScale(minimizedScale);
+        setProfileExpandedScale(expandedScale);
+      }
     };
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    checkMobileAndScale();
+    window.addEventListener('resize', checkMobileAndScale);
+    return () => window.removeEventListener('resize', checkMobileAndScale);
   }, []);
 
-  // Handle scroll event to animate profile picture
+  // Handle scroll event to animate profile picture with smooth debouncing
   useEffect(() => {
     if (!isClient) return;
 
+    let ticking = false;
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setIsScrolled(scrollY > 50); // Start animation after 50px of scroll
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          const scrolled = scrollY > 50;
+          setIsScrolled(scrolled);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    // Use passive listener for better performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isClient]);
 
@@ -297,43 +335,60 @@ export default function Navbar() {
             </div>
 
             {/* Right: User Profile Picture - Half on banner, half below */}
+            {/* When scrolled (minimized), matches logo size and vertical position for symmetry */}
             {session?.user && (
               <div 
-                className="relative h-16 md:h-20 lg:h-24" 
-                ref={profileRef} 
-                style={{ 
-                  display: 'flex', 
-                  alignItems: (isOnBettingPage && isMobile) ? 'center' : (isScrolled ? 'center' : 'flex-end')
-                }}
+                className="relative h-16 tablet:h-20 xl:h-24 flex items-end overflow-visible" 
+                ref={profileRef}
               >
                 <button
                   onClick={() => setProfileOpen(v => !v)}
-                  className={`relative z-10 group transition-all duration-500 ease-out ${
+                  className={`relative z-10 group ${
                     (isOnBettingPage && isMobile)
                       ? 'mb-0' 
-                      : (isScrolled ? 'mb-0' : '-mb-12 md:-mb-14 lg:-mb-[70px]')
-                  } ${
-                    !isOnBettingPage && isScrolled ? 'avatar-shrink-bounce' : ''
+                      : (isScrolled ? 'mb-2 tablet:mb-3 self-end' : '-mb-12 md:-mb-14 lg:-mb-[70px]')
                   }`}
                   aria-label="Open profile menu"
                   style={{ 
-                    transform: (isOnBettingPage && isMobile) ? 'scale(1)' : (isScrolled ? 'scale(0.4)' : 'scale(1)'),
-                    transformOrigin: 'center center'
+                    // Simple, smooth animation like original GitHub version
+                    // When scrolled (minimized): zoom out (scale down from bottom)
+                    // When NOT scrolled (expanded): zoom in (scale up from top)
+                    transform: (isOnBettingPage && isMobile) 
+                      ? 'scale(1)' 
+                      : (isScrolled ? `scale(${profileScale})` : `scale(${profileExpandedScale})`),
+                    transformOrigin: 'center bottom', // Always scale from bottom to prevent jumping
+                    // Ultra-smooth, fluid transition for both directions - no visible steps
+                    transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
+                    // Optimize for smooth animation
+                    willChange: 'transform',
+                    // Force hardware acceleration for ultra-smooth animation
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    // Additional smooth rendering properties
+                    WebkitFontSmoothing: 'antialiased',
+                    MozOsxFontSmoothing: 'grayscale',
+                    // Ensure smooth sub-pixel rendering
+                    imageRendering: 'auto'
                   }}
                 >
-                  {/* Profile Picture - Bigger, half overlapping (positioned at bottom of navbar) */}
+                  {/* Profile Picture - Full size, scaled down when scrolled to match logo */}
                   {profilePictureUrl && (
                     <img
                       src={profilePictureUrl}
                       alt={session.user.name || 'User'}
-                      width={140}
-                      height={140}
-                      className={`rounded-full border-2 md:border-3 lg:border-4 border-white object-cover shadow-2xl transition-all duration-300 ${
+                      className={`rounded-full border-2 tablet:border-3 xl:border-4 border-white object-cover shadow-2xl ${
                         (isOnBettingPage && isMobile)
                           ? 'w-12 h-12 md:w-20 md:h-20 lg:w-28 lg:h-28' 
                           : 'w-20 h-20 md:w-28 md:h-28 lg:w-[140px] lg:h-[140px]'
                       }`}
                       loading="eager"
+                      style={{
+                        // Ensure the image respects the className sizes and can be scaled
+                        maxWidth: 'none',
+                        maxHeight: 'none',
+                        // Remove any transitions that might conflict with parent transform
+                        transition: 'none'
+                      }}
                     />
                   )}
                 </button>
