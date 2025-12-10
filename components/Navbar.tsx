@@ -167,8 +167,9 @@ export default function Navbar() {
   };
 
   // Mobile bottom navigation bar
+  // Mobile nav shows until 820px (using custom tablet: breakpoint)
   const MobileBottomNav = () => (
-    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-gray-800 backdrop-blur-lg border-t-2 border-white shadow-2xl" style={{ boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.5), 0 -4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
+    <div className="fixed bottom-0 left-0 right-0 z-40 tablet:hidden bg-gray-800 backdrop-blur-lg border-t-2 border-white shadow-2xl" style={{ boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.5), 0 -4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
       <div className="flex items-center justify-around px-2 py-2 safe-area-inset-bottom">
         {filteredNavigation.map(item => {
           const isActive = router.pathname.startsWith(item.href);
@@ -211,9 +212,11 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 w-full bg-gray-800 backdrop-blur-lg shadow-2xl border-b-2 md:border-b-3 lg:border-b-4 border-white z-40" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
+      {/* Navbar border: consistent until 820px (tablet:), then increase */}
+      <nav className="fixed top-0 left-0 w-full bg-gray-800 backdrop-blur-lg shadow-2xl border-b-2 tablet:border-b-3 xl:border-b-4 border-white z-40" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20 lg:h-24 py-1 md:py-2">
+          {/* Navbar height: consistent until 820px (tablet:), then increase */}
+          <div className="flex items-center justify-between h-16 tablet:h-20 xl:h-24 py-1 tablet:py-2">
             {/* Left: User Profile + Separator + Back Button + Navigation */}
             <div className="flex items-center space-x-4">
               {/* Site Name with Logo - title aligned with bottom of logo */}
@@ -222,6 +225,7 @@ export default function Navbar() {
                 className="flex items-end gap-0 text-white hover:text-white transition-colors select-none"
                 style={{ letterSpacing: '0.01em' }}
               >
+                {/* Logo size: keep consistent until 820px (tablet:), then increase */}
                 <div className="flex items-center justify-center -mr-1">
                   <Image
                     src={logoPng}
@@ -229,15 +233,15 @@ export default function Navbar() {
                     width={72}
                     height={72}
                     priority
-                    className="w-16 h-16 md:w-20 md:h-20 object-contain transition-transform duration-200 hover:scale-105"
+                    className="w-16 h-16 tablet:w-20 tablet:h-20 object-contain transition-transform duration-200 hover:scale-105"
                   />
                 </div>
-                <span className="font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl tracking-tight mb-2 md:mb-3">
+                <span className="font-bold text-lg tablet:text-xl xl:text-2xl 2xl:text-3xl tracking-tight mb-2 tablet:mb-3">
                   PronoFootball.Club
                 </span>
               </Link>
-              {/* Back Button + Navigation with text labels (desktop only) */}
-              <div className="flex items-center gap-0 hidden md:flex -ml-2">
+              {/* Back Button + Navigation with text labels (desktop only - show from 820px/tablet: breakpoint) */}
+              <div className="flex items-center gap-0 hidden tablet:flex -ml-2">
                 <BackButton />
                 {filteredNavigation.map(item => (
                   <NavItem key={item.href} item={item} />

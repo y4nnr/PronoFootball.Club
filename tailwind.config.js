@@ -7,6 +7,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        'tablet': '820px', // Custom breakpoint for tablet/desktop transition
+      },
       colors: {
         primary: {
           50: '#f8fafc',
