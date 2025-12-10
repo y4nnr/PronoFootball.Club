@@ -40,6 +40,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Local debug API endpoints (not for Git)
+pages/api/debug-all-games-today.ts
+pages/api/test-api-fields.ts
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
