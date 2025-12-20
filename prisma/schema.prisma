@@ -54,6 +54,7 @@ model Competition {
   winner      User?             @relation("CompetitionWinner", fields: [winnerId], references: [id])
   users       CompetitionUser[]
   games       Game[]
+  news        News[]
 }
 
 model CompetitionUser {
@@ -82,30 +83,30 @@ model Team {
 }
 
 model Game {
-  id            String      @id @default(cuid())
-  competitionId String
-  date          DateTime
-  status        GameStatus  @default(UPCOMING)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  awayScore     Int?
-  awayTeamId    String
-  homeScore     Int?
-  homeTeamId    String
-  matchday      Int?
+  id             String      @id @default(cuid())
+  competitionId  String
+  date           DateTime
+  status         GameStatus  @default(UPCOMING)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  awayScore      Int?
+  awayTeamId     String
+  homeScore      Int?
+  homeTeamId     String
+  matchday       Int?
   // Live score fields for external API integration
-  externalId    String?     // Football-Data.org game ID
-  liveHomeScore Int?        // Live home score from external API
-  liveAwayScore Int?        // Live away score from external API
-  lastSyncAt    DateTime?   // Last time we synced with external API
-  externalStatus String?    // External API status (IN_PLAY, FINISHED, etc.)
-  statusDetail  String?     // Status detail (HT, AET, PEN, PPD, SUS, etc.)
-  decidedBy     String?     // How the game was decided (FT, AET, PEN)
-  finishedAt    DateTime?   // When the game was first marked as finished
-  bets          Bet[]
-  awayTeam      Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
-  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  homeTeam      Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  externalId     String? // Football-Data.org game ID
+  liveHomeScore  Int? // Live home score from external API
+  liveAwayScore  Int? // Live away score from external API
+  lastSyncAt     DateTime? // Last time we synced with external API
+  externalStatus String? // External API status (IN_PLAY, FINISHED, etc.)
+  statusDetail   String? // Status detail (HT, AET, PEN, PPD, SUS, etc.)
+  decidedBy      String? // How the game was decided (FT, AET, PEN)
+  finishedAt     DateTime? // When the game was first marked as finished
+  bets           Bet[]
+  awayTeam       Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  competition    Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  homeTeam       Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
 }
 
 model Bet {
@@ -121,6 +122,20 @@ model Bet {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([gameId, userId])
+}
+
+model News {
+  id            String      @id @default(cuid())
+  competitionId String
+  matchDayDate  DateTime    // The date of the match day this news covers
+  summary       String      // The AI-generated summary text
+  logo          String?     // Competition logo URL
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
+  @@unique([competitionId, matchDayDate]) // One news item per competition per match day
+  @@index([competitionId, matchDayDate])   // For efficient queries
 }
 
 enum UserRole {

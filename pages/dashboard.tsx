@@ -18,6 +18,7 @@ import {
 import GameCard from '../components/GameCard';
 import CompetitionCard from '../components/CompetitionCard';
 import CountdownTimer from '../components/CountdownTimer';
+import News from '../components/News';
 
 type UserStats = {
   totalPredictions: number;
@@ -441,6 +442,7 @@ export default function Dashboard() {
   const [lastGamesPerformance, setLastGamesPerformance] = useState<LastGamePerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastSessionIdRef = useRef<string | null>(null); // Track last session ID to prevent unnecessary refreshes
 
   // Function to refresh just the game data (for live updates)
   const refreshGameData = useCallback(async () => {
@@ -510,6 +512,7 @@ export default function Dashboard() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
+      console.log('📊 fetchDashboardData called - Full dashboard refresh starting');
       setLoading(true);
       setError(null);
 
@@ -582,13 +585,44 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (status === "loading") return;
+    if (status === "loading") {
+      console.log('⏳ Dashboard: Session status is loading, skipping fetch');
+      return;
+    }
     if (!session) {
+      console.log('🚫 Dashboard: No session, redirecting to login');
       router.push("/login");
       return;
     }
-    fetchDashboardData();
-  }, [session, status, router, fetchDashboardData]);
+    
+    // Only fetch on mount or when session ID actually changes (not on every render)
+    const sessionId = session?.user?.id;
+    const lastSessionId = lastSessionIdRef.current;
+    
+    // Only fetch if:
+    // 1. We haven't fetched yet (lastSessionId is null), OR
+    // 2. The session ID actually changed (and both are defined)
+    const shouldFetch = lastSessionId === null || (sessionId && lastSessionId !== sessionId);
+    
+    if (shouldFetch && sessionId) {
+      console.log('🔄 Dashboard: Triggering fetchDashboardData', {
+        reason: lastSessionId === null ? 'Initial mount' : `Session changed (${lastSessionId} → ${sessionId})`,
+        sessionId,
+        status,
+        routerPath: router.pathname,
+      });
+      lastSessionIdRef.current = sessionId;
+      fetchDashboardData();
+    } else {
+      console.log('⏭️ Dashboard: Skipping fetch - same session ID', { 
+        sessionId,
+        lastSessionId,
+        status,
+        routerPath: router.pathname,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, status, fetchDashboardData]); // router is stable, session object changes too often
 
   // Register the refresh function with the live scores hook
   useEffect(() => {
@@ -646,9 +680,11 @@ export default function Dashboard() {
 
 
 
+        {/* First row: Countdown Timer + Active Competitions + News */}
         <div className="mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-            <div className="w-full flex flex-col">
+            {/* Left column: Countdown Timer + Active Competitions */}
+            <div className="w-full flex flex-col gap-6">
               {/* Countdown Timer */}
               {(() => {
                 // Smart countdown logic: prioritize today's games, fallback to future games
@@ -686,28 +722,28 @@ export default function Dashboard() {
                 }
 
                 const handleCountdownComplete = () => {
+                  console.log('⏰ Countdown completed - Triggering full dashboard refresh');
                   fetchDashboardData();
                 };
 
                 return (
-                  <div className="h-full">
-                    <CountdownTimer 
-                      key={nextGame.id}
-                      nextGameDate={nextGame.date}
-                      onCountdownComplete={handleCountdownComplete}
-                      upcomingGames={upcomingGames.slice(0, 10)}
-                    />
-                  </div>
+                  <CountdownTimer 
+                    key={nextGame.id}
+                    nextGameDate={nextGame.date}
+                    onCountdownComplete={handleCountdownComplete}
+                    upcomingGames={upcomingGames.slice(0, 10)}
+                  />
                 );
               })()}
+              {/* Active Competitions */}
+              <ActiveCompetitionsSection
+                competitions={dashboardData?.activeCompetitions || []}
+                t={t}
+              />
             </div>
-            <div className="w-full flex flex-col">
-              <div className="h-full">
-                <ActiveCompetitionsSection
-                  competitions={dashboardData?.activeCompetitions || []}
-                  t={t}
-                />
-              </div>
+            {/* Right column: News */}
+            <div className="w-full">
+              <News />
             </div>
           </div>
         </div>
