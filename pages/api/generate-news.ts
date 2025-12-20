@@ -421,6 +421,17 @@ export default async function handler(
   };
 
   try {
+    // 0) Check if Prisma client has been regenerated (News model available)
+    if (!prisma.news) {
+      const errorMsg = 'Prisma client not regenerated. The News model is not available. Please run "npx prisma generate" on the server.';
+      log(errorMsg);
+      return res.status(500).json({ 
+        error: 'Prisma client not regenerated',
+        message: errorMsg,
+        hint: 'Run "npx prisma generate" and restart the server'
+      });
+    }
+
     // 1) Get current user session (optional - for filtering when fetching)
     const session = await getServerSession(req, res, authOptions);
     const userId = session?.user?.id || null;
