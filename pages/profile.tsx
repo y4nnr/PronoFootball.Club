@@ -174,13 +174,14 @@ export default function ProfilePage() {
       setEditing(false);
       setSuccessMessage(t('profile.messages.updateSuccess'));
       
-      // Update the session with new user data
+      // Update the session with new user data including profile picture
       await update({
         ...session,
         user: {
           ...session?.user,
           name: updatedProfile.name,
-          email: updatedProfile.email
+          email: updatedProfile.email,
+          profilePictureUrl: finalProfilePictureUrl || null
         }
       });
       

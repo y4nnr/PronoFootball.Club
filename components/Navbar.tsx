@@ -13,15 +13,73 @@ export default function Navbar() {
   const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
   const [adminEditOpen, setAdminEditOpen] = useState(false);
+  // Get profile picture from session directly (no fetch needed)
+  // Use persistent state to prevent blinking on navigation
+  // Initialize to null to avoid hydration mismatch (will be loaded from localStorage after mount)
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Load from localStorage and session after mount (client-side only)
+  useEffect(() => {
+    setIsClient(true);
+    
+    // First, try to load from localStorage (fastest, prevents blinking)
+    const cached = localStorage.getItem('profilePictureUrl');
+    if (cached) {
+      setProfilePictureUrl(cached);
+      // Preload the cached image using native Image constructor
+      const img = new window.Image();
+      img.src = cached;
+    }
+    
+    // Then, update from session if available (may be different/newer)
+    if (session?.user?.profilePictureUrl) {
+      if (cached !== session.user.profilePictureUrl) {
+        setProfilePictureUrl(session.user.profilePictureUrl);
+        // Cache in localStorage for instant load on next page
+        localStorage.setItem('profilePictureUrl', session.user.profilePictureUrl);
+        // Preload the new image using native Image constructor
+        const img = new window.Image();
+        img.src = session.user.profilePictureUrl;
+      }
+    } else if (session?.user && !session.user.profilePictureUrl) {
+      // User has no profile picture, clear cache
+      setProfilePictureUrl(null);
+      localStorage.removeItem('profilePictureUrl');
+    }
+  }, [session?.user?.profilePictureUrl]);
+
+  // Update profile picture URL when session changes (after initial mount)
+  useEffect(() => {
+    if (!isClient) return; // Don't run on server
+    
+    if (session?.user?.profilePictureUrl) {
+      // Only update if different to avoid unnecessary re-renders
+      if (profilePictureUrl !== session.user.profilePictureUrl) {
+        setProfilePictureUrl(session.user.profilePictureUrl);
+        // Cache in localStorage for instant load on next page
+        localStorage.setItem('profilePictureUrl', session.user.profilePictureUrl);
+        // Preload the new image using native Image constructor
+        const img = new window.Image();
+        img.src = session.user.profilePictureUrl;
+      }
+    } else if (session?.user && !session.user.profilePictureUrl) {
+      // User has no profile picture, clear cache
+      if (profilePictureUrl !== null) {
+        setProfilePictureUrl(null);
+        localStorage.removeItem('profilePictureUrl');
+      }
+    }
+    // Don't clear if session is loading - keep previous value
+  }, [session?.user?.profilePictureUrl, profilePictureUrl, isClient]);
   // Initialize with scale that matches logo size
   const [profileScale, setProfileScale] = useState(0.6); // Minimized scale (moderate for mobile)
   const [profileExpandedScale, setProfileExpandedScale] = useState(1.0); // Expanded scale (base size)
   const profileRef = useRef<HTMLDivElement>(null);
   const adminEditRef = useRef<HTMLDivElement>(null);
+
 
   // Handle client-side mounting
   useEffect(() => {
@@ -85,26 +143,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isClient]);
 
-  // Fetch user profile picture separately
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetch('/api/user/profile-picture')
-        .then(res => res.json())
-        .then(data => {
-          // Only update if we have a real profile picture URL
-          if (data.profilePictureUrl) {
-            setProfilePictureUrl(data.profilePictureUrl);
-          } else {
-            // Explicitly set to null if no profile picture
-            setProfilePictureUrl(null);
-          }
-        })
-        .catch(err => {
-          console.error('Failed to fetch profile picture:', err);
-          setProfilePictureUrl(null);
-        });
-    }
-  }, [session?.user?.id]);
+  // Profile picture is now included in session, no need to fetch separately
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -254,10 +293,13 @@ export default function Navbar() {
       <nav className="fixed top-0 left-0 w-full bg-gray-800 backdrop-blur-lg shadow-2xl border-b-2 tablet:border-b-3 xl:border-b-4 border-white z-40" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Navbar height: consistent until 820px (tablet:), then increase */}
-          <div className="flex items-center justify-between h-16 tablet:h-20 xl:h-24 py-1 tablet:py-2">
-            {/* Left: User Profile + Separator + Back Button + Navigation */}
-            <div className="flex items-center space-x-4">
-              {/* Site Name with Logo - title aligned with bottom of logo */}
+          <div className={`flex items-center h-16 tablet:h-20 xl:h-24 py-1 tablet:py-2 ${
+            // Mobile: justify-between (logo left, profile right)
+            // Desktop: 3-column layout (logo left, menu center, profile right)
+            isMobile ? 'justify-between' : ''
+          }`}>
+            {/* Left: Site Name with Logo */}
+            <div className="flex items-center flex-shrink-0">
               <Link
                 href="/"
                 className="flex items-end gap-0 text-white hover:text-white transition-colors select-none"
@@ -278,90 +320,104 @@ export default function Navbar() {
                   PronoFootball.Club
                 </span>
               </Link>
-              {/* Back Button + Navigation with text labels (desktop only - show from 820px/tablet: breakpoint) */}
-              <div className="flex items-center gap-0 hidden tablet:flex -ml-2">
-                <BackButton />
-                {filteredNavigation.map(item => (
-                  <NavItem key={item.href} item={item} />
-                ))}
-                {/* Admin Edit Button */}
-                {isAdmin && (
-                  <div className="relative" ref={adminEditRef}>
-                    <button
-                      onClick={() => setAdminEditOpen(v => !v)}
-                      className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
-                        router.pathname.startsWith('/admin/competitions') || router.pathname.startsWith('/admin/teams') || router.pathname.startsWith('/admin/users')
-                          ? 'bg-white/10 text-orange-400 shadow-md' 
-                          : 'text-orange-400 hover:text-orange-300 hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="mb-0">
-                        <PencilSquareIcon className="h-4 w-4 md:h-4 md:w-4 lg:h-5 lg:w-5" />
-                      </div>
-                      <span className="whitespace-nowrap text-[10px] md:text-xs lg:text-sm xl:text-base font-medium leading-none tracking-[0.01em] text-center">
-                        Edit
-                      </span>
-                    </button>
-                    {/* Admin Edit Dropdown */}
-                    {adminEditOpen && (
-                      <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-fade-in">
-                        {adminEditItems.map(item => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                              router.pathname.startsWith(item.href)
-                                ? 'bg-primary-50 text-primary-600 shadow-sm' : 'text-gray-700 hover:bg-gray-50'
-                            }`}
-                            onClick={() => setAdminEditOpen(false)}
-                          >
-                            <span className="text-xl">{item.icon}</span>
-                            <span>{item.name}</span>
-                          </Link>
-                        ))}
-                        <div className="border-t border-gray-200 my-2"></div>
-                        <button
-                          onClick={() => { setAdminEditOpen(false); signOut({ callbackUrl: '/login' }); }}
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
+            </div>
+
+            {/* Center: Back Button + Navigation with text labels (desktop only - show from 820px/tablet: breakpoint) */}
+            <div className="flex items-center gap-0 hidden tablet:flex flex-1 justify-center min-w-0">
+              <BackButton />
+              {filteredNavigation.map(item => (
+                <NavItem key={item.href} item={item} />
+              ))}
+              {/* Admin Edit Button */}
+              {isAdmin && (
+                <div className="relative" ref={adminEditRef}>
+                  <button
+                    onClick={() => setAdminEditOpen(v => !v)}
+                    className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
+                      router.pathname.startsWith('/admin/competitions') || router.pathname.startsWith('/admin/teams') || router.pathname.startsWith('/admin/users')
+                        ? 'bg-white/10 text-orange-400 shadow-md' 
+                        : 'text-orange-400 hover:text-orange-300 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="mb-0">
+                      <PencilSquareIcon className="h-4 w-4 md:h-4 md:w-4 lg:h-5 lg:w-5" />
+                    </div>
+                    <span className="whitespace-nowrap text-[10px] md:text-xs lg:text-sm xl:text-base font-medium leading-none tracking-[0.01em] text-center">
+                      Edit
+                    </span>
+                  </button>
+                  {/* Admin Edit Dropdown */}
+                  {adminEditOpen && (
+                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-fade-in">
+                      {adminEditItems.map(item => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                            router.pathname.startsWith(item.href)
+                              ? 'bg-primary-50 text-primary-600 shadow-sm' : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                          onClick={() => setAdminEditOpen(false)}
                         >
-                          <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0" />
-                          <span>Déconnexion</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                          <span className="text-xl">{item.icon}</span>
+                          <span>{item.name}</span>
+                        </Link>
+                      ))}
+                      <div className="border-t border-gray-200 my-2"></div>
+                      <button
+                        onClick={() => { setAdminEditOpen(false); signOut({ callbackUrl: '/login' }); }}
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                      >
+                        <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0" />
+                        <span>Déconnexion</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right: User Profile Picture - Half on banner, half below */}
             {/* When scrolled (minimized), matches logo size and vertical position for symmetry */}
-            {session?.user && (
-              <div 
-                className="relative h-16 tablet:h-20 xl:h-24 flex items-end overflow-visible" 
-                ref={profileRef}
-              >
+            {/* Reserve space for profile picture to prevent menu shift on load */}
+            <div 
+              className={`relative h-16 tablet:h-20 xl:h-24 flex items-end overflow-visible flex-shrink-0 ${
+                isClient && (profilePictureUrl || session?.user) ? '' : 'invisible'
+              } w-20 tablet:w-28 lg:w-[140px]`}
+              style={{ 
+                // Reserve space even when not loaded to prevent layout shift
+                minWidth: '80px' // Minimum width on mobile
+              }}
+              ref={profileRef}
+            >
+              {isClient && (profilePictureUrl || session?.user) && (
                 <button
                   onClick={() => setProfileOpen(v => !v)}
                   className={`relative z-10 group ${
                     (isOnBettingPage && isMobile)
                       ? 'mb-0' 
-                      : (isScrolled ? 'mb-2 tablet:mb-3 self-end' : '-mb-12 md:-mb-14 lg:-mb-[70px]')
+                      : isMobile
+                        ? 'mb-2 self-end' // Mobile: always minimized position
+                        : (isScrolled ? 'mb-2 tablet:mb-3 self-end' : '-mb-12 md:-mb-14 lg:-mb-[70px]') // Desktop: animate
                   }`}
                   aria-label="Open profile menu"
                   style={{ 
-                    // Simple, smooth animation like original GitHub version
-                    // When scrolled (minimized): zoom out (scale down from bottom)
-                    // When NOT scrolled (expanded): zoom in (scale up from top)
+                    // On mobile: always minimized, no animation
+                    // On desktop: animate based on scroll
                     transform: (isOnBettingPage && isMobile) 
                       ? 'scale(1)' 
-                      : (isScrolled ? `scale(${profileScale})` : `scale(${profileExpandedScale})`),
+                      : isMobile 
+                        ? `scale(${profileScale})` // Mobile: always minimized
+                        : (isScrolled ? `scale(${profileScale})` : `scale(${profileExpandedScale})`), // Desktop: animate
                     transformOrigin: 'center bottom', // Always scale from bottom to prevent jumping
-                    // Ultra-smooth, fluid transition for both directions - no visible steps
-                    transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
-                    // Optimize for smooth animation
-                    willChange: 'transform',
-                    // Force hardware acceleration for ultra-smooth animation
+                    // On mobile: no transition (always minimized)
+                    // On desktop: smooth transition
+                    transition: isMobile 
+                      ? 'none' 
+                      : 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
+                    // Optimize for smooth animation (desktop only)
+                    willChange: isMobile ? 'auto' : 'transform',
+                    // Force hardware acceleration for ultra-smooth animation (desktop only)
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     // Additional smooth rendering properties
@@ -375,7 +431,7 @@ export default function Navbar() {
                   {profilePictureUrl && (
                     <img
                       src={profilePictureUrl}
-                      alt={session.user.name || 'User'}
+                      alt={session?.user?.name || 'User'}
                       className={`rounded-full border-2 tablet:border-3 xl:border-4 border-white object-cover shadow-2xl ${
                         (isOnBettingPage && isMobile)
                           ? 'w-12 h-12 md:w-20 md:h-20 lg:w-28 lg:h-28' 
@@ -392,28 +448,34 @@ export default function Navbar() {
                     />
                   )}
                 </button>
-                {/* Profile dropdown */}
-                {profileOpen && (
-                  <div className={`absolute right-0 w-44 bg-zinc-900/95 rounded-xl shadow-lg border border-zinc-800 py-2 z-50 animate-fade-in ${isScrolled ? 'top-full' : 'top-[calc(100%+3rem)] md:top-[calc(100%+3.5rem)] lg:top-[calc(100%+70px)]'}`}>
-                    <Link
-                      href="/profile"
-                      className="flex items-center gap-2 px-4 py-2 text-gray-200 hover:bg-white/10 rounded-md transition"
-                      onClick={() => setProfileOpen(false)}
-                    >
-                      <UserIcon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 min-w-0 break-words text-sm md:text-base">Mon Profile</span>
-                    </Link>
-                    <button
-                      onClick={() => { setProfileOpen(false); signOut({ callbackUrl: '/login' }); }}
-                      className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-200 hover:bg-white/10 rounded-md transition"
-                    >
-                      <ArrowRightOnRectangleIcon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 min-w-0 break-words text-sm md:text-base">Déconnexion</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+              {/* Profile dropdown */}
+              {session?.user && profileOpen && (
+                <div className={`absolute right-0 w-48 bg-white rounded-xl shadow-modern-lg border border-neutral-200/50 py-2 z-50 animate-fade-in ${
+                  isMobile 
+                    ? 'top-full mt-2' // Mobile: always minimized, menu just below with small gap
+                    : (isScrolled ? 'top-full' : 'top-[calc(100%+3rem)] md:top-[calc(100%+3.5rem)] lg:top-[calc(100%+70px)]') // Desktop: based on scroll
+                }`}
+                style={{ boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}
+                >
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-3 px-4 py-2.5 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors duration-200"
+                    onClick={() => setProfileOpen(false)}
+                  >
+                    <UserIcon className="w-5 h-5 shrink-0 text-primary-600" />
+                    <span className="flex-1 min-w-0 break-words text-sm font-medium">Mon Profile</span>
+                  </Link>
+                  <button
+                    onClick={() => { setProfileOpen(false); signOut({ callbackUrl: '/login' }); }}
+                    className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-neutral-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors duration-200"
+                  >
+                    <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0 text-red-600" />
+                    <span className="flex-1 min-w-0 break-words text-sm font-medium">Déconnexion</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>

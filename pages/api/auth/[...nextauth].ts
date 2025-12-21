@@ -12,6 +12,7 @@ declare module "next-auth" {
       name: string;
       role: string;
       image: string | null;
+      profilePictureUrl: string | null;
     };
   }
   
@@ -21,6 +22,7 @@ declare module "next-auth" {
     name: string;
     role: string;
     image: string | null;
+    profilePictureUrl: string | null;
   }
 }
 
@@ -66,6 +68,8 @@ export const authOptions: NextAuthOptions = {
           name: user.name ?? '',
           role: user.role,
           image: null,
+          // Don't store profilePictureUrl in token to avoid cookie size issues
+          // Will be fetched in session callback instead
         };
       },
     }),
@@ -78,14 +82,35 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        // Don't store profilePictureUrl in token to avoid cookie size issues
+        // Remove it if it exists (from old tokens)
+        if (token.profilePictureUrl) {
+          delete token.profilePictureUrl;
+        }
+      } else {
+        // Clean up profilePictureUrl from existing tokens to reduce cookie size
+        if (token.profilePictureUrl) {
+          delete token.profilePictureUrl;
+        }
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      if (session.user && token.id) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.image = null;
+        // Always fetch profilePictureUrl from DB to avoid storing long URLs in cookies
+        try {
+          const user = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { profilePictureUrl: true }
+          });
+          session.user.profilePictureUrl = user?.profilePictureUrl || null;
+        } catch (error) {
+          console.error('Error fetching profile picture in session callback:', error);
+          session.user.profilePictureUrl = null;
+        }
       }
       return session;
     },
