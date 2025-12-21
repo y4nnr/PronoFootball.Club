@@ -269,8 +269,8 @@ export default function Home() {
 
       {/* Sign Up Modal */}
       {isSignUpOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setIsSignUpOpen(false)}>
-              <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-6 sm:p-8" onClick={(e) => e.stopPropagation()}>
+            <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/50 overflow-y-auto" style={{ paddingTop: 'clamp(4rem, 15vh, 10rem)' }} onClick={() => setIsSignUpOpen(false)}>
+              <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-6 sm:p-8 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => setIsSignUpOpen(false)}
                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
@@ -360,8 +360,8 @@ export default function Home() {
 
       {/* Login Modal */}
       {isLoginOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setIsLoginOpen(false)}>
-              <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-6 sm:p-8" onClick={(e) => e.stopPropagation()}>
+            <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/50 overflow-y-auto" style={{ paddingTop: 'clamp(4rem, 15vh, 10rem)' }} onClick={() => setIsLoginOpen(false)}>
+              <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-6 sm:p-8 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => setIsLoginOpen(false)}
                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
