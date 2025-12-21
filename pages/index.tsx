@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession, signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { useTranslation } from '../hooks/useTranslation';
 import Footer from '../components/Footer';
 import Image from 'next/image';
@@ -156,9 +157,9 @@ export default function Home() {
           willChange: 'auto',
         }}
       >
-        {/* Gradient overlay for better text readability - lighter on mobile */}
+        {/* Gradient overlay for better text readability - consistent across all screen sizes */}
         <div 
-          className="absolute inset-0 bg-gradient-to-b from-gray-900/50 sm:from-gray-900/70 via-gray-900/40 sm:via-gray-900/60 to-gray-900/50 sm:to-gray-900/70"
+          className="absolute inset-0 bg-gradient-to-b from-gray-900/70 via-gray-900/60 to-gray-900/70"
           style={{
             transform: 'translate3d(0, 0, 0)',
             WebkitTransform: 'translate3d(0, 0, 0)',
@@ -166,7 +167,7 @@ export default function Home() {
         />
         {/* Static gradient overlay - no animation to prevent re-renders */}
         <div 
-          className="absolute inset-0 bg-gradient-to-br from-blue-900/10 sm:from-blue-900/20 via-transparent to-purple-900/10 sm:to-purple-900/20"
+          className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/20"
           style={{
             transform: 'translate3d(0, 0, 0)',
             WebkitTransform: 'translate3d(0, 0, 0)',
@@ -182,18 +183,18 @@ export default function Home() {
         style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex items-center justify-center">
+          <div className="flex items-end flex-shrink-0">
+            <div className="flex items-center justify-center -mr-1">
               <Image
                 src={logoPng}
                 alt="PronoFootball.Club"
                 width={64}
                 height={64}
                 priority
-                className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+                className="w-12 h-12 sm:w-16 sm:h-16 object-contain transition-transform duration-200 hover:scale-105"
               />
             </div>
-            <span className="text-white font-bold text-lg sm:text-xl lg:text-2xl tracking-tight">
+            <span className="text-white font-bold text-lg sm:text-xl lg:text-2xl tracking-tight mb-1 sm:mb-2" style={{ letterSpacing: '0.01em' }}>
               PronoFootball.Club
             </span>
           </div>
@@ -205,17 +206,17 @@ export default function Home() {
         <div className="relative max-w-sm sm:max-w-md w-full px-3" style={{ marginTop: 'clamp(0.5rem, 2vh, 2rem)' }}>
           {/* Login Card */}
           <div 
-            className="bg-gradient-to-br from-gray-900/60 via-gray-800/60 to-gray-900/60 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-2xl border border-white/20"
+            className="bg-gradient-to-br from-gray-900/40 sm:from-gray-900/60 via-gray-800/40 sm:via-gray-800/60 to-gray-900/40 sm:to-gray-900/60 backdrop-blur-lg sm:backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-2xl border border-white/20"
             style={{ 
-              padding: 'clamp(1.5rem, 4vh, 2.5rem)',
+              padding: 'clamp(1.25rem, 3vh, 2.5rem)',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
             }}
           >
-            <div className="text-center mb-6 sm:mb-8">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
+            <div className="text-center mb-4 sm:mb-8">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 sm:mb-4">
                 {t('welcome')}
               </h1>
-              <p className="text-sm sm:text-base text-gray-200 leading-relaxed max-w-sm mx-auto">
+              <p className="hidden sm:block text-xs sm:text-base text-gray-200 leading-relaxed max-w-sm mx-auto">
                 {t('homepage.subtitle')}
               </p>
             </div>
@@ -238,6 +239,30 @@ export default function Home() {
                 Créer un compte
               </button>
             </div>
+          </div>
+
+          {/* En savoir plus Card */}
+          <div 
+            className="bg-gradient-to-br from-gray-900/40 sm:from-gray-900/60 via-gray-800/40 sm:via-gray-800/60 to-gray-900/40 sm:to-gray-900/60 backdrop-blur-lg sm:backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-2xl border border-white/20 mt-8 sm:mt-12"
+            style={{ 
+              padding: 'clamp(1rem, 2.5vh, 2rem)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            <div className="text-center mb-3 sm:mb-4">
+              <h2 className="text-base sm:text-xl font-semibold text-white mb-1.5 sm:mb-2">
+                Découvrez PronoFootball.Club
+              </h2>
+              <p className="hidden sm:block text-xs sm:text-base text-gray-200 leading-relaxed">
+                En savoir plus sur notre plateforme, ses fonctionnalités et comment elle peut transformer votre expérience des pronostics football.
+              </p>
+            </div>
+            <Link
+              href="/about"
+              className="block w-full text-center px-4 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              En savoir plus
+            </Link>
           </div>
         </div>
       </div>

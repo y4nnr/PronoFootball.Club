@@ -190,6 +190,7 @@ export default function Navbar() {
   // Check if we can show a back button (only on client side to prevent hydration mismatch)
   const isOnBettingPage = router.pathname.startsWith('/betting');
   const isOnLoginPage = router.pathname === '/' || router.pathname === '/login';
+  const isOnAboutPage = router.pathname === '/about';
   const canGoBack = isClient && router.pathname !== '/dashboard' && window.history.length > 1;
 
   // Back button handler - always enabled, falls back to dashboard if no history
@@ -312,8 +313,8 @@ export default function Navbar() {
     </div>
   );
 
-  // Don't render navbar on login page
-  if (isOnLoginPage) {
+  // Don't render navbar on login page or about page
+  if (isOnLoginPage || isOnAboutPage) {
     return null;
   }
 

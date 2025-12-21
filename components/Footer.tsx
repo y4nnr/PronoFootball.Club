@@ -9,8 +9,13 @@ export default function Footer() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-24 py-2">
-            <p className="text-gray-300 text-sm">© {new Date().getFullYear()} PronoFootball.Club - Tous droits réservés</p>
-            <p className="text-gray-400 text-sm">Developed and Maintained by Kuma Flynt</p>
+            <p className="text-gray-300 text-xs sm:text-sm whitespace-nowrap">
+              © {new Date().getFullYear()} PronoFootball.Club<span className="hidden sm:inline"> - Tous droits réservés</span>
+            </p>
+            <p className="text-gray-400 text-xs sm:text-sm">
+              <span className="block sm:inline">Developed and Maintained</span>
+              <span className="block sm:inline sm:ml-1">by Kuma Flynt</span>
+            </p>
           </div>
         </div>
       </footer>
