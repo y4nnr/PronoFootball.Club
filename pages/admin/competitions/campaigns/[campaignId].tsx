@@ -69,7 +69,7 @@ export default function AdminCampaignDetail() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t('admin.campaigns.loading')}</p> {/* Reuse loading translation */}
@@ -80,7 +80,7 @@ export default function AdminCampaignDetail() {
 
    if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center text-red-600">
           <p>Error: {error}</p>
           <button onClick={() => {
@@ -96,7 +96,7 @@ export default function AdminCampaignDetail() {
 
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center text-gray-600">
           <p>{t('admin.campaigns.notFound')}</p>
         </div>
@@ -105,9 +105,9 @@ export default function AdminCampaignDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+        <div className="mb-4">
           <h1 className="text-2xl font-bold text-gray-900">{campaign.name}</h1>
           <p className="mt-2 text-gray-600">{campaign.description}</p>
           <div className="mt-4 text-sm text-gray-500">
@@ -118,8 +118,8 @@ export default function AdminCampaignDetail() {
         </div>
 
         {/* Game management section will go here */}
-        <div className="bg-white rounded-lg shadow p-6 mt-8">
-          <h2 className="text-xl font-semibold mb-4">{t('admin.games.title')} for this Campaign</h2>
+        <div className="bg-white rounded-lg shadow p-3 mt-4">
+          <h2 className="text-lg font-semibold mb-3">{t('admin.games.title')} pour cette campagne</h2>
           {/* List of games and Add Game button will go here */}
           <p className="text-gray-500">Game management features coming soon...</p>
         </div>

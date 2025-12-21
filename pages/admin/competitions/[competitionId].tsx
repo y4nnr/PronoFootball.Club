@@ -432,7 +432,7 @@ export default function CompetitionDetail() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t('dashboard.loading')}</p>
@@ -443,9 +443,9 @@ export default function CompetitionDetail() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">Error</h2>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center p-4 bg-white rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-red-600 mb-3">Error</h2>
           <p className="text-gray-700">{error}</p>
           {error === t('admin.competitions.notFound') && (
             <div className="mt-4">
@@ -473,8 +473,9 @@ export default function CompetitionDetail() {
 
   return (
     <>
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-4">
             {competition.logo && (
               <img 
@@ -501,8 +502,8 @@ export default function CompetitionDetail() {
           </button>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="bg-gray-50 rounded-lg p-3 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
             <div>
               <span className="font-medium text-gray-700">Start Date:</span>
               <p className="text-gray-900">{new Date(competition.startDate).toLocaleDateString('fr-FR')}</p>
@@ -595,7 +596,7 @@ export default function CompetitionDetail() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <button 
                         onClick={handleDateSort}
                         className="flex items-center space-x-1 hover:text-gray-700 transition-colors focus:outline-none"
@@ -619,13 +620,13 @@ export default function CompetitionDetail() {
                         </div>
                       </button>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Match
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -635,7 +636,7 @@ export default function CompetitionDetail() {
                     const { date, time } = formatGameDate(game.date);
                     return (
                       <tr key={game.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 py-2 whitespace-nowrap">
                           <div className="text-sm text-gray-900 font-medium">{date}</div>
                           <div className="text-sm text-gray-500">{time}</div>
                         </td>
@@ -681,7 +682,7 @@ export default function CompetitionDetail() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 py-2 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
                             game.status === 'LIVE' ? 'bg-red-100 text-red-800' :
@@ -695,7 +696,7 @@ export default function CompetitionDetail() {
                              game.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <td className="px-3 py-2 whitespace-nowrap text-xs font-medium">
                           <div className="flex space-x-2">
                             <button
                               className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 transition-colors"
@@ -1136,6 +1137,7 @@ export default function CompetitionDetail() {
       </div>
     </div>
   )}
+      </div>
     </>
   );
 } 

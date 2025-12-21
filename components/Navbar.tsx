@@ -424,21 +424,17 @@ export default function Navbar() {
                 <button
                   onClick={() => setProfileOpen(v => !v)}
                   className={`relative z-10 group ${
-                    (isOnBettingPage && isMobile)
-                      ? 'mb-0' 
-                      : isMobile
-                        ? 'mb-2 self-end' // Mobile: always minimized position
-                        : 'mb-2 tablet:mb-3 self-end' // Desktop: always minimized (no animation)
+                    isMobile
+                      ? 'mb-2 self-end' // Mobile: always minimized position (same for all pages)
+                      : 'mb-2 tablet:mb-3 self-end' // Desktop: always minimized (no animation)
                   }`}
                   aria-label="Open profile menu"
                   style={{ 
                     // On mobile: always minimized, no animation
                     // On desktop: animate based on scroll
-                    transform: (isOnBettingPage && isMobile) 
-                      ? 'scale(1)' 
-                      : isMobile 
-                        ? `scale(${profileScale})` // Mobile: always minimized
-                        : `scale(${profileScale})`, // Desktop: always minimized (no animation)
+                    transform: isMobile 
+                      ? `scale(${profileScale})` // Mobile: always minimized
+                      : `scale(${profileScale})`, // Desktop: always minimized (no animation)
                     transformOrigin: 'center bottom', // Always scale from bottom to prevent jumping
                     // No transition on mobile or desktop (always minimized)
                     transition: 'none',
@@ -459,11 +455,7 @@ export default function Navbar() {
                     <img
                       src={profilePictureUrl}
                       alt={session?.user?.name || 'User'}
-                      className={`rounded-full border-2 tablet:border-3 xl:border-4 border-white object-cover shadow-2xl ${
-                        (isOnBettingPage && isMobile)
-                          ? 'w-12 h-12 md:w-20 md:h-20 lg:w-28 lg:h-28' 
-                          : 'w-20 h-20 md:w-28 md:h-28 lg:w-[140px] lg:h-[140px]'
-                      }`}
+                      className="rounded-full border-2 tablet:border-3 xl:border-4 border-white object-cover shadow-2xl w-20 h-20 md:w-28 md:h-28 lg:w-[140px] lg:h-[140px]"
                       loading="eager"
                       style={{
                         // Ensure the image respects the className sizes and can be scaled

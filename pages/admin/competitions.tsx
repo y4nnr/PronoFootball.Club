@@ -167,7 +167,7 @@ export default function AdminCompetitions() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t('admin.competitions.loading')}</p>
@@ -177,39 +177,46 @@ export default function AdminCompetitions() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('admin.competitions.title')}</h1>
-          <div className="flex justify-center">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+        {/* Header */}
+        <div className="mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{t('admin.competitions.title')}</h1>
+              <p className="mt-1 text-xs text-gray-600">Gérez les compétitions et leurs campagnes</p>
+            </div>
             <button
               onClick={openNewCompetitionModal}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="mt-2 sm:mt-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow-md hover:bg-primary-700 transition-all text-sm font-medium"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
               {t('admin.competitions.new')}
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="space-y-4">
+        <div className="bg-white rounded-lg shadow p-3">
+          <div className="space-y-2">
             {competitions.length > 0 ? (
               competitions.map((competition) => (
-                <div key={competition.id} className="border rounded-lg p-4 hover:bg-gray-50 block flex justify-between items-center">
+                <div key={competition.id} className="border rounded-lg p-3 hover:bg-gray-50 flex justify-between items-center">
                   <Link
                     href={`/admin/competitions/${competition.id}`}
                     className="flex-1"
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium">{competition.name}</h3>
-                        <p className="text-sm text-gray-600">{competition.description}</p>
-                        <div className="mt-2 text-sm text-gray-500">
+                        <h3 className="font-medium text-sm text-gray-900">{competition.name}</h3>
+                        <p className="text-xs text-gray-600 mt-0.5">{competition.description}</p>
+                        <div className="mt-1.5 text-xs text-gray-500">
                           <p>{t('admin.competitions.start')}: {new Date(competition.startDate).toLocaleDateString('fr-FR')}</p>
                           <p>{t('admin.competitions.end')}: {new Date(competition.endDate).toLocaleDateString('fr-FR')}</p>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
+                      <span className={`px-2 py-0.5 text-xs rounded-full ml-3 ${
                         competition.status === 'active' ? 'bg-green-100 text-green-800' :
                         competition.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         competition.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
@@ -221,17 +228,17 @@ export default function AdminCompetitions() {
                   </Link>
                   <button
                     onClick={() => openDeleteModal(competition.id)}
-                    className="ml-4 p-2 rounded-md text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    title="Delete Competition"
+                    className="ml-3 p-1.5 rounded-md text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    title="Supprimer la compétition"
                   >
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500">{t('admin.competitions.noCompetitions')}</p>
+              <p className="text-sm text-gray-500">{t('admin.competitions.noCompetitions')}</p>
             )}
           </div>
         </div>

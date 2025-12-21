@@ -20,8 +20,16 @@ async function sendWelcomeEmail(params: { to: string; name: string; temporaryPas
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
 
-  if (!session || session.user.role.toLowerCase() !== 'admin') {
-    return res.status(401).json({ error: 'Unauthorized' });
+  console.log('Admin users API - Session:', session ? { email: session.user?.email, role: session.user?.role } : 'No session');
+
+  if (!session || !session.user) {
+    return res.status(401).json({ error: 'Unauthorized - No session' });
+  }
+
+  const userRole = session.user.role?.toLowerCase();
+  if (userRole !== 'admin') {
+    console.error('Unauthorized access attempt - Role:', session.user.role, 'Expected: admin');
+    return res.status(401).json({ error: 'Unauthorized - Admin access required' });
   }
 
   if (req.method === 'GET') {
@@ -35,6 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           createdAt: true,
           profilePictureUrl: true,
           needsPasswordChange: true,
+          isActive: true,
         },
         orderBy: { createdAt: 'desc' },
       });
@@ -112,7 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'PUT') {
     const { id } = req.query;
-    const { name, email, role, profilePictureUrl, password } = req.body;
+    const { name, email, role, profilePictureUrl, password, isActive } = req.body;
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ error: 'User id is required' });
     }
@@ -121,6 +130,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     try {
       const data: Record<string, unknown> = { name, email, role, profilePictureUrl };
+      
+      // Update isActive if provided
+      if (typeof isActive === 'boolean') {
+        data.isActive = isActive;
+      }
       
       // Only update password if it's provided and it's not already a hash
       if (password && password.trim() !== '') {
@@ -145,6 +159,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (error) {
       console.error('Error updating user:', error);
       return res.status(500).json({ error: 'Failed to update user' });
+    }
+  }
+
+  if (req.method === 'PATCH') {
+    const { id } = req.query;
+    const { isActive } = req.body;
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ error: 'User id is required' });
+    }
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({ error: 'isActive must be a boolean' });
+    }
+    try {
+      console.log('[ADMIN] Updating user activation status:', { id, isActive });
+      const user = await prisma.user.update({
+        where: { id },
+        data: { isActive },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          username: true,
+          isActive: true,
+          role: true
+        }
+      });
+      console.log('[ADMIN] User updated successfully:', user);
+      return res.status(200).json({ id: user.id, isActive: user.isActive, message: `User ${isActive ? 'activated' : 'deactivated'} successfully` });
+    } catch (error) {
+      console.error('[ADMIN] Error updating user activation status:', error);
+      return res.status(500).json({ error: 'Failed to update user activation status' });
     }
   }
 

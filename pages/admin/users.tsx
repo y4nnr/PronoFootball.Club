@@ -1,5 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 import { useTranslation } from '../../hooks/useTranslation';
+import { 
+  MagnifyingGlassIcon, 
+  FunnelIcon,
+  UserPlusIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  PencilIcon,
+  TrashIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  Bars3Icon
+} from '@heroicons/react/24/outline';
 
 interface User {
   id: string;
@@ -8,14 +22,18 @@ interface User {
   role: string;
   createdAt: string;
   profilePictureUrl?: string;
+  isActive?: boolean;
 }
 
 const DEFAULT_AVATAR = 'https://via.placeholder.com/40x40?text=User';
 
 export default function AdminUsers() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const { t } = useTranslation('common');
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [editUserId, setEditUserId] = useState<string | null>(null);
@@ -34,6 +52,14 @@ export default function AdminUsers() {
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [deleteUserName, setDeleteUserName] = useState<string>('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<string>('');
+  
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'user'>('all');
+  const [sortField, setSortField] = useState<'name' | 'email' | 'role' | 'createdAt' | 'status'>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Function to upload file and get URL
   const uploadFile = async (file: File): Promise<string> => {
@@ -63,21 +89,41 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await fetch('/api/admin/users');
-      if (!res.ok) throw new Error('Failed to fetch users');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to fetch users:', errorData);
+        const errorMessage = errorData.error || `Failed to fetch users (${res.status})`;
+        setError(errorMessage);
+        return; // Don't throw, just set error and return
+      }
       const data = await res.json();
+      console.log('Fetched users:', data);
       setUsers(data);
-    } catch {
-      // error handling removed as error variable is unused
+      setError(''); // Clear any previous errors
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch users. Please check your connection and try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (status === 'unauthenticated') {
+      router.push('/');
+    } else if (status === 'authenticated') {
+      const userRole = (session?.user as { role?: string })?.role?.toLowerCase();
+      if (userRole !== 'admin') {
+        router.push('/dashboard');
+      } else {
+        fetchUsers();
+      }
+    }
+  }, [status, session, router]);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -186,46 +232,273 @@ export default function AdminUsers() {
     const user = users.find(u => u.id === userId);
     setDeleteUserId(userId);
     setDeleteUserName(user?.name || 'Unknown User');
+    setDeleteConfirmation(''); // Reset confirmation when opening modal
+    setFormError(''); // Clear any previous errors
     setShowDeleteConfirm(true);
   };
 
   const handleDelete = async () => {
     if (!deleteUserId) return;
+    
+    // Verify confirmation text
+    const expectedConfirmation = `delete ${deleteUserName}`.toLowerCase();
+    if (deleteConfirmation.toLowerCase() !== expectedConfirmation) {
+      setFormError(`Please type "delete ${deleteUserName}" to confirm deletion.`);
+      return;
+    }
+    
     setDeleteLoading(true);
+    setFormError('');
     try {
       const res = await fetch(`/api/admin/users?id=${deleteUserId}`, {
         method: 'DELETE',
       });
       
       if (!res.ok) {
-        // error handling removed as error variable is unused
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        setFormError(errorData.error || 'Failed to delete user');
+        setDeleteLoading(false);
       } else {
-        // Show success message briefly
-        // setError('');
         console.log('User deleted successfully');
+        setShowDeleteConfirm(false);
+        setDeleteUserId(null);
+        setDeleteUserName('');
+        setDeleteConfirmation('');
+        setFormError('');
+        fetchUsers();
       }
-    } catch {
-      // error handling removed as error variable is unused
-    } finally {
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      setFormError('An error occurred while deleting the user.');
       setDeleteLoading(false);
-      setShowDeleteConfirm(false);
-      setDeleteUserId(null);
-      fetchUsers();
+    }
+  };
+
+  const handleToggleActivation = async (userId: string, isActive: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/users?id=${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setFormError(data.error || 'Failed to update user status');
+        setTimeout(() => setFormError(''), 5000);
+      } else {
+        setSuccessMessage(`User ${isActive ? 'activated' : 'deactivated'} successfully`);
+        setTimeout(() => setSuccessMessage(''), 3000);
+        fetchUsers();
+      }
+    } catch (error) {
+      setFormError('An error occurred. Please try again.');
+      setTimeout(() => setFormError(''), 5000);
+    }
+  };
+
+  // Filter and sort users
+  const filteredAndSortedUsers = useMemo(() => {
+    let filtered = users.filter(user => {
+      // Search filter
+      const matchesSearch = !searchQuery || 
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'active' && user.isActive) ||
+        (statusFilter === 'inactive' && !user.isActive);
+      
+      // Role filter
+      const matchesRole = roleFilter === 'all' ||
+        user.role.toLowerCase() === roleFilter;
+      
+      return matchesSearch && matchesStatus && matchesRole;
+    });
+
+    // Sort users
+    filtered.sort((a, b) => {
+      let aValue: string | number | boolean;
+      let bValue: string | number | boolean;
+
+      switch (sortField) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'email':
+          aValue = a.email.toLowerCase();
+          bValue = b.email.toLowerCase();
+          break;
+        case 'role':
+          aValue = a.role.toLowerCase();
+          bValue = b.role.toLowerCase();
+          break;
+        case 'status':
+          aValue = a.isActive ? 1 : 0;
+          bValue = b.isActive ? 1 : 0;
+          break;
+        case 'createdAt':
+        default:
+          aValue = new Date(a.createdAt).getTime();
+          bValue = new Date(b.createdAt).getTime();
+          break;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [users, searchQuery, statusFilter, roleFilter, sortField, sortDirection]);
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const total = users.length;
+    const active = users.filter(u => u.isActive).length;
+    const inactive = users.filter(u => !u.isActive).length;
+    const admins = users.filter(u => u.role.toLowerCase() === 'admin').length;
+    return { total, active, inactive, admins };
+  }, [users]);
+
+  const handleSort = (field: typeof sortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Users</h1>
-          <div className="flex justify-center">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+        {/* Header */}
+        <div className="mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>
+              <p className="mt-1 text-xs text-gray-600">Gérez les comptes utilisateurs et leurs permissions</p>
+            </div>
             <button
               onClick={openAddModal}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
+              className="mt-2 sm:mt-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow-md hover:bg-primary-700 transition-all text-sm font-medium"
             >
-              New User
+              <UserPlusIcon className="w-4 h-4" />
+              Nouvel utilisateur
             </button>
+          </div>
+
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+            <div className="bg-white rounded-lg shadow p-2.5 border-l-3 border-blue-500">
+              <div className="text-xs font-medium text-gray-600">Total</div>
+              <div className="text-lg font-bold text-gray-900">{stats.total}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-2.5 border-l-3 border-green-500">
+              <div className="text-xs font-medium text-gray-600">Actifs</div>
+              <div className="text-lg font-bold text-green-600">{stats.active}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-2.5 border-l-3 border-yellow-500">
+              <div className="text-xs font-medium text-gray-600">En attente</div>
+              <div className="text-lg font-bold text-yellow-600">{stats.inactive}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-2.5 border-l-3 border-purple-500">
+              <div className="text-xs font-medium text-gray-600">Admins</div>
+              <div className="text-lg font-bold text-purple-600">{stats.admins}</div>
+            </div>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="bg-white rounded-lg shadow p-2.5 mb-3">
+            <div className="flex flex-col md:flex-row gap-2">
+              {/* Search */}
+              <div className="flex-1">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher par nom, email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+              </div>
+
+              {/* Status Filter */}
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+                    statusFilter === 'all'
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Tous
+                </button>
+                <button
+                  onClick={() => setStatusFilter('active')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+                    statusFilter === 'active'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Actifs
+                </button>
+                <button
+                  onClick={() => setStatusFilter('inactive')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+                    statusFilter === 'inactive'
+                      ? 'bg-yellow-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  En attente
+                </button>
+              </div>
+
+              {/* Role Filter */}
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setRoleFilter('all')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+                    roleFilter === 'all'
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Tous
+                </button>
+                <button
+                  onClick={() => setRoleFilter('admin')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+                    roleFilter === 'admin'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Admins
+                </button>
+                <button
+                  onClick={() => setRoleFilter('user')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+                    roleFilter === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Users
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         {loading ? (
@@ -233,52 +506,220 @@ export default function AdminUsers() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <span className="ml-4 text-gray-600">Loading users...</span>
           </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800 font-medium">Error: {error}</p>
+            <button
+              onClick={fetchUsers}
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+            >
+              Retry
+            </button>
+          </div>
         ) : (
-          <div className="bg-white rounded-lg shadow p-6">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2"></th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registered</th>
-                  <th className="px-4 py-2"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-4 py-2">
-                      <img
-                        src={user.profilePictureUrl || DEFAULT_AVATAR}
-                        alt={user.name + ' avatar'}
-                        className="w-10 h-10 rounded-full object-cover border border-gray-200 bg-white"
-                        onError={e => (e.currentTarget.src = DEFAULT_AVATAR)}
-                      />
-                    </td>
-                    <td className="px-4 py-2 font-medium text-gray-900">{user.name}</td>
-                    <td className="px-4 py-2 text-gray-700">{user.email}</td>
-                    <td className="px-4 py-2 text-gray-700">{user.role}</td>
-                    <td className="px-4 py-2 text-gray-700">{new Date(user.createdAt).toLocaleDateString('fr-FR')}</td>
-                    <td className="px-4 py-2 flex space-x-2">
-                      <button
-                        onClick={() => openEditModal(user)}
-                        className="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 transition text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => openDeleteModal(user.id)}
-                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            {filteredAndSortedUsers.length === 0 ? (
+              <div className="p-12 text-center">
+                <p className="text-gray-500 text-lg">Aucun utilisateur trouvé</p>
+                {searchQuery && (
+                  <p className="text-gray-400 text-sm mt-2">Essayez de modifier vos critères de recherche</p>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left"></th>
+                      <th className="px-3 py-2 text-left">
+                        <button
+                          onClick={() => handleSort('name')}
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                        >
+                          Nom
+                          {sortField === 'name' ? (
+                            sortDirection === 'asc' ? (
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                            ) : (
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                            )
+                          ) : (
+                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="px-3 py-2 text-left">
+                        <button
+                          onClick={() => handleSort('email')}
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                        >
+                          Email
+                          {sortField === 'email' ? (
+                            sortDirection === 'asc' ? (
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                            ) : (
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                            )
+                          ) : (
+                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="px-3 py-2 text-left">
+                        <button
+                          onClick={() => handleSort('role')}
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                        >
+                          Rôle
+                          {sortField === 'role' ? (
+                            sortDirection === 'asc' ? (
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                            ) : (
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                            )
+                          ) : (
+                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="px-3 py-2 text-left">
+                        <button
+                          onClick={() => handleSort('status')}
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                        >
+                          Statut
+                          {sortField === 'status' ? (
+                            sortDirection === 'asc' ? (
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                            ) : (
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                            )
+                          ) : (
+                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="px-3 py-2 text-left hidden md:table-cell">
+                        <button
+                          onClick={() => handleSort('createdAt')}
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                        >
+                          Inscription
+                          {sortField === 'createdAt' ? (
+                            sortDirection === 'asc' ? (
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                            ) : (
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                            )
+                          ) : (
+                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="px-3 py-2 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredAndSortedUsers.map((user) => (
+                      <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <img
+                            src={user.profilePictureUrl || DEFAULT_AVATAR}
+                            alt={user.name + ' avatar'}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 bg-white shadow-sm"
+                            onError={e => (e.currentTarget.src = DEFAULT_AVATAR)}
+                          />
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <div className="font-semibold text-sm text-gray-900">{user.name}</div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <div className="text-xs text-gray-700 truncate max-w-[200px]">{user.email}</div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <span className={`px-2 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full ${
+                            user.role.toLowerCase() === 'admin'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {user.role.toLowerCase() === 'admin' ? 'Admin' : 'User'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <span className={`px-2 py-0.5 inline-flex items-center text-xs leading-4 font-semibold rounded-full ${
+                            user.isActive 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {user.isActive ? (
+                              <>
+                                <CheckCircleIcon className="w-3 h-3 mr-0.5" />
+                                Actif
+                              </>
+                            ) : (
+                              <>
+                                <XCircleIcon className="w-3 h-3 mr-0.5" />
+                                En attente
+                              </>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 hidden md:table-cell">
+                          {new Date(user.createdAt).toLocaleDateString('fr-FR', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-right text-xs font-medium">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => handleToggleActivation(user.id, !user.isActive)}
+                              className={`inline-flex items-center gap-0.5 px-2 py-1 rounded text-xs font-medium transition ${
+                                user.isActive 
+                                  ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                              }`}
+                              title={user.isActive ? 'Désactiver' : 'Activer'}
+                            >
+                              {user.isActive ? (
+                                <XCircleIcon className="w-3.5 h-3.5" />
+                              ) : (
+                                <CheckCircleIcon className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => openEditModal(user)}
+                              className="inline-flex items-center gap-0.5 px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition text-xs font-medium"
+                              title="Modifier"
+                            >
+                              <PencilIcon className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(user.id)}
+                              className="inline-flex items-center gap-0.5 px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition text-xs font-medium"
+                              title="Supprimer"
+                            >
+                              <TrashIcon className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {filteredAndSortedUsers.length > 0 && (
+              <div className="bg-gray-50 px-3 py-2 border-t border-gray-200">
+                <p className="text-xs text-gray-600">
+                  Affichage de <span className="font-medium">{filteredAndSortedUsers.length}</span> utilisateur{filteredAndSortedUsers.length > 1 ? 's' : ''}
+                  {searchQuery || statusFilter !== 'all' || roleFilter !== 'all' ? (
+                    <> sur <span className="font-medium">{users.length}</span> total</>
+                  ) : null}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -520,17 +961,45 @@ export default function AdminUsers() {
                   </ul>
                 </div>
                 
-                <p className="text-red-600 font-semibold text-sm">
+                <p className="text-red-600 font-semibold text-sm mb-4">
                   ⚠️ This action cannot be undone!
                 </p>
+                
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    To confirm, type <span className="font-mono font-bold text-red-600">delete {deleteUserName}</span>:
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmation}
+                    onChange={(e) => setDeleteConfirmation(e.target.value)}
+                    placeholder={`delete ${deleteUserName}`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    disabled={deleteLoading}
+                    autoFocus
+                  />
+                  {deleteConfirmation && deleteConfirmation.toLowerCase() !== `delete ${deleteUserName}`.toLowerCase() && (
+                    <p className="mt-2 text-sm text-red-600">
+                      Confirmation text does not match. Please type exactly: <span className="font-mono font-bold">delete {deleteUserName}</span>
+                    </p>
+                  )}
+                </div>
               </div>
               
-              <div className="flex justify-end space-x-3">
+              {formError && (
+                <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-red-800 text-sm">{formError}</p>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={() => {
                     setShowDeleteConfirm(false);
                     setDeleteUserId(null);
                     setDeleteUserName('');
+                    setDeleteConfirmation('');
+                    setFormError('');
                   }}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition font-medium"
                   disabled={deleteLoading}
@@ -539,8 +1008,8 @@ export default function AdminUsers() {
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition disabled:opacity-50 font-medium"
-                  disabled={deleteLoading}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  disabled={deleteLoading || deleteConfirmation.toLowerCase() !== `delete ${deleteUserName}`.toLowerCase()}
                 >
                   {deleteLoading ? (
                     <span className="flex items-center">

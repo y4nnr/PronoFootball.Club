@@ -12,12 +12,16 @@ model User {
   id                    String            @id @default(cuid())
   email                 String            @unique
   name                  String
+  lastName              String?
+  username              String?           @unique
+  dateOfBirth           DateTime?
   hashedPassword        String
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
   role                  String            @default("user")
   profilePictureUrl     String?
   needsPasswordChange   Boolean           @default(false)
+  isActive              Boolean           @default(false) // User must be activated by admin
   bets                  Bet[]
   competitionsLastPlace Competition[]     @relation("CompetitionLastPlace")
   competitionsWon       Competition[]     @relation("CompetitionWinner")

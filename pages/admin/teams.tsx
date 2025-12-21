@@ -130,7 +130,7 @@ export default function TeamsAdmin() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-[#18181b] flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">{t('dashboard.loading')}</p>
@@ -141,13 +141,13 @@ export default function TeamsAdmin() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#18181b] flex items-center justify-center">
-        <div className="text-center p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-700">{error}</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center p-4 bg-white rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-red-600 mb-3">Erreur</h2>
+          <p className="text-sm text-gray-700">{error}</p>
           <button
             onClick={fetchTeams}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="mt-3 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
           >
             {t('Retry')}
           </button>
@@ -157,62 +157,69 @@ export default function TeamsAdmin() {
   }
 
   return (
-    <div className="min-h-screen bg-[#18181b]">
-      <div className="max-w-7xl mx-auto py-8 px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-4">Teams</h1>
-          <div className="flex justify-center">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+        {/* Header */}
+        <div className="mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Équipes</h1>
+              <p className="mt-1 text-xs text-gray-600">Gérez les équipes nationales et de club</p>
+            </div>
             <button
               onClick={openAddModal}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition"
+              className="mt-2 sm:mt-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow-md hover:bg-primary-700 transition-all text-sm font-medium"
             >
-              New Team
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Nouvelle équipe
             </button>
           </div>
-        </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <input
-              type="text"
-              placeholder={t('admin.teams.searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-            />
-            <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          {/* Search Bar */}
+          <div className="mb-3">
+            <div className="relative max-w-md">
+              <input
+                type="text"
+                placeholder={t('admin.teams.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900"
               />
-            </svg>
+              <svg
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
           </div>
         </div>
 
         {teams.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-500">{t('admin.teams.noTeams')}</p>
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500">{t('admin.teams.noTeams')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {/* National Teams Column */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <div className="bg-white rounded-lg shadow p-3">
+              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
                 <span className="mr-2">🏆</span>
-                National Teams ({teams.filter(team => 
+                Équipes nationales ({teams.filter(team => 
                   team.category === 'NATIONAL' && 
                   team.name.toLowerCase().includes(searchQuery.toLowerCase())
                 ).length})
               </h2>
-              <div className="space-y-3 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-2 max-h-[70vh] overflow-y-auto">
                 {teams
                   .filter(team => 
                     team.category === 'NATIONAL' && 
@@ -220,9 +227,9 @@ export default function TeamsAdmin() {
                   )
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((team) => (
-                    <div key={team.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition">
+                    <div key={team.id} className="border border-gray-200 rounded-lg p-2 hover:bg-gray-50 transition">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
                           <img
                             src={team.logo || DEFAULT_LOGO}
                             alt={team.name + ' logo'}
@@ -235,22 +242,28 @@ export default function TeamsAdmin() {
                             }}
                           />
                           <div>
-                            <div className="text-sm font-medium text-gray-800">{team.name}</div>
+                            <div className="text-xs font-medium text-gray-800">{team.name}</div>
                             {team.shortName && <div className="text-xs text-gray-500">{team.shortName}</div>}
                           </div>
                         </div>
                         <div className="flex space-x-1">
                           <button
                             onClick={() => openEditModal(team)}
-                            className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 transition text-xs"
+                            className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition text-xs"
+                            title="Modifier"
                           >
-                            Edit
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
                           </button>
                           <button
                             onClick={() => openDeleteModal(team.id)}
-                            className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-xs"
+                            className="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition text-xs"
+                            title="Supprimer"
                           >
-                            Del
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -260,21 +273,21 @@ export default function TeamsAdmin() {
                   team.category === 'NATIONAL' && 
                   team.name.toLowerCase().includes(searchQuery.toLowerCase())
                 ).length === 0 && (
-                  <p className="text-gray-500 text-sm">No national teams found.</p>
+                  <p className="text-gray-500 text-xs">Aucune équipe nationale trouvée.</p>
                 )}
               </div>
             </div>
 
             {/* Club Teams Column */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <div className="bg-white rounded-lg shadow p-3">
+              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
                 <span className="mr-2">⚽</span>
-                Club Teams ({teams.filter(team => 
+                Équipes de club ({teams.filter(team => 
                   team.category === 'CLUB' && 
                   team.name.toLowerCase().includes(searchQuery.toLowerCase())
                 ).length})
               </h2>
-              <div className="space-y-3 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-2 max-h-[70vh] overflow-y-auto">
                 {teams
                   .filter(team => 
                     team.category === 'CLUB' && 
@@ -282,9 +295,9 @@ export default function TeamsAdmin() {
                   )
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((team) => (
-                    <div key={team.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition">
+                    <div key={team.id} className="border border-gray-200 rounded-lg p-2 hover:bg-gray-50 transition">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
                           <img
                             src={team.logo || DEFAULT_LOGO}
                             alt={team.name + ' logo'}
@@ -297,22 +310,28 @@ export default function TeamsAdmin() {
                             }}
                           />
                           <div>
-                            <div className="text-sm font-medium text-gray-800">{team.name}</div>
+                            <div className="text-xs font-medium text-gray-800">{team.name}</div>
                             {team.shortName && <div className="text-xs text-gray-500">{team.shortName}</div>}
                           </div>
                         </div>
                         <div className="flex space-x-1">
                           <button
                             onClick={() => openEditModal(team)}
-                            className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 transition text-xs"
+                            className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition text-xs"
+                            title="Modifier"
                           >
-                            Edit
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
                           </button>
                           <button
                             onClick={() => openDeleteModal(team.id)}
-                            className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-xs"
+                            className="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition text-xs"
+                            title="Supprimer"
                           >
-                            Del
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -322,7 +341,7 @@ export default function TeamsAdmin() {
                   team.category === 'CLUB' && 
                   team.name.toLowerCase().includes(searchQuery.toLowerCase())
                 ).length === 0 && (
-                  <p className="text-gray-500 text-sm">No club teams found.</p>
+                  <p className="text-gray-500 text-xs">Aucune équipe de club trouvée.</p>
                 )}
               </div>
             </div>
