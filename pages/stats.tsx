@@ -279,17 +279,6 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
   return (
     <div className="bg-[#f3f4f6] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="p-4 bg-primary-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
-              <ChartBarIcon className="h-10 w-10 text-white" />
-            </div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
-              {t('stats.title')}
-            </h1>
-          </div>
-        </div>
 
 
         {/* Remarque Banner - much more visible */}

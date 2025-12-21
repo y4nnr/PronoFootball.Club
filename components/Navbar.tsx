@@ -212,12 +212,30 @@ export default function Navbar() {
       <Link
         key={item.href}
         href={item.href}
-        className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 select-none bg-white/[0.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
-          isActive ? 'bg-white/10 text-white shadow-md' : 'text-gray-300 hover:text-white hover:bg-white/10'
+        className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-md px-3 py-1 transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
+          isActive 
+            ? 'text-white' 
+            : 'text-gray-300 hover:text-white hover:bg-white/10'
         }`}
+        style={isActive ? {
+          background: 'rgba(255, 255, 255, 0.15)',
+          borderBottom: '3px solid rgba(255, 255, 255, 0.9)',
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
+          transform: 'translateZ(0)',
+          willChange: 'auto'
+        } : {}}
       >
-        <div className="mb-0">{item.icon}</div>
-        <span className={`whitespace-nowrap text-[10px] md:text-xs lg:text-sm xl:text-base font-medium leading-none tracking-[0.01em] text-center ${isActive ? 'text-white' : item.showFor.length === 1 && item.showFor.includes('admin') ? 'text-orange-400 group-hover:text-orange-300' : 'text-gray-100 group-hover:text-white'}`}>
+        <div className="mb-0">
+          {item.icon}
+        </div>
+        <span className={`whitespace-nowrap text-[10px] md:text-xs lg:text-sm xl:text-base font-medium leading-none tracking-[0.01em] text-center ${
+          isActive 
+            ? 'text-white' 
+            : item.showFor.length === 1 && item.showFor.includes('admin') 
+              ? 'text-orange-400 group-hover:text-orange-300' 
+              : 'text-gray-100 group-hover:text-white'
+        }`}>
           {item.name}
         </span>
       </Link>
@@ -254,14 +272,26 @@ export default function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 flex-1 min-w-0 h-[64px] ${
+              className={`flex flex-col items-center justify-center gap-1 rounded-md px-3 py-1 transition-all duration-200 flex-1 min-w-0 h-[64px] ${
                 isActive 
-                  ? 'text-white bg-white/10' 
+                  ? 'text-white' 
                   : 'text-gray-300 hover:text-white hover:bg-white/5'
               }`}
+              style={isActive ? {
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderBottom: '3px solid rgba(255, 255, 255, 0.9)',
+                WebkitFontSmoothing: 'antialiased',
+                MozOsxFontSmoothing: 'grayscale',
+                transform: 'translateZ(0)',
+                willChange: 'auto'
+              } : {}}
             >
-              <span className="text-xl flex-shrink-0">{item.icon}</span>
-              <span className="text-[10px] font-medium leading-tight text-center whitespace-nowrap flex-shrink-0">
+              <span className="text-xl flex-shrink-0">
+                {item.icon}
+              </span>
+              <span className={`text-[10px] font-medium leading-tight text-center whitespace-nowrap flex-shrink-0 ${
+                isActive ? 'text-white' : ''
+              }`}>
                 {item.name}
               </span>
             </Link>
@@ -398,7 +428,7 @@ export default function Navbar() {
                       ? 'mb-0' 
                       : isMobile
                         ? 'mb-2 self-end' // Mobile: always minimized position
-                        : (isScrolled ? 'mb-2 tablet:mb-3 self-end' : '-mb-12 md:-mb-14 lg:-mb-[70px]') // Desktop: animate
+                        : 'mb-2 tablet:mb-3 self-end' // Desktop: always minimized (no animation)
                   }`}
                   aria-label="Open profile menu"
                   style={{ 
@@ -408,13 +438,10 @@ export default function Navbar() {
                       ? 'scale(1)' 
                       : isMobile 
                         ? `scale(${profileScale})` // Mobile: always minimized
-                        : (isScrolled ? `scale(${profileScale})` : `scale(${profileExpandedScale})`), // Desktop: animate
+                        : `scale(${profileScale})`, // Desktop: always minimized (no animation)
                     transformOrigin: 'center bottom', // Always scale from bottom to prevent jumping
-                    // On mobile: no transition (always minimized)
-                    // On desktop: smooth transition
-                    transition: isMobile 
-                      ? 'none' 
-                      : 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
+                    // No transition on mobile or desktop (always minimized)
+                    transition: 'none',
                     // Optimize for smooth animation (desktop only)
                     willChange: isMobile ? 'auto' : 'transform',
                     // Force hardware acceleration for ultra-smooth animation (desktop only)
@@ -454,7 +481,7 @@ export default function Navbar() {
                 <div className={`absolute right-0 w-48 bg-white rounded-xl shadow-modern-lg border border-neutral-200/50 py-2 z-50 animate-fade-in ${
                   isMobile 
                     ? 'top-full mt-2' // Mobile: always minimized, menu just below with small gap
-                    : (isScrolled ? 'top-full' : 'top-[calc(100%+3rem)] md:top-[calc(100%+3.5rem)] lg:top-[calc(100%+70px)]') // Desktop: based on scroll
+                    : 'top-full' // Desktop: always minimized position (no animation)
                 }`}
                 style={{ boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}
                 >

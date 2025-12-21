@@ -10,7 +10,6 @@ import {
   ChartBarIcon, 
   PlayIcon,
   ArrowRightIcon,
-  HomeIcon,
   CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon
@@ -663,15 +662,6 @@ export default function Dashboard() {
   return (
     <div style={{ backgroundColor: '#f7f8fa' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="p-4 bg-primary-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
-              <HomeIcon className="h-10 w-10 text-white" />
-            </div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">{t('title')}</h1>
-        </div>
-        </div>
 
 
 

@@ -320,7 +320,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const getPositionColor = (position: number) => {
     switch (position) {
       case 1: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 2: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 2: return 'bg-slate-200 text-slate-800 border-slate-400'; // Silver/metallic gray for 2nd place
       case 3: return 'bg-orange-100 text-orange-800 border-orange-200';
       default: return 'bg-blue-100 text-blue-800 border-blue-200';
     }
@@ -753,11 +753,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          {t('competition.shooters').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
-                              {word}
-                            </span>
-                          ))}
+                          <span className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
+                            Shots
+                          </span>
                           {sortColumn === 'shooters' && (
                             <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
@@ -787,7 +785,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       rowBgClass = 'bg-yellow-50/70';
                       rowBorderClass = '';
                     } else if (isSecond) {
-                      rowBgClass = 'bg-gray-50/75';
+                      rowBgClass = 'bg-slate-100/75'; // Silver/metallic gray background for 2nd place
                       rowBorderClass = '';
                     } else if (isThird) {
                       rowBgClass = 'bg-orange-50/70';
@@ -798,7 +796,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     }
                     
                     return (
-                    <tr key={player.userId} className={`hover:bg-gray-50 ${rowBgClass} ${rowBorderClass}`}>
+                    <tr key={player.userId} className={`${rowBgClass} ${rowBorderClass}`}>
                       <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200">
                         <div className={`inline-flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded-full border-2 font-bold text-[10px] md:text-sm ${getPositionColor(player.position)}`}>
                           {getPositionIcon(player.position)}
