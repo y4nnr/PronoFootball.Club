@@ -5,7 +5,7 @@ export default function Document() {
     <Html lang="fr">
       <Head>
         <meta name="description" content="Prédisez les résultats des matchs et rivalisez avec vos amis sur PronoFootball.club" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/logo.png" type="image/png" />
       </Head>
       <body className="antialiased">
         <Main />
