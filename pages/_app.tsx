@@ -18,10 +18,10 @@ function App({ Component, pageProps }: AppProps) {
       <LanguageProvider>
         <div className={`min-h-screen antialiased text-gray-900 flex flex-col ${isLoginPage || isAboutPage ? 'bg-neutral-900' : 'bg-white'}`}>
           <Navbar />
-          <main className={`${isLoginPage || isAboutPage ? '' : isBettingPage ? 'pt-24 pb-20 md:pb-0' : 'pt-16 pb-20 md:pt-24 md:pb-0'} flex-1`}>
+          <main className={`${isLoginPage || isAboutPage ? '' : isBettingPage ? 'pt-24 pb-16 md:pb-0' : 'pt-16 pb-16 md:pt-24 md:pb-0'} flex-1`}>
             <Component {...pageProps} />
           </main>
-          {!isLoginPage && !isAboutPage && <Footer />}
+          {!isLoginPage && !isAboutPage && <div className="hidden md:block"><Footer /></div>}
         </div>
       </LanguageProvider>
     </SessionProvider>
