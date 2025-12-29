@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]';
-import { prisma } from '@lib/prisma';
+import { prisma } from '../../../lib/prisma';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
@@ -34,6 +34,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     try {
+      console.log('[ADMIN USERS] Starting to fetch users...');
+      console.log('[ADMIN USERS] Prisma client initialized:', !!prisma);
+      console.log('[ADMIN USERS] DATABASE_URL exists:', !!process.env.DATABASE_URL);
+      
+      // Test connection first
+      await prisma.$connect();
+      console.log('[ADMIN USERS] Database connection successful');
+      
       const users = await prisma.user.findMany({
         select: {
           id: true,
@@ -47,16 +55,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         orderBy: { createdAt: 'desc' },
       });
+      
+      console.log('[ADMIN USERS] Successfully fetched', users.length, 'users');
       return res.status(200).json(users);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('[ADMIN USERS] Error fetching users:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
-      console.error('Error details:', { errorMessage, errorStack });
+      const errorName = error instanceof Error ? error.name : 'Unknown';
+      
+      console.error('[ADMIN USERS] Error details:', { 
+        name: errorName,
+        message: errorMessage, 
+        stack: errorStack,
+        code: (error as any)?.code,
+        meta: (error as any)?.meta,
+      });
+      
       return res.status(500).json({ 
         error: 'Failed to fetch users',
-        message: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
-        stack: process.env.NODE_ENV === 'development' ? errorStack : undefined,
+        message: errorMessage,
+        name: errorName,
+        // Include error code if available (e.g., Prisma error codes)
+        code: (error as any)?.code || undefined,
       });
     }
   }
