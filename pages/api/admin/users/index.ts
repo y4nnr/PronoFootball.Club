@@ -50,7 +50,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json(users);
     } catch (error) {
       console.error('Error fetching users:', error);
-      return res.status(500).json({ error: 'Failed to fetch users' });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      console.error('Error details:', { errorMessage, errorStack });
+      return res.status(500).json({ 
+        error: 'Failed to fetch users',
+        message: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+        stack: process.env.NODE_ENV === 'development' ? errorStack : undefined,
+      });
     }
   }
 
