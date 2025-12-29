@@ -42,19 +42,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await prisma.$connect();
       console.log('[ADMIN USERS] Database connection successful');
       
-      const users = await prisma.user.findMany({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          createdAt: true,
-          profilePictureUrl: true,
-          needsPasswordChange: true,
-          isActive: true,
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+      // Try to fetch with all fields first, fallback to basic fields if needed
+      let users;
+      try {
+        users = await prisma.user.findMany({
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            profilePictureUrl: true,
+            needsPasswordChange: true,
+            isActive: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+      } catch (fieldError: any) {
+        // If fields don't exist, try with basic fields only
+        if (fieldError?.code === 'P2009' || fieldError?.name === 'PrismaClientValidationError') {
+          console.warn('[ADMIN USERS] Some fields may not exist, trying with basic fields only');
+          users = await prisma.user.findMany({
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              createdAt: true,
+              profilePictureUrl: true,
+            },
+            orderBy: { createdAt: 'desc' },
+          });
+          // Add default values for missing fields
+          users = users.map(user => ({
+            ...user,
+            needsPasswordChange: false,
+            isActive: true, // Assume active if field doesn't exist
+          }));
+        } else {
+          throw fieldError;
+        }
+      }
       
       console.log('[ADMIN USERS] Successfully fetched', users.length, 'users');
       return res.status(200).json(users);
