@@ -151,6 +151,17 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const [userIsMember, setUserIsMember] = useState(isUserMember);
   const [joiningCompetition, setJoiningCompetition] = useState(false);
 
+  // Abbreviate team names for mobile display - 3 letters only
+  const abbreviateTeamName = (team: { shortName?: string | null; name: string }): string => {
+    // Use shortName from database if available, take first 3 letters
+    if (team.shortName) {
+      return team.shortName.substring(0, 3).toUpperCase();
+    }
+    
+    // Fallback: use first 3 letters of team name
+    return team.name.substring(0, 3).toUpperCase();
+  };
+
   // Helper function to determine bet highlight for LIVE and FINISHED games
   const getBetHighlight = (bet: { score1: number | null; score2: number | null }, game: Game) => {
     if (bet.score1 === null || bet.score2 === null) return null;
@@ -411,46 +422,44 @@ export default function CompetitionDetails({ competition, competitionStats, game
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-3">
-              {competition.logo ? (
-                <img 
-                  src={competition.logo} 
-                  alt={`${competition.name} logo`}
-                  className="h-12 w-12 object-contain"
-                />
-              ) : (
-                <div className="h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center">
-                  <TrophyIcon className="h-8 w-8 text-white" />
-                </div>
-              )}
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
-                {competition.name}
-              </h1>
-            </div>
-            {showJoinButton && (
-              <button
-                onClick={handleJoinCompetition}
-                disabled={joiningCompetition}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
-              >
-                {joiningCompetition ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Rejoindre...</span>
-                  </>
-                ) : (
-                  <>
-                    <UsersIcon className="h-5 w-5" />
-                    <span>Rejoindre la compétition</span>
-                  </>
-                )}
-              </button>
+          <div className="flex items-center space-x-3 mb-2">
+            {competition.logo ? (
+              <img 
+                src={competition.logo} 
+                alt={`${competition.name} logo`}
+                className="h-12 w-12 object-contain flex-shrink-0"
+              />
+            ) : (
+              <div className="h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <TrophyIcon className="h-8 w-8 text-white" />
+              </div>
             )}
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
+              {competition.name}
+            </h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-3">
             {descriptionKey ? t(`competitionDescriptions.${descriptionKey}`) : competition.description}
           </p>
+          {showJoinButton && (
+            <button
+              onClick={handleJoinCompetition}
+              disabled={joiningCompetition}
+              className="px-3 py-1.5 md:px-4 md:py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-1.5 md:gap-2 text-sm md:text-base w-full md:w-auto justify-center md:justify-start"
+            >
+              {joiningCompetition ? (
+                <>
+                  <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-b-2 border-white"></div>
+                  <span>Rejoindre...</span>
+                </>
+              ) : (
+                <>
+                  <UsersIcon className="h-4 w-4 md:h-5 md:w-5" />
+                  <span>Rejoindre la compétition</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Competition Info Cards */}
@@ -1122,7 +1131,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                                   <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 mb-1 flex-shrink-0">{game.homeTeam.name.substring(0,2)}</div>
                                 )}
                                 <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-                                  <span className="text-gray-900 font-medium text-[10px] text-center leading-tight line-clamp-2">{game.homeTeam.shortName || game.homeTeam.name}</span>
+                                  <span className="text-gray-900 font-medium text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.homeTeam)}</span>
                                 </div>
                               </div>
                               {/* Desktop: Name and logo side by side */}
@@ -1153,7 +1162,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                                   <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 mb-1 flex-shrink-0">{game.awayTeam.name.substring(0,2)}</div>
                                 )}
                                 <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-                                  <span className="text-gray-900 font-medium text-[10px] text-center leading-tight line-clamp-2">{game.awayTeam.shortName || game.awayTeam.name}</span>
+                                  <span className="text-gray-900 font-medium text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.awayTeam)}</span>
                                 </div>
                               </div>
                               {/* Desktop: Logo and name side by side */}
