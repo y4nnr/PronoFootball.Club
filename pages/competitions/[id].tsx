@@ -422,39 +422,62 @@ export default function CompetitionDetails({ competition, competitionStats, game
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-2">
-            {competition.logo ? (
-              <img 
-                src={competition.logo} 
-                alt={`${competition.name} logo`}
-                className="h-12 w-12 object-contain flex-shrink-0"
-              />
-            ) : (
-              <div className="h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <TrophyIcon className="h-8 w-8 text-white" />
-              </div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-3 min-w-0 flex-1">
+              {competition.logo ? (
+                <img 
+                  src={competition.logo} 
+                  alt={`${competition.name} logo`}
+                  className="h-12 w-12 object-contain flex-shrink-0"
+                />
+              ) : (
+                <div className="h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <TrophyIcon className="h-8 w-8 text-white" />
+                </div>
+              )}
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
+                {competition.name}
+              </h1>
+            </div>
+            {/* Desktop: Button top right */}
+            {showJoinButton && (
+              <button
+                onClick={handleJoinCompetition}
+                disabled={joiningCompetition}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed transition-colors font-medium text-base flex-shrink-0"
+              >
+                {joiningCompetition ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Rejoindre...</span>
+                  </>
+                ) : (
+                  <>
+                    <UsersIcon className="h-5 w-5" />
+                    <span>Rejoindre la compétition</span>
+                  </>
+                )}
+              </button>
             )}
-            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
-              {competition.name}
-            </h1>
           </div>
           <p className="text-gray-600 mb-3">
             {descriptionKey ? t(`competitionDescriptions.${descriptionKey}`) : competition.description}
           </p>
+          {/* Mobile: Button below description */}
           {showJoinButton && (
             <button
               onClick={handleJoinCompetition}
               disabled={joiningCompetition}
-              className="px-3 py-1.5 md:px-4 md:py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-1.5 md:gap-2 text-sm md:text-base w-full md:w-auto justify-center md:justify-start"
+              className="md:hidden px-3 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-1.5 text-sm w-full justify-center min-h-[44px]"
             >
               {joiningCompetition ? (
                 <>
-                  <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                   <span>Rejoindre...</span>
                 </>
               ) : (
                 <>
-                  <UsersIcon className="h-4 w-4 md:h-5 md:w-5" />
+                  <UsersIcon className="h-4 w-4" />
                   <span>Rejoindre la compétition</span>
                 </>
               )}
