@@ -65,6 +65,7 @@ DO $$
 DECLARE
     competitions_updated INTEGER;
     competitions_total INTEGER;
+    rec RECORD;
 BEGIN
     -- Count total competitions
     SELECT COUNT(*) INTO competitions_total FROM "Competition";
@@ -119,6 +120,7 @@ END $$;
 DO $$
 DECLARE
     duplicate_count INTEGER;
+    rec RECORD;
 BEGIN
     -- Check for teams with same name AND same sportType (this should not happen)
     SELECT COUNT(*) INTO duplicate_count
