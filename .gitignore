@@ -93,5 +93,6 @@ temp/
 .env
 backups/
 *.sql
+!scripts/migrate-production-data.sql
 node_modules/
 .env.*
