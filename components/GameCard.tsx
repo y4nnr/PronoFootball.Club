@@ -215,11 +215,57 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       )}
       {/* Date & Status */}
-      <div className="flex items-center w-full justify-between pb-2 md:pb-3 border-b border-neutral-200">
-        <span className="text-[9px] md:text-[10px] lg:text-xs text-gray-700 font-semibold bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md border border-gray-200 flex-shrink-0">
-          {formatDateTime(game.date)}
-        </span>
-        <div className="flex items-center gap-1 ml-1.5 md:ml-0 flex-shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center w-full justify-between pb-2 md:pb-3 border-b border-neutral-200 gap-1.5 md:gap-0">
+        {/* Mobile: First line with Date/Time (2 lines) + Status + Tick */}
+        {/* Desktop: Date/Time on left */}
+        <div className="flex items-center w-full md:w-auto justify-between md:justify-start gap-1.5">
+          {/* Date/Time box - 2 lines on mobile, 1 line on desktop */}
+          <span className="text-[9px] md:text-[10px] lg:text-xs text-gray-700 font-semibold bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md border border-gray-200 flex-shrink-0 flex flex-col md:flex-row md:items-center">
+            <span className="md:hidden leading-tight">{formatDate(game.date)}</span>
+            <span className="md:hidden leading-tight">{formatTime(game.date)}</span>
+            <span className="hidden md:inline">{formatDateTime(game.date)}</span>
+          </span>
+          {/* Mobile: Status + Tick on same line as date/time */}
+          <div className="flex items-center gap-1 ml-1.5 md:hidden flex-shrink-0">
+            {userHasBet && (
+              <div className="flex items-center">
+                {context === 'home' ? (
+                  <div className="flex items-center justify-center w-4 h-4 bg-blue-100 rounded-full">
+                    <span className="text-blue-600 text-[10px] font-bold">✓</span>
+                  </div>
+                ) : (
+                  <div 
+                    className={`w-2 h-2 rounded-full ${
+                      userPoints === 3 ? 'bg-yellow-500' : 
+                      userPoints === 1 ? 'bg-green-500' : 
+                      'bg-red-500'
+                    }`} 
+                    title={`Vous avez gagné ${userPoints || 0} point${(userPoints || 0) > 1 ? 's' : ''}`}
+                  ></div>
+                )}
+              </div>
+            )}
+            {game.status === 'LIVE' ? (
+              <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-100 text-red-800">
+                {t('live')}
+              </span>
+            ) : (
+              <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap ${
+                game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
+                game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
+                'bg-gray-100 text-gray-800'
+              } ${
+                isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
+              }`}>
+                {game.status === 'UPCOMING' && t('upcoming')}
+                {game.status === 'FINISHED' && t('finished')}
+                {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status}
+              </span>
+            )}
+          </div>
+        </div>
+        {/* Desktop: Status + Tick + Chronometer on right */}
+        <div className="hidden md:flex items-center gap-1 ml-1.5 md:ml-0 flex-shrink-0">
           {userHasBet && (
             <div className="flex items-center">
               {context === 'home' ? (
@@ -244,7 +290,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               <span className="inline-block px-2.5 md:px-2 py-1 md:py-1 text-[10px] md:text-[10px] lg:text-xs rounded-full whitespace-nowrap bg-red-100 text-red-800">
                 {t('live')}
               </span>
-              {/* Separate chronometer badge - ONLY this one blinks */}
+              {/* Chronometer */}
               {game.externalStatus === 'HT' ? (
                 <span className="inline-flex items-center px-2 md:px-2.5 py-1 md:py-1 bg-orange-100 text-orange-800 rounded-full text-[10px] md:text-[10px] lg:text-xs font-bold animate-pulse">
                   MT
@@ -281,6 +327,32 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
             </span>
           )}
         </div>
+        {/* Mobile: Second line (LIVE games only): Chronometer */}
+        {game.status === 'LIVE' && (
+          <div className="flex items-center md:hidden gap-1.5">
+            {game.externalStatus === 'HT' ? (
+              <span className="inline-flex items-center px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-[10px] font-bold animate-pulse">
+                MT
+              </span>
+            ) : game.elapsedMinute !== null && game.elapsedMinute !== undefined ? (
+              <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] font-semibold animate-pulse border border-gray-300">
+                {game.elapsedMinute}'
+                {/* Show max time indicator for rugby (80 min) vs football (90 min) */}
+                {game.sportType === 'RUGBY' && game.elapsedMinute >= 80 && (
+                  <span className="ml-0.5 text-[9px] opacity-75">/80</span>
+                )}
+                {game.sportType !== 'RUGBY' && game.elapsedMinute >= 90 && (
+                  <span className="ml-0.5 text-[9px] opacity-75">/90</span>
+                )}
+              </span>
+            ) : (game.externalStatus === '1H' || game.externalStatus === '2H') ? (
+              // Fallback: show half indicator when chrono is not available
+              <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] font-semibold animate-pulse border border-gray-300">
+                {game.externalStatus === '1H' ? '1/2' : '2/2'}
+              </span>
+            ) : null}
+          </div>
+        )}
       </div>
       {/* Teams & Score */}
       <div className="flex items-center w-full justify-between py-2 md:py-3 border-b border-neutral-200">
