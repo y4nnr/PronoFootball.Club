@@ -131,6 +131,34 @@ const removeSeasonFromName = (name: string): string => {
   return name.replace(/\s*\d{4}(?:[-/]\d{2,4})?\s*$/, '').trim();
 };
 
+// Abbreviate competition names for mobile display
+const abbreviateCompetitionName = (competitionName: string): string => {
+  const name = competitionName.trim();
+  const lowerName = name.toLowerCase();
+  
+  // Champions League variations
+  if (lowerName.includes('champions league')) {
+    if (lowerName.includes('uefa')) {
+      return 'UEFA CL';
+    }
+    return 'Champions League';
+  }
+  
+  // 6 Nations - remove year and any suffix
+  if (lowerName.includes('6 nations') || lowerName.includes('six nations')) {
+    // Remove year pattern (e.g., "2026", "2025-26", etc.)
+    return name.replace(/\s*\d{4}(-\d{2})?.*$/i, '').trim();
+  }
+  
+  // Ligue 1 - keep as is (already short)
+  if (lowerName.includes('ligue 1')) {
+    return 'Ligue 1';
+  }
+  
+  // For other competitions, return as is for now
+  return name;
+};
+
 // Personal Stats Section
 const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: UserStats | null; lastGamesPerformance: LastGamePerformance[] }) => {
   if (!stats) return null;
@@ -166,7 +194,7 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
                     />
                   )}
                   <span className="text-[11px] font-bold text-gray-700 truncate max-w-[70px]">
-                    {removeSeasonFromName(game.competition)}
+                    {abbreviateCompetitionName(removeSeasonFromName(game.competition))}
                   </span>
                 </div>
                 {/* Separator line */}
