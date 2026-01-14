@@ -3,6 +3,62 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]";
 import { prisma } from "../../../../lib/prisma";
 
+/**
+ * Automatically set winner and last place for a competition based on total points
+ */
+async function setCompetitionWinnerAndLastPlace(competitionId: string) {
+  try {
+    // Get all users with their total points for this competition
+    const userPoints = await prisma.user.findMany({
+      include: {
+        bets: {
+          where: {
+            game: { 
+              competitionId,
+              status: 'FINISHED' // Only count points from finished games
+            }
+          }
+        }
+      }
+    });
+
+    // Calculate total points for each user
+    const standings = userPoints
+      .map(user => {
+        const totalPoints = user.bets.reduce((sum, bet) => sum + (bet.points || 0), 0);
+        return {
+          user,
+          totalPoints,
+          betCount: user.bets.length
+        };
+      })
+      .filter(standing => standing.betCount > 0) // Only users who have bets
+      .sort((a, b) => b.totalPoints - a.totalPoints); // Sort by points descending
+
+    if (standings.length === 0) {
+      console.log(`⚠️ No participants with bets found for competition ${competitionId}`);
+      return;
+    }
+
+    const winner = standings[0];
+    const lastPlace = standings[standings.length - 1];
+
+    // Update competition with winner and last place
+    await prisma.competition.update({
+      where: { id: competitionId },
+      data: {
+        winnerId: winner.user.id,
+        lastPlaceId: lastPlace.user.id
+      }
+    });
+
+    console.log(`✅ Auto-set winner: ${winner.user.name} (${winner.totalPoints} points) and last place: ${lastPlace.user.name} (${lastPlace.totalPoints} points) for competition ${competitionId}`);
+  } catch (error) {
+    console.error(`❌ Error setting winner and last place for competition ${competitionId}:`, error);
+    // Don't throw - we don't want to fail the competition update if winner setting fails
+  }
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -73,6 +129,16 @@ export default async function handler(
         logo: logo || null,
       };
 
+      // Check if status is being changed to COMPLETED
+      const competitionBeforeUpdate = await prisma.competition.findUnique({
+        where: { id: competitionId },
+        select: { status: true }
+      });
+
+      const isStatusChangingToCompleted = status && 
+        status === 'COMPLETED' && 
+        competitionBeforeUpdate?.status !== 'COMPLETED';
+
       // Only update status if it's provided and valid
       if (status && ['ACTIVE', 'COMPLETED', 'CANCELLED'].includes(status)) {
         (updateData as { status?: string }).status = status;
@@ -92,6 +158,26 @@ export default async function handler(
           },
         },
       });
+
+      // Automatically set winner and last place when competition is marked as COMPLETED
+      if (isStatusChangingToCompleted) {
+        await setCompetitionWinnerAndLastPlace(competitionId);
+        // Refetch competition to get updated winner and lastPlace
+        const competitionWithWinner = await prisma.competition.findUnique({
+          where: { id: competitionId },
+          include: {
+            games: {
+              include: {
+                homeTeam: true,
+                awayTeam: true,
+              },
+            },
+            winner: true,
+            lastPlace: true,
+          },
+        });
+        return res.status(200).json(competitionWithWinner);
+      }
 
       res.status(200).json(updatedCompetition);
     } catch (error) {

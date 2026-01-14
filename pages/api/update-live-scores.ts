@@ -1,6 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../lib/prisma';
-import { FootballDataAPI } from '../../lib/football-data-api';
+import { API_CONFIG } from '../../lib/api-config';
+
+// Feature flag routing: Use V2 if enabled, otherwise use V1
+// V2 will be imported dynamically when USE_API_V2=true
+let updateLiveScoresV2: ((req: NextApiRequest, res: NextApiResponse) => Promise<void>) | null = null;
 
 // Helper function to update shooters for all users in a competition
 async function updateShootersForCompetition(competitionId: string) {
@@ -56,11 +60,38 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Feature flag routing: Route to V2 if enabled
+  if (API_CONFIG.useV2) {
+    // Dynamically import V2 handler (only when needed)
+    if (!updateLiveScoresV2) {
+      try {
+        const v2Module = await import('./update-live-scores-v2');
+        updateLiveScoresV2 = v2Module.default;
+        console.log('✅ Loaded API V2 handler (api-sports.io)');
+      } catch (error) {
+        console.error('❌ Failed to load API V2 handler:', error);
+        return res.status(500).json({ 
+          error: 'API V2 handler not available',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+    return updateLiveScoresV2(req, res);
+  }
+
+  // V1 Handler (football-data.org) - Original code below
   try {
-    console.log('🔄 Updating live scores with real Football-Data.org API...');
+    console.log('🔄 Updating live scores with Football-Data.org API (V1)...');
+
+    // Validate configuration
+    const validation = API_CONFIG.validate();
+    if (!validation.valid) {
+      throw new Error(`Configuration error: ${validation.errors.join(', ')}`);
+    }
 
     // Initialize Football-Data.org API
-    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+    const { FootballDataAPI } = await import('../../lib/football-data-api');
+    const apiKey = API_CONFIG.footballDataApiKey;
     if (!apiKey) {
       throw new Error('FOOTBALL_DATA_API_KEY not found in environment variables');
     }
@@ -102,13 +133,14 @@ export default async function handler(
 
     // If no external matches, check if we need to auto-finish old LIVE games
     if (allExternalMatches.length === 0) {
-      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      // Auto-finish after 3 hours to account for extra time and penalties (consistent with main auto-finish)
+      const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
       const oldLiveGames = ourLiveGames.filter(game => 
-        new Date(game.date) < twoHoursAgo
+        new Date(game.date) < threeHoursAgo
       );
 
       if (oldLiveGames.length > 0) {
-        console.log(`🕐 Auto-finishing ${oldLiveGames.length} old LIVE games (older than 2 hours)`);
+        console.log(`🕐 Auto-finishing ${oldLiveGames.length} old LIVE games (older than 3 hours)`);
         
         const updatedGames = [];
         for (const game of oldLiveGames) {
@@ -136,25 +168,29 @@ export default async function handler(
 
           // If the game is now finished and scores are set, recalculate all bets
           if (updatedGame.status === 'FINISHED' && finalHomeScore !== null && finalHomeScore !== undefined && finalAwayScore !== null && finalAwayScore !== undefined) {
+            // Get competition to determine sport type and scoring system
+            const competition = await prisma.competition.findUnique({
+              where: { id: game.competitionId },
+              select: { sportType: true }
+            });
+            
+            const { calculateBetPoints, getScoringSystemForSport } = await import('../../lib/scoring-systems');
+            const scoringSystem = getScoringSystemForSport(competition?.sportType || 'FOOTBALL');
+            
             const bets = await prisma.bet.findMany({ where: { gameId: game.id } });
             for (const bet of bets) {
-              let points = 0;
-              if (bet.score1 === finalHomeScore && bet.score2 === finalAwayScore) {
-                points = 3;
-              } else {
-                const actualResult = finalHomeScore > finalAwayScore ? 'home' : finalHomeScore < finalAwayScore ? 'away' : 'draw';
-                const predictedResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
-                if (actualResult === predictedResult) {
-                  points = 1;
-                }
-              }
+              const points = calculateBetPoints(
+                { score1: bet.score1, score2: bet.score2 },
+                { home: finalHomeScore, away: finalAwayScore },
+                scoringSystem
+              );
               await prisma.bet.update({ where: { id: bet.id }, data: { points } });
             }
             
             // Update shooters count for all users in this competition
             await updateShootersForCompetition(updatedGame.competitionId);
             
-            console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
+            console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} (${scoringSystem})`);
           }
 
           updatedGames.push({
@@ -346,25 +382,29 @@ export default async function handler(
 
         // If the game is now finished and scores are set, recalculate all bets
         if (newStatus === 'FINISHED' && externalHomeScore !== null && externalHomeScore !== undefined && externalAwayScore !== null && externalAwayScore !== undefined) {
+          // Get competition to determine sport type and scoring system
+          const competition = await prisma.competition.findUnique({
+            where: { id: matchingGame.competitionId },
+            select: { sportType: true }
+          });
+          
+          const { calculateBetPoints, getScoringSystemForSport } = await import('../../lib/scoring-systems');
+          const scoringSystem = getScoringSystemForSport(competition?.sportType || 'FOOTBALL');
+          
           const bets = await prisma.bet.findMany({ where: { gameId: matchingGame.id } });
           for (const bet of bets) {
-            let points = 0;
-            if (bet.score1 === externalHomeScore && bet.score2 === externalAwayScore) {
-              points = 3;
-            } else {
-              const actualResult = externalHomeScore > externalAwayScore ? 'home' : externalHomeScore < externalAwayScore ? 'away' : 'draw';
-              const predictedResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
-              if (actualResult === predictedResult) {
-                points = 1;
-              }
-            }
+            const points = calculateBetPoints(
+              { score1: bet.score1, score2: bet.score2 },
+              { home: externalHomeScore, away: externalAwayScore },
+              scoringSystem
+            );
             await prisma.bet.update({ where: { id: bet.id }, data: { points } });
           }
           
           // Update shooters count for all users in this competition
           await updateShootersForCompetition(updatedGame.competitionId);
           
-          console.log(`💰 Calculated points for ${bets.length} bets in game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
+          console.log(`💰 Calculated points for ${bets.length} bets in game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} (${scoringSystem})`);
         }
 
         updatedGameIds.add(matchingGame.id);
@@ -422,8 +462,11 @@ export default async function handler(
         const timeDiff = now.getTime() - gameDate.getTime();
         const hoursDiff = timeDiff / (1000 * 60 * 60);
 
-        // If game started more than 2 hours ago and is still LIVE, mark as FINISHED
-        if (hoursDiff > 2 && game.status === 'LIVE') {
+        // Auto-finish after 3 hours to account for extra time and penalties
+        // Normal match: ~90min + stoppage time + half-time = ~2h
+        // Extra time match: ~120min + stoppage time + breaks = ~2h30-2h45
+        // Extra time + penalties: can go up to ~3h
+        if (hoursDiff > 3 && game.status === 'LIVE') {
           console.log(`⏰ Game ${game.homeTeam.name} vs ${game.awayTeam.name} started ${hoursDiff.toFixed(1)} hours ago, marking as FINISHED`);
           
           // Preserve existing final scores if they exist, otherwise use live scores
@@ -453,25 +496,29 @@ export default async function handler(
 
           // If the game is now finished and scores are set, recalculate all bets
           if (updatedGame.status === 'FINISHED' && finalHomeScore !== null && finalHomeScore !== undefined && finalAwayScore !== null && finalAwayScore !== undefined) {
+            // Get competition to determine sport type and scoring system
+            const competition = await prisma.competition.findUnique({
+              where: { id: game.competitionId },
+              select: { sportType: true }
+            });
+            
+            const { calculateBetPoints, getScoringSystemForSport } = await import('../../lib/scoring-systems');
+            const scoringSystem = getScoringSystemForSport(competition?.sportType || 'FOOTBALL');
+            
             const bets = await prisma.bet.findMany({ where: { gameId: game.id } });
             for (const bet of bets) {
-              let points = 0;
-              if (bet.score1 === finalHomeScore && bet.score2 === finalAwayScore) {
-                points = 3;
-              } else {
-                const actualResult = finalHomeScore > finalAwayScore ? 'home' : finalHomeScore < finalAwayScore ? 'away' : 'draw';
-                const predictedResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
-                if (actualResult === predictedResult) {
-                  points = 1;
-                }
-              }
+              const points = calculateBetPoints(
+                { score1: bet.score1, score2: bet.score2 },
+                { home: finalHomeScore, away: finalAwayScore },
+                scoringSystem
+              );
               await prisma.bet.update({ where: { id: bet.id }, data: { points } });
             }
             
             // Update shooters count for all users in this competition
             await updateShootersForCompetition(updatedGame.competitionId);
             
-            console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
+            console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} (${scoringSystem})`);
           }
 
           // Only add if not already in updatedGames (prevent duplicates)

@@ -11,6 +11,7 @@ interface LastGamePerformance {
   homeTeamLogo: string | null;
   awayTeamLogo: string | null;
   competition: string;
+  competitionLogo: string | null;
   actualScore: string;
   predictedScore: string;
   points: number;
@@ -29,21 +30,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
 
-    // Find the most recent competition that has finished games
-    // Only look for Champions League 25/26 and future competitions where user is participating
-    const recentCompetition = await prisma.competition.findFirst({
+    // Find all active competitions where user is participating
+    const activeCompetitions = await prisma.competition.findMany({
       where: {
-        OR: [
-          { name: { contains: 'UEFA Champions League 25/26' } },
-          { name: { contains: 'Champions League 25/26' } }
-        ],
         status: {
           in: ['ACTIVE', 'COMPLETED']
-        },
-        games: {
-          some: {
-            status: 'FINISHED'
-          }
         },
         users: {
           some: {
@@ -51,12 +42,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
       },
-      orderBy: {
-        startDate: 'desc'
+      select: {
+        id: true
       }
     });
 
-    if (!recentCompetition) {
+    const competitionIds = activeCompetitions.map(c => c.id);
+
+    if (competitionIds.length === 0) {
       return res.status(200).json({
         lastGamesPerformance: [],
         startDate: null,
@@ -64,34 +57,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Find the last finished game from this competition
-    const lastGameOfRecentCompetition = await prisma.game.findFirst({
-      where: {
-        competitionId: recentCompetition.id,
-        status: 'FINISHED'
-      },
-      include: {
-        homeTeam: true,
-        awayTeam: true
-      },
-      orderBy: {
-        date: 'desc'
-      }
-    });
-
-    if (!lastGameOfRecentCompetition) {
-      return res.status(200).json({
-        lastGamesPerformance: [],
-        startDate: null,
-        startGame: null
-      });
-    }
-
-    // Fetch ALL finished games from the Champions League 25/26
-    // Only from competitions where the user is participating
+    // Fetch ALL finished games from all active competitions where user is participating
     const finishedGames = await prisma.game.findMany({
       where: {
-        competitionId: recentCompetition.id,
+        competitionId: {
+          in: competitionIds
+        },
         status: 'FINISHED'
       },
       include: {
@@ -125,6 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           homeTeamLogo: game.homeTeam.logo,
           awayTeamLogo: game.awayTeam.logo,
           competition: game.competition.name,
+          competitionLogo: game.competition.logo,
           actualScore,
           predictedScore: 'N/A',
           points: 0,
@@ -132,23 +104,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         };
       }
 
-      // Bet was placed - calculate points the same way as dashboard API
+      // Bet was placed - use the scoring system from the bet's points (already calculated)
       const predictedScore = `${userBet.score1}-${userBet.score2}`;
-        let result: 'exact' | 'correct' | 'wrong' | 'no_bet' = 'wrong';
-      let gamePoints = 0;
+      let result: 'exact' | 'correct' | 'wrong' | 'no_bet' = 'wrong';
+      const gamePoints = userBet.points || 0;
       
-      if (userBet.score1 === game.homeScore && userBet.score2 === game.awayScore) {
+      if (gamePoints === 3) {
         result = 'exact';
-        gamePoints = 3;
-      } else if (
-        game.homeScore !== null && game.awayScore !== null && (
-          (userBet.score1 > userBet.score2 && game.homeScore > game.awayScore) ||
-          (userBet.score1 < userBet.score2 && game.homeScore < game.awayScore) ||
-          (userBet.score1 === userBet.score2 && game.homeScore === game.awayScore)
-        )
-      ) {
+      } else if (gamePoints === 1) {
         result = 'correct';
-        gamePoints = 1;
+      } else {
+        result = 'wrong';
       }
 
       return {
@@ -159,6 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         homeTeamLogo: game.homeTeam.logo,
         awayTeamLogo: game.awayTeam.logo,
         competition: game.competition.name,
+        competitionLogo: game.competition.logo,
         actualScore,
         predictedScore,
         points: gamePoints,
@@ -166,14 +133,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
+    // Find the most recent finished game for metadata
+    const lastGame = finishedGames.length > 0 ? finishedGames[0] : null;
+    const lastGameCompetition = lastGame ? await prisma.competition.findUnique({
+      where: { id: lastGame.competitionId },
+      select: { startDate: true }
+    }) : null;
+
     // Add caching headers to reduce database load
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
     
     res.status(200).json({
       lastGamesPerformance,
-      startDate: recentCompetition.startDate.toISOString(),
-      startGame: lastGameOfRecentCompetition ? 
-        `${lastGameOfRecentCompetition.homeTeam?.name || 'Home'} vs ${lastGameOfRecentCompetition.awayTeam?.name || 'Away'}` : 
+      startDate: lastGameCompetition?.startDate.toISOString() || null,
+      startGame: lastGame ? 
+        `${lastGame.homeTeam?.name || 'Home'} vs ${lastGame.awayTeam?.name || 'Away'}` : 
         'No finished games yet'
     });
 

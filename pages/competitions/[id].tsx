@@ -3,7 +3,7 @@ import { getSession } from 'next-auth/react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { prisma } from '../../lib/prisma';
-import { TrophyIcon, CalendarIcon, UsersIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, CalendarIcon, UsersIcon, ChartBarIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import PlayersPerformanceWidget from '../../components/PlayersPerformanceWidget';
@@ -105,6 +105,7 @@ interface CompetitionDetailsProps {
     startDate: string;
     endDate: string;
     status: string;
+    sportType?: string;
     winner?: {
       id: string;
       name: string;
@@ -123,6 +124,7 @@ interface CompetitionDetailsProps {
   competitionStats: CompetitionStats[];
   games: Game[];
   currentUserId: string;
+  isUserMember: boolean;
 }
 
 // Deterministic date formatting to avoid hydration errors
@@ -136,7 +138,7 @@ function formatDateTime(dateString: string) {
   return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
-export default function CompetitionDetails({ competition, competitionStats, games, currentUserId }: CompetitionDetailsProps) {
+export default function CompetitionDetails({ competition, competitionStats, games, currentUserId, isUserMember }: CompetitionDetailsProps) {
   const { t } = useTranslation('common');
   const [showAllGames, setShowAllGames] = useState(false);
   const [gamesWithBets, setGamesWithBets] = useState<Map<string, any[]>>(new Map());
@@ -146,6 +148,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const [loadingPerformance, setLoadingPerformance] = useState(false);
   const [sortColumn, setSortColumn] = useState<string>('position');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [userIsMember, setUserIsMember] = useState(isUserMember);
+  const [joiningCompetition, setJoiningCompetition] = useState(false);
 
   // Helper function to determine bet highlight for LIVE and FINISHED games
   const getBetHighlight = (bet: { score1: number | null; score2: number | null }, game: Game) => {
@@ -366,26 +370,83 @@ export default function CompetitionDetails({ competition, competitionStats, game
   };
   const descriptionKey = descriptionKeyMap[competition.name] || null;
 
+  // Handle joining competition
+  const handleJoinCompetition = async () => {
+    if (joiningCompetition || userIsMember) return;
+
+    setJoiningCompetition(true);
+    try {
+      const response = await fetch(`/api/competitions/${competition.id}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setUserIsMember(true);
+        // Reload the page to update all data
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Erreur lors de la tentative de rejoindre la compétition');
+      }
+    } catch (error) {
+      console.error('Error joining competition:', error);
+      alert('Erreur lors de la tentative de rejoindre la compétition');
+    } finally {
+      setJoiningCompetition(false);
+    }
+  };
+
+  // Show join button if user is not a member and competition is UPCOMING or ACTIVE
+  const showJoinButton = !userIsMember && 
+    (competition.status === 'UPCOMING' || 
+     competition.status === 'upcoming' || 
+     competition.status === 'ACTIVE' || 
+     competition.status === 'active');
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f7f8fa' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-2">
-            {competition.logo ? (
-              <img 
-                src={competition.logo} 
-                alt={`${competition.name} logo`}
-                className="h-12 w-12 object-contain"
-              />
-            ) : (
-              <div className="h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center">
-                <TrophyIcon className="h-8 w-8 text-white" />
-              </div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-3">
+              {competition.logo ? (
+                <img 
+                  src={competition.logo} 
+                  alt={`${competition.name} logo`}
+                  className="h-12 w-12 object-contain"
+                />
+              ) : (
+                <div className="h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center">
+                  <TrophyIcon className="h-8 w-8 text-white" />
+                </div>
+              )}
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
+                {competition.name}
+              </h1>
+            </div>
+            {showJoinButton && (
+              <button
+                onClick={handleJoinCompetition}
+                disabled={joiningCompetition}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+              >
+                {joiningCompetition ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Rejoindre...</span>
+                  </>
+                ) : (
+                  <>
+                    <UsersIcon className="h-5 w-5" />
+                    <span>Rejoindre la compétition</span>
+                  </>
+                )}
+              </button>
             )}
-            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
-              {competition.name}
-            </h1>
           </div>
           <p className="text-gray-600">
             {descriptionKey ? t(`competitionDescriptions.${descriptionKey}`) : competition.description}
@@ -1259,27 +1320,45 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
         </div>
 
-        {/* Competition Summary */}
+        {/* Rules Widget */}
         <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <ChartBarIcon className="h-6 w-6 text-primary-600 mr-2" />
-            {t('competition.competitionSummary')}
+            <BookOpenIcon className="h-6 w-6 text-primary-600 mr-2" />
+            {t('competition.rules.title')}
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="text-center">
-              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-blue-600">
-                {competitionStats.reduce((sum, player) => sum + player.totalPoints, 0)}
+          {competition.sportType === 'RUGBY' ? (
+            <div className="space-y-4">
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <h3 className="font-bold text-green-800 mb-2">{t('competition.rules.rugby.threePoints')}</h3>
+                <p className="text-sm text-gray-700 mb-2">{t('competition.rules.rugby.threePointsDesc')}</p>
+                <p className="text-xs text-gray-600 italic">{t('competition.rules.rugby.threePointsExamples')}</p>
               </div>
-              <div className="text-sm text-gray-600">{t('competition.totalPoints')}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-green-600">
-                {competitionStats.reduce((sum, player) => sum + player.exactScores, 0)}
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <h3 className="font-bold text-blue-800 mb-2">{t('competition.rules.rugby.onePoint')}</h3>
+                <p className="text-sm text-gray-700">{t('competition.rules.rugby.onePointDesc')}</p>
               </div>
-              <div className="text-sm text-gray-600">{t('competition.totalExactScores')}</div>
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <h3 className="font-bold text-red-800 mb-2">{t('competition.rules.rugby.zeroPoints')}</h3>
+                <p className="text-sm text-gray-700">{t('competition.rules.rugby.zeroPointsDesc')}</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <h3 className="font-bold text-green-800 mb-2">{t('competition.rules.football.threePoints')}</h3>
+                <p className="text-sm text-gray-700">{t('competition.rules.football.threePointsDesc')}</p>
+              </div>
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <h3 className="font-bold text-blue-800 mb-2">{t('competition.rules.football.onePoint')}</h3>
+                <p className="text-sm text-gray-700">{t('competition.rules.football.onePointDesc')}</p>
+              </div>
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <h3 className="font-bold text-red-800 mb-2">{t('competition.rules.football.zeroPoints')}</h3>
+                <p className="text-sm text-gray-700">{t('competition.rules.football.zeroPointsDesc')}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1314,6 +1393,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         startDate: true,
         endDate: true,
         status: true,
+        sportType: true,
         logo: true,
         winner: {
           select: { id: true, name: true }
@@ -1469,6 +1549,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       player.position = index + 1;
     });
 
+    // Check if user is a member of this competition
+    const isUserMember = competition.users.some(
+      (compUser) => compUser.user.id === session.user.id
+    );
+
     const endTime = Date.now();
     const duration = endTime - startTime;
     const totalBetsLoaded = games.reduce((sum, game) => sum + (game as any).bets.length, 0);
@@ -1482,6 +1567,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         competitionStats: JSON.parse(JSON.stringify(competitionStats)),
         games: JSON.parse(JSON.stringify(games)),
         currentUserId: session.user.id,
+        isUserMember,
       },
     };
   } catch (error) {

@@ -442,18 +442,23 @@ const PlayerPointsProgressionWidget = memo(({
                 className="h-10 bg-gray-100 rounded-lg overflow-hidden flex shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
                 style={{ width: `${(player.totalPoints / maxTotalPoints) * availableBarWidth}%` }}
               >
-                {player.gameDays
-                  .filter(gameDay => gameDay.points > 0) // Only show days with points
-                  .map((gameDay) => {
+                {(() => {
+                  // Filter to only game days with points
+                  const gameDaysWithPoints = player.gameDays.filter(gameDay => gameDay.points > 0);
+                  
+                  // If player has only one segment, it should fill 100% of the bar
+                  const isSingleSegment = gameDaysWithPoints.length === 1;
+                  
+                  return gameDaysWithPoints.map((gameDay) => {
                     // Additional safety check
                     if (gameDay.points <= 0) return null;
                     
-                    // Debug logging for the last player
-                    if (player.rank === playerData.length) {
-                      console.log(`Player ${player.userName} (rank ${player.rank}) gameDay:`, gameDay);
-                    }
+                    // Calculate segment width as proportion of player's total points
+                    // This ensures segments always fill 100% of the bar (no gray background showing)
+                    const width = isSingleSegment 
+                      ? 100 
+                      : (gameDay.points / player.totalPoints) * 100;
                     
-                    const width = Math.max((gameDay.points / effectiveMaxPoints) * 100, minSegmentWidth); // Percentage within the bar with minimum width
                     const colorObj = getGameDayColor(gameDay.date);
                     
                     return (
@@ -503,7 +508,8 @@ const PlayerPointsProgressionWidget = memo(({
                         </div>
                       </div>
                     );
-                  })}
+                  });
+                })()}
               </div>
               
               {/* Score Badge - Integrated at the end of the bar */}

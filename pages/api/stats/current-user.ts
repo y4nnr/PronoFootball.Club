@@ -66,6 +66,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Get sportType filter from query parameter (optional: 'FOOTBALL', 'RUGBY', or 'ALL')
+    const sportType = req.query.sportType as 'FOOTBALL' | 'RUGBY' | 'ALL' | undefined;
+
     // Get current user with their stats and bets
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -87,6 +90,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Helper function to filter bets by sport type
+    const filterBetsBySport = (bets: any[]) => {
+      if (!sportType || sportType === 'ALL') return bets;
+      return bets.filter((bet: any) => bet.game.competition.sportType === sportType);
+    };
+
     let calculatedStats;
     
     if (!user.stats) {
@@ -94,38 +103,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const finishedGameBets = user.bets.filter((bet: Bet) => 
         bet.game.status === 'FINISHED' || bet.game.status === 'LIVE'
       );
-      const totalBets = finishedGameBets.length;
-      const totalPoints = finishedGameBets.reduce((sum: number, bet: Bet) => sum + bet.points, 0);
+      // Filter by sport type
+      const filteredFinishedBets = filterBetsBySport(finishedGameBets);
+      const totalBets = filteredFinishedBets.length;
+      const totalPoints = filteredFinishedBets.reduce((sum: number, bet: Bet) => sum + bet.points, 0);
       // Calculate accuracy as percentage of correct predictions (1+ points) - only from finished games
-      const correctPredictions = finishedGameBets.filter((bet: Bet) => bet.points > 0).length;
+      const correctPredictions = filteredFinishedBets.filter((bet: Bet) => bet.points > 0).length;
       const accuracy = totalBets > 0 ? (correctPredictions / totalBets) * 100 : 0;
       
       // Calculate actual competition wins (consistent with leaderboard API) - only completed competitions
+      // Filter by sport type if specified
       const competitions = await prisma.competition.findMany({
         where: { 
           winnerId: user.id,
-          status: 'COMPLETED'
+          status: 'COMPLETED',
+          ...(sportType && sportType !== 'ALL' ? { sportType } : {})
         }
       });
       const wins = competitions.length;
       
-      // Calculate exact scores (3 points) - only from Champions League 25/26 onwards
-      const exactScores = finishedGameBets.filter((bet: Bet) => 
+      // Calculate exact scores (3 points) - only from competitions starting August 2025 onwards
+      const exactScores = filteredFinishedBets.filter((bet: Bet) => 
         bet.points === 3 && 
-        bet.game.competition.name.includes('UEFA Champions League 25/26')
+        new Date(bet.game.competition.startDate) >= new Date('2025-08-01')
       ).length;
 
-      // Calculate correct outcomes (1 point) - only from Champions League 25/26 onwards
-      const correctOutcomes = finishedGameBets.filter((bet: Bet) => 
+      // Calculate correct outcomes (1 point) - only from competitions starting August 2025 onwards
+      const correctOutcomes = filteredFinishedBets.filter((bet: Bet) => 
         bet.points === 1 && 
-        bet.game.competition.name.includes('UEFA Champions League 25/26')
+        new Date(bet.game.competition.startDate) >= new Date('2025-08-01')
       ).length;
 
-      // Calculate streaks only from Champions League 25/26 onwards
-      const championsLeagueBets = finishedGameBets.filter((bet: Bet) => 
-        bet.game.competition.name.includes('UEFA Champions League 25/26')
+      // Calculate streaks only from competitions starting August 2025 onwards
+      const recentBets = filteredFinishedBets.filter((bet: Bet) => 
+        new Date(bet.game.competition.startDate) >= new Date('2025-08-01')
       );
-      const { longestStreak, exactScoreStreak } = calculateStreaks(championsLeagueBets);
+      const { longestStreak, exactScoreStreak } = calculateStreaks(recentBets);
 
       calculatedStats = {
         totalPredictions: totalBets,
@@ -139,10 +152,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     } else {
       // For existing stats, recalculate competition wins and streaks
+      // Filter by sport type if specified
       const competitions = await prisma.competition.findMany({
         where: { 
           winnerId: user.id,
-          status: 'COMPLETED'
+          status: 'COMPLETED',
+          ...(sportType && sportType !== 'ALL' ? { sportType } : {})
         }
       });
       const wins = competitions.length;
@@ -163,28 +178,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         bet.game.status === 'FINISHED' || bet.game.status === 'LIVE'
       );
       
-      // Calculate exact scores (3 points) - only from Champions League 25/26 onwards
-      const exactScores = finishedGameBets.filter((bet: Bet) => 
+      // Filter by sport type
+      const filteredFinishedBets = filterBetsBySport(finishedGameBets);
+      
+      // Recalculate stats from filtered bets (don't use UserStats for sport-specific filtering)
+      const totalBets = filteredFinishedBets.length;
+      const totalPoints = filteredFinishedBets.reduce((sum: number, bet: Bet) => sum + bet.points, 0);
+      const correctPredictions = filteredFinishedBets.filter((bet: Bet) => bet.points > 0).length;
+      const accuracy = totalBets > 0 ? (correctPredictions / totalBets) * 100 : 0;
+      
+      // Calculate exact scores (3 points) - only from competitions starting August 2025 onwards
+      const exactScores = filteredFinishedBets.filter((bet: Bet) => 
         bet.points === 3 && 
-        bet.game.competition.name.includes('UEFA Champions League 25/26')
+        new Date(bet.game.competition.startDate) >= new Date('2025-08-01')
       ).length;
 
-      // Calculate correct outcomes (1 point) - only from Champions League 25/26 onwards
-      const correctOutcomes = finishedGameBets.filter((bet: Bet) => 
+      // Calculate correct outcomes (1 point) - only from competitions starting August 2025 onwards
+      const correctOutcomes = filteredFinishedBets.filter((bet: Bet) => 
         bet.points === 1 && 
-        bet.game.competition.name.includes('UEFA Champions League 25/26')
+        new Date(bet.game.competition.startDate) >= new Date('2025-08-01')
       ).length;
 
-      // Calculate streaks only from Champions League 25/26 onwards
-      const championsLeagueBets = finishedGameBets.filter((bet: Bet) => 
-        bet.game.competition.name.includes('UEFA Champions League 25/26')
+      // Calculate streaks only from competitions starting August 2025 onwards
+      const recentBets = filteredFinishedBets.filter((bet: Bet) => 
+        new Date(bet.game.competition.startDate) >= new Date('2025-08-01')
       );
-      const { longestStreak, exactScoreStreak } = calculateStreaks(championsLeagueBets);
+      const { longestStreak, exactScoreStreak } = calculateStreaks(recentBets);
       
       calculatedStats = {
-        totalPredictions: user.stats.totalPredictions,
-        totalPoints: user.stats.totalPoints,
-        accuracy: user.stats.accuracy,
+        totalPredictions: totalBets,
+        totalPoints,
+        accuracy: Math.round(accuracy * 100) / 100,
         wins,
         longestStreak,
         exactScoreStreak,
@@ -216,9 +240,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const userRankings = allUsers
       .map((u) => {
         // Only count bets from finished games for ranking
-        const finishedGameBets = u.bets.filter((bet: any) => 
-          bet.game.status === 'FINISHED' || bet.game.status === 'LIVE'
-        );
+        const finishedGameBets = u.bets.filter((bet: any) => {
+          const statusMatch = bet.game.status === 'FINISHED' || bet.game.status === 'LIVE';
+          const sportMatch = !sportType || sportType === 'ALL' || bet.game.competition.sportType === sportType;
+          return statusMatch && sportMatch;
+        });
         return {
           id: u.id,
           totalPoints: finishedGameBets.reduce((sum: number, bet: { points: number }) => sum + bet.points, 0),
@@ -229,8 +255,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .sort((a, b) => b.totalPoints - a.totalPoints);
 
     const ranking = userRankings.findIndex((u) => u.id === user.id) + 1;
+    // Calculate average points with 3 decimal precision (consistent with leaderboard widget)
     const averagePoints = calculatedStats.totalPredictions > 0 
-      ? parseFloat((calculatedStats.totalPoints / calculatedStats.totalPredictions).toFixed(2))
+      ? parseFloat((calculatedStats.totalPoints / calculatedStats.totalPredictions).toFixed(3))
       : 0;
 
     const currentUserStats = {

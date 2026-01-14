@@ -183,22 +183,22 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     },
   });
 
-  // Fetch user's bets to determine participation
-  const userBets = await prisma.bet.findMany({
+  // Fetch user's competition participation via CompetitionUser table
+  const userCompetitions = await prisma.competitionUser.findMany({
     where: { userId: session.user.id },
-    select: { game: { select: { competitionId: true } } }
+    select: { competitionId: true }
   });
-  const betCompetitionIds = Array.from(new Set(userBets.map(bet => bet.game.competitionId)));
+  const userCompetitionIds = userCompetitions.map(cu => cu.competitionId);
 
   // Filter competitions into three groups
-  // Vos Compétitions: Active/Upcoming competitions where user has placed bets
+  // Vos Compétitions: Active/Upcoming competitions where user is a member
   const joinedCompetitions = allCompetitions.filter((c: Competition) => 
-    betCompetitionIds.includes(c.id) && c.status !== 'COMPLETED' && c.status !== 'completed'
+    userCompetitionIds.includes(c.id) && c.status !== 'COMPLETED' && c.status !== 'completed'
   );
 
-  // Compétitions Disponibles: Active/Upcoming competitions where user hasn't placed bets
+  // Compétitions Disponibles: Active/Upcoming competitions where user is not a member
   const availableCompetitions = allCompetitions.filter((c: Competition) => 
-    !betCompetitionIds.includes(c.id) && c.status !== 'COMPLETED' && c.status !== 'completed'
+    !userCompetitionIds.includes(c.id) && c.status !== 'COMPLETED' && c.status !== 'completed'
   );
 
   // Compétitions Archivées: All completed competitions (regardless of participation)

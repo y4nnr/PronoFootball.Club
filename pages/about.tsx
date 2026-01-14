@@ -44,20 +44,17 @@ export default function About() {
           style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-            <Link href="/" className="flex items-end flex-shrink-0">
-              <div className="flex items-center justify-center -mr-1">
+            <Link href="/" className="flex items-center text-white hover:text-white transition-colors select-none flex-shrink-0">
+              <div className="flex items-center justify-center mt-2 tablet:mt-3 xl:mt-4 -ml-6 tablet:-ml-8 xl:-ml-20 2xl:-ml-24">
                 <Image
                   src={logoPng}
-                  alt="PronoFootball.Club"
-                  width={64}
-                  height={64}
+                  alt="Toopil"
+                  width={300}
+                  height={300}
                   priority
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain transition-transform duration-200 hover:scale-105"
+                  className="w-48 h-48 tablet:w-60 tablet:h-60 xl:w-[336px] xl:h-[336px] 2xl:w-96 2xl:h-96 object-contain transition-transform duration-200 hover:scale-105"
                 />
               </div>
-              <span className="text-white font-bold text-lg sm:text-xl lg:text-2xl tracking-tight mb-1 sm:mb-2" style={{ letterSpacing: '0.01em' }}>
-                PronoFootball.Club
-              </span>
             </Link>
             <Link href="/" className="text-white hover:text-gray-200 text-sm sm:text-base font-medium transition-colors">
               Accueil
@@ -78,7 +75,7 @@ export default function About() {
             >
               <div className="text-center mb-6 sm:mb-8">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
-                  À propos de PronoFootball.Club
+                  À propos de Toopil
                 </h1>
               </div>
               
@@ -86,7 +83,7 @@ export default function About() {
                 <section>
                   <h2 className="text-xl sm:text-2xl font-semibold text-white mb-3">Notre mission</h2>
                   <p className="text-sm sm:text-base leading-relaxed">
-                    PronoFootball.Club est une plateforme de pronostics football qui permet aux passionnés de football de créer des compétitions privées entre amis, de placer des pronostics sur les matchs et de suivre leurs performances en temps réel. Notre objectif est de rendre l'expérience des pronostics football amusante, compétitive et accessible à tous.
+                    Toopil est une plateforme de pronostics football et rugby qui permet aux passionnés de sport de créer des compétitions privées entre amis, de placer des pronostics sur les matchs et de suivre leurs performances en temps réel. Notre objectif est de rendre l'expérience des pronostics football et rugby amusante, compétitive et accessible à tous.
                   </p>
                 </section>
 
@@ -117,7 +114,7 @@ export default function About() {
                 </section>
 
                 <section>
-                  <h2 className="text-xl sm:text-2xl font-semibold text-white mb-3">Comment utiliser PronoFootball.Club</h2>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-white mb-3">Comment utiliser Toopil</h2>
                   <div className="space-y-4 text-sm sm:text-base">
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-2">1. Créez votre compte</h3>

@@ -62,6 +62,7 @@ interface LeaderboardData {
     participantCount: number;
     gameCount: number;
     logo?: string;
+    sportType: string;
   }>;
 }
 
@@ -90,6 +91,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
   const router = useRouter();
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [personalStatsLoading, setPersonalStatsLoading] = useState(false);
   const [userProfilePictures, setUserProfilePictures] = useState<UserProfilePicture>({});
   const [currentUserStats, setCurrentUserStats] = useState<CurrentUserStats | null>(null);
   const [selectedUser, setSelectedUser] = useState<LeaderboardUser | null>(null);
@@ -97,25 +99,15 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
   const [expandedUser, setExpandedUser] = useState<LeaderboardUser | null>(null);
   const [breakdown, setBreakdown] = useState<{ competition: string; total_points: number }[] | null>(null);
   const [breakdownLoading, setBreakdownLoading] = useState(false);
+  const [selectedSportPersonal, setSelectedSportPersonal] = useState<'ALL' | 'FOOTBALL' | 'RUGBY'>('ALL');
+  const [selectedSportGlobal, setSelectedSportGlobal] = useState<'ALL' | 'FOOTBALL' | 'RUGBY'>('ALL');
 
-
-  useEffect(() => {
-    fetchLeaderboardData();
-    fetchUserProfilePictures();
-  }, []);
-
-  // Fetch personal stats after leaderboard data is loaded
-  useEffect(() => {
-    console.log('🔄 useEffect triggered for leaderboardData:', !!leaderboardData);
-    if (leaderboardData) {
-      console.log('📊 Leaderboard data available, fetching current user stats...');
-      fetchCurrentUserStats();
-    }
-  }, [leaderboardData]);
 
   const fetchLeaderboardData = async () => {
     try {
-      const response = await fetch('/api/stats/leaderboard');
+      setLoading(true);
+      const url = `/api/stats/leaderboard${selectedSportGlobal && selectedSportGlobal !== 'ALL' ? `?sportType=${selectedSportGlobal}` : ''}`;
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         setLeaderboardData(data);
@@ -128,29 +120,58 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
     }
   };
 
+  useEffect(() => {
+    fetchLeaderboardData();
+    fetchUserProfilePictures();
+  }, []);
+
+  // Fetch leaderboard data when global sport filter changes
+  useEffect(() => {
+    if (selectedSportGlobal) {
+      fetchLeaderboardData();
+    }
+  }, [selectedSportGlobal]);
+
+  // Track if leaderboard data has been loaded initially
+  const [leaderboardDataInitialized, setLeaderboardDataInitialized] = useState(false);
+
+  // Fetch personal stats after leaderboard data is loaded initially or when personal sport filter changes
+  useEffect(() => {
+    if (leaderboardData && !leaderboardDataInitialized) {
+      console.log('📊 Leaderboard data available initially, fetching current user stats...');
+      setLeaderboardDataInitialized(true);
+      fetchCurrentUserStats();
+    }
+  }, [leaderboardData, leaderboardDataInitialized]);
+
+  // Fetch personal stats when personal sport filter changes (but not when global filter changes)
+  useEffect(() => {
+    if (leaderboardDataInitialized) {
+      console.log('🔄 Personal sport filter changed to:', selectedSportPersonal);
+      fetchCurrentUserStats();
+    }
+  }, [selectedSportPersonal]);
+
   const fetchCurrentUserStats = async () => {
     try {
-      console.log('🔍 Fetching current user stats...');
-      const response = await fetch('/api/stats/current-user');
+      setPersonalStatsLoading(true);
+      console.log('🔍 Fetching current user stats...', 'sport:', selectedSportPersonal);
+      const url = selectedSportPersonal === 'ALL' 
+        ? '/api/stats/current-user' 
+        : `/api/stats/current-user?sportType=${selectedSportPersonal}`;
+      const response = await fetch(url);
       console.log('📊 Current user API response status:', response.status);
       
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Individual user stats:', data);
         
-        // Calculate ranking from leaderboard data if available
-        let ranking = 1;
-        if (leaderboardData && leaderboardData.topPlayersByPoints) {
-          const userIndex = leaderboardData.topPlayersByPoints.findIndex((user: LeaderboardUser) => user.id === currentUser.id);
-          ranking = userIndex >= 0 ? userIndex + 1 : 1;
-        }
-        
-        // Calculate average points
-        const averagePoints = data.totalPredictions > 0 ? data.totalPoints / data.totalPredictions : 0;
+        // Use ranking from API (already calculated with sport filter if applicable)
+        // Calculate average points if not provided
+        const averagePoints = data.averagePoints ?? (data.totalPredictions > 0 ? data.totalPoints / data.totalPredictions : 0);
         
         const statsData = {
           ...data,
-          ranking,
           averagePoints
         };
         
@@ -163,6 +184,8 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
       }
     } catch (error) {
       console.error('❌ Error fetching current user stats:', error);
+    } finally {
+      setPersonalStatsLoading(false);
     }
   };
 
@@ -227,22 +250,27 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
     if (!leaderboardData) return [];
     
     return [...leaderboardData.topPlayersByPoints]
-      .sort((a, b) => b.stats.wins - a.stats.wins)
-      .filter(user => user.stats.wins > 0)
-      .slice(0, 10)
       .map(user => {
-        // Get the actual competitions this user won
+        // Count wins only from filtered competitions
         const wonCompetitions = leaderboardData.competitions
-          .filter(comp => comp.winner?.id === user.id)
-          .map(comp => comp.name);
+          .filter(comp => comp.winner?.id === user.id && (comp.status === 'COMPLETED' || comp.status === 'completed'));
+        const winsCount = wonCompetitions.length;
         
         return {
-          name: user.name,
-          competitions: user.stats.wins,
-          avatar: user.avatar,
-          wonCompetitions: wonCompetitions.join(', ') || 'Unknown competitions'
+          ...user,
+          filteredWins: winsCount,
+          wonCompetitionsList: wonCompetitions.map(comp => comp.name)
         };
-      });
+      })
+      .filter(user => user.filteredWins > 0)
+      .sort((a, b) => b.filteredWins - a.filteredWins)
+      .slice(0, 10)
+      .map(user => ({
+        name: user.name,
+        competitions: user.filteredWins,
+        avatar: user.avatar,
+        wonCompetitions: user.wonCompetitionsList.join(', ') || 'Unknown competitions'
+      }));
   };
 
   const { pointsStreaks, exactScoreStreaks } = getStreakLeaderboards();
@@ -290,83 +318,180 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
           </div>
         )}
 
-        {/* Loading State */}
-        {loading && (
-          <div className="bg-primary-100 border border-primary-400 rounded-lg p-6 text-center mb-8 shadow">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-700 text-white text-sm font-medium mb-4">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              {t('stats.loadingRealData')}
-            </div>
-            <p className="text-primary-900">
-              {t('stats.fetchingStatistics')}
-            </p>
-          </div>
-        )}
-
         {/* Statistiques Personnelles */}
         <section className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <div className="flex items-center mb-6">
-            <span className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-              <UserIcon className="h-6 w-6 text-white" />
-            </span>
-            <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('stats.personalStats')}</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <span className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+                <UserIcon className="h-6 w-6 text-white" />
+              </span>
+              <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('stats.personalStats')}</h2>
+            </div>
+            {/* Sport Filter - Dropdown for mobile, buttons for desktop */}
+            <div className="md:hidden">
+              <select
+                value={selectedSportPersonal}
+                onChange={(e) => setSelectedSportPersonal(e.target.value as 'ALL' | 'FOOTBALL' | 'RUGBY')}
+                className="px-3 py-2 rounded-md text-sm font-medium bg-gray-100 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+              >
+                <option value="ALL">{t('stats.allSports') || 'Tous'}</option>
+                <option value="FOOTBALL">{t('stats.football') || 'Football'}</option>
+                <option value="RUGBY">{t('stats.rugby') || 'Rugby'}</option>
+              </select>
+            </div>
+            {/* Sport Filter Tabs - Desktop only */}
+            <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setSelectedSportPersonal('ALL')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedSportPersonal === 'ALL'
+                    ? 'bg-primary-600 text-white shadow-md font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {t('stats.allSports') || 'Tous'}
+              </button>
+              <button
+                onClick={() => setSelectedSportPersonal('FOOTBALL')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedSportPersonal === 'FOOTBALL'
+                    ? 'bg-primary-600 text-white shadow-md font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {t('stats.football') || 'Football'}
+              </button>
+              <button
+                onClick={() => setSelectedSportPersonal('RUGBY')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedSportPersonal === 'RUGBY'
+                    ? 'bg-primary-600 text-white shadow-md font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {t('stats.rugby') || 'Rugby'}
+              </button>
+            </div>
           </div>
-          {currentUserStats ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              {/* All-time Ranking with Total Points */}
-              <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
-                <div className="flex items-center mb-2">
-                  <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
-                    <TrophyIcon className="h-6 w-6 text-white" />
-                  </span>
-                  <span className="text-xl md:text-2xl lg:text-3xl text-gray-800">#{currentUserStats.ranking} <span className="text-lg md:text-xl lg:text-2xl">({currentUserStats.totalPoints} points)</span></span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {/* All-time Ranking with Total Points */}
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
+              {personalStatsLoading || !currentUserStats ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                  <p className="text-sm text-neutral-500 mt-2">{t('loading')}...</p>
                 </div>
-                <div className="text-base text-gray-800">{t('stats.allTimeRanking')}</div>
-                <div className="text-xs text-gray-500">{t('stats.outOfUsers', { count: leaderboardData?.totalUsers || 0 })}</div>
-              </div>
-              {/* Average Points per Game */}
-              <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
-                <div className="flex items-center mb-2">
-                  <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
-                    <ChartBarIcon className="h-6 w-6 text-white" />
-                  </span>
-                  <span className="text-xl md:text-2xl lg:text-3xl text-gray-800">{Number(currentUserStats.averagePoints).toFixed(3)}</span>
-                </div>
-                <div className="text-base text-gray-800">{t('stats.avgPointsGame')}</div>
-                <div className="text-xs text-gray-500">{t('stats.basedOnGames', { count: currentUserStats.totalPredictions })}</div>
-              </div>
-              {/* Competitions Won */}
-              <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
-                <div className="flex items-center mb-2">
-                  <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
-                    <TrophyIcon className="h-6 w-6 text-white" />
-                  </span>
-                  <span className="text-xl md:text-2xl lg:text-3xl text-gray-800">{currentUserStats.wins}</span>
-                </div>
-                <div className="text-base text-gray-800">{t('stats.competitionsWon')}</div>
-                <div className="text-xs text-gray-500">{t('stats.totalVictories')}</div>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center mb-2">
+                    <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
+                      <TrophyIcon className="h-6 w-6 text-white" />
+                    </span>
+                    <span className="text-xl md:text-2xl lg:text-3xl text-gray-800">#{currentUserStats.ranking} <span className="text-lg md:text-xl lg:text-2xl">({currentUserStats.totalPoints} points)</span></span>
+                  </div>
+                  <div className="text-base text-gray-800">{t('stats.allTimeRanking')}</div>
+                  <div className="text-xs text-gray-500">{t('stats.outOfUsers', { count: leaderboardData?.totalUsers || 0 })}</div>
+                </>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="text-gray-500 mb-2">
-                {loading ? t('stats.fetchingStatistics') : 'Chargement des statistiques personnelles...'}
-              </div>
-              <div className="text-sm text-gray-400">
-                Debug: currentUserStats = {currentUserStats ? 'loaded' : 'null'}, leaderboardData = {leaderboardData ? 'loaded' : 'null'}
-              </div>
+            {/* Average Points per Game */}
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
+              {personalStatsLoading || !currentUserStats ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                  <p className="text-sm text-neutral-500 mt-2">{t('loading')}...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center mb-2">
+                    <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
+                      <ChartBarIcon className="h-6 w-6 text-white" />
+                    </span>
+                    <span className="text-xl md:text-2xl lg:text-3xl text-gray-800">{Number(currentUserStats.averagePoints).toFixed(3)}</span>
+                  </div>
+                  <div className="text-base text-gray-800">{t('stats.avgPointsGame')}</div>
+                  <div className="text-xs text-gray-500">{t('stats.basedOnGames', { count: currentUserStats.totalPredictions })}</div>
+                </>
+              )}
             </div>
-          )}
+            {/* Competitions Won */}
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
+              {personalStatsLoading || !currentUserStats ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                  <p className="text-sm text-neutral-500 mt-2">{t('loading')}...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center mb-2">
+                    <span className='p-3 bg-accent-500 rounded-full shadow-lg mr-2 flex items-center justify-center'>
+                      <TrophyIcon className="h-6 w-6 text-white" />
+                    </span>
+                    <span className="text-xl md:text-2xl lg:text-3xl text-gray-800">{currentUserStats.wins}</span>
+                  </div>
+                  <div className="text-base text-gray-800">{t('stats.competitionsWon')}</div>
+                  <div className="text-xs text-gray-500">{t('stats.totalVictories')}</div>
+                </>
+              )}
+            </div>
+          </div>
 
         </section>
 
         {/* Statistiques Globales */}
         <section className="bg-white rounded-2xl shadow-2xl p-6 mb-8 border border-gray-200" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <div className="flex items-center mb-6">
-            <span className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-              <UserGroupIcon className="h-6 w-6 text-white" />
-            </span>
-            <h2 className="text-lg md:text-xl font-bold text-neutral-900">Statistiques Globales</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <span className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+                <UserGroupIcon className="h-6 w-6 text-white" />
+              </span>
+              <h2 className="text-lg md:text-xl font-bold text-neutral-900">Statistiques Globales</h2>
+            </div>
+            {/* Sport Filter - Dropdown for mobile, buttons for desktop */}
+            <div className="md:hidden">
+              <select
+                value={selectedSportGlobal}
+                onChange={(e) => setSelectedSportGlobal(e.target.value as 'ALL' | 'FOOTBALL' | 'RUGBY')}
+                className="px-3 py-2 rounded-md text-sm font-medium bg-gray-100 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-primary-600"
+              >
+                <option value="ALL">{t('stats.allSports') || 'Tous'}</option>
+                <option value="FOOTBALL">{t('stats.football') || 'Football'}</option>
+                <option value="RUGBY">{t('stats.rugby') || 'Rugby'}</option>
+              </select>
+            </div>
+            {/* Sport Filter Tabs - Desktop only */}
+            <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setSelectedSportGlobal('ALL')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedSportGlobal === 'ALL'
+                    ? 'bg-primary-600 text-white shadow-md font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {t('stats.allSports') || 'Tous'}
+              </button>
+              <button
+                onClick={() => setSelectedSportGlobal('FOOTBALL')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedSportGlobal === 'FOOTBALL'
+                    ? 'bg-primary-600 text-white shadow-md font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {t('stats.football') || 'Football'}
+              </button>
+              <button
+                onClick={() => setSelectedSportGlobal('RUGBY')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedSportGlobal === 'RUGBY'
+                    ? 'bg-primary-600 text-white shadow-md font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {t('stats.rugby') || 'Rugby'}
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* Meilleurs Marqueurs */}
@@ -405,7 +530,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                             <p className="text-xs text-neutral-500">{player.stats.totalPredictions} {t('stats.games')}</p>
                           </div>
                         </div>
-                        <span className="font-semibold text-neutral-900">{player.stats.totalPoints} {t('stats.points').toLowerCase()}</span>
+                        <span className="font-semibold text-neutral-900">{player.stats.totalPoints} <span className="hidden md:inline">{t('stats.points').toLowerCase()}</span></span>
                       </div>
                       
                       {/* Inline Breakdown - Only for this specific player */}
@@ -686,7 +811,6 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 <div className="text-center py-4 text-neutral-500">{t('stats.noCompetitionWinners')}</div>
               )}
             </div>
-
           </div>
         </section>
 

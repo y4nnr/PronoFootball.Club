@@ -183,20 +183,22 @@ export default function Home() {
         style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-          <div className="flex items-end flex-shrink-0">
-            <div className="flex items-center justify-center -mr-1">
-              <Image
-                src={logoPng}
-                alt="PronoFootball.Club"
-                width={64}
-                height={64}
-                priority
-                className="w-12 h-12 sm:w-16 sm:h-16 object-contain transition-transform duration-200 hover:scale-105"
-              />
-            </div>
-            <span className="text-white font-bold text-lg sm:text-xl lg:text-2xl tracking-tight mb-1 sm:mb-2" style={{ letterSpacing: '0.01em' }}>
-              PronoFootball.Club
-            </span>
+          <div className="flex items-center flex-shrink-0">
+            <Link
+              href="/"
+              className="flex items-center text-white hover:text-white transition-colors select-none"
+            >
+              <div className="flex items-center justify-center mt-2 tablet:mt-3 xl:mt-4 -ml-6 tablet:-ml-8 xl:-ml-20 2xl:-ml-24">
+                <Image
+                  src={logoPng}
+                  alt="Toopil"
+                  width={300}
+                  height={300}
+                  priority
+                  className="w-48 h-48 tablet:w-60 tablet:h-60 xl:w-[336px] xl:h-[336px] 2xl:w-96 2xl:h-96 object-contain transition-transform duration-200 hover:scale-105"
+                />
+              </div>
+            </Link>
           </div>
         </div>
       </header>
@@ -251,10 +253,10 @@ export default function Home() {
           >
             <div className="text-center mb-3 sm:mb-4">
               <h2 className="text-base sm:text-xl font-semibold text-white mb-1.5 sm:mb-2">
-                Découvrez PronoFootball.Club
+                Découvrez Toopil
               </h2>
               <p className="hidden sm:block text-xs sm:text-base text-gray-200 leading-relaxed">
-                En savoir plus sur notre plateforme, ses fonctionnalités et comment elle peut transformer votre expérience des pronostics football.
+                En savoir plus sur notre plateforme, ses fonctionnalités et comment elle peut transformer votre expérience des pronostics football et rugby.
               </p>
             </div>
             <Link

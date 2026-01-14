@@ -122,7 +122,7 @@ interface Competition {
               <li key={comp.id} className="mb-2 flex items-center gap-2">
                 <span>{comp.name}</span>
                 <button className="ml-2 px-2 py-1 bg-green-600 text-white rounded" onClick={() => handleJoin(comp.id)}>
-                  {language === 'fr' ? 'Rejoindre' : 'Join'}
+                  {language === 'fr' ? 'Voir' : 'View'}
                 </button>
               </li>
             ))}

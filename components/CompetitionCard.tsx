@@ -83,12 +83,20 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
             <div className="relative w-full bg-neutral-200 rounded-full h-8">
               <div 
                 className="bg-gradient-to-r from-primary-500 to-primary-600 h-8 rounded-full transition-all duration-300 ease-out flex items-center justify-center"
-                style={{ width: `${competition.progressPercentage}%` }}
+                style={{ width: `${competition.progressPercentage}%`, minWidth: competition.progressPercentage === 0 ? '0%' : 'auto' }}
               >
-                <span className="text-xs font-bold text-white drop-shadow-sm">
-                  {competition.progressPercentage}%
-                </span>
+                {competition.progressPercentage > 0 && (
+                  <span className="text-xs font-bold text-white drop-shadow-sm">
+                    {competition.progressPercentage}%
+                  </span>
+                )}
               </div>
+              {/* Show percentage text outside the bar when it's 0% or too small to fit text */}
+              {competition.progressPercentage === 0 && (
+                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-bold text-neutral-800">
+                  0%
+                </span>
+              )}
             </div>
           </div>
         ) : (

@@ -811,40 +811,47 @@ export default async function handler(
     // 5) Fetch stored news from database
     // - If user is logged in: only their competitions
     // - If no user (automation): all competitions (though this shouldn't happen in fetch mode)
-    let storedNews = [];
+    // For each competition, get the 2 latest news items
+    let allNewsItems: NewsItem[] = [];
+    
     try {
-      storedNews = await prisma.news.findMany({
-        where: {
-          competitionId: { in: competitionIds },
-        },
-        include: {
-          competition: {
-            select: {
-              name: true,
+      // Fetch news for each competition separately to get top 2 per competition
+      for (const competitionId of competitionIds) {
+        const competitionNews = await prisma.news.findMany({
+          where: {
+            competitionId: competitionId,
+          },
+          include: {
+            competition: {
+              select: {
+                name: true,
+              },
             },
           },
-        },
-        orderBy: {
-          matchDayDate: 'desc',
-        },
-        take: 10, // Get more than 2, then filter to latest 2
-      });
+          orderBy: {
+            matchDayDate: 'desc',
+          },
+          take: 2, // Get 2 latest news per competition
+        });
+
+        // Format news items for this competition
+        const formattedNews = competitionNews.map(news => ({
+          date: formatDisplayDate(news.matchDayDate),
+          competition: news.competition.name,
+          logo: news.logo || '/images/competitions/champions-league.png',
+          summary: news.summary,
+        }));
+
+        allNewsItems.push(...formattedNews);
+      }
     } catch (dbError) {
       console.error('Error fetching news from database:', dbError);
       // If database error, return empty array (news table might not exist yet or other issue)
       return res.status(200).json([]);
     }
 
-    // 6) Format and return news items
-    const newsItems: NewsItem[] = storedNews.map(news => ({
-      date: formatDisplayDate(news.matchDayDate),
-      competition: news.competition.name,
-      logo: news.logo || '/images/competitions/champions-league.png',
-      summary: news.summary,
-    }));
-
-    // Sort by date (newest first) and return max 2 items
-    newsItems.sort((a, b) => {
+    // 6) Sort all news items by date (newest first) globally across all competitions
+    allNewsItems.sort((a, b) => {
       const [dayA, monthA, yearA] = a.date.split('/').map(Number);
       const [dayB, monthB, yearB] = b.date.split('/').map(Number);
       const dateA = new Date(yearA, monthA - 1, dayA);
@@ -852,7 +859,8 @@ export default async function handler(
       return dateB.getTime() - dateA.getTime(); // Descending (newest first)
     });
 
-    const result = newsItems.slice(0, 2);
+    // Return max 8 items total (2 per competition, up to 4 competitions)
+    const result = allNewsItems.slice(0, 8);
     
     // If debug mode, return debug info along with news
     if (debugMode) {

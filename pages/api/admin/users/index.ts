@@ -131,16 +131,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         needsPasswordChange = true;
       }
       
-      const user = await prisma.user.create({
-        data: {
-          name,
-          email,
-          hashedPassword,
-          role,
-          profilePictureUrl,
-          needsPasswordChange,
-        },
-      });
+      // Try to create with needsPasswordChange, fallback if field doesn't exist
+      let user;
+      try {
+        user = await prisma.user.create({
+          data: {
+            name,
+            email,
+            hashedPassword,
+            role,
+            profilePictureUrl,
+            needsPasswordChange,
+          },
+        });
+      } catch (createError: any) {
+        // If needsPasswordChange field doesn't exist, create without it
+        if (createError?.code === 'P2009' || createError?.name === 'PrismaClientValidationError') {
+          user = await prisma.user.create({
+            data: {
+              name,
+              email,
+              hashedPassword,
+              role,
+              profilePictureUrl,
+            },
+          });
+        } else {
+          throw createError;
+        }
+      }
 
       // Only send welcome email if no password was provided
       if (!password) {

@@ -13,11 +13,68 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     try {
       const teams = await prisma.team.findMany({
+        include: {
+          homeGames: {
+            include: {
+              competition: {
+                select: {
+                  sportType: true,
+                },
+              },
+            },
+          },
+          awayGames: {
+            include: {
+              competition: {
+                select: {
+                  sportType: true,
+                },
+              },
+            },
+          },
+        },
         orderBy: {
           name: 'asc',
         },
       });
-      return res.status(200).json(teams);
+      
+      // Use sportType from database, fallback to calculating from games if not set
+      const teamsWithSport = teams.map(team => {
+        // Use sportType from database if available
+        if (team.sportType) {
+          return {
+            ...team,
+            sportType: team.sportType,
+            sportTypes: [team.sportType],
+          };
+        }
+        
+        // Fallback: determine sport type from competitions they play in
+        const allGames = [...team.homeGames, ...team.awayGames];
+        const sportTypes = new Set<string>();
+        
+        for (const game of allGames) {
+          if (game.competition.sportType) {
+            sportTypes.add(game.competition.sportType);
+          }
+        }
+        
+        // Determine primary sport (if team plays in multiple sports, prefer RUGBY if present, else FOOTBALL)
+        let primarySport: 'FOOTBALL' | 'RUGBY' | null = null;
+        if (sportTypes.has('RUGBY')) {
+          primarySport = 'RUGBY';
+        } else if (sportTypes.has('FOOTBALL')) {
+          primarySport = 'FOOTBALL';
+        }
+        
+        return {
+          ...team,
+          sportType: primarySport,
+          sportTypes: Array.from(sportTypes),
+        };
+      });
+      
+      return res.status(200).json(teamsWithSport);
     } catch (error) {
       console.error('Error fetching teams:', error);
       return res.status(500).json({ error: 'Failed to fetch teams' });

@@ -111,18 +111,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // If the game is now finished and scores are set, recalculate all bets
       if (gameStatus === GameStatus.FINISHED && normalizedHomeScore !== undefined && normalizedHomeScore !== null && normalizedAwayScore !== undefined && normalizedAwayScore !== null) {
+        // Get competition to determine sport type and scoring system
+        const competition = await prisma.competition.findUnique({
+          where: { id: updatedGame.competitionId },
+          select: { sportType: true }
+        });
+        
+        const { calculateBetPoints, getScoringSystemForSport } = await import('../../../../lib/scoring-systems');
+        const scoringSystem = getScoringSystemForSport(competition?.sportType || 'FOOTBALL');
+        
         const bets = await prisma.bet.findMany({ where: { gameId } });
         for (const bet of bets) {
-          let points = 0;
-          if (bet.score1 === normalizedHomeScore && bet.score2 === normalizedAwayScore) {
-            points = 3;
-          } else {
-            const actualResult = normalizedHomeScore > normalizedAwayScore ? 'home' : normalizedHomeScore < normalizedAwayScore ? 'away' : 'draw';
-            const predictedResult = bet.score1 > bet.score2 ? 'home' : bet.score1 < bet.score2 ? 'away' : 'draw';
-            if (actualResult === predictedResult) {
-              points = 1;
-            }
-          }
+          const points = calculateBetPoints(
+            { score1: bet.score1, score2: bet.score2 },
+            { home: normalizedHomeScore, away: normalizedAwayScore },
+            scoringSystem
+          );
           await prisma.bet.update({ where: { id: bet.id }, data: { points } });
         }
       } else if (status !== GameStatus.FINISHED) {

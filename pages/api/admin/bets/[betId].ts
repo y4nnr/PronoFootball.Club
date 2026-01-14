@@ -68,23 +68,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           existingBet.game.homeScore !== null && 
           existingBet.game.awayScore !== null) {
         
-        let points = 0;
+        // Get competition to determine sport type and scoring system
+        const competition = await prisma.competition.findUnique({
+          where: { id: existingBet.game.competitionId },
+          select: { sportType: true }
+        });
         
-        // Exact score = 3 points
-        if (score1 === existingBet.game.homeScore && score2 === existingBet.game.awayScore) {
-          points = 3;
-        }
-        // Correct result (win/draw/loss) = 1 point
-        else {
-          const actualResult = existingBet.game.homeScore > existingBet.game.awayScore ? 'home' :
-                              existingBet.game.homeScore < existingBet.game.awayScore ? 'away' : 'draw';
-          const predictedResult = score1 > score2 ? 'home' :
-                                 score1 < score2 ? 'away' : 'draw';
-          
-          if (actualResult === predictedResult) {
-            points = 1;
-          }
-        }
+        const { calculateBetPoints, getScoringSystemForSport } = await import('../../../../lib/scoring-systems');
+        const scoringSystem = getScoringSystemForSport(competition?.sportType || 'FOOTBALL');
+        
+        const points = calculateBetPoints(
+          { score1, score2 },
+          { home: existingBet.game.homeScore, away: existingBet.game.awayScore },
+          scoringSystem
+        );
 
         // Update points
         await prisma.bet.update({

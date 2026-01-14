@@ -1,5 +1,5 @@
 {
-  "welcome": "Welcome to PronoFootball.club",
+  "welcome": "Welcome to Toopil",
   "getStarted": "Get Started",
   "goToDashboard": "Go to Dashboard",
   "homepage": {
@@ -95,7 +95,7 @@
       "title": "Latest News",
       "noNews": "No news available",
       "welcome": {
-        "title": "Welcome to PronoFootball.club!",
+        "title": "Welcome to Toopil!",
         "content": "Start making your predictions and compete with other users."
       },
       "euro2024": {
@@ -134,7 +134,7 @@
       "manageTeamsDesc": "Add, edit and manage football teams"
     },
     "statsOverview": "Your Statistics Overview",
-    "statsOverviewSubtitle": "A summary of your performance and activity on PronoFootball.club"
+    "statsOverviewSubtitle": "A summary of your performance and activity on Toopil"
   },
   "admin": {
     "title": "Admin Configuration",
@@ -246,7 +246,7 @@
     "noAvailable": "No competitions available at the moment.",
     "noArchived": "No archived competitions.",
     "view": "View",
-    "join": "Join",
+    "join": "View",
     "viewResults": "View Results"
   },
   "competition": {
@@ -315,7 +315,28 @@
     "noActiveGamesFound": "No games available for betting at the moment.",
     "competitionSummary": "Competition Summary",
     "totalPoints": "Total Points",
-    "totalExactScores": "Exact Scores"
+    "totalExactScores": "Exact Scores",
+    "noParticipantsYet": "No participants yet",
+    "rules": {
+      "title": "Scoring Rules",
+      "football": {
+        "threePoints": "3 points - Exact score",
+        "threePointsDesc": "If you predict the exact score of the match, you get 3 points.",
+        "onePoint": "1 point - Correct result",
+        "onePointDesc": "If you predict the correct result (win, draw, loss) but not the exact score, you get 1 point.",
+        "zeroPoints": "0 points - Incorrect result",
+        "zeroPointsDesc": "If the result you predicted is incorrect, you get 0 points."
+      },
+      "rugby": {
+        "threePoints": "3 points - Exact or very close score",
+        "threePointsDesc": "If you predict the exact score or if the total difference between your prediction and the actual score is 5 points or less, you get 3 points.",
+        "threePointsExamples": "Examples: Prediction 25-22, Actual 26-23 (difference = 2) → 3 points | Prediction 20-15, Actual 24-18 (difference = 7) → no 3 points",
+        "onePoint": "1 point - Correct result",
+        "onePointDesc": "If you predict the correct result (win, draw, loss) but the total difference is greater than 5 points, you get 1 point.",
+        "zeroPoints": "0 points - Incorrect result",
+        "zeroPointsDesc": "If the result you predicted is incorrect, you get 0 points."
+      }
+    }
   },
   "betting": {
     "title": "Place Your Bet",
@@ -395,6 +416,9 @@
     "realDataNotice": "This page shows the planned structure with placeholder data. Real statistics will be calculated from your actual predictions and competition results.",
     "realDataHeader": "Statistics based on real data from {{count}} registered users with historical competitions data",
     "streakNotice": "Statistics related to streaks (such as longest winning streaks) will begin from your first participation in a real competition on this application. Data from past competitions is not integrated.",
+    "allSports": "All",
+    "football": "Football",
+    "rugby": "Rugby",
     "noPerformanceData": "No performance data available yet.",
     "performanceTrackingNotice": "Performance tracking will begin with the first real competition played with this app.",
     "completedCompetitions": "Completed Competitions",
@@ -504,5 +528,9 @@
   "game": {
     "placedBets": "Placed Bets"
   },
-  "pointsBreakdownByCompetition": "Points breakdown by competition"
+  "pointsBreakdownByCompetition": "Points breakdown by competition",
+  "competitionDescriptions": {
+    "uefaChampionsLeague": "The most prestigious club competition in Europe, bringing together the best teams from across the continent.",
+    "worldCup2026": "The FIFA World Cup, the most prestigious football tournament in the world."
+  }
 } 

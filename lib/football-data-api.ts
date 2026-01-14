@@ -49,7 +49,11 @@ export class FootballDataAPI {
         headers: {
           'X-Auth-Token': this.apiKey,
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
+        cache: 'no-store', // Disable Next.js fetch cache
       });
 
       // Handle rate limiting (429) with exponential backoff

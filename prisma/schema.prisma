@@ -43,22 +43,24 @@ model UserStats {
 }
 
 model Competition {
-  id          String            @id @default(cuid())
-  name        String
-  description String
-  startDate   DateTime
-  endDate     DateTime
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  status      String            @default("upcoming")
-  lastPlaceId String?
-  logo        String?
-  winnerId    String?
-  lastPlace   User?             @relation("CompetitionLastPlace", fields: [lastPlaceId], references: [id])
-  winner      User?             @relation("CompetitionWinner", fields: [winnerId], references: [id])
-  users       CompetitionUser[]
-  games       Game[]
-  news        News[]
+  id            String            @id @default(cuid())
+  name          String
+  description   String
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  status        String            @default("upcoming")
+  lastPlaceId   String?
+  logo          String?
+  winnerId      String?
+  sportType     SportType         @default(FOOTBALL) // Sport type: FOOTBALL or RUGBY
+  externalSeason String?          // For Rugby: cached season partition key (e.g., "2024" for 2024/25 season)
+  lastPlace     User?             @relation("CompetitionLastPlace", fields: [lastPlaceId], references: [id])
+  winner        User?             @relation("CompetitionWinner", fields: [winnerId], references: [id])
+  users         CompetitionUser[]
+  games         Game[]
+  news          News[]
 }
 
 model CompetitionUser {
@@ -76,14 +78,18 @@ model CompetitionUser {
 
 model Team {
   id        String       @id @default(cuid())
-  name      String       @unique
+  name      String
   shortName String?
   logo      String?
+  country   String?      // Country code or name (e.g., "France", "England")
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   category  TeamCategory @default(NATIONAL)
+  sportType SportType?   // Optional: Can be null if team plays multiple sports or sport is unknown
   awayGames Game[]       @relation("AwayTeam")
   homeGames Game[]       @relation("HomeTeam")
+
+  @@unique([name, sportType]) // Allow same name for different sports
 }
 
 model Game {
@@ -107,6 +113,7 @@ model Game {
   statusDetail   String? // Status detail (HT, AET, PEN, PPD, SUS, etc.)
   decidedBy      String? // How the game was decided (FT, AET, PEN)
   finishedAt     DateTime? // When the game was first marked as finished
+  elapsedMinute  Int? // Current minute of the match (0-90+) - V2 feature
   bets           Bet[]
   awayTeam       Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
   competition    Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
@@ -171,4 +178,9 @@ enum BetStatus {
 enum TeamCategory {
   NATIONAL
   CLUB
+}
+
+enum SportType {
+  FOOTBALL
+  RUGBY
 }

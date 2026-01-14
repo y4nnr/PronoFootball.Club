@@ -22,10 +22,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { hashedPassword: true, needsPasswordChange: true }
-    });
+    // Try to fetch with needsPasswordChange field first
+    let user;
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { hashedPassword: true, needsPasswordChange: true }
+      });
+    } catch (fieldError: any) {
+      // If field doesn't exist, try without it
+      if (fieldError?.code === 'P2009' || fieldError?.name === 'PrismaClientValidationError') {
+        user = await prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { hashedPassword: true }
+        });
+      } else {
+        throw fieldError;
+      }
+    }
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -39,13 +53,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Hash and update new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        hashedPassword,
-        needsPasswordChange: false
+    
+    // Try to update with needsPasswordChange, fallback if field doesn't exist
+    try {
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+          hashedPassword,
+          needsPasswordChange: false
+        }
+      });
+    } catch (updateError: any) {
+      // If needsPasswordChange field doesn't exist, update without it
+      if (updateError?.code === 'P2009' || updateError?.name === 'PrismaClientValidationError') {
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: {
+            hashedPassword
+          }
+        });
+      } else {
+        throw updateError;
       }
-    });
+    }
 
     return res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {

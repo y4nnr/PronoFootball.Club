@@ -1,5 +1,5 @@
 {
-  "welcome": "Bienvenue sur PronoFootball.club",
+  "welcome": "Bienvenue sur Toopil",
   "getStarted": "Commencer",
   "goToDashboard": "Aller au Tableau de Bord",
   "homepage": {
@@ -82,7 +82,7 @@
       "aiComingSoonDescription": "Nous travaillons sur des suggestions personnalisées basées sur l'IA pour améliorer vos prédictions.",
       "noNews": "Aucune actualité disponible",
       "welcome": {
-        "title": "Bienvenue sur PronoFootball.club !",
+        "title": "Bienvenue sur Toopil !",
         "content": "Commencez à faire vos prédictions et rivalisez avec les autres utilisateurs."
       },
       "euro2024": {
@@ -237,7 +237,7 @@
     "noAvailable": "Aucune compétition disponible pour le moment.",
     "noArchived": "Aucune compétition archivée.",
     "view": "Voir",
-    "join": "Rejoindre",
+    "join": "Voir",
     "viewResults": "Voir les résultats"
   },
   "competition": {
@@ -269,7 +269,28 @@
     "shooters": "Shooters",
     "totalPoints": "Total des Points",
     "totalExactScores": "Total des Scores Exacts",
+    "noParticipantsYet": "Aucun participant pour le moment",
     "competitionSummary": "Résumé de la Compétition",
+    "rules": {
+      "title": "Règles de Scoring",
+      "football": {
+        "threePoints": "3 points - Score exact",
+        "threePointsDesc": "Si vous prédisez le score exact du match, vous obtenez 3 points.",
+        "onePoint": "1 point - Résultat correct",
+        "onePointDesc": "Si vous prédisez le bon résultat (victoire, match nul, défaite) mais pas le score exact, vous obtenez 1 point.",
+        "zeroPoints": "0 point - Résultat incorrect",
+        "zeroPointsDesc": "Si le résultat que vous avez prédit est incorrect, vous obtenez 0 point."
+      },
+      "rugby": {
+        "threePoints": "3 points - Score exact ou très proche",
+        "threePointsDesc": "Si vous prédisez le score exact ou si la différence totale entre votre pronostic et le score réel est de 5 points ou moins, vous obtenez 3 points.",
+        "threePointsExamples": "Exemples : Pronostic 25-22, Réel 26-23 (différence = 2) → 3 points | Pronostic 20-15, Réel 24-18 (différence = 7) → pas 3 points",
+        "onePoint": "1 point - Résultat correct",
+        "onePointDesc": "Si vous prédisez le bon résultat (victoire, match nul, défaite) mais que la différence totale est supérieure à 5 points, vous obtenez 1 point.",
+        "zeroPoints": "0 point - Résultat incorrect",
+        "zeroPointsDesc": "Si le résultat que vous avez prédit est incorrect, vous obtenez 0 point."
+      }
+    },
     "currentLeader": "Leader Actuel",
     "currentLastPlace": "Dernière Place Actuelle",
     "allCompetitionGames": "Tous les Matchs de la Compétition",
@@ -283,6 +304,7 @@
     "noGamesAvailableForBetting": "Aucun match disponible pour parier",
     "competitionDoesntHaveGames": "Cette compétition n'a pas encore de matchs.",
     "noUpcomingGamesForBetting": "Il n'y a pas de matchs à venir dans cette compétition où vous pouvez placer des paris.",
+    "noActiveGamesFound": "Aucun match disponible pour parier pour le moment.",
     "at": "à",
     "vs": "vs",
     "betPlaced": "Pari placé",
@@ -388,6 +410,9 @@
     "realDataNotice": "Cette page montre la structure prévue avec des données fictives. Les vraies statistiques seront calculées à partir de vos prédictions et résultats de compétitions réels.",
     "realDataHeader": "Statistiques calculées à partir des données réelles de {{count}} utilisateurs et de leurs compétitions passées",
     "streakNotice": "Les statistiques liées aux séries ou scores exacts débutent à partir de la Champions League 25/26. Les données des compétitions antérieures ne sont pas intégrées.",
+    "allSports": "Tous",
+    "football": "Football",
+    "rugby": "Rugby",
     "noPerformanceData": "Aucune donnée de performance disponible pour le moment.",
     "performanceTrackingNotice": "Le suivi des performances commencera avec la première vraie compétition jouée avec cette application.",
     "completedCompetitions": "Compétitions Terminées",
@@ -493,9 +518,13 @@
   "pointsBreakdownByCompetition": "Répartition des points par compétition",
   "upcoming": "À Venir",
   "finished": "Terminé",
-  "live": "En Direct",
+  "live": "Live",
   "cancelled": "Annulé",
   "active": "Actif",
   "completed": "Terminé",
-  "placedBets": "Paris placés"
+  "placedBets": "Paris placés",
+  "competitionDescriptions": {
+    "uefaChampionsLeague": "La plus prestigieuse compétition de clubs en Europe, réunissant les meilleures équipes du continent.",
+    "worldCup2026": "La Coupe du Monde de la FIFA, le tournoi de football le plus prestigieux au monde."
+  }
 } 

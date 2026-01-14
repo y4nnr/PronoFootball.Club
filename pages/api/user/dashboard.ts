@@ -23,6 +23,7 @@ interface LastGamePerformance {
   homeTeamLogo: string | null;
   awayTeamLogo: string | null;
   competition: string;
+  competitionLogo: string | null;
   actualScore: string;
   predictedScore: string;
   points: number;
@@ -120,19 +121,19 @@ export default async function handler(
       ? parseFloat((totalPoints / totalBets).toFixed(3))
       : 0;
 
-    // Calculate current streak only from Champions League 25/26 onwards
-    const cl25_26Bets = finishedGameBets.filter((bet: any) => 
-      bet.game.competition.name.includes('UEFA Champions League 25/26')
+    // Calculate current streak only from competitions starting August 2025 onwards
+    const recentBets = finishedGameBets.filter((bet: any) => 
+      new Date(bet.game.competition.startDate) >= new Date('2025-08-01')
     );
     
-    // Calculate current streak from CL 25/26 onwards
+    // Calculate current streak from recent competitions onwards
     let currentStreak = 0;
     let bestStreak = 0;
-    const sortedClBets = cl25_26Bets.sort((a: any, b: any) => 
+    const sortedRecentBets = recentBets.sort((a: any, b: any) => 
       new Date(a.game.date).getTime() - new Date(b.game.date).getTime()
     );
     
-    for (const bet of sortedClBets) {
+    for (const bet of sortedRecentBets) {
       if (bet.points > 0) {
         currentStreak++;
         bestStreak = Math.max(bestStreak, currentStreak);
@@ -153,21 +154,12 @@ export default async function handler(
       competitionsWon: competitionsWon,
     };
 
-    // Get last 10 games performance - Only from Champions League 25/26 and future competitions
-    // First, find the Champions League 25/26 competition where user is participating
-    const recentCompetition = await prisma.competition.findFirst({
+    // Get last games performance from all active competitions where user is participating
+    // Find all active competitions where user is participating
+    const userActiveCompetitions = await prisma.competition.findMany({
       where: {
-        OR: [
-          { name: { contains: 'UEFA Champions League 25/26' } },
-          { name: { contains: 'Champions League 25/26' } }
-        ],
         status: {
           in: ['ACTIVE', 'COMPLETED']
-        },
-        games: {
-          some: {
-            status: 'FINISHED'
-          }
         },
         users: {
           some: {
@@ -175,18 +167,22 @@ export default async function handler(
           }
         }
       },
-      orderBy: {
-        startDate: 'desc'
+      select: {
+        id: true
       }
     });
 
+    const competitionIds = userActiveCompetitions.map(c => c.id);
+
     let formattedLastGames: LastGamePerformance[] = [];
 
-    if (recentCompetition) {
-      // Fetch ALL finished games from the Champions League 25/26
+    if (competitionIds.length > 0) {
+      // Fetch ALL finished games from all active competitions where user is participating
       const finishedGames = await prisma.game.findMany({
         where: {
-          competitionId: recentCompetition.id,
+          competitionId: {
+            in: competitionIds
+          },
           status: 'FINISHED'
         },
         include: {
@@ -220,6 +216,7 @@ export default async function handler(
             homeTeamLogo: game.homeTeam.logo,
             awayTeamLogo: game.awayTeam.logo,
             competition: game.competition.name,
+            competitionLogo: game.competition.logo,
             actualScore,
             predictedScore: 'N/A',
             points: 0,
@@ -228,23 +225,17 @@ export default async function handler(
           };
         }
 
-        // Bet was placed
+        // Bet was placed - use the scoring system from the bet's points (already calculated)
         const predictedScore = `${userBet.score1}-${userBet.score2}`;
         let result: 'exact' | 'correct' | 'wrong' | 'no_bet' = 'wrong';
-        let gamePoints = 0;
+        const gamePoints = userBet.points || 0;
         
-        if (userBet.score1 === game.homeScore && userBet.score2 === game.awayScore) {
+        if (gamePoints === 3) {
           result = 'exact';
-          gamePoints = 3;
-        } else if (
-          game.homeScore !== null && game.awayScore !== null && (
-            (userBet.score1 > userBet.score2 && game.homeScore > game.awayScore) ||
-            (userBet.score1 < userBet.score2 && game.homeScore < game.awayScore) ||
-            (userBet.score1 === userBet.score2 && game.homeScore === game.awayScore)
-          )
-        ) {
+        } else if (gamePoints === 1) {
           result = 'correct';
-          gamePoints = 1;
+        } else {
+          result = 'wrong';
         }
         
         return {
@@ -255,6 +246,7 @@ export default async function handler(
           homeTeamLogo: game.homeTeam.logo,
           awayTeamLogo: game.awayTeam.logo,
           competition: game.competition.name,
+          competitionLogo: game.competition.logo,
           actualScore,
           predictedScore,
           points: gamePoints,

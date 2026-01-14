@@ -81,8 +81,8 @@ export default function News() {
       </div>
 
       {showSkeleton && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-          {[0, 1].map((idx) => (
+        <div className="space-y-3">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => (
             <div
               key={idx}
               className="relative bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl p-3 md:p-4 border border-primary-300/60 shadow-modern hover:shadow-modern-lg transition-all duration-300 flex items-start space-x-3 animate-pulse"
@@ -112,28 +112,26 @@ export default function News() {
           {items.map((item, index) => (
             <div
               key={`${item.date}-${index}`}
-              className="relative bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl p-3 md:p-4 border border-primary-300/60 shadow-modern hover:shadow-modern-lg transition-all duration-300 flex items-start space-x-3"
+              className="relative bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl p-3 md:p-4 border border-primary-300/60 shadow-modern hover:shadow-modern-lg transition-all duration-300"
             >
-              <div className="flex-shrink-0">
-                {/* Competition logo - small left-aligned image */}
+              <div className="flex items-center gap-2 mb-1.5">
+                {/* Date */}
+                <span className="text-xs md:text-sm font-semibold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md">
+                  {item.date}
+                </span>
+                {/* Competition logo */}
                 <img
                   src={item.logo}
                   alt={item.competition}
                   className="w-7 h-7 rounded-md object-contain bg-white border border-white/60 shadow-sm"
                 />
+                {/* Competition name */}
+                <span className="text-[11px] md:text-xs font-bold text-neutral-700">
+                  {item.competition}
+                </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-xs md:text-sm font-semibold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md">
-                    {item.date}
-                  </span>
-                  <span className="text-[11px] md:text-xs text-neutral-500">
-                    {item.competition}
-                  </span>
-                </div>
-                <div className="text-sm md:text-[15px] text-neutral-900 leading-snug">
-                  {item.summary}
-                </div>
+              <div className="text-sm md:text-[15px] text-neutral-900 leading-snug">
+                {item.summary}
               </div>
             </div>
           ))}

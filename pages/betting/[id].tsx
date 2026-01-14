@@ -25,6 +25,7 @@ interface Game {
   competition: {
     id: string;
     name: string;
+    logo?: string | null;
   };
   bets: {
     id: string;
@@ -554,6 +555,26 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                         )}
                         
                         <div className="text-center">
+                          {/* Competition Name & Logo - More visible */}
+                          {gameItem.competition && (
+                            <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-2 sm:mb-2.5 pb-1.5 sm:pb-2 border-b border-gray-200">
+                              {gameItem.competition.logo ? (
+                                <img 
+                                  src={gameItem.competition.logo} 
+                                  alt={gameItem.competition.name} 
+                                  className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded object-contain border border-gray-200 bg-white shadow-sm flex-shrink-0" 
+                                />
+                              ) : (
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded bg-gray-200 flex items-center justify-center text-[8px] sm:text-[9px] md:text-[10px] text-gray-600 font-semibold flex-shrink-0 border border-gray-300">
+                                  {gameItem.competition.name.substring(0, 2).toUpperCase()}
+                                </div>
+                              )}
+                              <span className="text-[9px] sm:text-[10px] md:text-xs text-gray-700 font-semibold truncate max-w-[90px] sm:max-w-[110px] md:max-w-[130px]">
+                                {gameItem.competition.name}
+                              </span>
+                            </div>
+                          )}
+                          
                           <div className="font-semibold text-[10px] sm:text-xs md:text-sm mb-1 truncate text-gray-900">
                             {gameItem.homeTeam.name}
                           </div>
@@ -922,7 +943,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         competition: {
           select: {
             id: true,
-            name: true
+            name: true,
+            logo: true
           }
         }
       }
@@ -983,7 +1005,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         competition: {
           select: {
             id: true,
-            name: true
+            name: true,
+            logo: true
           }
         },
         bets: {

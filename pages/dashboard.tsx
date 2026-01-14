@@ -56,6 +56,7 @@ interface UserBet {
   userId: string;
   score1: number;
   score2: number;
+  points?: number | null;
   user: {
     id: string;
     name: string;
@@ -79,8 +80,12 @@ interface BettingGame {
   };
   date: string;
   status: string;
+  externalStatus?: string | null; // V2: External API status (HT, 1H, 2H, etc.)
   homeScore?: number | null;
   awayScore?: number | null;
+  liveHomeScore?: number | null;
+  liveAwayScore?: number | null;
+  elapsedMinute?: number | null; // V2: Chronometer minute
   userBet?: {
     id: string;
     score1: number;
@@ -120,6 +125,12 @@ interface LastGamePerformance {
 }
 
 
+// Helper function to remove season from competition name
+const removeSeasonFromName = (name: string): string => {
+  // Remove patterns like "2025-26", "2025/26", "2025-2026", "2025/2026", "2025", etc.
+  return name.replace(/\s*\d{4}(?:[-/]\d{2,4})?\s*$/, '').trim();
+};
+
 // Personal Stats Section
 const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: UserStats | null; lastGamesPerformance: LastGamePerformance[] }) => {
   if (!stats) return null;
@@ -133,18 +144,33 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
                        const game = lastGamesPerformance[index];
                        return game ? (
                          <div
-                           key={game.gameId}
-                           className={`h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 font-bold text-sm shadow-modern p-2 bg-white border-2 ${
-                             game.result === 'no_bet' ? 'border-blue-300' :
-                             game.points === 3 ? 'border-yellow-400' :
-                             game.points === 1 ? 'border-green-400' :
-                             'border-red-400'
-                           }`}
-                           title={game.result === 'no_bet' ? 
-                             `${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore} (No bet placed)` :
-                             `${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore} (predicted: ${game.predictedScore}) - ${game.points} points`
-                           }
-                         >
+                          key={game.gameId}
+                          className={`h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 font-bold text-sm shadow-modern p-2 bg-white border-2 ${
+                            game.result === 'no_bet' ? 'border-blue-300' :
+                            game.points === 3 ? 'border-yellow-400' :
+                            game.points === 1 ? 'border-green-400' :
+                            'border-red-400'
+                          }`}
+                          title={game.result === 'no_bet' ? 
+                            `${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore} (No bet placed)` :
+                            `${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore} (predicted: ${game.predictedScore}) - ${game.points} points`
+                          }
+                        >
+                {/* Competition logo and name */}
+                <div className="mb-1 flex items-center justify-center space-x-1.5">
+                  {game.competitionLogo && (
+                    <img 
+                      src={game.competitionLogo} 
+                      alt={game.competition}
+                      className="w-5 h-5 object-contain"
+                    />
+                  )}
+                  <span className="text-[11px] font-bold text-gray-700 truncate max-w-[70px]">
+                    {removeSeasonFromName(game.competition)}
+                  </span>
+                </div>
+                {/* Separator line */}
+                <div className="w-full border-t border-gray-300 mb-1"></div>
                 {/* Team logos and codes */}
                 <div className="flex items-center space-x-2 mb-1">
                   <div className="flex flex-col items-center">
@@ -174,7 +200,7 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
                              <div className="text-base font-bold">
                                {game.result === 'no_bet' ? 'shooter!' : game.points}
                              </div>
-                             <div className="text-[10px] text-gray-600">
+                             <div className="text-[11px] font-bold text-gray-700">
                                {new Date(game.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                              </div>
                            </div>
@@ -259,7 +285,7 @@ const AvailableCompetitionsSection = memo(({ competitions, t }: { competitions: 
             <CompetitionCard
               key={competition.id}
               competition={competition}
-              actionLabel="Rejoindre"
+              actionLabel="Voir"
               actionIcon={<TrophyIcon className="h-4 w-4" />}
             />
           ))}
@@ -337,6 +363,13 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
                   awayScore: game.awayScore || undefined,
                   liveHomeScore: game.liveHomeScore || undefined,
                   liveAwayScore: game.liveAwayScore || undefined,
+                  externalStatus: game.externalStatus || undefined, // V2: External API status
+                  elapsedMinute: game.elapsedMinute !== null && game.elapsedMinute !== undefined ? game.elapsedMinute : undefined, // V2: Chronometer
+                  sportType: game.competition?.sportType || undefined,
+                  competition: game.competition ? {
+                    name: game.competition.name,
+                    logo: game.competition.logo || undefined
+                  } : undefined,
                   bets: bets
                 }} 
                 currentUserId={currentUserId} 
@@ -408,6 +441,13 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
                 awayScore: game.awayScore !== null ? game.awayScore : undefined,
                 liveHomeScore: game.liveHomeScore !== null ? game.liveHomeScore : undefined,
                 liveAwayScore: game.liveAwayScore !== null ? game.liveAwayScore : undefined,
+                externalStatus: game.externalStatus || undefined, // V2: External API status
+                elapsedMinute: game.elapsedMinute !== null && game.elapsedMinute !== undefined ? game.elapsedMinute : undefined, // V2: Chronometer
+                sportType: game.competition?.sportType || undefined,
+                competition: game.competition ? {
+                  name: game.competition.name,
+                  logo: game.competition.logo || undefined
+                } : undefined,
                 bets: bets
               }} 
               currentUserId={currentUserId} 

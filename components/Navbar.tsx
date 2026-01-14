@@ -20,6 +20,12 @@ export default function Navbar() {
   const [isClient, setIsClient] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [windowWidth, setWindowWidth] = useState<number | null>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth;
+    }
+    return null;
+  });
   
   // Load from localStorage and session after mount (client-side only)
   useEffect(() => {
@@ -80,6 +86,20 @@ export default function Navbar() {
   const profileRef = useRef<HTMLDivElement>(null);
   const adminEditRef = useRef<HTMLDivElement>(null);
 
+
+  // Track window width for responsive profile picture alignment
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateWidth = () => {
+        setWindowWidth(window.innerWidth);
+      };
+      // Initialize immediately
+      updateWidth();
+      window.addEventListener('resize', updateWidth);
+      return () => window.removeEventListener('resize', updateWidth);
+    }
+  }, []);
+  
 
   // Handle client-side mounting
   useEffect(() => {
@@ -333,23 +353,19 @@ export default function Navbar() {
             <div className="flex items-center flex-shrink-0">
               <Link
                 href="/"
-                className="flex items-end gap-0 text-white hover:text-white transition-colors select-none"
-                style={{ letterSpacing: '0.01em' }}
+                className="flex items-center text-white hover:text-white transition-colors select-none"
               >
-                {/* Logo size: keep consistent until 820px (tablet:), then increase */}
-                <div className="flex items-center justify-center -mr-1">
+                {/* Logo size: increased since name is now in the logo */}
+                <div className="flex items-center justify-center mt-2 tablet:mt-3 xl:mt-4 -ml-8 tablet:-ml-8 xl:-ml-20 2xl:-ml-24">
                   <Image
                     src={logoPng}
-                    alt="PronoFootball.Club"
-                    width={72}
-                    height={72}
+                    alt="Toopil"
+                    width={300}
+                    height={300}
                     priority
-                    className="w-16 h-16 tablet:w-20 tablet:h-20 object-contain transition-transform duration-200 hover:scale-105"
+                    className="w-[216px] h-[216px] tablet:w-60 tablet:h-60 xl:w-[336px] xl:h-[336px] 2xl:w-96 2xl:h-96 object-contain transition-transform duration-200 hover:scale-105"
                   />
                 </div>
-                <span className="font-bold text-lg tablet:text-xl xl:text-2xl 2xl:text-3xl tracking-tight mb-2 tablet:mb-3">
-                  PronoFootball.Club
-                </span>
               </Link>
             </div>
 
@@ -424,10 +440,10 @@ export default function Navbar() {
               {isClient && (profilePictureUrl || session?.user) && (
                 <button
                   onClick={() => setProfileOpen(v => !v)}
-                  className={`relative z-10 group ${
+                  className={`relative z-10 group self-end ${
                     isMobile
-                      ? 'mb-2 self-end' // Mobile: always minimized position (same for all pages)
-                      : 'mb-2 tablet:mb-3 self-end' // Desktop: always minimized (no animation)
+                      ? 'mb-2' // Mobile: always minimized position (same for all pages)
+                      : 'mb-2' // Base margin, will be overridden by inline style
                   }`}
                   aria-label="Open profile menu"
                   style={{ 
@@ -448,7 +464,13 @@ export default function Navbar() {
                     WebkitFontSmoothing: 'antialiased',
                     MozOsxFontSmoothing: 'grayscale',
                     // Ensure smooth sub-pixel rendering
-                    imageRendering: 'auto'
+                    imageRendering: 'auto',
+                    // Fix vertical alignment: use smaller margin for resolutions below 1280px
+                    marginBottom: isMobile 
+                      ? '0.5rem' // mb-2
+                      : (windowWidth === null || windowWidth < 1280)
+                        ? '0.5rem' // mb-2 for resolutions below 1280px (default to smaller if width not yet known)
+                        : '0.75rem' // mb-3 for 1280px and above
                   }}
                 >
                   {/* Profile Picture - Full size, scaled down when scrolled to match logo */}

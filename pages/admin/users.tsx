@@ -380,14 +380,14 @@ export default function AdminUsers() {
       <div className="max-w-6xl mx-auto py-4 px-3 sm:px-4">
         {/* Header */}
         <div className="mb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-            <div>
+          <div className="flex flex-col items-center mb-4">
+            <div className="text-center mb-4">
               <h1 className="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>
               <p className="mt-1 text-xs text-gray-600">Gérez les comptes utilisateurs et leurs permissions</p>
             </div>
             <button
               onClick={openAddModal}
-              className="mt-2 sm:mt-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow-md hover:bg-primary-700 transition-all text-sm font-medium"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow-md hover:bg-primary-700 transition-all text-sm font-medium"
             >
               <UserPlusIcon className="w-4 h-4" />
               Nouvel utilisateur

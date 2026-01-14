@@ -7,8 +7,12 @@ interface BettingGame {
   id: string;
   date: string;
   status: string;
+  externalStatus?: string | null; // V2: External API status (HT, 1H, 2H, etc.)
   homeScore: number | null;
   awayScore: number | null;
+  liveHomeScore?: number | null;
+  liveAwayScore?: number | null;
+  elapsedMinute?: number | null; // V2: Chronometer minute
   homeTeam: {
     id: string;
     name: string;
@@ -25,6 +29,7 @@ interface BettingGame {
     id: string;
     name: string;
     logo: string | null;
+    sportType?: string | null;
   };
   userBet: {
     id: string;
@@ -67,65 +72,103 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Get user's competition participation via CompetitionUser table
+    const userCompetitions = await prisma.competitionUser.findMany({
+      where: { userId: user.id },
+      select: { competitionId: true }
+    });
+    const userCompetitionIds = userCompetitions.map(cu => cu.competitionId);
+
+    if (userCompetitionIds.length === 0) {
+      return res.status(200).json([]);
+    }
+
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
-    // Get games for today
-    const games = await prisma.game.findMany({
-      where: {
-        date: {
-          gte: startOfDay,
-          lt: endOfDay
-        },
-        status: {
-          in: ['UPCOMING', 'LIVE', 'FINISHED']
-        }
-      },
-      include: {
-        homeTeam: {
-          select: {
-            id: true,
-            name: true,
-            logo: true,
-            shortName: true
+    // Get games for today from competitions the user is part of
+    let games;
+    try {
+      games = await prisma.game.findMany({
+        where: {
+          competitionId: {
+            in: userCompetitionIds
+          },
+          date: {
+            gte: startOfDay,
+            lt: endOfDay
+          },
+          status: {
+            in: ['UPCOMING', 'LIVE', 'FINISHED']
           }
         },
-        awayTeam: {
-          select: {
-            id: true,
-            name: true,
-            logo: true,
-            shortName: true
-          }
-        },
-        competition: {
-          select: {
-            id: true,
-            name: true,
-            logo: true
-          }
-        },
-        bets: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                profilePictureUrl: true
-              }
+        select: {
+          id: true,
+          date: true,
+          status: true,
+          externalStatus: true, // V2: External API status
+          homeScore: true,
+          awayScore: true,
+          liveHomeScore: true,
+          liveAwayScore: true,
+          elapsedMinute: true, // V2: Chronometer
+          homeTeam: {
+            select: {
+              id: true,
+              name: true,
+              logo: true,
+              shortName: true
             }
           },
-          orderBy: {
-            createdAt: 'asc'
+          awayTeam: {
+            select: {
+              id: true,
+              name: true,
+              logo: true,
+              shortName: true
+            }
+          },
+          competition: {
+            select: {
+              id: true,
+              name: true,
+              logo: true,
+              sportType: true
+            }
+          },
+          bets: {
+            select: {
+              id: true,
+              userId: true,
+              score1: true,
+              score2: true,
+              points: true,
+              createdAt: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  profilePictureUrl: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'asc'
+            }
           }
-        }
-      },
-      orderBy: [
-        { date: 'asc' },
-        { id: 'asc' } // Secondary sort by ID for stability
-      ]
-    });
+        },
+        orderBy: [
+          { date: 'asc' },
+          { id: 'asc' } // Secondary sort by ID for stability
+        ]
+      });
+    } catch (prismaError: any) {
+      console.error('Prisma query error:', prismaError);
+      console.error('Error code:', prismaError?.code);
+      console.error('Error meta:', prismaError?.meta);
+      throw prismaError;
+    }
 
     // Format the response with same structure as dashboard-betting-games
     const formattedGames: BettingGame[] = games.map(game => {
@@ -135,10 +178,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         id: game.id,
         date: game.date.toISOString(),
         status: game.status,
+        externalStatus: game.externalStatus, // V2: External API status
         homeScore: game.homeScore,
         awayScore: game.awayScore,
         liveHomeScore: game.liveHomeScore,
         liveAwayScore: game.liveAwayScore,
+        elapsedMinute: game.elapsedMinute, // V2: Chronometer
         homeTeam: {
           id: game.homeTeam.id,
           name: game.homeTeam.name,
@@ -154,7 +199,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         competition: {
           id: game.competition.id,
           name: game.competition.name,
-          logo: game.competition.logo
+          logo: game.competition.logo,
+          sportType: game.competition.sportType ? String(game.competition.sportType) : 'FOOTBALL' // Convert enum to string, default to FOOTBALL if null
         },
         userBet: currentUserBet ? {
           id: currentUserBet.id,
@@ -174,7 +220,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           createdAt: bet.createdAt.toISOString(),
           // Show actual scores for LIVE/FINISHED games, hide for UPCOMING
           score1: (game.status === 'LIVE' || game.status === 'FINISHED') ? bet.score1 : null,
-          score2: (game.status === 'LIVE' || game.status === 'FINISHED') ? bet.score2 : null
+          score2: (game.status === 'LIVE' || game.status === 'FINISHED') ? bet.score2 : null,
+          points: bet.points // Include points for color coding in finished games
         }))
       };
     });
@@ -185,6 +232,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return res.status(200).json(formattedGames);
   } catch (error) {
     console.error('Error fetching games of the day:', error);
-    return res.status(500).json({ error: 'Failed to fetch games of the day' });
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
+    return res.status(500).json({ 
+      error: 'Failed to fetch games of the day',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }

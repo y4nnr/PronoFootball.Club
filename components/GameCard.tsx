@@ -21,6 +21,7 @@ interface Team {
 
 interface Game {
   status: string;
+  externalStatus?: string | null; // V2: External API status (HT, 1H, 2H, etc.)
   date: string;
   homeTeam: Team;
   awayTeam: Team;
@@ -28,6 +29,12 @@ interface Game {
   awayScore?: number;
   liveHomeScore?: number;
   liveAwayScore?: number;
+  elapsedMinute?: number | null; // V2: Chronometer minute (0-90+ for football, 0-80+ for rugby)
+  sportType?: string | null; // FOOTBALL or RUGBY
+  competition?: {
+    name: string;
+    logo?: string | null;
+  };
   bets: Bet[];
 }
 
@@ -49,6 +56,23 @@ function formatDateTime(dateString: string) {
   const hour = String(date.getHours()).padStart(2, '0');
   const minute = String(date.getMinutes()).padStart(2, '0');
   return `${day}/${month}/${year} ${hour}:${minute}`;
+}
+
+// Format date only
+function formatDate(dateString: string) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2);
+  return `${day}/${month}/${year}`;
+}
+
+// Format time only
+function formatTime(dateString: string) {
+  const date = new Date(dateString);
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  return `${hour}:${minute}`;
 }
 
 // Abbreviate team names for mobile display - always use shortName if available
@@ -112,6 +136,15 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
       return null;
     }
     
+    // For FINISHED games, prefer using stored points if available (already calculated with correct scoring system)
+    // This ensures rugby games with "very close" scores (3 points) show as gold
+    if (game.status === 'FINISHED' && bet.points !== null && bet.points !== undefined) {
+      if (bet.points === 3) return 'gold';
+      if (bet.points === 1) return 'green';
+      if (bet.points === 0) return 'red';
+    }
+    
+    // Fallback: calculate based on score comparison (for LIVE games or when points not available)
     // Check for exact score match (gold)
     if (bet.score1 === actualHomeScore && bet.score2 === actualAwayScore) {
       return 'gold';
@@ -162,12 +195,31 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         highlightType === 'both' ? 'animate-pulse ring-4 ring-purple-400 ring-opacity-75' :
         'animate-pulse ring-4 ring-yellow-400 ring-opacity-75' : ''
     }`}>
+      {/* Competition Name & Logo */}
+      {game.competition && (
+        <div className="flex items-center gap-2 pb-2 md:pb-2.5 border-b border-neutral-200">
+          {game.competition.logo ? (
+            <img 
+              src={game.competition.logo} 
+              alt={game.competition.name} 
+              className="w-5 h-5 md:w-6 md:h-6 rounded object-cover border border-gray-200 flex-shrink-0" 
+            />
+          ) : (
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded bg-gray-200 flex items-center justify-center text-[8px] md:text-[10px] text-gray-500 flex-shrink-0">
+              {game.competition.name.substring(0, 2).toUpperCase()}
+            </div>
+          )}
+          <span className="text-[10px] md:text-xs text-neutral-600 font-medium truncate flex-1">
+            {game.competition.name}
+          </span>
+        </div>
+      )}
       {/* Date & Status */}
       <div className="flex items-center w-full justify-between pb-2 md:pb-3 border-b border-neutral-200">
-        <span className="text-[9px] md:text-[10px] lg:text-xs text-neutral-500">
+        <span className="text-[9px] md:text-[10px] lg:text-xs text-gray-700 font-semibold bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md border border-gray-200 flex-shrink-0">
           {formatDateTime(game.date)}
         </span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 ml-1.5 md:ml-0 flex-shrink-0">
           {userHasBet && (
             <div className="flex items-center">
               {context === 'home' ? (
@@ -186,24 +238,53 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               )}
             </div>
           )}
-          <span className={`inline-block px-2.5 md:px-2 py-1 md:py-1 text-[10px] md:text-[10px] lg:text-xs rounded-full transition-all duration-300 whitespace-nowrap ${
-            game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
-            game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
-            game.status === 'LIVE' ? 'bg-red-100 text-red-800 animate-pulse' :
-            'bg-gray-100 text-gray-800'
-          } ${
-            isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
-          }`}>
-            {game.status === 'UPCOMING' && t('upcoming')}
-            {game.status === 'FINISHED' && t('finished')}
-            {game.status === 'LIVE' && t('live')}
-            {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status}
-          </span>
+          {game.status === 'LIVE' ? (
+            <div className="flex items-center gap-1.5">
+              {/* Live status badge - NO animation, static */}
+              <span className="inline-block px-2.5 md:px-2 py-1 md:py-1 text-[10px] md:text-[10px] lg:text-xs rounded-full whitespace-nowrap bg-red-100 text-red-800">
+                {t('live')}
+              </span>
+              {/* Separate chronometer badge - ONLY this one blinks */}
+              {game.externalStatus === 'HT' ? (
+                <span className="inline-flex items-center px-2 md:px-2.5 py-1 md:py-1 bg-orange-100 text-orange-800 rounded-full text-[10px] md:text-[10px] lg:text-xs font-bold animate-pulse">
+                  MT
+                </span>
+              ) : game.elapsedMinute !== null && game.elapsedMinute !== undefined ? (
+                <span className="inline-flex items-center justify-center min-w-[32px] px-2 md:px-2.5 py-1 md:py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] md:text-[11px] lg:text-xs font-semibold animate-pulse border border-gray-300">
+                  {game.elapsedMinute}'
+                  {/* Show max time indicator for rugby (80 min) vs football (90 min) */}
+                  {game.sportType === 'RUGBY' && game.elapsedMinute >= 80 && (
+                    <span className="ml-0.5 text-[9px] opacity-75">/80</span>
+                  )}
+                  {game.sportType !== 'RUGBY' && game.elapsedMinute >= 90 && (
+                    <span className="ml-0.5 text-[9px] opacity-75">/90</span>
+                  )}
+                </span>
+              ) : (game.externalStatus === '1H' || game.externalStatus === '2H') ? (
+                // Fallback: show half indicator when chrono is not available
+                <span className="inline-flex items-center justify-center min-w-[32px] px-2 md:px-2.5 py-1 md:py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] md:text-[11px] lg:text-xs font-semibold animate-pulse border border-gray-300">
+                  {game.externalStatus === '1H' ? '1/2' : '2/2'}
+                </span>
+              ) : null}
+            </div>
+          ) : (
+            <span className={`inline-block px-2.5 md:px-2 py-1 md:py-1 text-[10px] md:text-[10px] lg:text-xs rounded-full transition-all duration-300 whitespace-nowrap ${
+              game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
+              game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
+              'bg-gray-100 text-gray-800'
+            } ${
+              isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
+            }`}>
+              {game.status === 'UPCOMING' && t('upcoming')}
+              {game.status === 'FINISHED' && t('finished')}
+              {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status}
+            </span>
+          )}
         </div>
       </div>
       {/* Teams & Score */}
       <div className="flex items-center w-full justify-between py-2 md:py-3 border-b border-neutral-200">
-        {/* Home Team */}
+          {/* Home Team */}
         <div className="flex flex-col md:flex-row items-center min-w-0 w-2/5 justify-end pr-1 md:pr-2 gap-1 md:gap-0">
           {/* Mobile: Logo on top, name below */}
           <div className="md:hidden flex flex-col items-center w-full">
@@ -280,31 +361,35 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                   (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
                   (() => {
                     const highlight = getBetHighlight(bet);
-                    // For LIVE games: borders only, for FINISHED games: backgrounds
+                    // For LIVE games: colored text only with blinking animation
                     if (game.status === 'LIVE' && highlight) {
-                      const borderColor = highlight === 'gold' ? 'border-yellow-400 border-2' :
-                                        highlight === 'green' ? 'border-green-400 border-2' :
-                                        highlight === 'red' ? 'border-red-400 border-2' :
-                                        'border-gray-300 border';
+                      const textColor = highlight === 'gold' ? 'text-yellow-600' :
+                                       highlight === 'green' ? 'text-green-600' :
+                                       highlight === 'red' ? 'text-red-600' :
+                                       'text-gray-700';
                       return (
-                        <span className={`text-[10px] md:text-xs font-mono text-gray-900 bg-transparent ${borderColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                        <span className={`text-[10px] md:text-xs font-mono ${textColor} px-1.5 md:px-2 py-0.5 ml-auto font-bold animate-pulse`}>
                           {bet.score1} - {bet.score2}
                         </span>
                       );
                     } else if (game.status === 'FINISHED' && highlight) {
-                      // For finished games: background color with border, black text
-                      const bgColor = highlight === 'gold' ? 'bg-yellow-200 border-yellow-400 border-2' :
-                                    highlight === 'green' ? 'bg-green-200 border-green-400 border-2' :
-                                    highlight === 'red' ? 'bg-red-200 border-red-400 border-2' :
-                                    'bg-gray-100';
+                      // For finished games: colored text with very light background
+                      const textColor = highlight === 'gold' ? 'text-yellow-600' :
+                                       highlight === 'green' ? 'text-green-600' :
+                                       highlight === 'red' ? 'text-red-600' :
+                                       'text-gray-700';
+                      const bgColor = highlight === 'gold' ? 'bg-yellow-50' :
+                                     highlight === 'green' ? 'bg-green-50' :
+                                     highlight === 'red' ? 'bg-red-50' :
+                                     'bg-gray-50';
                       return (
-                        <span className={`text-[10px] md:text-xs font-mono text-gray-900 ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
+                        <span className={`text-[10px] md:text-xs font-mono ${textColor} ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
                           {bet.score1} - {bet.score2}
                         </span>
                       );
                     } else {
                       return (
-                        <span className="text-[10px] md:text-xs font-mono text-gray-900 bg-gray-100 rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold">
+                        <span className="text-[10px] md:text-xs font-mono text-gray-700 px-1.5 md:px-2 py-0.5 ml-auto font-bold">
                           {bet.score1} - {bet.score2}
                         </span>
                       );

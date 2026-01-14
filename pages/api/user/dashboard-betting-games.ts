@@ -7,10 +7,12 @@ interface BettingGame {
   id: string;
   date: string;
   status: string;
+  externalStatus?: string | null; // V2: External API status (HT, 1H, 2H, etc.)
   homeScore?: number | null;
   awayScore?: number | null;
   liveHomeScore?: number | null;
   liveAwayScore?: number | null;
+  elapsedMinute?: number | null; // V2: Chronometer minute
   homeTeam: {
     id: string;
     name: string;
@@ -22,6 +24,12 @@ interface BettingGame {
     name: string;
     logo: string | null;
     shortName: string | null;
+  };
+  competition?: {
+    id: string;
+    name: string;
+    logo: string | null;
+    sportType: string;
   };
   userBet: {
     id: string;
@@ -72,9 +80,23 @@ export default async function handler(
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Get active competitions (case-insensitive)
+    // Get user's competition participation via CompetitionUser table
+    const userCompetitions = await prisma.competitionUser.findMany({
+      where: { userId: user.id },
+      select: { competitionId: true }
+    });
+    const userCompetitionIds = userCompetitions.map(cu => cu.competitionId);
+
+    if (userCompetitionIds.length === 0) {
+      return res.status(200).json({ games: [], hasMore: false, total: 0 });
+    }
+
+    // Get active competitions that the user is part of (case-insensitive)
     const activeCompetitions = await prisma.competition.findMany({
       where: {
+        id: {
+          in: userCompetitionIds
+        },
         status: { 
           in: ['ACTIVE', 'active', 'UPCOMING', 'upcoming'] 
         },
@@ -118,12 +140,22 @@ export default async function handler(
         id: true,
         date: true,
         status: true,
+        externalStatus: true, // V2: External API status
         homeScore: true,
         awayScore: true,
         liveHomeScore: true,
         liveAwayScore: true,
+        elapsedMinute: true, // V2: Chronometer
         homeTeam: { select: { id: true, name: true, logo: true, shortName: true } },
         awayTeam: { select: { id: true, name: true, logo: true, shortName: true } },
+        competition: { 
+          select: { 
+            id: true, 
+            name: true, 
+            logo: true, 
+            sportType: true 
+          } 
+        },
         bets: { 
           select: { 
             id: true, 
@@ -151,10 +183,12 @@ export default async function handler(
         id: game.id,
         date: game.date.toISOString(),
         status: game.status,
+        externalStatus: game.externalStatus, // V2: External API status
         homeScore: game.homeScore,
         awayScore: game.awayScore,
         liveHomeScore: game.liveHomeScore,
         liveAwayScore: game.liveAwayScore,
+        elapsedMinute: game.elapsedMinute, // V2: Chronometer
         homeTeam: {
           id: game.homeTeam.id,
           name: game.homeTeam.name,
@@ -167,6 +201,12 @@ export default async function handler(
           logo: game.awayTeam.logo,
           shortName: game.awayTeam.shortName
         },
+        competition: game.competition ? {
+          id: game.competition.id,
+          name: game.competition.name,
+          logo: game.competition.logo,
+          sportType: game.competition.sportType
+        } : undefined,
         userBet: currentUserBet ? {
           id: currentUserBet.id,
           score1: currentUserBet.score1 ?? 0,
@@ -196,14 +236,16 @@ export default async function handler(
     console.log('🎯 DASHBOARD BETTING GAMES API LOG:');
     console.log('📊 Page:', pageNum, 'Limit:', limitNum, 'Offset:', offset);
     console.log('📊 Games returned:', games.length, 'Total available:', totalCount, 'Has more:', hasMore);
-    console.log('📊 Active competitions:', activeCompetitions.length);
+    console.log('📊 User competitions:', userCompetitionIds.length);
+    console.log('📊 Active competitions (user participating):', activeCompetitions.length);
     console.log('📊 Date filter: >=', endOfDay.toISOString());
     console.log('📊 Showing future games only (tomorrow onwards) to avoid duplication with "Matchs du jour"');
     
     if (games.length === 0) {
       console.log('⚠️ No betting games found - this might cause empty "Matchs à venir" section');
       console.log('🔍 Debug info:');
-      console.log('  - Active competitions:', activeCompetitions.map(c => c.id));
+      console.log('  - User competition IDs:', userCompetitionIds);
+      console.log('  - Active competitions (user participating):', activeCompetitions.map(c => c.id));
       console.log('  - Date filter:', endOfDay.toISOString());
       console.log('  - Status filter: UPCOMING only');
     }
@@ -215,6 +257,14 @@ export default async function handler(
     });
   } catch (error) {
     console.error('Dashboard betting games API error:', error);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
+    return res.status(500).json({ 
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 } 

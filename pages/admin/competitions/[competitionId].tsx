@@ -74,6 +74,13 @@ export default function CompetitionDetail() {
   const [duplicating, setDuplicating] = useState(false);
   const [deletingGame, setDeletingGame] = useState(false);
 
+  // Participants management state
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
+  const [showRemoveParticipantModal, setShowRemoveParticipantModal] = useState(false);
+  const [participantToRemove, setParticipantToRemove] = useState<{ userId: string; userName: string } | null>(null);
+  const [removingParticipant, setRemovingParticipant] = useState(false);
+
   // Pagination state for games
   const [currentPage, setCurrentPage] = useState(1);
   const gamesPerPage = 50;
@@ -130,12 +137,31 @@ export default function CompetitionDetail() {
   //   }
   // }, [session, status, router]);
 
+  const fetchParticipants = useCallback(async () => {
+    if (!competitionId || status !== 'authenticated') return;
+
+    setLoadingParticipants(true);
+    try {
+      const response = await fetch(`/api/admin/competitions/${competitionId}/participants`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch participants');
+      }
+      const data = await response.json();
+      setParticipants(data.participants || []);
+    } catch (err) {
+      console.error('Error fetching participants:', err);
+    } finally {
+      setLoadingParticipants(false);
+    }
+  }, [competitionId, status]);
+
   useEffect(() => {
     if (status === 'authenticated') {
       fetchCompetitionDetails();
       fetchTeams();
+      fetchParticipants();
     }
-  }, [status, fetchCompetitionDetails, fetchTeams]);
+  }, [status, fetchCompetitionDetails, fetchTeams, fetchParticipants]);
 
   const handleCreateGame = async () => {
     setFormError(null);
@@ -291,6 +317,32 @@ export default function CompetitionDetail() {
       setFormError(error instanceof Error ? error.message : 'Failed to delete game');
     } finally {
       setDeletingGame(false);
+    }
+  };
+
+  const handleRemoveParticipant = async () => {
+    if (!participantToRemove || !competitionId) return;
+
+    setRemovingParticipant(true);
+    try {
+      const response = await fetch(`/api/admin/competitions/${competitionId}/participants/${participantToRemove.userId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to remove participant');
+      }
+
+      // Remove participant from local state
+      setParticipants(prev => prev.filter(p => p.userId !== participantToRemove.userId));
+      setShowRemoveParticipantModal(false);
+      setParticipantToRemove(null);
+    } catch (error) {
+      console.error('Error removing participant:', error);
+      alert(error instanceof Error ? error.message : 'Erreur lors de la suppression du participant');
+    } finally {
+      setRemovingParticipant(false);
     }
   };
 
@@ -524,6 +576,116 @@ export default function CompetitionDetail() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Participants Management Section */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">Participants</h3>
+          <p className="text-sm text-gray-500">
+            {loadingParticipants ? 'Chargement...' : `${participants.length} participant${participants.length > 1 ? 's' : ''}`}
+          </p>
+        </div>
+
+        {loadingParticipants ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-500 mt-2">Chargement des participants...</p>
+          </div>
+        ) : participants.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun participant</h3>
+            <p className="text-gray-500">Aucun utilisateur n'a encore rejoint cette compétition.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Utilisateur
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Paris
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Points
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rejoint le
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {participants.map((participant, index) => (
+                  <tr key={participant.userId} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {participant.user.profilePictureUrl ? (
+                          <img
+                            className="h-10 w-10 rounded-full mr-3"
+                            src={participant.user.profilePictureUrl}
+                            alt={participant.user.name}
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-gray-300 mr-3 flex items-center justify-center">
+                            <span className="text-gray-600 font-medium">
+                              {participant.user.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="text-sm font-medium text-gray-900">
+                          {participant.user.name}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">{participant.user.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{participant.betCount}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{participant.totalPoints}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {new Date(participant.joinedAt).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => {
+                          setParticipantToRemove({
+                            userId: participant.userId,
+                            userName: participant.user.name
+                          });
+                          setShowRemoveParticipantModal(true);
+                        }}
+                        className="text-red-600 hover:text-red-900 font-medium"
+                      >
+                        Retirer
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
       
       <button
@@ -1138,6 +1300,44 @@ export default function CompetitionDetail() {
     </div>
   )}
       </div>
+
+      {/* Remove Participant Modal */}
+      {showRemoveParticipantModal && participantToRemove && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Retirer un participant</h3>
+            <p className="text-gray-700 mb-4">
+              Êtes-vous sûr de vouloir retirer <strong>{participantToRemove.userName}</strong> de cette compétition ?
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              Cette action retirera l'utilisateur de la compétition. Ses paris existants seront conservés mais il ne pourra plus voir cette compétition dans son dashboard.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRemoveParticipantModal(false);
+                  setParticipantToRemove(null);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                disabled={removingParticipant}
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleRemoveParticipant}
+                className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 ${
+                  removingParticipant ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                disabled={removingParticipant}
+              >
+                {removingParticipant ? 'Suppression...' : 'Retirer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 } 

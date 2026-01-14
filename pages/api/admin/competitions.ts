@@ -30,7 +30,7 @@ export default async function handler(
 
   } else if (req.method === 'POST') {
     // Handle creating a new competition
-    const { name, description, startDate, endDate } = req.body;
+    const { name, description, startDate, endDate, sportType = 'FOOTBALL' } = req.body;
 
     if (!name || !startDate || !endDate) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -44,6 +44,7 @@ export default async function handler(
           startDate: new Date(startDate),
           endDate: new Date(endDate),
           status: 'UPCOMING', // Default status for a new competition
+          sportType: sportType as any, // FOOTBALL or RUGBY
         },
       });
       res.status(201).json(newCompetition);
