@@ -142,6 +142,97 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const { t } = useTranslation('common');
   const [showAllGames, setShowAllGames] = useState(false);
   const [gamesWithBets, setGamesWithBets] = useState<Map<string, any[]>>(new Map());
+
+  // Helper function to render rugby scoring examples with table-like styling
+  const renderRugbyExamples = (examplesText: string) => {
+    // Split by bullet points
+    const examples = examplesText.split('\n•').filter(line => line.trim());
+    // Detect language from the text
+    const isFrench = examplesText.includes('Exemples');
+    const examplesLabel = isFrench ? 'Exemples :' : 'Examples:';
+    // Remove the "Exemples :" or "Examples:" header and filter out empty examples
+    const cleanExamples = examples
+      .map(ex => ex.replace(/^(Exemples|Examples)\s*:\s*/i, '').trim())
+      .filter(ex => ex.length > 0 && !ex.match(/^(Exemples|Examples)\s*:?\s*$/i));
+    
+    return (
+      <div className="mt-3">
+        <div className="text-xs font-medium text-gray-700 mb-2">{examplesLabel}</div>
+        <div className="space-y-3">
+          {cleanExamples.map((example, index) => {
+          // Split into lines
+          const lines = example.split('\n').filter(l => l.trim());
+          const mainLine = lines[0] || '';
+          // Skip if mainLine is empty or just a header
+          if (!mainLine || mainLine.match(/^(Exemples|Examples)\s*:?\s*$/i)) {
+            return null;
+          }
+          const winnerLine = lines.find(l => l.includes('Vainqueur:') || l.includes('Winner:')) || '';
+          const diffLine = lines.find(l => l.includes('Différence:') || l.includes('Difference:')) || '';
+          
+          return (
+            <div key={index} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+              <div className="font-semibold text-sm text-gray-800 mb-2">{mainLine}</div>
+              {winnerLine && (
+                <div className="text-xs text-gray-700 mb-1 ml-2">
+                  <span className="font-medium">{winnerLine.split(':')[0]}:</span>
+                  <span className={
+                    winnerLine.includes('PAS OK') || winnerLine.includes('NOT OK') 
+                      ? 'text-red-600 ml-1' 
+                      : winnerLine.includes('OK') 
+                        ? 'text-green-600 ml-1' 
+                        : 'text-gray-700 ml-1'
+                  }>
+                    {winnerLine.split(':')[1]?.trim()}
+                  </span>
+                </div>
+              )}
+              {diffLine && (() => {
+                // Split at the arrow to separate calculation from points
+                const parts = diffLine.split('→');
+                const calculation = parts[0]?.trim() || '';
+                const points = parts[1]?.trim() || '';
+                
+                // Extract total value and determine color
+                const totalMatch = calculation.match(/Total\s*=\s*(\d+)/i);
+                const totalValue = totalMatch ? parseInt(totalMatch[1], 10) : null;
+                
+                // Color: green if Total ≤ 5 (regardless of winner), red if Total > 5
+                const totalColor = (totalValue !== null && totalValue <= 5) ? 'text-green-600' : 'text-red-600';
+                
+                // Split calculation to highlight Total part
+                const totalRegex = /(Total\s*=\s*\d+)/i;
+                const calculationParts = calculation.split(totalRegex);
+                
+                return (
+                  <div className="text-xs text-gray-600 ml-2">
+                    <div>
+                      {calculationParts.map((part, idx) => {
+                        if (totalRegex.test(part)) {
+                          return (
+                            <span key={idx} className={totalColor}>
+                              {part}
+                            </span>
+                          );
+                        }
+                        return <span key={idx}>{part}</span>;
+                      })}
+                    </div>
+                    {points && (
+                      <div className="mt-1">
+                        <span className="font-bold text-gray-800">→ {points}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          );
+        })}
+        </div>
+      </div>
+    );
+  };
   const [loadingBets, setLoadingBets] = useState<Set<string>>(new Set());
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
   const [playersPerformance, setPlayersPerformance] = useState<PlayerPerformance[]>([]);
@@ -1017,7 +1108,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 </span>
               </h2>
               <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">
+                <div className="hidden md:block text-sm text-gray-500">
                   {showAllGames ? games.length : games.filter(g => g.status === 'UPCOMING' || g.status === 'LIVE').length} {t('competition.games')}
                 </div>
                 <button
@@ -1364,7 +1455,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
               <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
                 <h3 className="font-bold text-green-800 mb-2">{t('competition.rules.rugby.threePoints')}</h3>
                 <p className="text-sm text-gray-700 mb-2">{t('competition.rules.rugby.threePointsDesc')}</p>
-                <p className="text-xs text-gray-600 italic">{t('competition.rules.rugby.threePointsExamples')}</p>
+                {renderRugbyExamples(t('competition.rules.rugby.threePointsExamples'))}
               </div>
               <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                 <h3 className="font-bold text-blue-800 mb-2">{t('competition.rules.rugby.onePoint')}</h3>

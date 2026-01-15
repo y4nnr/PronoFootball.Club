@@ -329,8 +329,8 @@
       },
       "rugby": {
         "threePoints": "3 points - Exact or very close score",
-        "threePointsDesc": "If you predict the exact score or if the total difference between your prediction and the actual score is 5 points or less, you get 3 points.",
-        "threePointsExamples": "Examples: Prediction 25-22, Actual 26-23 (difference = 2) → 3 points | Prediction 20-15, Actual 24-18 (difference = 7) → no 3 points",
+        "threePointsDesc": "If you predict the exact score or if you get the winner right and the total difference between your prediction and the actual score is 5 points or less, you get 3 points.",
+        "threePointsExamples": "Examples:\n• Prediction 25-22, Final Score 26-23\n  Winner: OK\n  Difference: Home: |25-26| = 1, Away: |22-23| = 1, Total = 2 → 3 points\n• Prediction 20-15, Final Score 24-18\n  Winner: OK\n  Difference: Home: |20-24| = 4, Away: |15-18| = 3, Total = 7 → 1 point\n• Prediction 23-22, Final Score 22-23\n  Winner: NOT OK\n  Difference: Home: |23-22| = 1, Away: |22-23| = 1, Total = 2 → 0 points",
         "onePoint": "1 point - Correct result",
         "onePointDesc": "If you predict the correct result (win, draw, loss) but the total difference is greater than 5 points, you get 1 point.",
         "zeroPoints": "0 points - Incorrect result",

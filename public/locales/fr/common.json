@@ -283,8 +283,8 @@
       },
       "rugby": {
         "threePoints": "3 points - Score exact ou très proche",
-        "threePointsDesc": "Si vous prédisez le score exact ou si la différence totale entre votre pronostic et le score réel est de 5 points ou moins, vous obtenez 3 points.",
-        "threePointsExamples": "Exemples : Pronostic 25-22, Réel 26-23 (différence = 2) → 3 points | Pronostic 20-15, Réel 24-18 (différence = 7) → pas 3 points",
+        "threePointsDesc": "Si vous prédisez le score exact ou si vous trouvez le vainqueur et que la différence totale entre votre pronostic et le score réel est de 5 points ou moins, vous obtenez 3 points.",
+        "threePointsExamples": "Exemples :\n• Pronostic 25-22, Score Final 26-23\n  Vainqueur: OK\n  Différence: Domicile: |25-26| = 1, Extérieur: |22-23| = 1, Total = 2 → 3 points\n• Pronostic 20-15, Score Final 24-18\n  Vainqueur: OK\n  Différence: Domicile: |20-24| = 4, Extérieur: |15-18| = 3, Total = 7 → 1 point\n• Pronostic 23-22, Score Final 22-23\n  Vainqueur: PAS OK\n  Différence: Domicile: |23-22| = 1, Extérieur: |22-23| = 1, Total = 2 → 0 points",
         "onePoint": "1 point - Résultat correct",
         "onePointDesc": "Si vous prédisez le bon résultat (victoire, match nul, défaite) mais que la différence totale est supérieure à 5 points, vous obtenez 1 point.",
         "zeroPoints": "0 point - Résultat incorrect",

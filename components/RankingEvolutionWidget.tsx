@@ -150,6 +150,14 @@ const RankingEvolutionWidget = memo(({
   if (loading) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+        <div className="flex items-center mb-4">
+          <div className="p-2 bg-primary-600 rounded-full shadow mr-3 flex items-center justify-center">
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">Évolution du Classement</h2>
+        </div>
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
         </div>
@@ -160,6 +168,14 @@ const RankingEvolutionWidget = memo(({
   if (error) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+        <div className="flex items-center mb-4">
+          <div className="p-2 bg-primary-600 rounded-full shadow mr-3 flex items-center justify-center">
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">Évolution du Classement</h2>
+        </div>
         <div className="text-center py-8">
           <div className="text-red-500 text-4xl mb-3">⚠️</div>
           <p className="text-red-500 mb-2">{error}</p>
@@ -177,6 +193,14 @@ const RankingEvolutionWidget = memo(({
   if (rankingData.length === 0) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mb-4 w-full">
+        <div className="flex items-center mb-4">
+          <div className="p-2 bg-primary-600 rounded-full shadow mr-3 flex items-center justify-center">
+            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">Évolution du Classement</h2>
+        </div>
         <div className="text-center py-8">
           <div className="text-gray-400 text-4xl mb-3">📈</div>
           <p className="text-gray-500">
