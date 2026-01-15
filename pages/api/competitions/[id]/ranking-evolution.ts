@@ -30,17 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid competition ID' });
     }
 
-    // Verify user is part of this competition
-    const competitionUser = await prisma.competitionUser.findFirst({
-      where: {
-        competitionId,
-        userId: session.user.id,
-      },
-    });
-
-    if (!competitionUser) {
-      return res.status(403).json({ error: 'Not part of this competition' });
-    }
+    // Allow anyone (authenticated users) to view ranking data to entice new players
+    // No need to check if user is part of the competition
 
     // Get all finished games for this competition, ordered by date
     const finishedGames = await prisma.game.findMany({
