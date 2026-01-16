@@ -640,8 +640,34 @@ export default function Dashboard() {
       }
       
       console.log('🎯 FRONTEND LOG - Setting betting games:', gamesToSet.length, 'games');
-      setBettingGames(gamesToSet);
-      setGamesOfDay(gamesOfDayData);
+      
+      // Stable sort to prevent cards from jumping around (same as SSE refresh)
+      if (gamesToSet.length > 0) {
+        const sortedBettingData = [...gamesToSet].sort((a, b) => {
+          // First sort by date, then by ID for stability
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          if (dateA !== dateB) return dateA - dateB;
+          return a.id.localeCompare(b.id);
+        });
+        setBettingGames(sortedBettingData);
+      } else {
+        setBettingGames([]);
+      }
+      
+      // Stable sort for games of day as well
+      if (Array.isArray(gamesOfDayData) && gamesOfDayData.length > 0) {
+        const sortedGamesOfDayData = [...gamesOfDayData].sort((a, b) => {
+          // First sort by date, then by ID for stability
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          if (dateA !== dateB) return dateA - dateB;
+          return a.id.localeCompare(b.id);
+        });
+        setGamesOfDay(sortedGamesOfDayData);
+      } else {
+        setGamesOfDay(Array.isArray(gamesOfDayData) ? gamesOfDayData : []);
+      }
       setLastGamesPerformance(performanceData.lastGamesPerformance || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
