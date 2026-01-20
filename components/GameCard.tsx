@@ -248,7 +248,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           )}
         </div>
       )}
-      {/* Mobile: Date/Time and Status on same line */}
+      {/* Mobile: Date/Time and Status on same line, chronometer below status */}
       <div className="flex items-center w-full justify-between pb-2.5 md:hidden border-b border-neutral-200">
         {/* Date/Time on left - date above time */}
         <div className="flex items-center flex-shrink-0">
@@ -257,10 +257,10 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
             <span className="leading-tight mt-0.5">{formatTime(game.date)}</span>
           </span>
         </div>
-        {/* Status on the right */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* Status on the right - status on top, chronometer below */}
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
           {game.status === 'LIVE' ? (
-            <div className="flex items-center gap-1.5">
+            <>
               <span className="inline-block px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap bg-red-100 text-red-800 font-medium">
                 {t('live')}
               </span>
@@ -283,7 +283,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                   {game.externalStatus === '1H' ? '1/2' : '2/2'}
                 </span>
               ) : null}
-            </div>
+            </>
           ) : (
             <span className={`inline-block px-2 py-0.5 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-medium ${
               game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
@@ -449,8 +449,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                                        highlight === 'red' ? 'text-red-600' :
                                        'text-gray-700';
                       return (
-                        <span className={`text-xs font-mono ${textColor} px-2 py-0.5 ml-auto font-semibold animate-pulse`}>
-                          {bet.score1} - {bet.score2}
+                        <span className={`text-xs font-mono ${textColor} px-1.5 md:px-2 py-0.5 ml-auto font-semibold animate-pulse`}>
+                          <span className="md:hidden">{bet.score1}-{bet.score2}</span>
+                          <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
                       );
                     } else if (game.status === 'FINISHED' && highlight) {
@@ -464,14 +465,16 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                                      highlight === 'red' ? 'bg-red-50' :
                                      'bg-gray-50';
                       return (
-                        <span className={`text-xs font-mono ${textColor} ${bgColor} rounded px-2 py-0.5 ml-auto font-semibold`}>
-                          {bet.score1} - {bet.score2}
+                        <span className={`text-xs font-mono ${textColor} ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-semibold`}>
+                          <span className="md:hidden">{bet.score1}-{bet.score2}</span>
+                          <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
                       );
                     } else {
                       return (
-                        <span className="text-xs font-mono text-gray-700 px-2 py-0.5 ml-auto font-semibold">
-                          {bet.score1} - {bet.score2}
+                        <span className="text-xs font-mono text-gray-700 px-1.5 md:px-2 py-0.5 ml-auto font-semibold">
+                          <span className="md:hidden">{bet.score1}-{bet.score2}</span>
+                          <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
                       );
                     }
