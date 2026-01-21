@@ -448,8 +448,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                                        highlight === 'green' ? 'text-green-600' :
                                        highlight === 'red' ? 'text-red-600' :
                                        'text-gray-700';
+                      const borderClass = highlight === 'gold' ? 'border-2 border-yellow-500' : '';
                       return (
-                        <span className={`text-xs font-mono ${textColor} px-1.5 md:px-2 py-0.5 ml-auto font-semibold animate-pulse`}>
+                        <span className={`text-xs font-mono ${textColor} ${borderClass} rounded px-1.5 md:px-2 py-0.5 ml-auto font-semibold animate-pulse`}>
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
@@ -464,8 +465,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                                      highlight === 'green' ? 'bg-green-50' :
                                      highlight === 'red' ? 'bg-red-50' :
                                      'bg-gray-50';
+                      const borderClass = highlight === 'gold' ? 'border-2 border-yellow-500' : '';
                       return (
-                        <span className={`text-xs font-mono ${textColor} ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-semibold`}>
+                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded px-1.5 md:px-2 py-0.5 ml-auto font-semibold`}>
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
