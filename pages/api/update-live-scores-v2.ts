@@ -457,6 +457,38 @@ export default async function handler(
           );
         } else {
           console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+          
+          // Verify team names match (safety check in case external ID is wrong)
+          // Use flexible matching: check if any significant word from one name appears in the other
+          const normalizeForMatch = (name: string) => name.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+          const dbHomeNorm = normalizeForMatch(matchingGame.homeTeam.name);
+          const apiHomeNorm = normalizeForMatch(externalMatch.homeTeam.name);
+          const dbAwayNorm = normalizeForMatch(matchingGame.awayTeam.name);
+          const apiAwayNorm = normalizeForMatch(externalMatch.awayTeam.name);
+          
+          // Extract key words (words longer than 2 chars) for matching
+          const getKeyWords = (name: string) => name.split(/\s+/).filter(w => w.length > 2);
+          const dbHomeWords = getKeyWords(dbHomeNorm);
+          const apiHomeWords = getKeyWords(apiHomeNorm);
+          const dbAwayWords = getKeyWords(dbAwayNorm);
+          const apiAwayWords = getKeyWords(apiAwayNorm);
+          
+          const homeNameMatch = dbHomeWords.some(w => apiHomeNorm.includes(w)) || 
+                               apiHomeWords.some(w => dbHomeNorm.includes(w)) ||
+                               dbHomeNorm.includes(apiHomeNorm) || 
+                               apiHomeNorm.includes(dbHomeNorm);
+          const awayNameMatch = dbAwayWords.some(w => apiAwayNorm.includes(w)) || 
+                               apiAwayWords.some(w => dbAwayNorm.includes(w)) ||
+                               dbAwayNorm.includes(apiAwayNorm) || 
+                               apiAwayNorm.includes(dbAwayNorm);
+          
+          if (!homeNameMatch || !awayNameMatch) {
+            console.log(`   ⚠️ WARNING: External ID match but team names don't match!`);
+            console.log(`      DB: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+            console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            console.log(`   ⚠️ Skipping this match - external ID might be wrong`);
+            continue;
+          }
         }
 
         if (!matchingGame) {
@@ -486,18 +518,62 @@ export default async function handler(
         console.log(`   External: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
         console.log(`   External score: ${externalMatch.score.fullTime.home}-${externalMatch.score.fullTime.away}`);
         console.log(`   External elapsed: ${externalMatch.elapsedMinute} min`);
-        console.log(`   Current DB score: ${matchingGame.liveHomeScore || 0}-${matchingGame.liveAwayScore || 0}`);
+        console.log(`   Current DB score: ${matchingGame.liveHomeScore ?? 0}-${matchingGame.liveAwayScore ?? 0}`);
 
         // Get external scores
-        let externalHomeScore = matchingGame.liveHomeScore;
-        let externalAwayScore = matchingGame.liveAwayScore;
+        // IMPORTANT: During HT (half-time), some APIs may return null/0 for scores
+        // We should preserve the last known score during HT, but still update if API provides valid score
+        let externalHomeScore = matchingGame.liveHomeScore ?? 0;
+        let externalAwayScore = matchingGame.liveAwayScore ?? 0;
         
-        if (externalMatch.score.fullTime.home !== null) {
-          externalHomeScore = externalMatch.score.fullTime.home;
+        const isHalfTime = externalMatch.externalStatus === 'HT';
+        const apiHomeScore = externalMatch.score.fullTime.home;
+        const apiAwayScore = externalMatch.score.fullTime.away;
+        
+        console.log(`   🔍 API returned scores: ${apiHomeScore ?? 'null'}-${apiAwayScore ?? 'null'} (status: ${externalMatch.externalStatus})`);
+        console.log(`   🔍 Current DB scores: ${matchingGame.liveHomeScore ?? 'null'}-${matchingGame.liveAwayScore ?? 'null'}`);
+        console.log(`   🔍 Is Half-Time: ${isHalfTime}`);
+        
+        // Update if external score is a valid number
+        // IMPORTANT: If API returns 0-0 but we have a non-zero score, preserve it (API bug during HT/transitions)
+        // This prevents losing valid scores when API temporarily returns 0-0
+        if (apiHomeScore !== null && apiHomeScore !== undefined) {
+          // If API returns 0 but we have a non-zero score, preserve it
+          // Exception: if game just started (elapsed < 2 min), allow 0-0 (legitimate start)
+          const gameJustStarted = externalMatch.elapsedMinute !== null && externalMatch.elapsedMinute < 2;
+          const apiReturnsZeroButWeHaveScore = apiHomeScore === 0 && (matchingGame.liveHomeScore ?? 0) > 0;
+          
+          if (apiReturnsZeroButWeHaveScore && !gameJustStarted) {
+            console.log(`   ⚠️ API bug detected: preserving last known home score ${matchingGame.liveHomeScore} (API returned 0, status: ${externalMatch.externalStatus}, elapsed: ${externalMatch.elapsedMinute})`);
+            externalHomeScore = matchingGame.liveHomeScore ?? 0;
+          } else {
+            externalHomeScore = apiHomeScore;
+            console.log(`   ✅ Updating home score: ${matchingGame.liveHomeScore ?? 0} → ${externalHomeScore}`);
+          }
+        } else {
+          console.log(`   ⚠️ API returned null/undefined for home score, keeping current: ${externalHomeScore}`);
         }
-        if (externalMatch.score.fullTime.away !== null) {
-          externalAwayScore = externalMatch.score.fullTime.away;
+        
+        if (apiAwayScore !== null && apiAwayScore !== undefined) {
+          // If API returns 0 but we have a non-zero score, preserve it
+          // Exception: if game just started (elapsed < 2 min), allow 0-0 (legitimate start)
+          const gameJustStarted = externalMatch.elapsedMinute !== null && externalMatch.elapsedMinute < 2;
+          const apiReturnsZeroButWeHaveScore = apiAwayScore === 0 && (matchingGame.liveAwayScore ?? 0) > 0;
+          
+          if (apiReturnsZeroButWeHaveScore && !gameJustStarted) {
+            console.log(`   ⚠️ API bug detected: preserving last known away score ${matchingGame.liveAwayScore} (API returned 0, status: ${externalMatch.externalStatus}, elapsed: ${externalMatch.elapsedMinute})`);
+            externalAwayScore = matchingGame.liveAwayScore ?? 0;
+          } else {
+            externalAwayScore = apiAwayScore;
+            console.log(`   ✅ Updating away score: ${matchingGame.liveAwayScore ?? 0} → ${externalAwayScore}`);
+          }
+        } else {
+          console.log(`   ⚠️ API returned null/undefined for away score, keeping current: ${externalAwayScore}`);
         }
+        
+        console.log(`   🔍 Final extracted scores BEFORE updateData: ${externalHomeScore}-${externalAwayScore}`);
+        
+        console.log(`   Final extracted scores: ${externalHomeScore}-${externalAwayScore}${isHalfTime ? ' (HT - preserved if needed)' : ''}`);
 
         // Check if scores changed
         const homeScoreChanged = externalHomeScore !== matchingGame.liveHomeScore;
@@ -536,8 +612,10 @@ export default async function handler(
         };
 
         // Always update scores (even if same, to ensure sync)
+        // Use the extracted scores (already handled HT preservation logic above)
         updateData.liveHomeScore = externalHomeScore;
         updateData.liveAwayScore = externalAwayScore;
+        console.log(`   📝 Final updateData scores: liveHomeScore = ${updateData.liveHomeScore}, liveAwayScore = ${updateData.liveAwayScore}`);
 
         // V2: Add elapsedMinute if available, but NOT during half-time (HT)
         // During half-time, elapsedMinute should be null to show "MT" badge
@@ -546,15 +624,39 @@ export default async function handler(
           updateData.elapsedMinute = null;
           console.log(`   ⏱️ Half-time (HT) - setting elapsedMinute to null to show MT badge`);
         } else if (externalMatch.elapsedMinute !== null && externalMatch.elapsedMinute !== undefined) {
+          // Validate elapsedMinute makes sense for the status
+          let elapsedMinute = externalMatch.elapsedMinute;
+          
+          // For 2H (second half), elapsedMinute should be 45+ (45 minutes first half + minutes into second half)
+          // If API returns something suspicious (like 59' when game just started 2H), validate it
+          if (newExternalStatus === '2H') {
+            // Second half: elapsedMinute should be between 45 and ~105 (45 + 60 max)
+            // If it's less than 45, it's probably wrong (should be in 1H)
+            // If it's way too high (>105), it's probably wrong
+            if (elapsedMinute < 45) {
+              console.log(`   ⚠️ Suspicious elapsedMinute for 2H: ${elapsedMinute}' (should be ≥45). Using 45 as minimum.`);
+              elapsedMinute = 45;
+            } else if (elapsedMinute > 105) {
+              console.log(`   ⚠️ Suspicious elapsedMinute for 2H: ${elapsedMinute}' (seems too high). Capping at 105.`);
+              elapsedMinute = 105;
+            }
+          } else if (newExternalStatus === '1H') {
+            // First half: elapsedMinute should be between 0 and ~50 (45 + 5 injury time max)
+            if (elapsedMinute > 50) {
+              console.log(`   ⚠️ Suspicious elapsedMinute for 1H: ${elapsedMinute}' (should be ≤50). Capping at 50.`);
+              elapsedMinute = 50;
+            }
+          }
+          
           const previousElapsed = (matchingGame as any).elapsedMinute;
-          updateData.elapsedMinute = externalMatch.elapsedMinute;
-          if (previousElapsed !== externalMatch.elapsedMinute) {
-            console.log(`   ⏱️ Chronometer updated: ${previousElapsed ?? 'null'}' → ${externalMatch.elapsedMinute}'`);
+          updateData.elapsedMinute = elapsedMinute;
+          if (previousElapsed !== elapsedMinute) {
+            console.log(`   ⏱️ Chronometer updated: ${previousElapsed ?? 'null'}' → ${elapsedMinute}' (status: ${newExternalStatus})`);
           } else {
-            console.log(`   ⏱️ Chronometer unchanged: ${externalMatch.elapsedMinute}' (API may not be updating in real-time)`);
+            console.log(`   ⏱️ Chronometer unchanged: ${elapsedMinute}' (status: ${newExternalStatus}, API may not be updating in real-time)`);
           }
         } else {
-          console.log(`   ⏱️ No elapsedMinute in external match (value: ${externalMatch.elapsedMinute})`);
+          console.log(`   ⏱️ No elapsedMinute in external match (value: ${externalMatch.elapsedMinute}, status: ${newExternalStatus})`);
         }
 
         // If game is finished, also update final scores
@@ -595,6 +697,20 @@ export default async function handler(
             }
           });
           console.log(`   ✅ Game updated successfully`);
+          console.log(`   🔍 Verification - Updated game scores: ${updatedGame.liveHomeScore ?? 'null'}-${updatedGame.liveAwayScore ?? 'null'}`);
+          console.log(`   🔍 Verification - UpdateData scores were: ${updateData.liveHomeScore}-${updateData.liveAwayScore}`);
+          
+          // Double-check: verify the update actually persisted
+          const verifyGame = await prisma.game.findUnique({
+            where: { id: matchingGame.id },
+            select: { liveHomeScore: true, liveAwayScore: true }
+          });
+          if (verifyGame) {
+            console.log(`   🔍 Verification - Database after update: ${verifyGame.liveHomeScore ?? 'null'}-${verifyGame.liveAwayScore ?? 'null'}`);
+            if (verifyGame.liveHomeScore !== updateData.liveHomeScore || verifyGame.liveAwayScore !== updateData.liveAwayScore) {
+              console.error(`   ❌ CRITICAL: Update did not persist! Expected ${updateData.liveHomeScore}-${updateData.liveAwayScore}, got ${verifyGame.liveHomeScore}-${verifyGame.liveAwayScore}`);
+            }
+          }
         } catch (updateError: any) {
           console.error(`   ❌ Error updating game:`, updateError?.message || updateError);
           throw updateError;
