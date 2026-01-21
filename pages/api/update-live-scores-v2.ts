@@ -441,37 +441,35 @@ export default async function handler(
           const dbAwayNorm = normalizeForMatch(matchingGame.awayTeam.name);
           const apiAwayNorm = normalizeForMatch(externalMatch.awayTeam.name);
           
-          // Extract key words (words longer than 3 chars) for matching - more strict
-          const getKeyWords = (name: string) => name.split(/\s+/).filter(w => w.length > 3);
-          const dbHomeWords = getKeyWords(dbHomeNorm);
-          const apiHomeWords = getKeyWords(apiHomeNorm);
-          const dbAwayWords = getKeyWords(dbAwayNorm);
-          const apiAwayWords = getKeyWords(apiAwayNorm);
+          // STRICT verification: Use the same team matching algorithm as team name matching
+          // This ensures we catch cases where external ID is wrong
+          const homeMatch = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, [matchingGame.homeTeam]);
+          const awayMatch = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, [matchingGame.awayTeam]);
           
-          // Both teams must have at least one significant word match
-          // AND the main team name (first significant word) should match
-          const homeMainWord = dbHomeWords[0] || dbHomeNorm.split(/\s+/)[0];
-          const apiHomeMainWord = apiHomeWords[0] || apiHomeNorm.split(/\s+/)[0];
-          const awayMainWord = dbAwayWords[0] || dbAwayNorm.split(/\s+/)[0];
-          const apiAwayMainWord = apiAwayWords[0] || apiAwayNorm.split(/\s+/)[0];
+          // Also check reverse (API home vs DB away, API away vs DB home) in case teams are swapped
+          const homeMatchReverse = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, [matchingGame.awayTeam]);
+          const awayMatchReverse = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, [matchingGame.homeTeam]);
           
-          const homeNameMatch = (dbHomeWords.some(w => apiHomeNorm.includes(w)) || 
-                                apiHomeWords.some(w => dbHomeNorm.includes(w))) &&
-                               (homeMainWord.includes(apiHomeMainWord) || apiHomeMainWord.includes(homeMainWord));
-          const awayNameMatch = (dbAwayWords.some(w => apiAwayNorm.includes(w)) || 
-                                apiAwayWords.some(w => dbAwayNorm.includes(w))) &&
-                               (awayMainWord.includes(apiAwayMainWord) || apiAwayMainWord.includes(awayMainWord));
+          // Teams must match correctly (home-home and away-away) OR be swapped (home-away and away-home)
+          const teamsMatchCorrectly = homeMatch && awayMatch && 
+                                     homeMatch.team.id === matchingGame.homeTeam.id && 
+                                     awayMatch.team.id === matchingGame.awayTeam.id;
+          const teamsAreSwapped = homeMatchReverse && awayMatchReverse &&
+                                 homeMatchReverse.team.id === matchingGame.awayTeam.id &&
+                                 awayMatchReverse.team.id === matchingGame.homeTeam.id;
           
-          if (!homeNameMatch || !awayNameMatch) {
-            console.log(`   ⚠️ WARNING: External ID match but team names don't match!`);
-            console.log(`      DB: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+          if (!teamsMatchCorrectly && !teamsAreSwapped) {
+            console.log(`   ⚠️ WARNING: External ID ${matchingGame.externalId} matches but teams don't match!`);
+            console.log(`      DB: ${matchingGame.homeTeam.name} (ID: ${matchingGame.homeTeam.id}) vs ${matchingGame.awayTeam.name} (ID: ${matchingGame.awayTeam.id})`);
             console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-            console.log(`      DB normalized: ${dbHomeNorm} vs ${dbAwayNorm}`);
-            console.log(`      API normalized: ${apiHomeNorm} vs ${apiAwayNorm}`);
-            console.log(`      Home match: ${homeNameMatch}, Away match: ${awayNameMatch}`);
-            console.log(`   ⚠️ External ID ${matchingGame.externalId} is wrong - will try team name matching instead`);
+            console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (ID: ${homeMatch.team.id})` : 'NOT FOUND'}`);
+            console.log(`      Away match: ${awayMatch ? `${awayMatch.team.name} (ID: ${awayMatch.team.id})` : 'NOT FOUND'}`);
+            console.log(`      Teams match correctly: ${teamsMatchCorrectly}, Teams swapped: ${teamsAreSwapped}`);
+            console.log(`   ⚠️ External ID ${matchingGame.externalId} is WRONG - will try team name matching instead`);
             // Force it to try team name matching by setting to null
             matchingGame = null as any;
+          } else {
+            console.log(`   ✅ Team names verified: External ID ${matchingGame.externalId} is correct`);
           }
         }
 
