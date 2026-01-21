@@ -442,21 +442,8 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                   (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
                   (() => {
                     const highlight = getBetHighlight(bet);
-                    // For LIVE games: colored text only with blinking animation
+                    // For LIVE games: colored text with border and light background
                     if (game.status === 'LIVE' && highlight) {
-                      const textColor = highlight === 'gold' ? 'text-yellow-600' :
-                                       highlight === 'green' ? 'text-green-600' :
-                                       highlight === 'red' ? 'text-red-600' :
-                                       'text-gray-700';
-                      const borderClass = highlight === 'gold' ? 'border-2 border-yellow-500' : '';
-                      return (
-                        <span className={`text-xs font-mono ${textColor} ${borderClass} rounded px-1.5 md:px-2 py-0.5 ml-auto font-semibold animate-pulse`}>
-                          <span className="md:hidden">{bet.score1}-{bet.score2}</span>
-                          <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
-                        </span>
-                      );
-                    } else if (game.status === 'FINISHED' && highlight) {
-                      // For finished games: colored text with very light background
                       const textColor = highlight === 'gold' ? 'text-yellow-600' :
                                        highlight === 'green' ? 'text-green-600' :
                                        highlight === 'red' ? 'text-red-600' :
@@ -465,16 +452,40 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                                      highlight === 'green' ? 'bg-green-50' :
                                      highlight === 'red' ? 'bg-red-50' :
                                      'bg-gray-50';
-                      const borderClass = highlight === 'gold' ? 'border-2 border-yellow-500' : '';
+                      const borderClass = highlight === 'gold' ? 'border border-yellow-400' :
+                                         highlight === 'green' ? 'border border-green-300' :
+                                         highlight === 'red' ? 'border border-red-300' :
+                                         'border border-gray-300';
                       return (
-                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded px-1.5 md:px-2 py-0.5 ml-auto font-semibold`}>
+                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded-md px-1.5 md:px-2 py-0.5 ml-auto font-semibold`}>
+                          <span className="md:hidden">{bet.score1}-{bet.score2}</span>
+                          <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
+                        </span>
+                      );
+                    } else if (game.status === 'FINISHED' && highlight) {
+                      // For finished games: colored text with very light background and border
+                      const textColor = highlight === 'gold' ? 'text-yellow-600' :
+                                       highlight === 'green' ? 'text-green-600' :
+                                       highlight === 'red' ? 'text-red-600' :
+                                       'text-gray-700';
+                      const bgColor = highlight === 'gold' ? 'bg-yellow-50' :
+                                     highlight === 'green' ? 'bg-green-50' :
+                                     highlight === 'red' ? 'bg-red-50' :
+                                     'bg-gray-50';
+                      const borderClass = highlight === 'gold' ? 'border border-yellow-400' :
+                                         highlight === 'green' ? 'border border-green-300' :
+                                         highlight === 'red' ? 'border border-red-300' :
+                                         'border border-gray-300';
+                      return (
+                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded-md px-1.5 md:px-2 py-0.5 ml-auto font-semibold`}>
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
                       );
                     } else {
+                      // For upcoming games: default styling with border and light background
                       return (
-                        <span className="text-xs font-mono text-gray-700 px-1.5 md:px-2 py-0.5 ml-auto font-semibold">
+                        <span className="text-xs font-mono text-gray-700 bg-gray-50 border border-gray-300 rounded-md px-1.5 md:px-2 py-0.5 ml-auto font-semibold">
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
