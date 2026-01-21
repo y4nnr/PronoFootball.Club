@@ -432,14 +432,37 @@ export default async function handler(
         
         let matchingGame = matchingGameByExternalId;
         
-        // CRITICAL CHECK: If we found a game by external ID, verify the API match's external ID matches
-        // If they don't match, it means we're looking at the wrong API match for this DB game
-        if (matchingGame && matchingGame.externalId !== externalMatch.id.toString()) {
-          console.log(`   ⚠️ CRITICAL: External ID mismatch detected!`);
-          console.log(`      DB game external ID: ${matchingGame.externalId}`);
-          console.log(`      API match external ID: ${externalMatch.id}`);
-          console.log(`      This means we matched the wrong API match - will try team name matching`);
-          matchingGame = null; // Clear the wrong match
+        // CRITICAL CHECK: If we found a game by external ID, verify:
+        // 1. The API match's external ID matches our DB's external ID
+        // 2. The dates match (within 2 hours tolerance)
+        if (matchingGame) {
+          // Check external ID match
+          if (matchingGame.externalId !== externalMatch.id.toString()) {
+            console.log(`   ⚠️ CRITICAL: External ID mismatch detected!`);
+            console.log(`      DB game external ID: ${matchingGame.externalId}`);
+            console.log(`      API match external ID: ${externalMatch.id}`);
+            console.log(`      This means we matched the wrong API match - will try team name matching`);
+            matchingGame = null; // Clear the wrong match
+          } else if (externalMatch.utcDate) {
+            // Check date match (within 2 hours tolerance)
+            const apiMatchDate = new Date(externalMatch.utcDate);
+            const dbGameDate = new Date(matchingGame.date);
+            const timeDiff = Math.abs(dbGameDate.getTime() - apiMatchDate.getTime());
+            const hoursDiff = timeDiff / (1000 * 60 * 60);
+            
+            console.log(`   🔍 Date verification:`);
+            console.log(`      DB date: ${dbGameDate.toISOString()}`);
+            console.log(`      API date: ${apiMatchDate.toISOString()}`);
+            console.log(`      Time difference: ${hoursDiff.toFixed(2)} hours`);
+            
+            if (hoursDiff > 2) {
+              console.log(`   ⚠️ WARNING: Date difference is too large (${hoursDiff.toFixed(2)} hours)!`);
+              console.log(`      This might be the wrong match - will try team name matching to verify`);
+              // Don't clear matchingGame yet, but team name matching will verify
+            } else {
+              console.log(`   ✅ Date matches (within 2 hours tolerance)`);
+            }
+          }
         }
 
         // If found by externalId, verify team names match (safety check)
@@ -539,18 +562,68 @@ export default async function handler(
         console.log(`   Away match: ${awayMatch ? awayMatch.team.name : 'NOT FOUND'} (external: ${externalMatch.awayTeam.name})`);
 
         if (homeMatch && awayMatch) {
-          // Find the game that contains both matched teams
-          // IMPORTANT: Verify that the matched game is actually a football game (double-check sportType)
-          // Search in all games (LIVE + potentially finished) to catch games that finished in external API
-          matchingGameByTeamName = allGamesToCheck.find(game => 
+          // Parse API match date for comparison
+          const apiMatchDate = externalMatch.utcDate ? new Date(externalMatch.utcDate) : null;
+          
+          // Find all games that match by teams (might be multiple if same teams play multiple times)
+          const potentialMatches = allGamesToCheck.filter(game => 
             (game.homeTeam.id === homeMatch.team.id || game.awayTeam.id === homeMatch.team.id) &&
             (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id) &&
             game.competition.sportType === 'FOOTBALL' // Double-check: ensure it's a football competition
           );
           
+          // If multiple potential matches, prefer the one with matching date/time
+          if (potentialMatches.length > 1 && apiMatchDate) {
+            console.log(`   Found ${potentialMatches.length} potential matches by team name, checking dates...`);
+            
+            // Find the match with closest date/time (within 2 hours tolerance)
+            const matchesWithDate = potentialMatches.map(game => {
+              const gameDate = new Date(game.date);
+              const timeDiff = Math.abs(gameDate.getTime() - apiMatchDate.getTime());
+              const hoursDiff = timeDiff / (1000 * 60 * 60);
+              return { game, timeDiff, hoursDiff };
+            });
+            
+            // Sort by time difference and take the closest match within 2 hours
+            matchesWithDate.sort((a, b) => a.timeDiff - b.timeDiff);
+            const bestMatch = matchesWithDate.find(m => m.hoursDiff <= 2) || matchesWithDate[0];
+            
+            if (bestMatch) {
+              matchingGameByTeamName = bestMatch.game;
+              console.log(`   ✅ Selected match by date: ${matchingGameByTeamName.homeTeam.name} vs ${matchingGameByTeamName.awayTeam.name}`);
+              console.log(`   Date diff: ${bestMatch.hoursDiff.toFixed(2)} hours`);
+            } else {
+              // Fallback to first match if no date match found
+              matchingGameByTeamName = potentialMatches[0];
+              console.log(`   ⚠️ No date match found, using first potential match`);
+            }
+          } else if (potentialMatches.length === 1) {
+            matchingGameByTeamName = potentialMatches[0];
+          } else if (potentialMatches.length > 0 && !apiMatchDate) {
+            // No date from API, use first match
+            matchingGameByTeamName = potentialMatches[0];
+            console.log(`   ⚠️ No date from API, using first potential match`);
+          }
+          
           if (matchingGameByTeamName) {
-            console.log(`   ✅ Found game by team name matching: ${matchingGameByTeamName.homeTeam.name} vs ${matchingGameByTeamName.awayTeam.name}`);
-            console.log(`   Team name match external ID: ${matchingGameByTeamName.externalId}, API external ID: ${externalMatch.id}`);
+            // Verify date match if we have API date
+            if (apiMatchDate) {
+              const gameDate = new Date(matchingGameByTeamName.date);
+              const timeDiff = Math.abs(gameDate.getTime() - apiMatchDate.getTime());
+              const hoursDiff = timeDiff / (1000 * 60 * 60);
+              
+              console.log(`   ✅ Found game by team name matching: ${matchingGameByTeamName.homeTeam.name} vs ${matchingGameByTeamName.awayTeam.name}`);
+              console.log(`   DB date: ${gameDate.toISOString()}, API date: ${apiMatchDate.toISOString()}, diff: ${hoursDiff.toFixed(2)} hours`);
+              console.log(`   Team name match external ID: ${matchingGameByTeamName.externalId}, API external ID: ${externalMatch.id}`);
+              
+              // If date difference is too large (> 2 hours), this might be wrong match
+              if (hoursDiff > 2) {
+                console.log(`   ⚠️ WARNING: Date difference is large (${hoursDiff.toFixed(2)} hours) - might be wrong match`);
+              }
+            } else {
+              console.log(`   ✅ Found game by team name matching: ${matchingGameByTeamName.homeTeam.name} vs ${matchingGameByTeamName.awayTeam.name}`);
+              console.log(`   Team name match external ID: ${matchingGameByTeamName.externalId}, API external ID: ${externalMatch.id}`);
+            }
             
             // If team name matching found a different game than external ID matching, prefer team name match
             // This catches cases where external ID is wrong
