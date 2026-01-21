@@ -429,9 +429,55 @@ export default async function handler(
           return gameExternalId === matchId || gameExternalId === externalMatch.id.toString();
         });
 
-        // If not found by externalId, try team name matching
+        // If found by externalId, verify team names match (safety check)
+        if (matchingGame) {
+          console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+          
+          // Verify team names match (safety check in case external ID is wrong)
+          // Use strict matching: both teams must match reasonably well
+          const normalizeForMatch = (name: string) => name.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+          const dbHomeNorm = normalizeForMatch(matchingGame.homeTeam.name);
+          const apiHomeNorm = normalizeForMatch(externalMatch.homeTeam.name);
+          const dbAwayNorm = normalizeForMatch(matchingGame.awayTeam.name);
+          const apiAwayNorm = normalizeForMatch(externalMatch.awayTeam.name);
+          
+          // Extract key words (words longer than 3 chars) for matching - more strict
+          const getKeyWords = (name: string) => name.split(/\s+/).filter(w => w.length > 3);
+          const dbHomeWords = getKeyWords(dbHomeNorm);
+          const apiHomeWords = getKeyWords(apiHomeNorm);
+          const dbAwayWords = getKeyWords(dbAwayNorm);
+          const apiAwayWords = getKeyWords(apiAwayNorm);
+          
+          // Both teams must have at least one significant word match
+          // AND the main team name (first significant word) should match
+          const homeMainWord = dbHomeWords[0] || dbHomeNorm.split(/\s+/)[0];
+          const apiHomeMainWord = apiHomeWords[0] || apiHomeNorm.split(/\s+/)[0];
+          const awayMainWord = dbAwayWords[0] || dbAwayNorm.split(/\s+/)[0];
+          const apiAwayMainWord = apiAwayWords[0] || apiAwayNorm.split(/\s+/)[0];
+          
+          const homeNameMatch = (dbHomeWords.some(w => apiHomeNorm.includes(w)) || 
+                                apiHomeWords.some(w => dbHomeNorm.includes(w))) &&
+                               (homeMainWord.includes(apiHomeMainWord) || apiHomeMainWord.includes(homeMainWord));
+          const awayNameMatch = (dbAwayWords.some(w => apiAwayNorm.includes(w)) || 
+                                apiAwayWords.some(w => dbAwayNorm.includes(w))) &&
+                               (awayMainWord.includes(apiAwayMainWord) || apiAwayMainWord.includes(awayMainWord));
+          
+          if (!homeNameMatch || !awayNameMatch) {
+            console.log(`   ⚠️ WARNING: External ID match but team names don't match!`);
+            console.log(`      DB: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+            console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            console.log(`      DB normalized: ${dbHomeNorm} vs ${dbAwayNorm}`);
+            console.log(`      API normalized: ${apiHomeNorm} vs ${apiAwayNorm}`);
+            console.log(`      Home match: ${homeNameMatch}, Away match: ${awayNameMatch}`);
+            console.log(`   ⚠️ External ID ${matchingGame.externalId} is wrong - will try team name matching instead`);
+            // Force it to try team name matching by setting to null
+            matchingGame = null as any;
+          }
+        }
+
+        // If not found by externalId (or externalId was wrong), try team name matching
         if (!matchingGame) {
-          console.log(`   No match by externalId, trying team name matching...`);
+          console.log(`   No match by externalId (or externalId was wrong), trying team name matching...`);
           
           console.log(`   Our teams in DB: ${allOurTeams.map(t => t.name).join(', ')}`);
 
@@ -455,39 +501,11 @@ export default async function handler(
             (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id) &&
             game.competition.sportType === 'FOOTBALL' // Double-check: ensure it's a football competition
           );
-        } else {
-          console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
           
-          // Verify team names match (safety check in case external ID is wrong)
-          // Use flexible matching: check if any significant word from one name appears in the other
-          const normalizeForMatch = (name: string) => name.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
-          const dbHomeNorm = normalizeForMatch(matchingGame.homeTeam.name);
-          const apiHomeNorm = normalizeForMatch(externalMatch.homeTeam.name);
-          const dbAwayNorm = normalizeForMatch(matchingGame.awayTeam.name);
-          const apiAwayNorm = normalizeForMatch(externalMatch.awayTeam.name);
-          
-          // Extract key words (words longer than 2 chars) for matching
-          const getKeyWords = (name: string) => name.split(/\s+/).filter(w => w.length > 2);
-          const dbHomeWords = getKeyWords(dbHomeNorm);
-          const apiHomeWords = getKeyWords(apiHomeNorm);
-          const dbAwayWords = getKeyWords(dbAwayNorm);
-          const apiAwayWords = getKeyWords(apiAwayNorm);
-          
-          const homeNameMatch = dbHomeWords.some(w => apiHomeNorm.includes(w)) || 
-                               apiHomeWords.some(w => dbHomeNorm.includes(w)) ||
-                               dbHomeNorm.includes(apiHomeNorm) || 
-                               apiHomeNorm.includes(dbHomeNorm);
-          const awayNameMatch = dbAwayWords.some(w => apiAwayNorm.includes(w)) || 
-                               apiAwayWords.some(w => dbAwayNorm.includes(w)) ||
-                               dbAwayNorm.includes(apiAwayNorm) || 
-                               apiAwayNorm.includes(dbAwayNorm);
-          
-          if (!homeNameMatch || !awayNameMatch) {
-            console.log(`   ⚠️ WARNING: External ID match but team names don't match!`);
-            console.log(`      DB: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
-            console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-            console.log(`   ⚠️ Skipping this match - external ID might be wrong`);
-            continue;
+          if (matchingGame) {
+            console.log(`   ✅ Found game by team name matching: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+            // Update the external ID to the correct one
+            console.log(`   🔄 Will update external ID from ${matchingGame.externalId} to ${externalMatch.id}`);
           }
         }
 
