@@ -451,25 +451,50 @@ export default async function handler(
           const awayMatchReverse = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, [matchingGame.homeTeam]);
           
           // Teams must match correctly (home-home and away-away) OR be swapped (home-away and away-home)
+          // AND the match score must be high (>= 0.8) to ensure it's a good match
           const teamsMatchCorrectly = homeMatch && awayMatch && 
                                      homeMatch.team.id === matchingGame.homeTeam.id && 
-                                     awayMatch.team.id === matchingGame.awayTeam.id;
+                                     awayMatch.team.id === matchingGame.awayTeam.id &&
+                                     (homeMatch.score >= 0.8 && awayMatch.score >= 0.8);
           const teamsAreSwapped = homeMatchReverse && awayMatchReverse &&
                                  homeMatchReverse.team.id === matchingGame.awayTeam.id &&
-                                 awayMatchReverse.team.id === matchingGame.homeTeam.id;
+                                 awayMatchReverse.team.id === matchingGame.homeTeam.id &&
+                                 (homeMatchReverse.score >= 0.8 && awayMatchReverse.score >= 0.8);
+          
+          console.log(`   🔍 Team verification:`);
+          console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (ID: ${homeMatch.team.id}, score: ${homeMatch.score?.toFixed(2)})` : 'NOT FOUND'}`);
+          console.log(`      Away match: ${awayMatch ? `${awayMatch.team.name} (ID: ${awayMatch.team.id}, score: ${awayMatch.score?.toFixed(2)})` : 'NOT FOUND'}`);
+          console.log(`      Teams match correctly: ${teamsMatchCorrectly}, Teams swapped: ${teamsAreSwapped}`);
+          
+          // Additional check: if teams match but scores/elapsed are very different, external ID might be wrong
+          // This catches cases where external ID points to a different game with same teams
+          const scoreDiff = Math.abs((matchingGame.liveHomeScore ?? 0) - (externalMatch.score.fullTime.home ?? 0)) +
+                           Math.abs((matchingGame.liveAwayScore ?? 0) - (externalMatch.score.fullTime.away ?? 0));
+          const elapsedDiff = matchingGame.elapsedMinute !== null && externalMatch.elapsedMinute !== null
+                            ? Math.abs(matchingGame.elapsedMinute - externalMatch.elapsedMinute)
+                            : null;
+          const significantScoreDiff = scoreDiff > 2; // More than 2 goal difference
+          const significantElapsedDiff = elapsedDiff !== null && elapsedDiff > 10; // More than 10 minutes difference
           
           if (!teamsMatchCorrectly && !teamsAreSwapped) {
             console.log(`   ⚠️ WARNING: External ID ${matchingGame.externalId} matches but teams don't match!`);
             console.log(`      DB: ${matchingGame.homeTeam.name} (ID: ${matchingGame.homeTeam.id}) vs ${matchingGame.awayTeam.name} (ID: ${matchingGame.awayTeam.id})`);
             console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-            console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (ID: ${homeMatch.team.id})` : 'NOT FOUND'}`);
-            console.log(`      Away match: ${awayMatch ? `${awayMatch.team.name} (ID: ${awayMatch.team.id})` : 'NOT FOUND'}`);
-            console.log(`      Teams match correctly: ${teamsMatchCorrectly}, Teams swapped: ${teamsAreSwapped}`);
             console.log(`   ⚠️ External ID ${matchingGame.externalId} is WRONG - will try team name matching instead`);
             // Force it to try team name matching by setting to null
             matchingGame = null as any;
-          } else {
-            console.log(`   ✅ Team names verified: External ID ${matchingGame.externalId} is correct`);
+          } else if (teamsMatchCorrectly || teamsAreSwapped) {
+            // Teams match, but check if data is significantly different (wrong external ID)
+            if (significantScoreDiff || significantElapsedDiff) {
+              console.log(`   ⚠️ WARNING: External ID ${matchingGame.externalId} matches and teams match, but data is very different!`);
+              console.log(`      DB Score: ${matchingGame.liveHomeScore ?? 0}-${matchingGame.liveAwayScore ?? 0}, API Score: ${externalMatch.score.fullTime.home ?? 0}-${externalMatch.score.fullTime.away ?? 0} (diff: ${scoreDiff})`);
+              console.log(`      DB Elapsed: ${matchingGame.elapsedMinute ?? 'null'}, API Elapsed: ${externalMatch.elapsedMinute ?? 'null'} (diff: ${elapsedDiff ?? 'N/A'})`);
+              console.log(`   ⚠️ External ID ${matchingGame.externalId} might be WRONG - will try team name matching to find correct game`);
+              // Force it to try team name matching by setting to null
+              matchingGame = null as any;
+            } else {
+              console.log(`   ✅ Team names verified: External ID ${matchingGame.externalId} is correct`);
+            }
           }
         }
 
