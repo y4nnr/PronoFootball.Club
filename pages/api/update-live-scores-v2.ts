@@ -431,6 +431,16 @@ export default async function handler(
         });
         
         let matchingGame = matchingGameByExternalId;
+        
+        // CRITICAL CHECK: If we found a game by external ID, verify the API match's external ID matches
+        // If they don't match, it means we're looking at the wrong API match for this DB game
+        if (matchingGame && matchingGame.externalId !== externalMatch.id.toString()) {
+          console.log(`   ⚠️ CRITICAL: External ID mismatch detected!`);
+          console.log(`      DB game external ID: ${matchingGame.externalId}`);
+          console.log(`      API match external ID: ${externalMatch.id}`);
+          console.log(`      This means we matched the wrong API match - will try team name matching`);
+          matchingGame = null; // Clear the wrong match
+        }
 
         // If found by externalId, verify team names match (safety check)
         if (matchingGame) {
@@ -479,8 +489,8 @@ export default async function handler(
           const elapsedDiff = matchingGame.elapsedMinute !== null && externalMatch.elapsedMinute !== null
                             ? Math.abs(matchingGame.elapsedMinute - externalMatch.elapsedMinute)
                             : null;
-          const significantScoreDiff = scoreDiff > 2; // More than 2 goal difference
-          const significantElapsedDiff = elapsedDiff !== null && elapsedDiff > 10; // More than 10 minutes difference
+          const significantScoreDiff = scoreDiff > 1; // More than 1 goal difference (lowered to catch more cases)
+          const significantElapsedDiff = elapsedDiff !== null && elapsedDiff > 5; // More than 5 minutes difference (lowered to catch more cases)
           
           console.log(`   🔍 Data comparison:`);
           console.log(`      DB: ${dbHomeScore}-${dbAwayScore}, Elapsed: ${matchingGame.elapsedMinute ?? 'null'}`);
@@ -511,8 +521,23 @@ export default async function handler(
         }
 
         // If not found by externalId (or externalId was wrong), try team name matching
-        if (!matchingGame) {
-          console.log(`   No match by externalId (or externalId was wrong), trying team name matching...`);
+        // ALSO: If external ID matched but external ID in API differs, verify with team name matching
+        let shouldTryTeamNameMatching = !matchingGame;
+        let matchingGameByTeamName: typeof matchingGame = null;
+        
+        // If external ID matched, check if the API's external ID matches our DB's external ID
+        // If they differ, it means we matched the wrong game in the API
+        if (matchingGame && matchingGame.externalId !== externalMatch.id.toString()) {
+          console.log(`   ⚠️ WARNING: External ID mismatch!`);
+          console.log(`      DB external ID: ${matchingGame.externalId}`);
+          console.log(`      API external ID: ${externalMatch.id}`);
+          console.log(`      This means we matched the wrong game - will try team name matching`);
+          shouldTryTeamNameMatching = true;
+          matchingGame = null; // Clear the wrong match
+        }
+        
+        if (shouldTryTeamNameMatching) {
+          console.log(`   ${!matchingGame ? 'No match by externalId (or externalId was wrong), trying' : 'Verifying with'} team name matching...`);
           
           console.log(`   Our teams in DB: ${allOurTeams.map(t => t.name).join(', ')}`);
 
@@ -531,16 +556,17 @@ export default async function handler(
           // Find the game that contains both matched teams
           // IMPORTANT: Verify that the matched game is actually a football game (double-check sportType)
           // Search in all games (LIVE + potentially finished) to catch games that finished in external API
-          matchingGame = allGamesToCheck.find(game => 
+          matchingGameByTeamName = allGamesToCheck.find(game => 
             (game.homeTeam.id === homeMatch.team.id || game.awayTeam.id === homeMatch.team.id) &&
             (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id) &&
             game.competition.sportType === 'FOOTBALL' // Double-check: ensure it's a football competition
           );
           
-          if (matchingGame) {
-            console.log(`   ✅ Found game by team name matching: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+          if (matchingGameByTeamName) {
+            console.log(`   ✅ Found game by team name matching: ${matchingGameByTeamName.homeTeam.name} vs ${matchingGameByTeamName.awayTeam.name}`);
             // Update the external ID to the correct one
-            console.log(`   🔄 Will update external ID from ${matchingGame.externalId} to ${externalMatch.id}`);
+            console.log(`   🔄 Will update external ID from ${matchingGameByTeamName.externalId} to ${externalMatch.id}`);
+            matchingGame = matchingGameByTeamName;
           }
         }
 
