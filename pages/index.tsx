@@ -4,8 +4,6 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useTranslation } from '../hooks/useTranslation';
 import Footer from '../components/Footer';
-import Image from 'next/image';
-import logoPng from '../logo.png';
 
 // Define a type for the session user
 interface SessionUserWithPasswordChange {
@@ -188,16 +186,9 @@ export default function Home() {
               href="/"
               className="flex items-center text-white hover:text-white transition-colors select-none"
             >
-              <div className="flex items-center justify-center mt-2 tablet:mt-3 xl:mt-4 -ml-6 tablet:-ml-8 xl:-ml-20 2xl:-ml-24">
-                <Image
-                  src={logoPng}
-                  alt="Toopil"
-                  width={300}
-                  height={300}
-                  priority
-                  className="w-48 h-48 tablet:w-60 tablet:h-60 xl:w-[336px] xl:h-[336px] 2xl:w-96 2xl:h-96 object-contain transition-transform duration-200 hover:scale-105"
-                />
-              </div>
+              <span className="text-white text-xl tablet:text-3xl xl:text-4xl 2xl:text-5xl font-bold tracking-tight pl-2 tablet:pl-4">
+                Toopil.app
+              </span>
             </Link>
           </div>
         </div>
