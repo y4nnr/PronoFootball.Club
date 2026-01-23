@@ -201,42 +201,42 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   };
   
   const cardContent = (
-    <div className={`${getBackgroundColor()} border rounded-xl md:rounded-2xl shadow flex flex-col items-stretch transition p-3 md:p-4 lg:p-5 gap-2 md:gap-3 ${getBorderColor()} ${isClickable ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 'cursor-default'} ${
+    <div className={`bg-white border-2 ${userHasBet ? 'border-blue-500' : 'border-gray-300'} rounded-xl md:rounded-2xl shadow-lg flex flex-col items-stretch transition overflow-hidden ${isClickable ? 'hover:shadow-xl hover:border-gray-400 cursor-pointer transform hover:scale-[1.01]' : 'cursor-default'} ${userHasBet && isClickable ? 'hover:border-blue-600' : ''} ${
       isHighlighted ? 
         highlightType === 'status' ? 'animate-bounce ring-4 ring-blue-400 ring-opacity-75' :
         highlightType === 'both' ? 'animate-pulse ring-4 ring-purple-400 ring-opacity-75' :
         'animate-pulse ring-4 ring-yellow-400 ring-opacity-75' : ''
     }`}>
-      {/* Competition Name & Logo - Secondary importance, similar to date/time */}
+      {/* Competition Name & Logo - Section 1: Darker shade (top) */}
       {game.competition && (
-        <div className="flex items-center justify-between gap-2 pb-2.5 md:pb-3 border-b border-neutral-200">
+        <div className="flex items-center justify-between gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gray-200 border-b border-gray-300">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {game.competition.logo ? (
               <img 
                 src={game.competition.logo} 
                 alt={game.competition.name} 
-                className="w-6 h-6 md:w-7 md:h-7 rounded object-cover border border-gray-200 flex-shrink-0" 
+                className="w-6 h-6 md:w-7 md:h-7 rounded object-cover border border-gray-300 flex-shrink-0 shadow-sm" 
               />
             ) : (
-              <div className="w-6 h-6 md:w-7 md:h-7 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-500 flex-shrink-0">
+              <div className="w-6 h-6 md:w-7 md:h-7 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-bold flex-shrink-0">
                 {game.competition.name.substring(0, 2).toUpperCase()}
               </div>
             )}
-            <span className="text-sm text-gray-800 font-semibold truncate">
+            <span className="text-xs md:text-sm text-gray-800 font-semibold truncate">
               <span className="md:hidden">{abbreviateCompetitionName(game.competition.name)}</span>
               <span className="hidden md:inline">{game.competition.name}</span>
             </span>
           </div>
-          {/* Tick on the right (mobile only) */}
+          {/* Tick on the right (mobile and desktop) */}
           {userHasBet && (
-            <div className="md:hidden flex items-center flex-shrink-0">
+            <div className="flex items-center flex-shrink-0">
               {context === 'home' ? (
-                <div className="flex items-center justify-center w-4 h-4 bg-blue-100 rounded-full">
-                  <span className="text-blue-600 text-xs font-semibold">✓</span>
+                <div className="flex items-center justify-center w-5 h-5 bg-blue-100 rounded-full border border-blue-300">
+                  <span className="text-blue-600 text-xs font-bold">✓</span>
                 </div>
               ) : (
                 <div 
-                  className={`w-2 h-2 rounded-full ${
+                  className={`w-3 h-3 rounded-full shadow-md ${
                     userPoints === 3 ? 'bg-yellow-500' : 
                     userPoints === 1 ? 'bg-green-500' : 
                     'bg-red-500'
@@ -248,28 +248,35 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           )}
         </div>
       )}
-      {/* Mobile: Date/Time and Status on same line, chronometer below status */}
-      <div className="flex items-center w-full justify-between pb-2.5 md:hidden border-b border-neutral-200">
-        {/* Date/Time on left - date above time */}
-        <div className="flex items-center flex-shrink-0">
-          <span className="inline-flex flex-col items-center px-3 py-1.5 text-xs text-gray-800 font-semibold bg-gray-100 rounded-full">
-            <span className="leading-tight">{formatDate(game.date)}</span>
-            <span className="leading-tight mt-0.5">{formatTime(game.date)}</span>
-          </span>
+      {/* Section 2: Date/Time & Status - Dedicated section for better visibility (Mobile) */}
+      <div className="flex items-center justify-between w-full px-3 md:px-4 py-3 md:hidden bg-gray-50 border-b border-gray-200">
+        {/* Date/Time on left */}
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-xs text-gray-700 font-semibold uppercase tracking-wide">{formatDate(game.date)}</span>
+          </div>
+          <div className="w-px h-4 bg-gray-300"></div>
+          <span className="text-xs text-gray-700 font-bold">{formatTime(game.date)}</span>
         </div>
-        {/* Status on the right - status on top, chronometer below */}
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        {/* Status on the right */}
+        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
           {game.status === 'LIVE' ? (
-            <>
-              <span className="inline-block px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap bg-red-100 text-red-800 font-medium">
-                {t('live')}
-              </span>
+            <div className="flex flex-col items-end gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 text-white font-bold shadow-md">
+                  {t('live')}
+                </span>
+              </div>
               {game.externalStatus === 'HT' ? (
-                <span className="inline-flex items-center px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-[10px] font-semibold animate-pulse">
+                <span className="inline-flex items-center px-2.5 py-1 bg-orange-500 text-white rounded-full text-[10px] font-bold animate-pulse border-2 border-orange-300 shadow-md">
                   MT
                 </span>
               ) : game.elapsedMinute !== null && game.elapsedMinute !== undefined ? (
-                <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[10px] font-semibold animate-pulse">
+                <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
                   {game.elapsedMinute}'
                   {game.sportType === 'RUGBY' && game.elapsedMinute >= 80 && (
                     <span className="ml-0.5 text-[9px] opacity-75">/80</span>
@@ -279,61 +286,60 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                   )}
                 </span>
               ) : (game.externalStatus === '1H' || game.externalStatus === '2H') ? (
-                <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[10px] font-semibold animate-pulse">
+                <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
                   {game.externalStatus === '1H' ? '1/2' : '2/2'}
                 </span>
               ) : null}
-            </>
-          ) : (
-            <span className={`inline-block px-2 py-0.5 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-medium ${
-              game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
-              game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
-              'bg-gray-100 text-gray-800'
-            } ${
-              isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
-            }`}>
-              {game.status === 'UPCOMING' && t('upcoming')}
-              {game.status === 'FINISHED' && t('finished')}
-              {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status}
-            </span>
-          )}
-        </div>
-      </div>
-      {/* Desktop: Date & Status - Secondary importance */}
-      <div className="hidden md:flex md:items-center w-full justify-between pb-3 border-b border-neutral-200">
-        <span className="inline-block px-3 py-1.5 text-sm text-gray-800 font-semibold bg-gray-100 rounded-full flex-shrink-0">
-          {formatDateTime(game.date)}
-        </span>
-        <div className="flex items-center gap-1 ml-1.5 md:ml-0 flex-shrink-0">
-          {userHasBet && (
-            <div className="flex items-center">
-              {context === 'home' ? (
-                <div className="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 bg-blue-100 rounded-full">
-                  <span className="text-blue-600 text-xs font-semibold">✓</span>
-                </div>
-              ) : (
-                <div 
-                  className={`w-2 h-2 rounded-full ${
-                    userPoints === 3 ? 'bg-yellow-500' : 
-                    userPoints === 1 ? 'bg-green-500' : 
-                    'bg-red-500'
-                  }`} 
-                  title={`Vous avez gagné ${userPoints || 0} point${(userPoints || 0) > 1 ? 's' : ''}`}
-                ></div>
-              )}
             </div>
-          )}
-          {game.status === 'LIVE' ? (
+          ) : (
             <div className="flex items-center gap-1.5">
-              <span className="inline-block px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap bg-red-100 text-red-800 font-medium">
+              {game.status === 'FINISHED' && (
+                <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
+                game.status === 'FINISHED' ? 'bg-green-500 text-white' :
+                game.status === 'UPCOMING' ? 'bg-blue-500 text-white' :
+                'bg-gray-500 text-white'
+              } ${
+                isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
+              }`}>
+                {game.status === 'UPCOMING' && t('upcoming')}
+                {game.status === 'FINISHED' && t('finished')}
+                {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Section 2: Date/Time & Status - Dedicated section for better visibility (Desktop) */}
+      <div className="hidden md:flex md:items-center w-full justify-between px-3 md:px-4 py-3 bg-gray-50 border-b border-gray-200">
+        {/* Date/Time on left */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-xs text-gray-700 font-semibold uppercase tracking-wide">{formatDate(game.date)}</span>
+          </div>
+          <div className="w-px h-4 bg-gray-300"></div>
+          <span className="text-xs text-gray-700 font-bold">{formatTime(game.date)}</span>
+        </div>
+        {/* Status on the right */}
+        <div className="flex items-center gap-2 ml-1.5 md:ml-0 flex-shrink-0">
+          {game.status === 'LIVE' ? (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 text-white font-bold shadow-md">
                 {t('live')}
               </span>
               {game.externalStatus === 'HT' ? (
-                <span className="inline-flex items-center px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-[10px] font-semibold animate-pulse">
+                <span className="inline-flex items-center px-2.5 py-1 bg-orange-500 text-white rounded-full text-[10px] font-bold animate-pulse border-2 border-orange-300 shadow-md">
                   MT
                 </span>
               ) : game.elapsedMinute !== null && game.elapsedMinute !== undefined ? (
-                <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[10px] font-semibold animate-pulse">
+                <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
                   {game.elapsedMinute}'
                   {game.sportType === 'RUGBY' && game.elapsedMinute >= 80 && (
                     <span className="ml-0.5 text-[9px] opacity-75">/80</span>
@@ -343,61 +349,68 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                   )}
                 </span>
               ) : (game.externalStatus === '1H' || game.externalStatus === '2H') ? (
-                <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-[10px] font-semibold animate-pulse">
+                <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
                   {game.externalStatus === '1H' ? '1/2' : '2/2'}
                 </span>
               ) : null}
             </div>
           ) : (
-            <span className={`inline-block px-2 py-0.5 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-medium ${
-              game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
-              game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
-              'bg-gray-100 text-gray-800'
-            } ${
-              isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
-            }`}>
-              {game.status === 'UPCOMING' && t('upcoming')}
-              {game.status === 'FINISHED' && t('finished')}
-              {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status}
-            </span>
+            <div className="flex items-center gap-1.5">
+              {game.status === 'FINISHED' && (
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
+                game.status === 'FINISHED' ? 'bg-green-500 text-white' :
+                game.status === 'UPCOMING' ? 'bg-blue-500 text-white' :
+                'bg-gray-500 text-white'
+              } ${
+                isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
+              }`}>
+                {game.status === 'UPCOMING' && t('upcoming')}
+                {game.status === 'FINISHED' && t('finished')}
+                {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status}
+              </span>
+            </div>
           )}
         </div>
       </div>
-      {/* Teams & Score - PRIMARY: Most prominent section */}
-      <div className="flex items-center w-full justify-between py-3 md:py-4 border-b border-neutral-200">
+      {/* Teams & Score - Section 3: Light gray (primary section) */}
+      <div className="flex items-center w-full justify-between py-4 md:py-6 px-3 md:px-4 bg-gray-50 border-b border-gray-200">
           {/* Home Team */}
         <div className="flex flex-col items-center min-w-0 w-2/5 justify-end pr-1 md:pr-2 gap-1">
           {/* Mobile: Logo on top, name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.homeTeam.logo ? (
-              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-8 h-8 rounded-full object-cover border border-gray-200 mb-1 flex-shrink-0" />
+              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 mb-2 flex-shrink-0 shadow-md" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500 mb-1 flex-shrink-0">{game.homeTeam.name.substring(0,2)}</div>
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-700 font-bold mb-2 flex-shrink-0 border-2 border-gray-300">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
             )}
             <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-              <span className="text-gray-900 font-medium text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.homeTeam)}</span>
+              <span className="text-gray-900 font-semibold text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.homeTeam)}</span>
             </div>
           </div>
           {/* Desktop: Logo on top, name below */}
           <div className="hidden md:flex flex-col items-center">
             {game.homeTeam.logo ? (
-              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-8 h-8 rounded-full object-cover border border-gray-200 mb-1 flex-shrink-0" />
+              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-12 h-12 rounded-full object-cover border-2 border-gray-300 mb-2 flex-shrink-0 shadow-md" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500 mb-1 flex-shrink-0">{game.homeTeam.name.substring(0,2)}</div>
+              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-sm text-gray-700 font-bold mb-2 flex-shrink-0 border-2 border-gray-300">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
             )}
-            <span className="text-gray-900 font-medium text-xs lg:text-sm text-center truncate max-w-[90px]">{game.homeTeam.name}</span>
+            <span className="text-gray-900 font-semibold text-xs lg:text-sm text-center truncate max-w-[90px]">{game.homeTeam.name}</span>
           </div>
         </div>
-        {/* Score - PRIMARY: Largest and boldest */}
-        <div className="flex-1 flex justify-center min-w-[50px] md:min-w-[60px]">
-          <span className={`text-base md:text-xl lg:text-2xl font-bold text-gray-900 transition-all duration-300 ${
+        {/* Score - PRIMARY: Largest and boldest - Maximum contrast */}
+        <div className="flex-1 flex justify-center min-w-[60px] md:min-w-[80px]">
+          <span className={`text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 transition-all duration-300 ${
             isHighlighted && (highlightType === 'score' || highlightType === 'both') ? 'animate-pulse scale-110 text-yellow-600' : ''
           }`}>
             {game.status === 'FINISHED' && typeof game.homeScore === 'number' && typeof game.awayScore === 'number'
               ? `${game.homeScore} - ${game.awayScore}`
               : game.status === 'LIVE' && typeof game.liveHomeScore === 'number' && typeof game.liveAwayScore === 'number'
               ? `${game.liveHomeScore} - ${game.liveAwayScore}`
-              : '-'}
+              : <span className="text-gray-400">-</span>}
           </span>
         </div>
         {/* Away Team */}
@@ -405,87 +418,87 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {/* Mobile: Logo on top, name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.awayTeam.logo ? (
-              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-8 h-8 rounded-full object-cover border border-gray-200 mb-1 flex-shrink-0" />
+              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 mb-2 flex-shrink-0 shadow-md" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500 mb-1 flex-shrink-0">{game.awayTeam.name.substring(0,2)}</div>
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-700 font-bold mb-2 flex-shrink-0 border-2 border-gray-300">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
             )}
             <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-              <span className="text-gray-900 font-medium text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.awayTeam)}</span>
+              <span className="text-gray-900 font-semibold text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.awayTeam)}</span>
             </div>
           </div>
           {/* Desktop: Logo on top, name below */}
           <div className="hidden md:flex flex-col items-center">
             {game.awayTeam.logo ? (
-              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-8 h-8 rounded-full object-cover border border-gray-200 mb-1 flex-shrink-0" />
+              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-12 h-12 rounded-full object-cover border-2 border-gray-300 mb-2 flex-shrink-0 shadow-md" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500 mb-1 flex-shrink-0">{game.awayTeam.name.substring(0,2)}</div>
+              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-sm text-gray-700 font-bold mb-2 flex-shrink-0 border-2 border-gray-300">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
             )}
-            <span className="text-gray-900 font-medium text-xs lg:text-sm text-center truncate max-w-[90px]">{game.awayTeam.name}</span>
+            <span className="text-gray-900 font-semibold text-xs lg:text-sm text-center truncate max-w-[90px]">{game.awayTeam.name}</span>
           </div>
         </div>
       </div>
-      {/* Bets List */}
+      {/* Bets List - Section 4: Matching main section style (bottom) */}
       {game.bets && game.bets.length > 0 && (
-        <div className="w-full pt-2.5 md:pt-3">
-          <div className="text-xs text-gray-500 font-medium mb-1.5 ml-1 uppercase tracking-wide">{t('placedBets')}</div>
-          <ul className="divide-y divide-neutral-100">
+        <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50">
+          <div className="text-xs text-gray-700 font-semibold mb-2.5 md:mb-3 uppercase tracking-wide">{t('placedBets')}</div>
+          <ul className="divide-y divide-gray-200">
             {game.bets.map((bet) => (
-              <li key={bet.id} className="flex items-center py-1 first:pt-0 last:pb-0">
+              <li key={bet.id} className="flex items-center py-2 first:pt-0 last:pb-0">
                 <img
                   src={bet.user.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(bet.user.name.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
                   alt={bet.user.name}
-                  className="w-5 h-5 md:w-6 md:h-6 rounded-full border border-gray-200 object-cover mr-1.5 md:mr-2"
+                  className="w-6 h-6 md:w-7 md:h-7 rounded-full border-2 border-gray-300 object-cover mr-2 md:mr-3 shadow-sm"
                   title={bet.user.name}
                 />
-                <span className="text-xs text-gray-700 mr-1.5 md:mr-2 truncate max-w-[70px] md:max-w-[80px]">{bet.user.name}</span>
+                <span className="text-xs text-gray-700 font-medium mr-2 md:mr-3 truncate max-w-[70px] md:max-w-[80px]">{bet.user.name}</span>
                 {((game.status === 'LIVE' || game.status === 'FINISHED') && bet.score1 !== null && bet.score2 !== null) || 
                   (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
                   (() => {
                     const highlight = getBetHighlight(bet);
                     // For LIVE games: colored text with border and light background
                     if (game.status === 'LIVE' && highlight) {
-                      const textColor = highlight === 'gold' ? 'text-yellow-600' :
-                                       highlight === 'green' ? 'text-green-600' :
-                                       highlight === 'red' ? 'text-red-600' :
+                      const textColor = highlight === 'gold' ? 'text-yellow-700' :
+                                       highlight === 'green' ? 'text-green-700' :
+                                       highlight === 'red' ? 'text-red-700' :
                                        'text-gray-700';
                       const bgColor = highlight === 'gold' ? 'bg-yellow-50' :
                                      highlight === 'green' ? 'bg-green-50' :
                                      highlight === 'red' ? 'bg-red-50' :
-                                     'bg-gray-50';
-                      const borderClass = highlight === 'gold' ? 'border border-yellow-400' :
+                                     'bg-gray-100';
+                      const borderClass = highlight === 'gold' ? 'border border-yellow-300' :
                                          highlight === 'green' ? 'border border-green-300' :
                                          highlight === 'red' ? 'border border-red-300' :
                                          'border border-gray-300';
                       return (
-                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded-md px-1.5 md:px-2 py-0.5 ml-auto font-semibold`}>
+                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}>
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
                       );
                     } else if (game.status === 'FINISHED' && highlight) {
-                      // For finished games: colored text with very light background and border
-                      const textColor = highlight === 'gold' ? 'text-yellow-600' :
-                                       highlight === 'green' ? 'text-green-600' :
-                                       highlight === 'red' ? 'text-red-600' :
+                      // For finished games: colored text with light background and border
+                      const textColor = highlight === 'gold' ? 'text-yellow-700' :
+                                       highlight === 'green' ? 'text-green-700' :
+                                       highlight === 'red' ? 'text-red-700' :
                                        'text-gray-700';
                       const bgColor = highlight === 'gold' ? 'bg-yellow-50' :
                                      highlight === 'green' ? 'bg-green-50' :
                                      highlight === 'red' ? 'bg-red-50' :
-                                     'bg-gray-50';
-                      const borderClass = highlight === 'gold' ? 'border border-yellow-400' :
+                                     'bg-gray-100';
+                      const borderClass = highlight === 'gold' ? 'border border-yellow-300' :
                                          highlight === 'green' ? 'border border-green-300' :
                                          highlight === 'red' ? 'border border-red-300' :
                                          'border border-gray-300';
                       return (
-                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded-md px-1.5 md:px-2 py-0.5 ml-auto font-semibold`}>
+                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}>
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
                       );
                     } else {
-                      // For upcoming games: default styling with border and light background
+                      // For upcoming games: default styling with light background and border
                       return (
-                        <span className="text-xs font-mono text-gray-700 bg-gray-50 border border-gray-300 rounded-md px-1.5 md:px-2 py-0.5 ml-auto font-semibold">
+                        <span className="text-xs font-mono text-gray-700 bg-gray-100 border border-gray-300 rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm">
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
