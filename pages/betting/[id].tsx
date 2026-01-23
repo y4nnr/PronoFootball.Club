@@ -739,8 +739,8 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                     </div>
                     
                     <div className="mx-2 sm:mx-4 md:mx-6 text-center flex-shrink-0 self-center">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-blue-100 dark:bg-accent-dark-900/50 rounded-full flex items-center justify-center shadow-lg">
-                        <span className="text-blue-700 dark:text-accent-dark-400 text-sm sm:text-base md:text-lg lg:text-xl font-bold">VS</span>
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-blue-100 dark:bg-accent-dark-600 rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-blue-700 dark:text-white text-sm sm:text-base md:text-lg lg:text-xl font-bold">VS</span>
                       </div>
                     </div>
                     
