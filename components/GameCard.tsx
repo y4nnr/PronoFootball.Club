@@ -203,7 +203,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   };
   
   const cardContent = (
-    <div className={`bg-white dark:bg-gray-800 border-2 ${userHasBet ? 'border-blue-500 dark:border-accent-dark-500' : 'border-gray-300 dark:border-gray-700'} rounded-xl md:rounded-2xl shadow-lg dark:shadow-dark-modern-lg flex flex-col items-stretch transition overflow-hidden ${isClickable ? 'hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600 cursor-pointer transform hover:scale-[1.01]' : 'cursor-default'} ${userHasBet && isClickable ? 'hover:border-blue-600 dark:hover:border-accent-dark-500' : ''} ${
+    <div className={`bg-white dark:bg-gray-800 border-2 ${userHasBet ? 'border-blue-500 dark:border-accent-dark-500' : 'border-gray-300 dark:border-gray-700'} rounded-xl md:rounded-2xl shadow-lg dark:shadow-dark-modern-lg flex flex-col items-stretch transition overflow-hidden ${isClickable ? `hover:shadow-xl dark:hover:shadow-dark-xl ${userHasBet ? 'hover:border-blue-600 dark:hover:border-accent-dark-500' : 'hover:border-gray-400 dark:hover:border-gray-600'} cursor-pointer transform hover:scale-[1.01]` : 'cursor-default'} ${
       isHighlighted ? 
         highlightType === 'status' ? 'animate-bounce ring-4 ring-blue-400 ring-opacity-75' :
         highlightType === 'both' ? 'animate-pulse ring-4 ring-purple-400 ring-opacity-75' :
