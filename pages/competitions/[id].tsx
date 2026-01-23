@@ -968,35 +968,30 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     let rowBgClass = '';
                     let borderClass = '';
                     
-                    // Determine border highlight first (for special positions)
+                    // Determine background colors for special positions
                     if (isFirst) {
-                      // Gold border and highlight for 1st place
-                      borderClass = '!border-l-4 !border-l-yellow-500 dark:!border-l-yellow-500';
                       rowBgClass = isCurrentUser 
                         ? 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45' 
                         : 'bg-amber-50/50 dark:bg-gray-900';
                     } else if (isSecond) {
-                      // Silver border and highlight for 2nd place
-                      borderClass = '!border-l-4 !border-l-slate-400 dark:!border-l-gray-300';
                       rowBgClass = isCurrentUser 
                         ? 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45' 
                         : 'bg-slate-50/50 dark:bg-gray-900';
                     } else if (isThird) {
-                      // Bronze border and highlight for 3rd place
-                      borderClass = '!border-l-4 !border-l-orange-600 dark:!border-l-orange-500';
                       rowBgClass = isCurrentUser 
                         ? 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45' 
                         : 'bg-orange-50/50 dark:bg-gray-900';
                     } else if (isLast) {
-                      // Red border and highlight for last place
-                      borderClass = '!border-l-4 !border-l-red-500 dark:!border-l-red-400';
                       rowBgClass = isCurrentUser 
                         ? 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45' 
                         : 'bg-red-50/50 dark:bg-gray-900';
                     } else if (isCurrentUser) {
-                      // Current user without special position
                       rowBgClass = 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45';
-                      borderClass = '';
+                    }
+                    
+                    // Add accent color border only for current user
+                    if (isCurrentUser) {
+                      borderClass = '!border-l-4 !border-l-primary-500 dark:!border-l-accent-dark-500';
                     }
                     
                     return (
