@@ -234,7 +234,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
             <div className="flex items-center flex-shrink-0">
               {context === 'home' ? (
                 <div className="flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-accent-dark-700 rounded-full border border-blue-300 dark:border-accent-dark-500">
-                  <span className="text-blue-600 dark:text-accent-dark-500 text-xs font-bold">✓</span>
+                  <span className="text-blue-600 dark:text-white text-xs font-bold">✓</span>
                 </div>
               ) : (
                 // Only show points dot for FINISHED games
@@ -250,7 +250,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                 ) : (
                   // For UPCOMING/LIVE games, show a simple checkmark like home context
                   <div className="flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-accent-dark-700 rounded-full border border-blue-300 dark:border-accent-dark-500">
-                    <span className="text-blue-600 dark:text-accent-dark-500 text-xs font-bold">✓</span>
+                    <span className="text-blue-600 dark:text-white text-xs font-bold">✓</span>
                   </div>
                 )
               )}
