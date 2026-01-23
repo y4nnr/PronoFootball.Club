@@ -303,11 +303,6 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
-              {game.status === 'FINISHED' && (
-                <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )}
               <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
                 game.status === 'FINISHED' ? 'bg-green-500 text-white' :
                 game.status === 'UPCOMING' ? 'bg-blue-500 dark:bg-blue-400 text-white' :
@@ -366,11 +361,6 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
-              {game.status === 'FINISHED' && (
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )}
               <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
                 game.status === 'FINISHED' ? 'bg-green-500 text-white' :
                 game.status === 'UPCOMING' ? 'bg-blue-500 dark:bg-blue-400 text-white' :
