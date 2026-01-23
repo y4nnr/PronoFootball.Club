@@ -1215,9 +1215,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     
                     return (
                       <div key={game.id} className="w-full">
-                        <div
-                          onClick={(e) => {
-                            if (isFinished) {
+                        {isFinished ? (
+                          <div
+                            onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               toggleGameExpansion(game.id);
@@ -1225,19 +1225,26 @@ export default function CompetitionDetails({ competition, competitionStats, game
                               if (!gamesWithBets.has(game.id)) {
                                 fetchGameBets(game.id);
                               }
-                            }
-                          }}
-                          className={isFinished ? 'cursor-pointer' : ''}
-                        >
-                          <div className={isFinished ? 'hover:opacity-90 transition-opacity' : ''}>
-                            <GameCard
-                              game={gameCardData}
-                              currentUserId={currentUserId}
-                              href={isOpen ? `/betting/${game.id}` : undefined}
-                              context="competition"
-                            />
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <div className="hover:opacity-90 transition-opacity">
+                              <GameCard
+                                game={gameCardData}
+                                currentUserId={currentUserId}
+                                href={undefined}
+                                context="competition"
+                              />
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <GameCard
+                            game={gameCardData}
+                            currentUserId={currentUserId}
+                            href={isOpen ? `/betting/${game.id}` : undefined}
+                            context="competition"
+                          />
+                        )}
                         
                         {/* Expanded Bets Section for Finished Games */}
                         {isFinished && isExpanded && (
