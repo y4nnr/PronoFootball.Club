@@ -491,7 +491,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                   <button
                     onClick={() => scrollCarousel('right')}
                     disabled={!canScrollRight}
-                    className={`absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
+                    className={`absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 dark:bg-gray-700/90 hover:bg-white dark:hover:bg-gray-700 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
                       canScrollRight 
                         ? 'opacity-100 hover:scale-110' 
                         : 'opacity-0 pointer-events-none'
