@@ -609,7 +609,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                         
                           {index === actualCurrentGameIndex && (
                             <div className="absolute -top-1 -right-1">
-                              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gray-400 dark:bg-accent-dark-600 rounded-full flex items-center justify-center shadow-lg">
+                              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center shadow-lg">
                                 <span className="text-white text-xs font-bold">✓</span>
                               </div>
                             </div>
