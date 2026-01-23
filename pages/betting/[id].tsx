@@ -66,8 +66,15 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   console.log('🎯 FRONTEND LOG - Current game index:', currentGameIndex);
 
   // CRITICAL FIX: Sync allGamesList from SSR list on route change (no merge), keep deterministic order
+  // Use same sorting logic as dashboard: date first, then ID for stability
   useEffect(() => {
-    const sorted = [...allGames].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sorted = [...allGames].sort((a, b) => {
+      // First sort by date, then by ID for stability (matches dashboard sorting)
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      if (dateA !== dateB) return dateA - dateB;
+      return a.id.localeCompare(b.id);
+    });
     setAllGamesList(sorted);
   }, [allGames]);
 
@@ -122,7 +129,13 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
           // Merge, de-duplicate by id, then sort by date asc to match competition page order
           const merged = [...prev, ...transformedGames];
           const uniqueById = Array.from(new Map(merged.map(g => [g.id, g])).values());
-          uniqueById.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          // Use same sorting logic as dashboard: date first, then ID for stability
+          uniqueById.sort((a, b) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            if (dateA !== dateB) return dateA - dateB;
+            return a.id.localeCompare(b.id);
+          });
           // Enforce MAX_CAROUSEL_GAMES cap
           const limited = uniqueById.slice(0, MAX_CAROUSEL_GAMES);
           
@@ -1068,9 +1081,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           }
         }
       },
-      orderBy: {
-        date: 'asc'
-      }
+      orderBy: [
+        { date: 'asc' },
+        { id: 'asc' } // Secondary sort by ID for stability (matches dashboard sorting)
+      ]
     });
 
     // Find the current game index
