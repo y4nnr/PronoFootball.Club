@@ -836,16 +836,6 @@ export default function Dashboard() {
           return null;
         })()}
 
-        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-dark-xl border border-gray-200 dark:border-gray-700 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-[1.15rem] flex items-center">
-            <span className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center mr-3">
-              <ChartBarIcon className="h-6 w-6 text-white" />
-            </span>
-            Performance des derniers matchs
-          </h2>
-          <PersonalStatsSection stats={dashboardData?.stats || null} lastGamesPerformance={lastGamesPerformance} />
-        </section>
-
         {gamesOfDay && gamesOfDay.length > 0 && (
           <div className="mb-8">
             <GamesOfDaySection 
