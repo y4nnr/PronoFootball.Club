@@ -5,6 +5,7 @@ import { prisma } from '../../../../lib/prisma';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
+import log from '../../../../lib/logger';
 
 // Function to generate a temporary password
 function generateTemporaryPassword() {
@@ -13,14 +14,18 @@ function generateTemporaryPassword() {
 
 // Placeholder email function - implement actual email sending later
 async function sendWelcomeEmail(params: { to: string; name: string; temporaryPassword: string }) {
-  console.log('Welcome email would be sent to:', params.to, 'with temp password:', params.temporaryPassword);
+  log.info('Welcome email would be sent', { to: params.to, name: params.name });
   return true; // Return true for now
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
 
-  console.log('Admin users API - Session:', session ? { email: session.user?.email, role: session.user?.role } : 'No session');
+  log.debug('Admin users API request', { 
+    method: req.method, 
+    hasSession: !!session, 
+    userRole: session?.user?.role 
+  });
 
   if (!session || !session.user) {
     return res.status(401).json({ error: 'Unauthorized - No session' });
@@ -28,19 +33,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const userRole = session.user.role?.toLowerCase();
   if (userRole !== 'admin') {
-    console.error('Unauthorized access attempt - Role:', session.user.role, 'Expected: admin');
+    log.warn('Unauthorized access attempt to admin endpoint', { 
+      userRole: session.user.role, 
+      userId: session.user.id 
+    });
     return res.status(401).json({ error: 'Unauthorized - Admin access required' });
   }
 
   if (req.method === 'GET') {
     try {
-      console.log('[ADMIN USERS] Starting to fetch users...');
-      console.log('[ADMIN USERS] Prisma client initialized:', !!prisma);
-      console.log('[ADMIN USERS] DATABASE_URL exists:', !!process.env.DATABASE_URL);
+      log.debug('Fetching users list');
       
       // Test connection first
       await prisma.$connect();
-      console.log('[ADMIN USERS] Database connection successful');
+      log.debug('Database connection successful');
       
       // Try to fetch with all fields first, fallback to basic fields if needed
       let users;
@@ -61,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } catch (fieldError: any) {
         // If fields don't exist, try with basic fields only
         if (fieldError?.code === 'P2009' || fieldError?.name === 'PrismaClientValidationError') {
-          console.warn('[ADMIN USERS] Some fields may not exist, trying with basic fields only');
+          log.warn('Some user fields may not exist, trying with basic fields only', { error: fieldError.message });
           users = await prisma.user.findMany({
             select: {
               id: true,
@@ -84,21 +90,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
       
-      console.log('[ADMIN USERS] Successfully fetched', users.length, 'users');
+      log.info('Successfully fetched users', { count: users.length });
       return res.status(200).json(users);
     } catch (error) {
-      console.error('[ADMIN USERS] Error fetching users:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      const errorName = error instanceof Error ? error.name : 'Unknown';
-      
-      console.error('[ADMIN USERS] Error details:', { 
-        name: errorName,
-        message: errorMessage, 
-        stack: errorStack,
+      log.error('Error fetching users', error, { 
         code: (error as any)?.code,
         meta: (error as any)?.meta,
       });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorName = error instanceof Error ? error.name : 'Unknown';
       
       return res.status(500).json({ 
         error: 'Failed to fetch users',
@@ -170,7 +170,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
 
         if (!emailSent) {
-          console.error('Failed to send welcome email to:', email);
+          log.error('Failed to send welcome email', undefined, { email, userId: user.id });
           return res.status(201).json({ 
             id: user.id,
             temporaryPassword,
@@ -189,7 +189,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         message: 'User created successfully with provided password.'
       });
     } catch (error) {
-      console.error('Error creating user:', error);
+      log.error('Error creating user', error);
       return res.status(500).json({ error: 'Failed to create user' });
     }
   }
@@ -219,10 +219,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!isBcryptHash) {
           // It's a plain text password, hash it
           data.hashedPassword = await bcrypt.hash(password, 10);
-          console.log('Password updated for user:', id);
+          log.info('Password updated for user', { userId: id });
         } else {
           // It's already a hash, don't update the password
-          console.log('Skipping password update - hash detected for user:', id);
+          log.debug('Skipping password update - hash detected', { userId: id });
         }
       }
       
@@ -232,7 +232,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
       return res.status(200).json({ id: user.id, message: 'User updated successfully' });
     } catch (error) {
-      console.error('Error updating user:', error);
+      log.error('Error updating user', error, { userId: id });
       return res.status(500).json({ error: 'Failed to update user' });
     }
   }
@@ -247,7 +247,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'isActive must be a boolean' });
     }
     try {
-      console.log('[ADMIN] Updating user activation status:', { id, isActive });
+      log.info('Updating user activation status', { userId: id, isActive });
       const user = await prisma.user.update({
         where: { id },
         data: { isActive },
@@ -260,10 +260,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           role: true
         }
       });
-      console.log('[ADMIN] User updated successfully:', user);
+      log.info('User activation status updated successfully', { userId: user.id, isActive: user.isActive });
       return res.status(200).json({ id: user.id, isActive: user.isActive, message: `User ${isActive ? 'activated' : 'deactivated'} successfully` });
     } catch (error) {
-      console.error('[ADMIN] Error updating user activation status:', error);
+      log.error('Error updating user activation status', error, { userId: id, isActive });
       return res.status(500).json({ error: 'Failed to update user activation status' });
     }
   }
@@ -297,10 +297,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       });
       
-      console.log('User and related records deleted successfully:', id);
+      log.info('User and related records deleted successfully', { userId: id });
       return res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
-      console.error('Error deleting user:', error);
+      log.error('Error deleting user', error, { userId: id });
       return res.status(500).json({ error: 'Failed to delete user' });
     }
   }

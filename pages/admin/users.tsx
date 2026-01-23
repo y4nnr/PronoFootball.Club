@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useTheme } from '../../contexts/ThemeContext';
 import { 
   MagnifyingGlassIcon, 
   FunnelIcon,
@@ -376,46 +377,46 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-4">
-          <div className="flex flex-col items-center mb-4">
-            <div className="text-center mb-4">
-              <h1 className="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>
-              <p className="mt-1 text-xs text-gray-600">Gérez les comptes utilisateurs et leurs permissions</p>
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestion des utilisateurs</h1>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Gérez les comptes utilisateurs et leurs permissions</p>
             </div>
             <button
               onClick={openAddModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow-md hover:bg-primary-700 transition-all text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 dark:bg-accent-dark-600 text-white rounded-lg shadow-sm hover:bg-primary-700 dark:hover:bg-accent-dark-700 transition-all text-sm font-medium"
             >
-              <UserPlusIcon className="w-4 h-4" />
+              <UserPlusIcon className="w-5 h-5" />
               Nouvel utilisateur
             </button>
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-            <div className="bg-white rounded-lg shadow p-2.5 border-l-3 border-blue-500">
-              <div className="text-xs font-medium text-gray-600">Total</div>
-              <div className="text-lg font-bold text-gray-900">{stats.total}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-blue-500 dark:border-blue-400">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.total}</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-2.5 border-l-3 border-green-500">
-              <div className="text-xs font-medium text-gray-600">Actifs</div>
-              <div className="text-lg font-bold text-green-600">{stats.active}</div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-green-500 dark:border-green-400">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Actifs</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{stats.active}</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-2.5 border-l-3 border-yellow-500">
-              <div className="text-xs font-medium text-gray-600">En attente</div>
-              <div className="text-lg font-bold text-yellow-600">{stats.inactive}</div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-yellow-500 dark:border-yellow-400">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">En attente</div>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">{stats.inactive}</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-2.5 border-l-3 border-purple-500">
-              <div className="text-xs font-medium text-gray-600">Admins</div>
-              <div className="text-lg font-bold text-purple-600">{stats.admins}</div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-purple-500 dark:border-purple-400">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Admins</div>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">{stats.admins}</div>
             </div>
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-white rounded-lg shadow p-2.5 mb-3">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-2">
               {/* Search */}
               <div className="flex-1">
@@ -426,7 +427,7 @@ export default function AdminUsers() {
                     placeholder="Rechercher par nom, email..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
                   />
                 </div>
               </div>
@@ -435,10 +436,10 @@ export default function AdminUsers() {
               <div className="flex gap-1.5">
                 <button
                   onClick={() => setStatusFilter('all')}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                     statusFilter === 'all'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary-600 dark:bg-accent-dark-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   Tous
@@ -503,144 +504,144 @@ export default function AdminUsers() {
         </div>
         {loading ? (
           <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-4 text-gray-600">Loading users...</span>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 dark:border-accent-dark-500"></div>
+            <span className="ml-4 text-gray-600 dark:text-gray-400">Loading users...</span>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800 font-medium">Error: {error}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+            <p className="text-red-800 dark:text-red-300 font-medium">Error: {error}</p>
             <button
               onClick={fetchUsers}
-              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+              className="mt-2 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition"
             >
               Retry
             </button>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
             {filteredAndSortedUsers.length === 0 ? (
               <div className="p-12 text-center">
-                <p className="text-gray-500 text-lg">Aucun utilisateur trouvé</p>
+                <p className="text-gray-500 dark:text-gray-400 text-lg">Aucun utilisateur trouvé</p>
                 {searchQuery && (
-                  <p className="text-gray-400 text-sm mt-2">Essayez de modifier vos critères de recherche</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Essayez de modifier vos critères de recherche</p>
                 )}
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-900/50">
                     <tr>
                       <th className="px-3 py-2 text-left"></th>
                       <th className="px-3 py-2 text-left">
                         <button
                           onClick={() => handleSort('name')}
-                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-300"
                         >
                           Nom
                           {sortField === 'name' ? (
                             sortDirection === 'asc' ? (
-                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             ) : (
-                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             )
                           ) : (
-                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                            <Bars3Icon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                           )}
                         </button>
                       </th>
                       <th className="px-3 py-2 text-left">
                         <button
                           onClick={() => handleSort('email')}
-                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-300"
                         >
                           Email
                           {sortField === 'email' ? (
                             sortDirection === 'asc' ? (
-                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             ) : (
-                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             )
                           ) : (
-                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                            <Bars3Icon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                           )}
                         </button>
                       </th>
                       <th className="px-3 py-2 text-left">
                         <button
                           onClick={() => handleSort('role')}
-                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-300"
                         >
                           Rôle
                           {sortField === 'role' ? (
                             sortDirection === 'asc' ? (
-                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             ) : (
-                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             )
                           ) : (
-                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                            <Bars3Icon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                           )}
                         </button>
                       </th>
                       <th className="px-3 py-2 text-left">
                         <button
                           onClick={() => handleSort('status')}
-                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-300"
                         >
                           Statut
                           {sortField === 'status' ? (
                             sortDirection === 'asc' ? (
-                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             ) : (
-                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             )
                           ) : (
-                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                            <Bars3Icon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                           )}
                         </button>
                       </th>
                       <th className="px-3 py-2 text-left hidden md:table-cell">
                         <button
                           onClick={() => handleSort('createdAt')}
-                          className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                          className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-300"
                         >
                           Inscription
                           {sortField === 'createdAt' ? (
                             sortDirection === 'asc' ? (
-                              <ChevronUpIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronUpIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             ) : (
-                              <ChevronDownIcon className="w-4 h-4 text-primary-600" />
+                              <ChevronDownIcon className="w-4 h-4 text-primary-600 dark:text-accent-dark-400" />
                             )
                           ) : (
-                            <Bars3Icon className="w-4 h-4 text-gray-400" />
+                            <Bars3Icon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                           )}
                         </button>
                       </th>
                       <th className="px-3 py-2 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {filteredAndSortedUsers.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <td className="px-3 py-2 whitespace-nowrap">
                           <img
                             src={user.profilePictureUrl || DEFAULT_AVATAR}
                             alt={user.name + ' avatar'}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 bg-white shadow-sm"
+                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm"
                             onError={e => (e.currentTarget.src = DEFAULT_AVATAR)}
                           />
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
-                          <div className="font-semibold text-sm text-gray-900">{user.name}</div>
+                          <div className="font-semibold text-sm text-gray-900 dark:text-white">{user.name}</div>
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
-                          <div className="text-xs text-gray-700 truncate max-w-[200px]">{user.email}</div>
+                          <div className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[200px]">{user.email}</div>
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
                           <span className={`px-2 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full ${
                             user.role.toLowerCase() === 'admin'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-blue-100 text-blue-800'
+                              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
+                              : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
                           }`}>
                             {user.role.toLowerCase() === 'admin' ? 'Admin' : 'User'}
                           </span>
@@ -648,8 +649,8 @@ export default function AdminUsers() {
                         <td className="px-3 py-2 whitespace-nowrap">
                           <span className={`px-2 py-0.5 inline-flex items-center text-xs leading-4 font-semibold rounded-full ${
                             user.isActive 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
+                              : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
                           }`}>
                             {user.isActive ? (
                               <>
@@ -664,7 +665,7 @@ export default function AdminUsers() {
                             )}
                           </span>
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 hidden md:table-cell">
+                        <td className="px-3 py-2 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400 hidden md:table-cell">
                           {new Date(user.createdAt).toLocaleDateString('fr-FR', {
                             year: 'numeric',
                             month: 'short',
@@ -677,8 +678,8 @@ export default function AdminUsers() {
                               onClick={() => handleToggleActivation(user.id, !user.isActive)}
                               className={`inline-flex items-center gap-0.5 px-2 py-1 rounded text-xs font-medium transition ${
                                 user.isActive 
-                                  ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
-                                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                  ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50' 
+                                  : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
                               }`}
                               title={user.isActive ? 'Désactiver' : 'Activer'}
                             >
@@ -690,14 +691,14 @@ export default function AdminUsers() {
                             </button>
                             <button
                               onClick={() => openEditModal(user)}
-                              className="inline-flex items-center gap-0.5 px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition text-xs font-medium"
+                              className="inline-flex items-center gap-0.5 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition text-xs font-medium"
                               title="Modifier"
                             >
                               <PencilIcon className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => openDeleteModal(user.id)}
-                              className="inline-flex items-center gap-0.5 px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition text-xs font-medium"
+                              className="inline-flex items-center gap-0.5 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition text-xs font-medium"
                               title="Supprimer"
                             >
                               <TrashIcon className="w-3.5 h-3.5" />
@@ -711,8 +712,8 @@ export default function AdminUsers() {
               </div>
             )}
             {filteredAndSortedUsers.length > 0 && (
-              <div className="bg-gray-50 px-3 py-2 border-t border-gray-200">
-                <p className="text-xs text-gray-600">
+              <div className="bg-gray-50 dark:bg-gray-900/50 px-3 py-2 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Affichage de <span className="font-medium">{filteredAndSortedUsers.length}</span> utilisateur{filteredAndSortedUsers.length > 1 ? 's' : ''}
                   {searchQuery || statusFilter !== 'all' || roleFilter !== 'all' ? (
                     <> sur <span className="font-medium">{users.length}</span> total</>
@@ -905,8 +906,8 @@ export default function AdminUsers() {
                     <option value="admin">{t('admin.users.admin')}</option>
                   </select>
                 </div>
-                {formError && <div className="text-red-600 text-sm mt-2">{formError}</div>}
-                {successMessage && <div className="text-green-600 text-sm mt-2">{successMessage}</div>}
+                {formError && <div className="text-red-600 dark:text-red-400 text-sm mt-2">{formError}</div>}
+                {successMessage && <div className="text-green-600 dark:text-green-400 text-sm mt-2">{successMessage}</div>}
               </div>
               <div className="mt-6 flex justify-end space-x-2">
                 <button

@@ -176,7 +176,8 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   
   // Determine border color based on context
   const getBorderColor = () => {
-    if (context === 'competition' && userPoints !== undefined) {
+    // Only show points-based styling for FINISHED games in competition context
+    if (context === 'competition' && game.status === 'FINISHED' && userPoints !== undefined && userPoints !== null) {
       if (userPoints === 3) return 'border-yellow-400 border-2'; // Gold for 3 points
       if (userPoints === 1) return 'border-green-400 border-2'; // Green for 1 point
       if (userPoints === 0) return 'border-red-400 border-2'; // Red for 0 points
@@ -189,7 +190,8 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
 
   // Determine background color based on context
   const getBackgroundColor = () => {
-    if (context === 'competition' && userPoints !== undefined) {
+    // Only show points-based styling for FINISHED games in competition context
+    if (context === 'competition' && game.status === 'FINISHED' && userPoints !== undefined && userPoints !== null) {
       if (userPoints === 3) return 'bg-yellow-50'; // Light gold for 3 points
       if (userPoints === 1) return 'bg-green-50'; // Light green for 1 point
       if (userPoints === 0) return 'bg-red-50'; // Light red for 0 points
@@ -201,7 +203,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   };
   
   const cardContent = (
-    <div className={`bg-white border-2 ${userHasBet ? 'border-blue-500' : 'border-gray-300'} rounded-xl md:rounded-2xl shadow-lg flex flex-col items-stretch transition overflow-hidden ${isClickable ? 'hover:shadow-xl hover:border-gray-400 cursor-pointer transform hover:scale-[1.01]' : 'cursor-default'} ${userHasBet && isClickable ? 'hover:border-blue-600' : ''} ${
+    <div className={`bg-white dark:bg-gray-800 border-2 ${userHasBet ? 'border-blue-500 dark:border-accent-dark-400' : 'border-gray-300 dark:border-gray-700'} rounded-xl md:rounded-2xl shadow-lg dark:shadow-dark-modern-lg flex flex-col items-stretch transition overflow-hidden ${isClickable ? 'hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600 cursor-pointer transform hover:scale-[1.01]' : 'cursor-default'} ${userHasBet && isClickable ? 'hover:border-blue-600 dark:hover:border-accent-dark-500' : ''} ${
       isHighlighted ? 
         highlightType === 'status' ? 'animate-bounce ring-4 ring-blue-400 ring-opacity-75' :
         highlightType === 'both' ? 'animate-pulse ring-4 ring-purple-400 ring-opacity-75' :
@@ -209,20 +211,20 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
     }`}>
       {/* Competition Name & Logo - Section 1: Darker shade (top) */}
       {game.competition && (
-        <div className="flex items-center justify-between gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gray-200 border-b border-gray-300">
+        <div className="flex items-center justify-between gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gray-200 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {game.competition.logo ? (
               <img 
                 src={game.competition.logo} 
                 alt={game.competition.name} 
-                className="w-6 h-6 md:w-7 md:h-7 rounded object-cover border border-gray-300 flex-shrink-0 shadow-sm" 
+                className="w-6 h-6 md:w-7 md:h-7 dark:w-7 dark:h-7 dark:md:w-8 dark:md:h-8 rounded object-cover border border-gray-300 dark:border-gray-600 flex-shrink-0 shadow-sm dark:bg-white dark:p-0.5" 
               />
             ) : (
-              <div className="w-6 h-6 md:w-7 md:h-7 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-bold flex-shrink-0">
+              <div className="w-6 h-6 md:w-7 md:h-7 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-600 dark:text-gray-300 font-bold flex-shrink-0">
                 {game.competition.name.substring(0, 2).toUpperCase()}
               </div>
             )}
-            <span className="text-xs md:text-sm text-gray-800 font-semibold truncate">
+            <span className="text-xs md:text-sm text-gray-800 dark:text-gray-200 font-semibold truncate">
               <span className="md:hidden">{abbreviateCompetitionName(game.competition.name)}</span>
               <span className="hidden md:inline">{game.competition.name}</span>
             </span>
@@ -231,35 +233,43 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {userHasBet && (
             <div className="flex items-center flex-shrink-0">
               {context === 'home' ? (
-                <div className="flex items-center justify-center w-5 h-5 bg-blue-100 rounded-full border border-blue-300">
-                  <span className="text-blue-600 text-xs font-bold">✓</span>
+                <div className="flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-accent-dark-900 rounded-full border border-blue-300 dark:border-accent-dark-600">
+                  <span className="text-blue-600 dark:text-accent-dark-500 text-xs font-bold">✓</span>
                 </div>
               ) : (
-                <div 
-                  className={`w-3 h-3 rounded-full shadow-md ${
-                    userPoints === 3 ? 'bg-yellow-500' : 
-                    userPoints === 1 ? 'bg-green-500' : 
-                    'bg-red-500'
-                  }`} 
-                  title={`Vous avez gagné ${userPoints || 0} point${(userPoints || 0) > 1 ? 's' : ''}`}
-                ></div>
+                // Only show points dot for FINISHED games
+                game.status === 'FINISHED' && userPoints !== undefined && userPoints !== null ? (
+                  <div 
+                    className={`w-3 h-3 rounded-full shadow-md ${
+                      userPoints === 3 ? 'bg-yellow-500' : 
+                      userPoints === 1 ? 'bg-green-500' : 
+                      'bg-red-500'
+                    }`} 
+                    title={`Vous avez gagné ${userPoints} point${userPoints > 1 ? 's' : ''}`}
+                  ></div>
+                ) : (
+                  // For UPCOMING/LIVE games, show a simple checkmark like home context
+                  <div className="flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-accent-dark-900 rounded-full border border-blue-300 dark:border-accent-dark-600">
+                    <span className="text-blue-600 dark:text-accent-dark-500 text-xs font-bold">✓</span>
+                  </div>
+                )
               )}
             </div>
           )}
         </div>
       )}
       {/* Section 2: Date/Time & Status - Dedicated section for better visibility (Mobile) */}
-      <div className="flex items-center justify-between w-full px-3 md:px-4 py-3 md:hidden bg-gray-50 border-b border-gray-200">
+      <div className="flex items-center justify-between w-full px-3 md:px-4 py-3 md:hidden bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         {/* Date/Time on left */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
           <div className="flex items-center gap-1.5">
-            <svg className="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span className="text-xs text-gray-700 font-semibold uppercase tracking-wide">{formatDate(game.date)}</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300 font-semibold uppercase tracking-wide">{formatDate(game.date)}</span>
           </div>
-          <div className="w-px h-4 bg-gray-300"></div>
-          <span className="text-xs text-gray-700 font-bold">{formatTime(game.date)}</span>
+          <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
+          <span className="text-xs text-gray-700 dark:text-gray-300 font-bold">{formatTime(game.date)}</span>
         </div>
         {/* Status on the right */}
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
@@ -314,17 +324,17 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       </div>
       {/* Section 2: Date/Time & Status - Dedicated section for better visibility (Desktop) */}
-      <div className="hidden md:flex md:items-center w-full justify-between px-3 md:px-4 py-3 bg-gray-50 border-b border-gray-200">
+      <div className="hidden md:flex md:items-center w-full justify-between px-3 md:px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         {/* Date/Time on left */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span className="text-xs text-gray-700 font-semibold uppercase tracking-wide">{formatDate(game.date)}</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300 font-semibold uppercase tracking-wide">{formatDate(game.date)}</span>
           </div>
-          <div className="w-px h-4 bg-gray-300"></div>
-          <span className="text-xs text-gray-700 font-bold">{formatTime(game.date)}</span>
+          <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
+          <span className="text-xs text-gray-700 dark:text-gray-300 font-bold">{formatTime(game.date)}</span>
         </div>
         {/* Status on the right */}
         <div className="flex items-center gap-2 ml-1.5 md:ml-0 flex-shrink-0">
@@ -377,40 +387,40 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       </div>
       {/* Teams & Score - Section 3: Light gray (primary section) */}
-      <div className="flex items-center w-full justify-between py-4 md:py-6 px-3 md:px-4 bg-gray-50 border-b border-gray-200">
+      <div className="flex items-center w-full justify-between py-4 md:py-6 px-3 md:px-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
           {/* Home Team */}
         <div className="flex flex-col items-center min-w-0 w-2/5 justify-end pr-1 md:pr-2 gap-1">
           {/* Mobile: Logo on top, name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.homeTeam.logo ? (
-              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 mb-2 flex-shrink-0 shadow-md" />
+              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className={`w-10 h-10 dark:w-12 dark:h-12 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md ${(game.homeTeam.name.toLowerCase().includes('juventus') || game.homeTeam.name.toLowerCase().includes('tottenham') || game.homeTeam.name.toLowerCase().includes('scotland') || game.homeTeam.name.toLowerCase().includes('england') || game.homeTeam.name.toLowerCase().includes('wales') || game.homeTeam.name.toLowerCase().includes('italy') || game.homeTeam.name.toLowerCase().includes('france') || game.homeTeam.name.toLowerCase().includes('ireland')) ? 'dark:bg-white dark:p-1' : ''}`} />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-700 font-bold mb-2 flex-shrink-0 border-2 border-gray-300">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
             )}
             <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-              <span className="text-gray-900 font-semibold text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.homeTeam)}</span>
+              <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.homeTeam)}</span>
             </div>
           </div>
           {/* Desktop: Logo on top, name below */}
           <div className="hidden md:flex flex-col items-center">
             {game.homeTeam.logo ? (
-              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-12 h-12 rounded-full object-cover border-2 border-gray-300 mb-2 flex-shrink-0 shadow-md" />
+              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className={`w-12 h-12 dark:w-14 dark:h-14 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md ${(game.homeTeam.name.toLowerCase().includes('juventus') || game.homeTeam.name.toLowerCase().includes('tottenham') || game.homeTeam.name.toLowerCase().includes('scotland') || game.homeTeam.name.toLowerCase().includes('england') || game.homeTeam.name.toLowerCase().includes('wales') || game.homeTeam.name.toLowerCase().includes('italy') || game.homeTeam.name.toLowerCase().includes('france') || game.homeTeam.name.toLowerCase().includes('ireland')) ? 'dark:bg-white dark:p-1' : ''}`} />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-sm text-gray-700 font-bold mb-2 flex-shrink-0 border-2 border-gray-300">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
+              <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
             )}
-            <span className="text-gray-900 font-semibold text-xs lg:text-sm text-center truncate max-w-[90px]">{game.homeTeam.name}</span>
+            <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs lg:text-sm text-center truncate max-w-[90px]">{game.homeTeam.name}</span>
           </div>
         </div>
         {/* Score - PRIMARY: Largest and boldest - Maximum contrast */}
         <div className="flex-1 flex justify-center min-w-[60px] md:min-w-[80px]">
-          <span className={`text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 transition-all duration-300 ${
+          <span className={`text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 dark:text-gray-100 transition-all duration-300 ${
             isHighlighted && (highlightType === 'score' || highlightType === 'both') ? 'animate-pulse scale-110 text-yellow-600' : ''
           }`}>
             {game.status === 'FINISHED' && typeof game.homeScore === 'number' && typeof game.awayScore === 'number'
               ? `${game.homeScore} - ${game.awayScore}`
               : game.status === 'LIVE' && typeof game.liveHomeScore === 'number' && typeof game.liveAwayScore === 'number'
               ? `${game.liveHomeScore} - ${game.liveAwayScore}`
-              : <span className="text-gray-400">-</span>}
+              : <span className="text-gray-400 dark:text-gray-500">-</span>}
           </span>
         </div>
         {/* Away Team */}
@@ -418,44 +428,46 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {/* Mobile: Logo on top, name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.awayTeam.logo ? (
-              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 mb-2 flex-shrink-0 shadow-md" />
+              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className={`w-10 h-10 dark:w-12 dark:h-12 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md ${(game.awayTeam.name.toLowerCase().includes('juventus') || game.awayTeam.name.toLowerCase().includes('tottenham') || game.awayTeam.name.toLowerCase().includes('scotland') || game.awayTeam.name.toLowerCase().includes('england') || game.awayTeam.name.toLowerCase().includes('wales') || game.awayTeam.name.toLowerCase().includes('italy') || game.awayTeam.name.toLowerCase().includes('france') || game.awayTeam.name.toLowerCase().includes('ireland')) ? 'dark:bg-white dark:p-1' : ''}`} />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-700 font-bold mb-2 flex-shrink-0 border-2 border-gray-300">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
             )}
             <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-              <span className="text-gray-900 font-semibold text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.awayTeam)}</span>
+              <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.awayTeam)}</span>
             </div>
           </div>
           {/* Desktop: Logo on top, name below */}
           <div className="hidden md:flex flex-col items-center">
             {game.awayTeam.logo ? (
-              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-12 h-12 rounded-full object-cover border-2 border-gray-300 mb-2 flex-shrink-0 shadow-md" />
+              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className={`w-12 h-12 dark:w-14 dark:h-14 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md ${(game.awayTeam.name.toLowerCase().includes('juventus') || game.awayTeam.name.toLowerCase().includes('tottenham') || game.awayTeam.name.toLowerCase().includes('scotland') || game.awayTeam.name.toLowerCase().includes('england') || game.awayTeam.name.toLowerCase().includes('wales') || game.awayTeam.name.toLowerCase().includes('italy') || game.awayTeam.name.toLowerCase().includes('france') || game.awayTeam.name.toLowerCase().includes('ireland')) ? 'dark:bg-white dark:p-1' : ''}`} />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-sm text-gray-700 font-bold mb-2 flex-shrink-0 border-2 border-gray-300">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
+              <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
             )}
-            <span className="text-gray-900 font-semibold text-xs lg:text-sm text-center truncate max-w-[90px]">{game.awayTeam.name}</span>
+            <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs lg:text-sm text-center truncate max-w-[90px]">{game.awayTeam.name}</span>
           </div>
         </div>
       </div>
       {/* Bets List - Section 4: Matching main section style (bottom) */}
       {game.bets && game.bets.length > 0 && (
-        <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50">
-          <div className="text-xs text-gray-700 font-semibold mb-2.5 md:mb-3 uppercase tracking-wide">{t('placedBets')}</div>
-          <ul className="divide-y divide-gray-200">
+        <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-gray-800/50">
+          <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-2.5 md:mb-3 uppercase tracking-wide">{t('placedBets')}</div>
+          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
             {game.bets.map((bet) => (
               <li key={bet.id} className="flex items-center py-2 first:pt-0 last:pb-0">
                 <img
                   src={bet.user.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(bet.user.name.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
                   alt={bet.user.name}
-                  className="w-6 h-6 md:w-7 md:h-7 rounded-full border-2 border-gray-300 object-cover mr-2 md:mr-3 shadow-sm"
+                  className="w-6 h-6 md:w-7 md:h-7 rounded-full border-2 border-gray-300 dark:border-gray-600 object-cover mr-2 md:mr-3 shadow-sm"
                   title={bet.user.name}
                 />
-                <span className="text-xs text-gray-700 font-medium mr-2 md:mr-3 truncate max-w-[70px] md:max-w-[80px]">{bet.user.name}</span>
+                <span className="text-xs text-gray-700 dark:text-gray-300 font-medium mr-2 md:mr-3 truncate max-w-[70px] md:max-w-[80px]">{bet.user.name}</span>
                 {((game.status === 'LIVE' || game.status === 'FINISHED') && bet.score1 !== null && bet.score2 !== null) || 
                   (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
                   (() => {
                     const highlight = getBetHighlight(bet);
                     // For LIVE games: colored text with border and light background
+                    // NOTE: These colors are kept the same in dark mode to preserve production color coding
+                    // Gold = exact score, Green = correct result, Red = no match
                     if (game.status === 'LIVE' && highlight) {
                       const textColor = highlight === 'gold' ? 'text-yellow-700' :
                                        highlight === 'green' ? 'text-green-700' :
@@ -498,7 +510,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                     } else {
                       // For upcoming games: default styling with light background and border
                       return (
-                        <span className="text-xs font-mono text-gray-700 bg-gray-100 border border-gray-300 rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm">
+                        <span className="text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm">
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>

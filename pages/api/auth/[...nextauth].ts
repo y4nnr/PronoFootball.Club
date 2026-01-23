@@ -3,6 +3,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "../../../lib/prisma";
+import log from "../../../lib/logger";
 
 declare module "next-auth" {
   interface Session {
@@ -36,7 +37,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.emailOrUsername || !credentials?.password) {
-          console.error('[AUTH] Missing credentials');
+          log.warn('Authentication attempt with missing credentials');
           throw new Error("Missing credentials");
         }
 
@@ -44,7 +45,7 @@ export const authOptions: NextAuthOptions = {
         // Note: 'name' is the username field that existing users use (e.g., "Yann", "Fifi")
         // The new 'username' field is optional and can be used as an alias
         const searchTerm = credentials.emailOrUsername;
-        console.log('[AUTH] Attempting login with:', searchTerm);
+        log.debug('Authentication attempt', { searchTerm });
         
         // First try by email (case-insensitive) or name (case-insensitive)
         // Note: For email, we need to use a case-insensitive search
@@ -62,7 +63,7 @@ export const authOptions: NextAuthOptions = {
         
         // If not found, also check the optional username field
         if (!user && searchTerm) {
-          console.log('[AUTH] User not found by email/name, trying username field');
+          log.debug('User not found by email/name, trying username field', { searchTerm });
           user = await prisma.user.findFirst({
             where: {
               username: { equals: searchTerm, mode: 'insensitive' }
@@ -71,20 +72,14 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (!user) {
-          console.error('[AUTH] No user found for:', searchTerm);
-          // Let's also check what users exist in the database for debugging
-          const allUsers = await prisma.user.findMany({
-            select: { email: true, name: true, username: true, isActive: true }
-          });
-          console.log('[AUTH] Available users in DB:', allUsers);
+          log.warn('Authentication failed: user not found', { searchTerm });
           throw new Error("No user found");
         }
 
-        console.log('[AUTH] User found:', {
-          id: user.id,
+        log.debug('User found for authentication', {
+          userId: user.id,
           email: user.email,
           name: user.name,
-          username: user.username,
           role: user.role,
           isActive: user.isActive
         });
@@ -95,21 +90,21 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
-          console.error('[AUTH] Invalid password for user:', user.email);
+          log.warn('Authentication failed: invalid password', { userId: user.id, email: user.email });
           throw new Error("Invalid password");
         }
 
-        console.log('[AUTH] Password valid, checking activation status...');
+        log.debug('Password validated, checking activation status', { userId: user.id });
 
         // Check if user is active (unless admin)
         // For existing users created before isActive was added, allow login if isActive is null/undefined
         // Only block if isActive is explicitly false
         if (user.role.toLowerCase() !== 'admin' && user.isActive === false) {
-          console.error('[AUTH] Account not active for user:', user.email, 'isActive:', user.isActive);
+          log.warn('Authentication failed: account not active', { userId: user.id, email: user.email });
           throw new Error("Account is pending admin approval. Please wait for activation.");
         }
         
-        console.log('[AUTH] Authentication successful for user:', user.email, 'isActive:', user.isActive);
+        log.info('Authentication successful', { userId: user.id, email: user.email, role: user.role });
 
         return {
           id: String(user.id),
@@ -155,10 +150,10 @@ export const authOptions: NextAuthOptions = {
             where: { id: token.id as string },
             select: { profilePictureUrl: true, email: true }
           });
-          console.log('[SESSION] Fetching profile picture for user:', user?.email, 'profilePictureUrl:', user?.profilePictureUrl);
+          log.debug('Fetched profile picture in session callback', { userId: token.id, hasProfilePicture: !!user?.profilePictureUrl });
           session.user.profilePictureUrl = user?.profilePictureUrl || null;
         } catch (error) {
-          console.error('[SESSION] Error fetching profile picture in session callback:', error);
+          log.error('Error fetching profile picture in session callback', error, { userId: token.id });
           session.user.profilePictureUrl = null;
         }
       }

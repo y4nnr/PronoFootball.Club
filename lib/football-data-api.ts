@@ -32,9 +32,12 @@ interface FootballDataResponse {
   matches: FootballDataMatch[];
 }
 
+import log from './logger';
+
 export class FootballDataAPI {
   private apiKey: string;
   private baseUrl = 'https://api.football-data.org/v4';
+  private logger = log.child({ service: 'FootballDataAPI' });
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -60,7 +63,7 @@ export class FootballDataAPI {
       if (response.status === 429) {
         if (retryCount < maxRetries) {
           const delay = baseDelay * Math.pow(2, retryCount);
-          console.log(`⏳ Rate limited, retrying in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+          this.logger.warn('Rate limited, retrying', { delay, attempt: retryCount + 1, maxRetries, endpoint });
           await new Promise(resolve => setTimeout(resolve, delay));
           return this.makeRequest(endpoint, retryCount + 1);
         } else {
@@ -84,7 +87,7 @@ export class FootballDataAPI {
     } catch (error) {
       if (retryCount < maxRetries && error instanceof Error && error.message.includes('fetch')) {
         const delay = baseDelay * Math.pow(2, retryCount);
-        console.log(`🔄 Network error, retrying in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+        this.logger.warn('Network error, retrying', { delay, attempt: retryCount + 1, maxRetries, endpoint });
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.makeRequest(endpoint, retryCount + 1);
       }
@@ -94,18 +97,18 @@ export class FootballDataAPI {
 
   async getLiveMatches(): Promise<FootballDataMatch[]> {
     try {
-      console.log('🔍 Fetching live matches from Football-Data.org...');
+      this.logger.debug('Fetching live matches from Football-Data.org');
       
       // Primary: Use the dedicated live matches endpoint (best practice)
       try {
         const response: FootballDataResponse = await this.makeRequest('/matches?status=LIVE');
         
         if (!response.matches || !Array.isArray(response.matches)) {
-          console.log('⚠️ Invalid response structure from LIVE endpoint');
+          this.logger.warn('Invalid response structure from LIVE endpoint');
           throw new Error('Invalid response structure');
         }
         
-        console.log(`📊 Found ${response.matches.length} LIVE matches from status=LIVE endpoint`);
+        this.logger.debug('Found LIVE matches from status endpoint', { count: response.matches.length });
         
         // Validate and filter matches - only Champions League
         const validMatches = response.matches.filter(match => {
@@ -116,12 +119,11 @@ export class FootballDataAPI {
           return match.competition && match.competition.name === 'UEFA Champions League';
         });
         
-        console.log(`✅ Validated ${validMatches.length} matches`);
+        this.logger.debug('Validated matches', { total: response.matches.length, valid: validMatches.length });
         return validMatches;
         
       } catch (error) {
-        console.log('⚠️ LIVE endpoint failed, falling back to date-based search...');
-        console.log('Error:', error instanceof Error ? error.message : 'Unknown error');
+        this.logger.warn('LIVE endpoint failed, falling back to date-based search', { error: error instanceof Error ? error.message : 'Unknown error' });
         
         // Fallback: Use date-based search with proper error handling
         const today = new Date();
@@ -130,11 +132,11 @@ export class FootballDataAPI {
         const response: FootballDataResponse = await this.makeRequest(`/matches?date=${dateStr}`);
         
         if (!response.matches || !Array.isArray(response.matches)) {
-          console.log('⚠️ Invalid response structure from date endpoint');
+          this.logger.warn('Invalid response structure from date endpoint');
           return [];
         }
         
-        console.log(`📊 Found ${response.matches.length} matches for today`);
+        this.logger.debug('Found matches for today', { count: response.matches.length, date: dateStr });
         
               // Filter for live Champions League matches with proper validation
               const liveMatches = response.matches.filter(match => {
@@ -151,32 +153,32 @@ export class FootballDataAPI {
                 return isChampionsLeague && isLiveStatus;
               });
         
-        console.log(`⚽ Found ${liveMatches.length} live/finished matches from date search`);
+        this.logger.debug('Found live/finished matches from date search', { count: liveMatches.length });
         
         return liveMatches;
       }
     } catch (error) {
-      console.error('❌ Error fetching live matches:', error);
+      this.logger.error('Error fetching live matches', error);
       
       // Return empty array instead of throwing to prevent app crashes
-      console.log('🔄 Returning empty array due to API error');
+      this.logger.debug('Returning empty array due to API error');
       return [];
     }
   }
 
   async getMatchesByDateRange(startDate: string, endDate: string): Promise<FootballDataMatch[]> {
     try {
-      console.log(`🔍 Fetching matches from ${startDate} to ${endDate}...`);
+      this.logger.debug('Fetching matches by date range', { startDate, endDate });
       
       const response: FootballDataResponse = await this.makeRequest(
         `/matches?dateFrom=${startDate}&dateTo=${endDate}`
       );
       
-      console.log(`📊 Found ${response.matches.length} matches in date range`);
+      this.logger.debug('Found matches in date range', { count: response.matches.length, startDate, endDate });
       
       return response.matches;
     } catch (error) {
-      console.error('❌ Error fetching matches by date range:', error);
+      this.logger.error('Error fetching matches by date range', error, { startDate, endDate });
       throw error;
     }
   }
@@ -342,9 +344,9 @@ export class FootballDataAPI {
     }
     
     if (bestMatch) {
-      console.log(`🎯 Team match: "${externalTeamName}" → "${bestMatch}" (${Math.round(bestScore * 100)}% similarity)`);
+      this.logger.debug('Team match found', { externalTeamName, matchedTeam: bestMatch, similarity: Math.round(bestScore * 100) });
     } else {
-      console.log(`❌ No match found for: "${externalTeamName}" (best score: ${Math.round(bestScore * 100)}%)`);
+      this.logger.debug('No team match found', { externalTeamName, bestScore: Math.round(bestScore * 100) });
     }
     
     return bestMatch;
@@ -407,9 +409,14 @@ export class FootballDataAPI {
     }
 
     if (bestMatch) {
-      console.log(`🎯 Advanced match: "${externalTeamName}" → "${bestMatch.name}" (${(bestScore * 100).toFixed(1)}% via ${bestMethod})`);
+      this.logger.debug('Advanced team match found', { 
+        externalTeamName, 
+        matchedTeam: bestMatch.name, 
+        score: (bestScore * 100).toFixed(1), 
+        method: bestMethod 
+      });
     } else {
-      console.log(`❌ No advanced match found for: "${externalTeamName}"`);
+      this.logger.debug('No advanced team match found', { externalTeamName });
     }
 
     return bestMatch ? { team: bestMatch, score: bestScore, method: bestMethod } : null;
@@ -463,7 +470,7 @@ export class FootballDataAPI {
       case 'CANCELLED':
         return 'CANCELLED';
       default:
-        console.log(`⚠️ Unknown external status: ${externalStatus}, defaulting to UPCOMING`);
+        this.logger.warn('Unknown external status, defaulting to UPCOMING', { externalStatus });
         return 'UPCOMING';
     }
   }

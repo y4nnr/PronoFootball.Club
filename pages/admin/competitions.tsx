@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from '../../hooks/useTranslation';
+import { useTheme } from '../../contexts/ThemeContext';
 import Link from 'next/link';
 
 interface Competition {
@@ -422,20 +423,20 @@ export default function AdminCompetitions() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto py-4 px-3 sm:px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-4">
-          <div className="flex flex-col items-center mb-3">
-            <div className="text-center mb-4">
-              <h1 className="text-2xl font-bold text-gray-900">{t('admin.competitions.title')}</h1>
-              <p className="mt-1 text-xs text-gray-600">Gérez les compétitions et leurs campagnes</p>
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('admin.competitions.title')}</h1>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Gérez les compétitions et leurs campagnes</p>
             </div>
             <button
               onClick={openNewCompetitionModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow-md hover:bg-primary-700 transition-all text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 dark:bg-accent-dark-600 text-white rounded-lg shadow-sm hover:bg-primary-700 dark:hover:bg-accent-dark-700 transition-all text-sm font-medium"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               {t('admin.competitions.new')}
@@ -443,56 +444,60 @@ export default function AdminCompetitions() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-3">
-          <div className="space-y-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {competitions.length > 0 ? (
               competitions.map((competition) => (
-                <div key={competition.id} className="border rounded-lg p-3 hover:bg-gray-50 flex justify-between items-center">
-                  <Link
-                    href={`/admin/competitions/${competition.id}`}
-                    className="flex-1"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-sm text-gray-900">{competition.name}</h3>
-                        <p className="text-xs text-gray-600 mt-0.5">{competition.description}</p>
-                        <div className="mt-1.5 text-xs text-gray-500">
-                          <p>{t('admin.competitions.start')}: {new Date(competition.startDate).toLocaleDateString('fr-FR')}</p>
-                          <p>{t('admin.competitions.end')}: {new Date(competition.endDate).toLocaleDateString('fr-FR')}</p>
+                <div key={competition.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  <div className="flex justify-between items-start gap-4">
+                    <Link
+                      href={`/admin/competitions/${competition.id}`}
+                      className="flex-1 min-w-0"
+                    >
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{competition.name}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{competition.description}</p>
+                          <div className="flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+                            <span>{t('admin.competitions.start')}: <span className="font-medium text-gray-700 dark:text-gray-300">{new Date(competition.startDate).toLocaleDateString('fr-FR')}</span></span>
+                            <span>{t('admin.competitions.end')}: <span className="font-medium text-gray-700 dark:text-gray-300">{new Date(competition.endDate).toLocaleDateString('fr-FR')}</span></span>
+                          </div>
                         </div>
+                        <span className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
+                          competition.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
+                          competition.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
+                          competition.status === 'upcoming' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
+                          'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+                        }`}>
+                          {t(`admin.competitions.status.${competition.status.toLowerCase()}`)}
+                        </span>
                       </div>
-                      <span className={`px-2 py-0.5 text-xs rounded-full ml-3 ${
-                        competition.status === 'active' ? 'bg-green-100 text-green-800' :
-                        competition.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        competition.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {t(`admin.competitions.status.${competition.status.toLowerCase()}`)}
-                      </span>
-                    </div>
-                  </Link>
-                  <button
-                    onClick={() => openDeleteModal(competition.id, competition.name)}
-                    className="ml-3 p-1.5 rounded-md text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    title="Supprimer la compétition"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                    </Link>
+                    <button
+                      onClick={() => openDeleteModal(competition.id, competition.name)}
+                      className="ml-2 p-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 transition-colors"
+                      title="Supprimer la compétition"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500">{t('admin.competitions.noCompetitions')}</p>
+              <div className="p-12 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('admin.competitions.noCompetitions')}</p>
+              </div>
             )}
           </div>
         </div>
 
         {/* New Competition Modal */}
         {showNewCompetitionModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center p-4">
-            <div className="relative p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
-              <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">{t('admin.competitions.new')}</h3>
+          <div className="fixed inset-0 bg-gray-900/50 dark:bg-gray-900/75 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex justify-center items-center p-4">
+            <div className="relative p-6 border border-gray-200 dark:border-gray-700 w-full max-w-2xl shadow-xl rounded-xl bg-white dark:bg-gray-800 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-semibold leading-6 text-gray-900 dark:text-white mb-6">{t('admin.competitions.new')}</h3>
               
               {/* Competition Type Selection */}
               <div className="mb-4">
@@ -511,7 +516,7 @@ export default function AdminCompetitions() {
                       }}
                       className="mr-2"
                     />
-                    <span className="text-sm text-gray-700">Personnalisée</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Personnalisée</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -534,7 +539,7 @@ export default function AdminCompetitions() {
                       }}
                       className="mr-2"
                     />
-                    <span className="text-sm text-gray-700">Depuis l'API (V2 uniquement)</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Depuis l'API (V2 uniquement)</span>
                   </label>
                 </div>
               </div>
@@ -543,7 +548,7 @@ export default function AdminCompetitions() {
                 {competitionType === 'custom' ? (
                   <>
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">{t('name')}</label>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('name')}</label>
                       <input
                         type="text"
                         name="name"
@@ -551,22 +556,22 @@ export default function AdminCompetitions() {
                         value={newCompetitionData.name}
                         onChange={handleNewCompetitionInputChange}
                         required
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-gray-900"
+                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">{t('description')}</label>
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('description')}</label>
                       <textarea
                         name="description"
                         id="description"
                         value={newCompetitionData.description}
                         onChange={handleNewCompetitionInputChange}
                         rows={3}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-gray-900"
+                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       ></textarea>
                     </div>
                     <div>
-                      <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">{t('admin.competitions.start')}</label>
+                      <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('admin.competitions.start')}</label>
                       <input
                         type="date"
                         name="startDate"
@@ -574,11 +579,11 @@ export default function AdminCompetitions() {
                         value={newCompetitionData.startDate}
                         onChange={handleNewCompetitionInputChange}
                         required
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-gray-900"
+                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">{t('admin.competitions.end')}</label>
+                      <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('admin.competitions.end')}</label>
                       <input
                         type="date"
                         name="endDate"
@@ -586,7 +591,7 @@ export default function AdminCompetitions() {
                         value={newCompetitionData.endDate}
                         onChange={handleNewCompetitionInputChange}
                         required
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-gray-900"
+                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
                   </>
@@ -823,7 +828,7 @@ export default function AdminCompetitions() {
                                 </div>
                               </>
                             ) : (
-                              <div className="mb-2 text-sm text-yellow-600">
+                              <div className="mb-2 text-sm text-yellow-600 dark:text-yellow-400">
                                 ⚠️ Aucune saison détectée automatiquement. L'import tentera de découvrir la saison lors de l'importation.
                               </div>
                             )}
@@ -838,7 +843,7 @@ export default function AdminCompetitions() {
                             </label>
                           </>
                         ) : (
-                          <div className="text-sm text-red-600">Erreur lors du chargement des détails</div>
+                          <div className="text-sm text-red-600 dark:text-red-400">Erreur lors du chargement des détails</div>
                         )}
                       </div>
                     )}
@@ -846,7 +851,7 @@ export default function AdminCompetitions() {
                 )}
 
                 {newCompetitionError && (
-                  <div className="text-red-600 text-sm">{newCompetitionError}</div>
+                  <div className="text-red-600 dark:text-red-400 text-sm">{newCompetitionError}</div>
                 )}
                 <div className="mt-4 flex justify-end">
                   <button

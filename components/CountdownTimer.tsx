@@ -61,7 +61,7 @@ const CountdownTimer = memo(({ nextGameDate, className = '', onCountdownComplete
   // If countdown has reached zero, show a different message
   if (timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0) {
     return (
-      <div className={`bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-6 shadow-modern-lg border border-primary-500/20 ${className}`}>
+      <div className={`bg-gradient-to-r from-primary-600 to-primary-700 dark:from-accent-dark-600 dark:to-accent-dark-700 rounded-2xl p-6 shadow-modern-lg border border-primary-500/20 dark:border-accent-dark-500/20 ${className}`}>
         <div className="flex items-center justify-center space-x-3">
           <div className="p-2 bg-white/10 rounded-full">
             <ClockIcon className="h-6 w-6 text-white" />
@@ -80,13 +80,13 @@ const CountdownTimer = memo(({ nextGameDate, className = '', onCountdownComplete
   ];
 
   return (
-    <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200/50 ${className}`} style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+    <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200/50 dark:border-gray-700 ${className}`} style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       {/* Header */}
       <div className="flex items-center space-x-3 mb-4">
-        <div className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center">
+        <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center">
           <ClockIcon className="h-6 w-6 text-white" />
         </div>
-        <h3 className="text-xl font-bold text-neutral-900">Prochain coup d'envoi</h3>
+        <h3 className="text-xl font-bold text-neutral-900 dark:text-gray-100">Prochain coup d'envoi</h3>
       </div>
 
       {/* Countdown Cards */}
@@ -94,23 +94,23 @@ const CountdownTimer = memo(({ nextGameDate, className = '', onCountdownComplete
         {timeUnits.map((unit, index) => (
           <div
             key={unit.label}
-            className="relative bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl p-3 md:p-4 border border-primary-300/60 shadow-modern hover:shadow-modern-lg transition-all duration-300"
+            className="relative bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-700 dark:to-gray-600 rounded-xl p-3 md:p-4 border border-primary-300/60 dark:border-gray-600 shadow-modern hover:shadow-modern-lg transition-all duration-300"
           >
             {/* Number */}
             <div className="text-center">
-              <div className="text-xl md:text-2xl font-black text-primary-800 mb-0.5">
+              <div className="text-xl md:text-2xl font-black text-primary-800 dark:text-gray-100 mb-0.5">
                 {unit.value.toString().padStart(2, '0')}
               </div>
               
               {/* Label */}
-              <div className="text-xs font-medium text-primary-600 uppercase tracking-wide">
+              <div className="text-xs font-medium text-primary-600 dark:text-gray-400 uppercase tracking-wide">
                 <span className="hidden md:inline">{unit.label}</span>
                 <span className="md:hidden">{unit.shortLabel}</span>
               </div>
             </div>
 
             {/* Subtle accent line */}
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-primary-400 to-primary-500 rounded-full"></div>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-primary-400 to-primary-500 dark:from-accent-dark-500 dark:to-accent-dark-600 rounded-full"></div>
           </div>
         ))}
       </div>

@@ -397,6 +397,16 @@ export default async function handler(
     const updatedGameIds = new Set<string>();
     let processedCount = 0;
     let matchedCount = 0;
+    let rejectedCount = 0;
+    const rejectedMatches: Array<{
+      externalMatch: { home: string; away: string; id: number; competition?: string };
+      reason: string;
+      details?: string;
+    }> = [];
+    const unmatchedMatches: Array<{
+      externalMatch: { home: string; away: string; id: number; competition?: string };
+      reason: string;
+    }> = [];
     
     // Get all teams from all games (LIVE + potentially finished) for matching
     // IMPORTANT: Only include teams that are actually football teams (sportType: 'FOOTBALL')
@@ -414,246 +424,221 @@ export default async function handler(
     );
     
     console.log(`📊 Using ${uniqueTeams.length} unique football teams for matching (from ${allGamesToCheck.length} games)`);
+    console.log(`📊 LIVE games: ${ourLiveGames.length}, Recently finished: ${allGamesToCheck.length - ourLiveGames.length}`);
     
     for (const externalMatch of allExternalMatches) {
       try {
         processedCount++;
         console.log(`🔍 Processing ${processedCount}/${allExternalMatches.length}: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name} (ID: ${externalMatch.id})`);
 
-        // First, try to find game by externalId (most reliable)
-        // But we'll verify it's correct before using it
-        // Try both string and number comparison for externalId
-        let matchingGameByExternalId = allGamesToCheck.find(game => {
-          if (!game.externalId || game.competition.sportType !== 'FOOTBALL') return false;
-          const gameExternalId = game.externalId.toString();
-          const matchId = externalMatch.id.toString();
-          return gameExternalId === matchId || gameExternalId === externalMatch.id.toString();
-        });
-        
-        let matchingGame = matchingGameByExternalId;
-        
-        // CRITICAL CHECK: If we found a game by external ID, verify:
-        // 1. The API match's external ID matches our DB's external ID
-        // 2. The dates match (within 2 hours tolerance)
-        if (matchingGame) {
-          // Check external ID match
-          if (matchingGame.externalId !== externalMatch.id.toString()) {
-            console.log(`   ⚠️ CRITICAL: External ID mismatch detected!`);
-            console.log(`      DB game external ID: ${matchingGame.externalId}`);
-            console.log(`      API match external ID: ${externalMatch.id}`);
-            console.log(`      This means we matched the wrong API match - will try team name matching`);
-            matchingGame = null; // Clear the wrong match
-          } else if (externalMatch.utcDate) {
-            // Check date match (within 2 hours tolerance)
-            const apiMatchDate = new Date(externalMatch.utcDate);
-            const dbGameDate = new Date(matchingGame.date);
-            const timeDiff = Math.abs(dbGameDate.getTime() - apiMatchDate.getTime());
-            const hoursDiff = timeDiff / (1000 * 60 * 60);
-            
-            console.log(`   🔍 Date verification:`);
-            console.log(`      DB date: ${dbGameDate.toISOString()}`);
-            console.log(`      API date: ${apiMatchDate.toISOString()}`);
-            console.log(`      Time difference: ${hoursDiff.toFixed(2)} hours`);
-            
-            if (hoursDiff > 2) {
-              console.log(`   ⚠️ WARNING: Date difference is too large (${hoursDiff.toFixed(2)} hours)!`);
-              console.log(`      This might be the wrong match - will try team name matching to verify`);
-              // Don't clear matchingGame yet, but team name matching will verify
+        // PRIORITY 1: V1-STYLE SIMPLE MATCHING FOR LIVE GAMES (Most reliable - like V1 that worked perfectly)
+        // This is the key: if a game is LIVE in our DB, simple team matching is almost always correct
+        let matchingGame: typeof ourLiveGames[0] | null = null;
+        let matchConfidence: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
+        let matchMethod = '';
+
+        // Step 1A: Try simple team matching in LIVE games only (V1 style - most reliable)
+        if (ourLiveGames.length > 0) {
+          // Get teams from LIVE games only for this matching attempt
+          const liveTeams = ourLiveGames.flatMap(game => [
+            { id: game.homeTeam.id, name: game.homeTeam.name, shortName: game.homeTeam.shortName },
+            { id: game.awayTeam.id, name: game.awayTeam.name, shortName: game.awayTeam.shortName }
+          ]);
+
+          const homeMatch = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, liveTeams);
+          const awayMatch = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, liveTeams);
+
+          // For V1-style LIVE matching we are extremely strict:
+          // - Both teams must have a very strong match (score >= 0.9)
+          // - This path is only allowed to produce HIGH confidence matches
+          if (
+            homeMatch &&
+            awayMatch &&
+            homeMatch.score >= 0.9 &&
+            awayMatch.score >= 0.9
+          ) {
+            // Find game in LIVE games that contains both matched teams (V1 style)
+            const liveMatch = ourLiveGames.find(game => 
+              (game.homeTeam.id === homeMatch.team.id || game.awayTeam.id === homeMatch.team.id) &&
+              (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id)
+            );
+
+            if (liveMatch) {
+              matchingGame = liveMatch;
+              matchConfidence = 'HIGH';
+              matchMethod = 'V1-style LIVE game match';
+              console.log(`   ✅ HIGH CONFIDENCE: Found LIVE game match (V1 style): ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+              console.log(`      Home: ${externalMatch.homeTeam.name} → ${homeMatch.team.name} (${homeMatch.method}, ${(homeMatch.score * 100).toFixed(1)}%)`);
+              console.log(`      Away: ${externalMatch.awayTeam.name} → ${awayMatch.team.name} (${awayMatch.method}, ${(awayMatch.score * 100).toFixed(1)}%)`);
+            }
+          } else if (homeMatch || awayMatch) {
+            console.log(
+              `   ⚠️ LIVE V1-style match discarded due to low score: homeScore=${homeMatch?.score?.toFixed(2) ?? 'n/a'}, awayScore=${awayMatch?.score?.toFixed(2) ?? 'n/a'}`
+            );
+          }
+        }
+
+        // Step 1B: If not found in LIVE games, try externalId matching (only if we have externalId)
+        if (!matchingGame && externalMatch.id) {
+          const externalIdMatch = allGamesToCheck.find(game => {
+            if (!game.externalId || game.competition.sportType !== 'FOOTBALL') return false;
+            return game.externalId.toString() === externalMatch.id.toString();
+          });
+
+          if (externalIdMatch) {
+            // Verify externalId match with date
+            if (externalMatch.utcDate) {
+              const apiMatchDate = new Date(externalMatch.utcDate);
+              const dbGameDate = new Date(externalIdMatch.date);
+              const hoursDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60);
+              
+              if (hoursDiff <= 1) {
+                matchingGame = externalIdMatch;
+                matchConfidence = 'HIGH';
+                matchMethod = 'externalId + date verified';
+                console.log(`   ✅ HIGH CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+                console.log(`      Date verified: ${hoursDiff.toFixed(2)} hours difference`);
+              } else {
+                console.log(`   ⚠️ ExternalId match found but date differs by ${hoursDiff.toFixed(2)} hours - rejecting`);
+              }
             } else {
-              console.log(`   ✅ Date matches (within 2 hours tolerance)`);
+              // No date to verify, but externalId match is still pretty reliable
+              matchingGame = externalIdMatch;
+              matchConfidence = 'MEDIUM';
+              matchMethod = 'externalId (no date verification)';
+              console.log(`   ⚠️ MEDIUM CONFIDENCE: Found by externalId (no date to verify): ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
             }
           }
         }
 
-        // If found by externalId, verify team names match (safety check)
-        if (matchingGame) {
-          console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+        // Step 2: If still not found, try complex matching (team + date + competition)
+        // This is only for games that aren't LIVE yet or recently finished
+        if (!matchingGame) {
+          console.log(`   No simple match found, trying complex matching...`);
           
-          // Verify team names match (safety check in case external ID is wrong)
-          // Use strict matching: both teams must match reasonably well
-          const normalizeForMatch = (name: string) => name.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
-          const dbHomeNorm = normalizeForMatch(matchingGame.homeTeam.name);
-          const apiHomeNorm = normalizeForMatch(externalMatch.homeTeam.name);
-          const dbAwayNorm = normalizeForMatch(matchingGame.awayTeam.name);
-          const apiAwayNorm = normalizeForMatch(externalMatch.awayTeam.name);
-          
-          // STRICT verification: Use the same team matching algorithm as team name matching
-          // This ensures we catch cases where external ID is wrong
-          const homeMatch = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, [matchingGame.homeTeam]);
-          const awayMatch = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, [matchingGame.awayTeam]);
-          
-          // Also check reverse (API home vs DB away, API away vs DB home) in case teams are swapped
-          const homeMatchReverse = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, [matchingGame.awayTeam]);
-          const awayMatchReverse = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, [matchingGame.homeTeam]);
-          
-          // Teams must match correctly (home-home and away-away) OR be swapped (home-away and away-home)
-          // AND the match score must be high (>= 0.8) to ensure it's a good match
-          const teamsMatchCorrectly = homeMatch && awayMatch && 
-                                     homeMatch.team.id === matchingGame.homeTeam.id && 
-                                     awayMatch.team.id === matchingGame.awayTeam.id &&
-                                     (homeMatch.score >= 0.8 && awayMatch.score >= 0.8);
-          const teamsAreSwapped = homeMatchReverse && awayMatchReverse &&
-                                 homeMatchReverse.team.id === matchingGame.awayTeam.id &&
-                                 awayMatchReverse.team.id === matchingGame.homeTeam.id &&
-                                 (homeMatchReverse.score >= 0.8 && awayMatchReverse.score >= 0.8);
-          
-          console.log(`   🔍 Team verification:`);
-          console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (ID: ${homeMatch.team.id}, score: ${homeMatch.score?.toFixed(2)})` : 'NOT FOUND'}`);
-          console.log(`      Away match: ${awayMatch ? `${awayMatch.team.name} (ID: ${awayMatch.team.id}, score: ${awayMatch.score?.toFixed(2)})` : 'NOT FOUND'}`);
-          console.log(`      Teams match correctly: ${teamsMatchCorrectly}, Teams swapped: ${teamsAreSwapped}`);
-          
-          // Additional check: if teams match but scores/elapsed are very different, external ID might be wrong
-          // This catches cases where external ID points to a different game with same teams
-          const dbHomeScore = matchingGame.liveHomeScore ?? 0;
-          const dbAwayScore = matchingGame.liveAwayScore ?? 0;
-          const apiHomeScore = externalMatch.score.fullTime.home ?? 0;
-          const apiAwayScore = externalMatch.score.fullTime.away ?? 0;
-          const scoreDiff = Math.abs(dbHomeScore - apiHomeScore) + Math.abs(dbAwayScore - apiAwayScore);
-          const elapsedDiff = matchingGame.elapsedMinute !== null && externalMatch.elapsedMinute !== null
-                            ? Math.abs(matchingGame.elapsedMinute - externalMatch.elapsedMinute)
-                            : null;
-          const significantScoreDiff = scoreDiff > 1; // More than 1 goal difference (lowered to catch more cases)
-          const significantElapsedDiff = elapsedDiff !== null && elapsedDiff > 5; // More than 5 minutes difference (lowered to catch more cases)
-          
-          console.log(`   🔍 Data comparison:`);
-          console.log(`      DB: ${dbHomeScore}-${dbAwayScore}, Elapsed: ${matchingGame.elapsedMinute ?? 'null'}`);
-          console.log(`      API: ${apiHomeScore}-${apiAwayScore}, Elapsed: ${externalMatch.elapsedMinute ?? 'null'}`);
-          console.log(`      Score diff: ${scoreDiff}, Elapsed diff: ${elapsedDiff ?? 'N/A'}`);
-          console.log(`      Significant score diff: ${significantScoreDiff}, Significant elapsed diff: ${significantElapsedDiff}`);
-          
-          if (!teamsMatchCorrectly && !teamsAreSwapped) {
-            console.log(`   ⚠️ WARNING: External ID ${matchingGame.externalId} matches but teams don't match!`);
-            console.log(`      DB: ${matchingGame.homeTeam.name} (ID: ${matchingGame.homeTeam.id}) vs ${matchingGame.awayTeam.name} (ID: ${matchingGame.awayTeam.id})`);
-            console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-            console.log(`   ⚠️ External ID ${matchingGame.externalId} is WRONG - will try team name matching instead`);
-            // Force it to try team name matching by setting to null
-            matchingGame = null as any;
-          } else if (teamsMatchCorrectly || teamsAreSwapped) {
-            // Teams match, but check if data is significantly different (wrong external ID)
-            if (significantScoreDiff || significantElapsedDiff) {
-              console.log(`   ⚠️ WARNING: External ID ${matchingGame.externalId} matches and teams match, but data is very different!`);
-              console.log(`      DB Score: ${matchingGame.liveHomeScore ?? 0}-${matchingGame.liveAwayScore ?? 0}, API Score: ${externalMatch.score.fullTime.home ?? 0}-${externalMatch.score.fullTime.away ?? 0} (diff: ${scoreDiff})`);
-              console.log(`      DB Elapsed: ${matchingGame.elapsedMinute ?? 'null'}, API Elapsed: ${externalMatch.elapsedMinute ?? 'null'} (diff: ${elapsedDiff ?? 'N/A'})`);
-              console.log(`   ⚠️ External ID ${matchingGame.externalId} might be WRONG - will try team name matching to find correct game`);
-              // Force it to try team name matching by setting to null
-              matchingGame = null as any;
-            } else {
-              console.log(`   ✅ Team names verified: External ID ${matchingGame.externalId} is correct`);
-            }
+          const homeMatch = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, uniqueTeams);
+          const awayMatch = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, uniqueTeams);
+
+          if (!homeMatch || !awayMatch) {
+            console.log(`⚠️ No team matches found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            continue;
           }
-        }
 
-        // If not found by externalId (or externalId was wrong), try team name matching
-        // ALSO: Always verify external ID match with team name matching to catch wrong matches
-        let shouldTryTeamNameMatching = !matchingGame;
-        let matchingGameByTeamName: typeof matchingGame = null;
-        
-        // Always try team name matching to verify we have the right game
-        // This catches cases where external ID matches but points to wrong game
-        console.log(`   Verifying match with team name matching...`);
-        
-        console.log(`   Our teams in DB: ${allOurTeams.map(t => t.name).join(', ')}`);
-
-        // Use matching for both teams (only match against football teams)
-        const homeMatch = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, uniqueTeams);
-        const awayMatch = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, uniqueTeams);
-
-        console.log(`   Home match: ${homeMatch ? homeMatch.team.name : 'NOT FOUND'} (external: ${externalMatch.homeTeam.name})`);
-        console.log(`   Away match: ${awayMatch ? awayMatch.team.name : 'NOT FOUND'} (external: ${externalMatch.awayTeam.name})`);
-
-        if (homeMatch && awayMatch) {
-          // Parse API match date for comparison
-          const apiMatchDate = externalMatch.utcDate ? new Date(externalMatch.utcDate) : null;
-          
-          // Find all games that match by teams (might be multiple if same teams play multiple times)
+          // Find ALL potential games that match by teams
           const potentialMatches = allGamesToCheck.filter(game => 
             (game.homeTeam.id === homeMatch.team.id || game.awayTeam.id === homeMatch.team.id) &&
             (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id) &&
-            game.competition.sportType === 'FOOTBALL' // Double-check: ensure it's a football competition
+            game.competition.sportType === 'FOOTBALL'
           );
+
+          if (potentialMatches.length === 0) {
+            console.log(`⚠️ No matching games found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            continue;
+          }
+
+          console.log(`   Found ${potentialMatches.length} potential match(es) by team names`);
+
+          // Filter by date/time
+          let matchesWithDate: Array<{game: typeof potentialMatches[0], timeDiff: number, hoursDiff: number, competitionScore: number}> = [];
           
-          // If multiple potential matches, prefer the one with matching date/time
-          if (potentialMatches.length > 1 && apiMatchDate) {
-            console.log(`   Found ${potentialMatches.length} potential matches by team name, checking dates...`);
+          if (externalMatch.utcDate) {
+            const apiMatchDate = new Date(externalMatch.utcDate);
             
-            // Find the match with closest date/time (within 2 hours tolerance)
-            const matchesWithDate = potentialMatches.map(game => {
+            matchesWithDate = potentialMatches.map(game => {
               const gameDate = new Date(game.date);
               const timeDiff = Math.abs(gameDate.getTime() - apiMatchDate.getTime());
               const hoursDiff = timeDiff / (1000 * 60 * 60);
-              return { game, timeDiff, hoursDiff };
-            });
-            
-            // Sort by time difference and take the closest match within 2 hours
-            matchesWithDate.sort((a, b) => a.timeDiff - b.timeDiff);
-            const bestMatch = matchesWithDate.find(m => m.hoursDiff <= 2) || matchesWithDate[0];
-            
-            if (bestMatch) {
-              matchingGameByTeamName = bestMatch.game;
-              console.log(`   ✅ Selected match by date: ${matchingGameByTeamName.homeTeam.name} vs ${matchingGameByTeamName.awayTeam.name}`);
-              console.log(`   Date diff: ${bestMatch.hoursDiff.toFixed(2)} hours`);
-            } else {
-              // Fallback to first match if no date match found
-              matchingGameByTeamName = potentialMatches[0];
-              console.log(`   ⚠️ No date match found, using first potential match`);
-            }
-          } else if (potentialMatches.length === 1) {
-            matchingGameByTeamName = potentialMatches[0];
-          } else if (potentialMatches.length > 0 && !apiMatchDate) {
-            // No date from API, use first match
-            matchingGameByTeamName = potentialMatches[0];
-            console.log(`   ⚠️ No date from API, using first potential match`);
-          }
-          
-          if (matchingGameByTeamName) {
-            // Verify date match if we have API date
-            if (apiMatchDate) {
-              const gameDate = new Date(matchingGameByTeamName.date);
-              const timeDiff = Math.abs(gameDate.getTime() - apiMatchDate.getTime());
-              const hoursDiff = timeDiff / (1000 * 60 * 60);
               
-              console.log(`   ✅ Found game by team name matching: ${matchingGameByTeamName.homeTeam.name} vs ${matchingGameByTeamName.awayTeam.name}`);
-              console.log(`   DB date: ${gameDate.toISOString()}, API date: ${apiMatchDate.toISOString()}, diff: ${hoursDiff.toFixed(2)} hours`);
-              console.log(`   Team name match external ID: ${matchingGameByTeamName.externalId}, API external ID: ${externalMatch.id}`);
-              
-              // If date difference is too large (> 2 hours), this might be wrong match
-              if (hoursDiff > 2) {
-                console.log(`   ⚠️ WARNING: Date difference is large (${hoursDiff.toFixed(2)} hours) - might be wrong match`);
+              // Calculate competition score
+              let competitionScore = 0;
+              if (externalMatch.competition?.name) {
+                const apiComp = externalMatch.competition.name.toLowerCase().trim();
+                const dbComp = game.competition.name.toLowerCase().trim();
+                
+                if (dbComp === apiComp) {
+                  competitionScore = 1.0;
+                } else if (dbComp.includes(apiComp) || apiComp.includes(dbComp)) {
+                  competitionScore = 0.8;
+                } else {
+                  const dbWords = dbComp.split(/\s+/).filter(w => w.length > 3);
+                  const apiWords = apiComp.split(/\s+/).filter(w => w.length > 3);
+                  const commonWords = dbWords.filter(w => apiWords.includes(w));
+                  if (commonWords.length >= 2) {
+                    competitionScore = commonWords.length / Math.max(dbWords.length, apiWords.length);
+                  }
+                }
               }
+              
+              return { game, timeDiff, hoursDiff, competitionScore };
+            });
+
+            // Sort by competition score first, then by date
+            matchesWithDate.sort((a, b) => {
+              if (b.competitionScore !== a.competitionScore) {
+                return b.competitionScore - a.competitionScore;
+              }
+              return a.timeDiff - b.timeDiff;
+            });
+
+            // Filter to matches within 30 minutes with good competition match
+            const strictMatches = matchesWithDate.filter(m => m.hoursDiff <= 0.5 && m.competitionScore >= 0.7);
+            
+            if (strictMatches.length > 0) {
+              matchingGame = strictMatches[0].game;
+              matchConfidence = 'MEDIUM';
+              matchMethod = 'team + date (30min) + competition (≥0.7)';
+              console.log(`   ✅ MEDIUM CONFIDENCE: Found match with strict criteria`);
+              console.log(`      Competition: ${matchingGame.competition.name} (score: ${strictMatches[0].competitionScore.toFixed(2)})`);
+              console.log(`      Date diff: ${strictMatches[0].hoursDiff.toFixed(2)} hours`);
             } else {
-              console.log(`   ✅ Found game by team name matching: ${matchingGameByTeamName.homeTeam.name} vs ${matchingGameByTeamName.awayTeam.name}`);
-              console.log(`   Team name match external ID: ${matchingGameByTeamName.externalId}, API external ID: ${externalMatch.id}`);
+              // Require very strict competition match if date is far
+              const looseMatches = matchesWithDate.filter(m => {
+                if (m.hoursDiff <= 0.5) {
+                  return m.competitionScore >= 0.6; // Allow lower competition score if date is close
+                } else if (m.hoursDiff <= 2) {
+                  return m.competitionScore >= 0.9; // Require very high competition score if date is far
+                }
+                return false; // Reject matches more than 2 hours apart
+              });
+
+              if (looseMatches.length > 0) {
+                matchingGame = looseMatches[0].game;
+                matchConfidence = 'LOW';
+                matchMethod = `team + date (${looseMatches[0].hoursDiff.toFixed(2)}h) + competition (${looseMatches[0].competitionScore.toFixed(2)})`;
+                console.log(`   ⚠️ LOW CONFIDENCE: Found match with loose criteria`);
+                console.log(`      Competition: ${matchingGame.competition.name} (score: ${looseMatches[0].competitionScore.toFixed(2)})`);
+                console.log(`      Date diff: ${looseMatches[0].hoursDiff.toFixed(2)} hours`);
+                console.log(`      ⚠️ This match will require additional validation before update`);
+              }
             }
-            
-            // If team name matching found a different game than external ID matching, prefer team name match
-            // This catches cases where external ID is wrong
-            if (matchingGame && matchingGame.id !== matchingGameByTeamName.id) {
-              console.log(`   ⚠️ WARNING: External ID match (${matchingGame.id}) differs from team name match (${matchingGameByTeamName.id})!`);
-              console.log(`   🔄 Preferring team name match - external ID ${matchingGame.externalId} is likely WRONG`);
-              matchingGame = matchingGameByTeamName;
-            } else if (!matchingGame) {
-              matchingGame = matchingGameByTeamName;
-            }
-            
-            // Update the external ID to the correct one if it's different
-            if (matchingGame.externalId !== externalMatch.id.toString()) {
-              console.log(`   🔄 Will update external ID from ${matchingGame.externalId} to ${externalMatch.id}`);
-            }
-          }
-        }
-        
-        if (!matchingGame) {
-          if (!homeMatch || !awayMatch) {
-            console.log(`⚠️ No team matches found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
           } else {
-            console.log(`⚠️ No matching game found by team name for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            // No date in API - require perfect competition match
+            if (externalMatch.competition?.name && potentialMatches.length === 1) {
+              const apiComp = externalMatch.competition.name.toLowerCase().trim();
+              const dbComp = potentialMatches[0].competition.name.toLowerCase().trim();
+              
+              if (dbComp === apiComp || dbComp.includes(apiComp) || apiComp.includes(dbComp)) {
+                matchingGame = potentialMatches[0];
+                matchConfidence = 'MEDIUM';
+                matchMethod = 'team + competition (no date)';
+                console.log(`   ⚠️ MEDIUM CONFIDENCE: Single match with competition match (no date in API)`);
+              }
+            }
           }
-          continue;
         }
 
         if (!matchingGame) {
           console.log(`⚠️ No matching football game found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
           console.log(`   Searched in ${allGamesToCheck.length} football games`);
+          unmatchedMatches.push({
+            externalMatch: {
+              home: externalMatch.homeTeam.name,
+              away: externalMatch.awayTeam.name,
+              id: externalMatch.id,
+              competition: externalMatch.competition?.name,
+            },
+            reason: 'No matching game found in database',
+          });
           continue;
         }
         
@@ -673,67 +658,93 @@ export default async function handler(
           continue;
         }
         
+        // CRITICAL: Confidence-based validation before applying updates
+        // LOW confidence matches are rejected to prevent wrong score updates
+        const apiMatchDate = externalMatch.utcDate ? new Date(externalMatch.utcDate) : null;
+        const dbGameDate = new Date(matchingGame.date);
+        const dateDiff = apiMatchDate ? Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60) : null;
+        
+        // Additional validation for LOW confidence matches
+        if (matchConfidence === 'LOW') {
+          // Reject LOW confidence matches if:
+          // 1. Trying to set FINISHED status (wrong final score risk)
+          // 2. Date difference is large (> 1 hour)
+          // 3. Competition doesn't match well
+          const isTryingToFinish =
+            externalMatch.status === 'FT' || externalMatch.status === 'FINISHED';
+          const competitionMatches = externalMatch.competition?.name
+            ? (() => {
+                const apiComp = externalMatch.competition.name.toLowerCase().trim();
+                const dbComp = matchingGame.competition.name.toLowerCase().trim();
+                return (
+                  dbComp === apiComp ||
+                  dbComp.includes(apiComp) ||
+                  apiComp.includes(dbComp)
+                );
+              })()
+            : false;
+
+          if (isTryingToFinish || (dateDiff !== null && dateDiff > 1) || !competitionMatches) {
+            rejectedCount++;
+            const reasons = [];
+            if (isTryingToFinish) reasons.push('Trying to set FINISHED status');
+            if (dateDiff !== null && dateDiff > 1) reasons.push(`Large date difference (${dateDiff.toFixed(2)}h)`);
+            if (!competitionMatches) reasons.push('Competition mismatch');
+            
+            const rejectionReason = reasons.join(' + ');
+            console.log(`   ❌ REJECTING LOW CONFIDENCE MATCH:`);
+            console.log(`      Reason: ${rejectionReason}`);
+            console.log(`      Match method: ${matchMethod}`);
+            console.log(`      This could cause wrong final score - REJECTED for safety`);
+            
+            rejectedMatches.push({
+              externalMatch: {
+                home: externalMatch.homeTeam.name,
+                away: externalMatch.awayTeam.name,
+                id: externalMatch.id,
+                competition: externalMatch.competition?.name,
+              },
+              reason: rejectionReason,
+              details: `Method: ${matchMethod}, Date diff: ${dateDiff?.toFixed(2) || 'N/A'}h`,
+            });
+            continue; // Skip this match
+          }
+        }
+        
+        // FINAL VALIDATION: Log full match details before applying update
         matchedCount++;
         console.log(`✅ Matched ${matchedCount}/${allExternalMatches.length}: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
-        console.log(`   External: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-        console.log(`   External score: ${externalMatch.score.fullTime.home}-${externalMatch.score.fullTime.away}`);
-        console.log(`   External elapsed: ${externalMatch.elapsedMinute} min`);
-        console.log(`   Current DB score: ${matchingGame.liveHomeScore ?? 0}-${matchingGame.liveAwayScore ?? 0}`);
+        console.log(`   🎯 Confidence: ${matchConfidence} | Method: ${matchMethod}`);
+        console.log(`   📍 Competition: ${matchingGame.competition.name} (${matchingGame.competition.sportType})`);
+        console.log(`   📅 Date: DB=${dbGameDate.toISOString()}, API=${apiMatchDate?.toISOString() || 'N/A'}, Diff=${dateDiff?.toFixed(2) || 'N/A'} hours`);
+        console.log(`   👥 Teams: DB=${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+        console.log(`            API=${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+        console.log(`   📊 Score: External=${externalMatch.score.fullTime.home}-${externalMatch.score.fullTime.away}, DB=${matchingGame.liveHomeScore || 0}-${matchingGame.liveAwayScore || 0}`);
+        console.log(`   ⏱️  Elapsed: External=${externalMatch.elapsedMinute} min`);
+        
+        // Final safety check: If competition doesn't match well and date is far, reject
+        if (externalMatch.competition?.name && dateDiff !== null && dateDiff > 1) {
+          const apiComp = externalMatch.competition.name.toLowerCase().trim();
+          const dbComp = matchingGame.competition.name.toLowerCase().trim();
+          if (!apiComp.includes(dbComp) && !dbComp.includes(apiComp)) {
+            console.log(`   ❌ REJECTING: Competition mismatch with large date difference!`);
+            console.log(`      API: "${externalMatch.competition.name}" vs DB: "${matchingGame.competition.name}"`);
+            console.log(`      Date diff: ${dateDiff.toFixed(2)} hours`);
+            console.log(`      This is likely the wrong match - REJECTED`);
+            continue; // Skip this match
+          }
+        }
 
         // Get external scores
-        // IMPORTANT: During HT (half-time), some APIs may return null/0 for scores
-        // We should preserve the last known score during HT, but still update if API provides valid score
-        let externalHomeScore = matchingGame.liveHomeScore ?? 0;
-        let externalAwayScore = matchingGame.liveAwayScore ?? 0;
+        let externalHomeScore = matchingGame.liveHomeScore;
+        let externalAwayScore = matchingGame.liveAwayScore;
         
-        const isHalfTime = externalMatch.externalStatus === 'HT';
-        const apiHomeScore = externalMatch.score.fullTime.home;
-        const apiAwayScore = externalMatch.score.fullTime.away;
-        
-        console.log(`   🔍 API returned scores: ${apiHomeScore ?? 'null'}-${apiAwayScore ?? 'null'} (status: ${externalMatch.externalStatus})`);
-        console.log(`   🔍 Current DB scores: ${matchingGame.liveHomeScore ?? 'null'}-${matchingGame.liveAwayScore ?? 'null'}`);
-        console.log(`   🔍 Is Half-Time: ${isHalfTime}`);
-        
-        // Update if external score is a valid number
-        // IMPORTANT: If API returns 0-0 but we have a non-zero score, preserve it (API bug during HT/transitions)
-        // This prevents losing valid scores when API temporarily returns 0-0
-        if (apiHomeScore !== null && apiHomeScore !== undefined) {
-          // If API returns 0 but we have a non-zero score, preserve it
-          // Exception: if game just started (elapsed < 2 min), allow 0-0 (legitimate start)
-          const gameJustStarted = externalMatch.elapsedMinute !== null && externalMatch.elapsedMinute < 2;
-          const apiReturnsZeroButWeHaveScore = apiHomeScore === 0 && (matchingGame.liveHomeScore ?? 0) > 0;
-          
-          if (apiReturnsZeroButWeHaveScore && !gameJustStarted) {
-            console.log(`   ⚠️ API bug detected: preserving last known home score ${matchingGame.liveHomeScore} (API returned 0, status: ${externalMatch.externalStatus}, elapsed: ${externalMatch.elapsedMinute})`);
-            externalHomeScore = matchingGame.liveHomeScore ?? 0;
-          } else {
-            externalHomeScore = apiHomeScore;
-            console.log(`   ✅ Updating home score: ${matchingGame.liveHomeScore ?? 0} → ${externalHomeScore}`);
-          }
-        } else {
-          console.log(`   ⚠️ API returned null/undefined for home score, keeping current: ${externalHomeScore}`);
+        if (externalMatch.score.fullTime.home !== null) {
+          externalHomeScore = externalMatch.score.fullTime.home;
         }
-        
-        if (apiAwayScore !== null && apiAwayScore !== undefined) {
-          // If API returns 0 but we have a non-zero score, preserve it
-          // Exception: if game just started (elapsed < 2 min), allow 0-0 (legitimate start)
-          const gameJustStarted = externalMatch.elapsedMinute !== null && externalMatch.elapsedMinute < 2;
-          const apiReturnsZeroButWeHaveScore = apiAwayScore === 0 && (matchingGame.liveAwayScore ?? 0) > 0;
-          
-          if (apiReturnsZeroButWeHaveScore && !gameJustStarted) {
-            console.log(`   ⚠️ API bug detected: preserving last known away score ${matchingGame.liveAwayScore} (API returned 0, status: ${externalMatch.externalStatus}, elapsed: ${externalMatch.elapsedMinute})`);
-            externalAwayScore = matchingGame.liveAwayScore ?? 0;
-          } else {
-            externalAwayScore = apiAwayScore;
-            console.log(`   ✅ Updating away score: ${matchingGame.liveAwayScore ?? 0} → ${externalAwayScore}`);
-          }
-        } else {
-          console.log(`   ⚠️ API returned null/undefined for away score, keeping current: ${externalAwayScore}`);
+        if (externalMatch.score.fullTime.away !== null) {
+          externalAwayScore = externalMatch.score.fullTime.away;
         }
-        
-        console.log(`   🔍 Final extracted scores BEFORE updateData: ${externalHomeScore}-${externalAwayScore}`);
-        
-        console.log(`   Final extracted scores: ${externalHomeScore}-${externalAwayScore}${isHalfTime ? ' (HT - preserved if needed)' : ''}`);
 
         // Check if scores changed
         const homeScoreChanged = externalHomeScore !== matchingGame.liveHomeScore;
@@ -747,9 +758,9 @@ export default async function handler(
                                externalMatch.elapsedMinute !== currentElapsed;
 
         // Map external status to our status
-        const newStatus = externalMatch.status; // Already mapped by ApiSportsAPI
+        // Use let because we may need to correct it for safety (e.g. HT should never be FINISHED)
+        let newStatus = externalMatch.status; // Already mapped by ApiSportsAPI
         const newExternalStatus = externalMatch.externalStatus; // Original external status (HT, 1H, 2H, etc.)
-        const statusChanged = newStatus !== matchingGame.status;
         
         // IMPORTANT: Ensure that HT, 1H, 2H are always treated as LIVE, not FINISHED
         // This prevents matches in half-time from being incorrectly marked as finished
@@ -758,6 +769,8 @@ export default async function handler(
           newStatus = 'LIVE';
         }
         
+        const statusChanged = newStatus !== matchingGame.status;
+
         console.log(`   Status check: current=${matchingGame.status}, new=${newStatus}, external=${newExternalStatus}, changed=${statusChanged}`);
 
         // Always update for LIVE games to sync chronometer even if nothing changed
@@ -772,10 +785,8 @@ export default async function handler(
         };
 
         // Always update scores (even if same, to ensure sync)
-        // Use the extracted scores (already handled HT preservation logic above)
         updateData.liveHomeScore = externalHomeScore;
         updateData.liveAwayScore = externalAwayScore;
-        console.log(`   📝 Final updateData scores: liveHomeScore = ${updateData.liveHomeScore}, liveAwayScore = ${updateData.liveAwayScore}`);
 
         // V2: Add elapsedMinute if available, but NOT during half-time (HT)
         // During half-time, elapsedMinute should be null to show "MT" badge
@@ -784,62 +795,83 @@ export default async function handler(
           updateData.elapsedMinute = null;
           console.log(`   ⏱️ Half-time (HT) - setting elapsedMinute to null to show MT badge`);
         } else if (externalMatch.elapsedMinute !== null && externalMatch.elapsedMinute !== undefined) {
-          // Validate elapsedMinute makes sense for the status
-          let elapsedMinute = externalMatch.elapsedMinute;
-          
-          // For 2H (second half), elapsedMinute should be 45+ (45 minutes first half + minutes into second half)
-          // If API returns something suspicious (like 59' when game just started 2H), validate it
-          if (newExternalStatus === '2H') {
-            // Second half: elapsedMinute should be between 45 and ~105 (45 + 60 max)
-            // If it's less than 45, it's probably wrong (should be in 1H)
-            // If it's way too high (>105), it's probably wrong
-            if (elapsedMinute < 45) {
-              console.log(`   ⚠️ Suspicious elapsedMinute for 2H: ${elapsedMinute}' (should be ≥45). Using 45 as minimum.`);
-              elapsedMinute = 45;
-            } else if (elapsedMinute > 105) {
-              console.log(`   ⚠️ Suspicious elapsedMinute for 2H: ${elapsedMinute}' (seems too high). Capping at 105.`);
-              elapsedMinute = 105;
-            }
-          } else if (newExternalStatus === '1H') {
-            // First half: elapsedMinute should be between 0 and ~50 (45 + 5 injury time max)
-            if (elapsedMinute > 50) {
-              console.log(`   ⚠️ Suspicious elapsedMinute for 1H: ${elapsedMinute}' (should be ≤50). Capping at 50.`);
-              elapsedMinute = 50;
-            }
-          }
-          
           const previousElapsed = (matchingGame as any).elapsedMinute;
-          updateData.elapsedMinute = elapsedMinute;
-          if (previousElapsed !== elapsedMinute) {
-            console.log(`   ⏱️ Chronometer updated: ${previousElapsed ?? 'null'}' → ${elapsedMinute}' (status: ${newExternalStatus})`);
+          updateData.elapsedMinute = externalMatch.elapsedMinute;
+          if (previousElapsed !== externalMatch.elapsedMinute) {
+            console.log(`   ⏱️ Chronometer updated: ${previousElapsed ?? 'null'}' → ${externalMatch.elapsedMinute}'`);
           } else {
-            console.log(`   ⏱️ Chronometer unchanged: ${elapsedMinute}' (status: ${newExternalStatus}, API may not be updating in real-time)`);
+            console.log(`   ⏱️ Chronometer unchanged: ${externalMatch.elapsedMinute}' (API may not be updating in real-time)`);
           }
         } else {
-          console.log(`   ⏱️ No elapsedMinute in external match (value: ${externalMatch.elapsedMinute}, status: ${newExternalStatus})`);
+          console.log(`   ⏱️ No elapsedMinute in external match (value: ${externalMatch.elapsedMinute})`);
         }
 
-        // If game is finished, also update final scores
+        // CRITICAL SAFETY CHECK: Before setting FINISHED status, verify that:
+        // - Competition matches strongly
+        // - Date is close (≤ 30 minutes)
+        // This applies for ALL confidence levels – even HIGH must pass this gate.
         if (newStatus === 'FINISHED') {
-          console.log(`🏁 Game is FINISHED - updating status from ${matchingGame.status} to ${newStatus}`);
-          updateData.homeScore = externalHomeScore;
-          updateData.awayScore = externalAwayScore;
-          // Determine decidedBy based on external status:
-          // - FT: match ended at 90 minutes
-          // - AET: match ended after extra time (120 minutes)
-          // - PEN: match went to penalties, but we use the 120-minute score (recorded as AET)
-          if (newExternalStatus === 'AET') {
-            updateData.decidedBy = 'AET'; // 120 minutes
-          } else if (newExternalStatus === 'PEN') {
-            // Match went to penalties, but we use the 120-minute score (not penalty score)
-            updateData.decidedBy = 'AET'; // Recorded as AET since we use 120-minute score
-            console.log(`⚽ Match went to penalties, using 120-minute score (not penalty score): ${externalHomeScore}-${externalAwayScore}`);
+          const competitionMatchesForFinish = externalMatch.competition?.name
+            ? (() => {
+                const apiComp = externalMatch.competition.name.toLowerCase().trim();
+                const dbComp = matchingGame.competition.name.toLowerCase().trim();
+                return (
+                  dbComp === apiComp ||
+                  dbComp.includes(apiComp) ||
+                  apiComp.includes(dbComp)
+                );
+              })()
+            : false;
+
+          const dateIsVeryClose = dateDiff !== null && dateDiff <= 0.5; // 30 minutes
+
+          if (!competitionMatchesForFinish || !dateIsVeryClose) {
+            console.log(
+              `   ❌ REJECTING FINISHED STATUS: competition/date validation failed (confidence=${matchConfidence})`
+            );
+            console.log(
+              `      Competition match: ${competitionMatchesForFinish ? 'YES' : 'NO'}`
+            );
+            console.log(
+              `      Date close (≤30min): ${dateIsVeryClose ? 'YES' : 'NO'} (${dateDiff?.toFixed(
+                2
+              ) || 'N/A'} hours)`
+            );
+            console.log(
+              `      This could set wrong final score - keeping current status ${matchingGame.status}`
+            );
+            // Don't set FINISHED, but allow LIVE updates (scores/elapsed) to proceed
+            newStatus = matchingGame.status;
+            updateData.status = matchingGame.status;
           } else {
-            updateData.decidedBy = 'FT'; // 90 minutes
+            console.log(
+              `   ✅ FINISHED status validated: competition and date are consistent (confidence=${matchConfidence})`
+            );
           }
-          updateData.finishedAt = new Date();
-          console.log(`🏁 Game finished: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} - Final score: ${externalHomeScore}-${externalAwayScore} (${updateData.decidedBy})`);
-        } else if (matchingGame.status === 'LIVE' && newStatus === 'LIVE') {
+
+          if (newStatus === 'FINISHED') {
+            console.log(`🏁 Game is FINISHED - updating status from ${matchingGame.status} to ${newStatus}`);
+            updateData.homeScore = externalHomeScore;
+            updateData.awayScore = externalAwayScore;
+            // Determine decidedBy based on external status:
+            // - FT: match ended at 90 minutes
+            // - AET: match ended after extra time (120 minutes)
+            // - PEN: match went to penalties, but we use the 120-minute score (recorded as AET)
+            if (newExternalStatus === 'AET') {
+              updateData.decidedBy = 'AET'; // 120 minutes
+            } else if (newExternalStatus === 'PEN') {
+              // Match went to penalties, but we use the 120-minute score (not penalty score)
+              updateData.decidedBy = 'AET'; // Recorded as AET since we use 120-minute score
+              console.log(`⚽ Match went to penalties, using 120-minute score (not penalty score): ${externalHomeScore}-${externalAwayScore}`);
+            } else {
+              updateData.decidedBy = 'FT'; // 90 minutes
+            }
+            updateData.finishedAt = new Date();
+            console.log(`🏁 Game finished: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} - Final score: ${externalHomeScore}-${externalAwayScore} (${updateData.decidedBy})`);
+          }
+        }
+        
+        if (matchingGame.status === 'LIVE' && newStatus === 'LIVE') {
           console.log(`   Game still LIVE: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} (external: ${newExternalStatus})`);
         }
 
@@ -857,20 +889,6 @@ export default async function handler(
             }
           });
           console.log(`   ✅ Game updated successfully`);
-          console.log(`   🔍 Verification - Updated game scores: ${updatedGame.liveHomeScore ?? 'null'}-${updatedGame.liveAwayScore ?? 'null'}`);
-          console.log(`   🔍 Verification - UpdateData scores were: ${updateData.liveHomeScore}-${updateData.liveAwayScore}`);
-          
-          // Double-check: verify the update actually persisted
-          const verifyGame = await prisma.game.findUnique({
-            where: { id: matchingGame.id },
-            select: { liveHomeScore: true, liveAwayScore: true }
-          });
-          if (verifyGame) {
-            console.log(`   🔍 Verification - Database after update: ${verifyGame.liveHomeScore ?? 'null'}-${verifyGame.liveAwayScore ?? 'null'}`);
-            if (verifyGame.liveHomeScore !== updateData.liveHomeScore || verifyGame.liveAwayScore !== updateData.liveAwayScore) {
-              console.error(`   ❌ CRITICAL: Update did not persist! Expected ${updateData.liveHomeScore}-${updateData.liveAwayScore}, got ${verifyGame.liveHomeScore}-${verifyGame.liveAwayScore}`);
-            }
-          }
         } catch (updateError: any) {
           console.error(`   ❌ Error updating game:`, updateError?.message || updateError);
           throw updateError;
@@ -1036,6 +1054,39 @@ export default async function handler(
       }
     }
 
+    // Final summary log
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`📊 LIVE SYNC SUMMARY (V2)`);
+    console.log(`${'='.repeat(80)}`);
+    console.log(`✅ Matched & Updated: ${matchedCount} games`);
+    console.log(`❌ Rejected (safety): ${rejectedCount} matches`);
+    console.log(`⚠️  Unmatched: ${unmatchedMatches.length} external matches`);
+    console.log(`📈 External API provided: ${allExternalMatches.length} matches`);
+    console.log(`🎮 Our LIVE games: ${ourLiveGames.length} games`);
+    console.log(`🔄 Games updated: ${updatedGames.length} games`);
+    
+    if (rejectedMatches.length > 0) {
+      console.log(`\n❌ REJECTED MATCHES (for safety):`);
+      rejectedMatches.forEach((rej, idx) => {
+        console.log(`   ${idx + 1}. ${rej.externalMatch.home} vs ${rej.externalMatch.away}`);
+        console.log(`      Reason: ${rej.reason}`);
+        console.log(`      Details: ${rej.details || 'N/A'}`);
+      });
+    }
+    
+    if (unmatchedMatches.length > 0) {
+      console.log(`\n⚠️  UNMATCHED EXTERNAL MATCHES:`);
+      unmatchedMatches.slice(0, 10).forEach((unm, idx) => {
+        console.log(`   ${idx + 1}. ${unm.externalMatch.home} vs ${unm.externalMatch.away} (ID: ${unm.externalMatch.id})`);
+        console.log(`      Competition: ${unm.externalMatch.competition || 'N/A'}`);
+        console.log(`      Reason: ${unm.reason}`);
+      });
+      if (unmatchedMatches.length > 10) {
+        console.log(`   ... and ${unmatchedMatches.length - 10} more unmatched matches`);
+      }
+    }
+    console.log(`${'='.repeat(80)}\n`);
+
     console.log(`✅ Successfully updated ${updatedGames.length} games with API-Sports.io data`);
 
     if (updatedGames.length > 0) {
@@ -1050,6 +1101,10 @@ export default async function handler(
       externalMatchesFound: allExternalMatches.length,
       processedMatches: processedCount,
       matchedGames: matchedCount,
+      rejectedMatches: rejectedCount,
+      unmatchedMatches: unmatchedMatches.length,
+      rejectedDetails: rejectedMatches.slice(0, 20), // Limit to first 20 for response size
+      unmatchedDetails: unmatchedMatches.slice(0, 20), // Limit to first 20 for response size
       attribution: apiSports.getAttributionText(),
       apiVersion: 'V2',
       lastSync: new Date().toISOString(),

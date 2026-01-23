@@ -818,25 +818,39 @@ export class ApiSportsV2 {
   }
 
   /**
-   * Find best team match using advanced matching strategies (matching V1)
+   * Find best team match using advanced matching strategies (mirrors V1, but stricter).
+   *
+   * IMPORTANT PHILOSOPHY:
+   * - This function is allowed to return null freely – callers MUST treat null as "do not update".
+   * - Thresholds are intentionally high to avoid false positives. We prefer missing a match over a wrong match.
    */
-  findBestTeamMatch(externalTeamName: string, ourTeams: Array<{id: string, name: string, shortName?: string | null}>): {team: any, score: number, method: string} | null {
+  findBestTeamMatch(
+    externalTeamName: string,
+    ourTeams: Array<{ id: string; name: string; shortName?: string | null }>
+  ): { team: any; score: number; method: string } | null {
     const strategies = [
-      { name: 'exact_normalized', threshold: 0.95, weight: 1.0 },
-      { name: 'short_name_match', threshold: 0.9, weight: 0.95 }, // New: match by shortName
-      { name: 'fuzzy_normalized', threshold: 0.7, weight: 0.9 },
-      { name: 'partial_match', threshold: 0.6, weight: 0.8 },
-      { name: 'word_overlap', threshold: 0.5, weight: 0.7 },
-      { name: 'contains_keyword', threshold: 0.4, weight: 0.6 } // New: check if one name contains key words from the other
-    ];
+      // Exact normalized name match – safest, required for many HIGH confidence paths
+      { name: 'exact_normalized', threshold: 0.98, weight: 1.0 },
+      // Short name / code based match – often very strong (e.g. "Lyo" vs "Olympique Lyonnais")
+      { name: 'short_name_match', threshold: 0.95, weight: 0.98 },
+      // Fuzzy normalized – only accept very high similarity
+      { name: 'fuzzy_normalized', threshold: 0.85, weight: 0.9 },
+      // Partial & word overlap – used mainly to assist LIVE-only decisions, never alone for FINISHED
+      { name: 'partial_match', threshold: 0.75, weight: 0.8 },
+      { name: 'word_overlap', threshold: 0.7, weight: 0.75 },
+      // Contains keyword – weakest signal, used only to bump confidence slightly
+      { name: 'contains_keyword', threshold: 0.6, weight: 0.6 },
+    ] as const;
 
-    let bestMatch = null;
+    let bestMatch: { id: string; name: string; shortName?: string | null } | null = null;
     let bestScore = 0;
     let bestMethod = '';
 
     // Normalize external name once
     const normalizedExternal = this.normalizeTeamName(externalTeamName);
-    const externalKeywords = normalizedExternal.split(/\s+/).filter(w => w.length > 2); // Extract meaningful words
+    const externalKeywords = normalizedExternal
+      .split(/\s+/)
+      .filter((w) => w.length > 2);
 
     for (const ourTeam of ourTeams) {
       for (const strategy of strategies) {
@@ -844,79 +858,88 @@ export class ApiSportsV2 {
         let method = '';
 
         switch (strategy.name) {
-          case 'exact_normalized':
+          case 'exact_normalized': {
             const normalizedOur = this.normalizeTeamName(ourTeam.name);
             if (normalizedExternal === normalizedOur) {
               score = 1.0;
               method = 'exact_normalized';
             }
             break;
+          }
 
-          case 'short_name_match':
-            // Match by shortName if available (e.g., "Lyon" matches "Olympique Lyonnais" if shortName is "LYO")
+          case 'short_name_match': {
             if (ourTeam.shortName) {
               const normalizedShort = this.normalizeTeamName(ourTeam.shortName);
               const normalizedExternalForShort = this.normalizeTeamName(externalTeamName);
-              
-              // Check if shortName is contained in external name or vice versa
-              if (normalizedExternalForShort.includes(normalizedShort) || 
-                  normalizedShort.includes(normalizedExternalForShort) ||
-                  normalizedExternalForShort === normalizedShort) {
-                score = 0.95;
+
+              if (
+                normalizedExternalForShort === normalizedShort ||
+                normalizedExternalForShort.includes(normalizedShort) ||
+                normalizedShort.includes(normalizedExternalForShort)
+              ) {
+                score = 0.98;
                 method = 'short_name_match';
-              }
-              
-              // Also check if external name normalized contains key city/team name
-              // e.g., "olympique lyonnais" contains "lyonnais" which could match "lyon"
-              const ourNameNormalized = this.normalizeTeamName(ourTeam.name);
-              if (normalizedExternalForShort.includes(ourNameNormalized) || 
-                  ourNameNormalized.includes(normalizedExternalForShort)) {
-                score = Math.max(score, 0.9);
-                method = 'short_name_match';
+              } else {
+                // Also allow exact short code vs part of team name (e.g. "lyon" vs "olympique lyonnais")
+                const ourNameNormalized = this.normalizeTeamName(ourTeam.name);
+                if (
+                  normalizedExternalForShort.includes(ourNameNormalized) ||
+                  ourNameNormalized.includes(normalizedExternalForShort)
+                ) {
+                  score = Math.max(score, 0.95);
+                  method = 'short_name_match';
+                }
               }
             }
             break;
+          }
 
-          case 'fuzzy_normalized':
+          case 'fuzzy_normalized': {
             const fuzzyOur = this.normalizeTeamName(ourTeam.name);
             score = this.calculateSimilarity(normalizedExternal, fuzzyOur);
             method = 'fuzzy_normalized';
             break;
+          }
 
-          case 'partial_match':
+          case 'partial_match': {
             score = this.calculatePartialMatch(externalTeamName, ourTeam.name);
             method = 'partial_match';
             break;
+          }
 
-          case 'word_overlap':
+          case 'word_overlap': {
             score = this.calculateWordOverlap(externalTeamName, ourTeam.name);
             method = 'word_overlap';
             break;
+          }
 
-          case 'contains_keyword':
-            // Check if key words from one name appear in the other
+          case 'contains_keyword': {
             const ourNameNormalized = this.normalizeTeamName(ourTeam.name);
-            const ourKeywords = ourNameNormalized.split(/\s+/).filter(w => w.length > 2);
-            
-            // Count matching keywords
-            const matchingKeywords = externalKeywords.filter(ek => 
-              ourKeywords.some(ok => ok.includes(ek) || ek.includes(ok))
+            const ourKeywords = ourNameNormalized
+              .split(/\s+/)
+              .filter((w) => w.length > 2);
+
+            const matchingKeywords = externalKeywords.filter((ek) =>
+              ourKeywords.some((ok) => ok.includes(ek) || ek.includes(ok))
             );
-            
+
             if (matchingKeywords.length > 0) {
-              // Score based on ratio of matching keywords
-              score = matchingKeywords.length / Math.max(externalKeywords.length, ourKeywords.length);
-              // Boost score if it's a city name match (e.g., "lyon" in both)
-              if (matchingKeywords.some(k => k.length >= 4)) {
-                score = Math.min(score * 1.2, 1.0);
+              score =
+                matchingKeywords.length /
+                Math.max(externalKeywords.length, ourKeywords.length);
+
+              if (matchingKeywords.some((k) => k.length >= 4)) {
+                score = Math.min(score * 1.1, 1.0);
               }
+
               method = 'contains_keyword';
             }
             break;
+          }
         }
 
         const weightedScore = score * strategy.weight;
-        
+
         if (weightedScore > bestScore && score >= strategy.threshold) {
           bestScore = weightedScore;
           bestMatch = ourTeam;
@@ -926,7 +949,11 @@ export class ApiSportsV2 {
     }
 
     if (bestMatch) {
-      console.log(`🎯 Advanced match: "${externalTeamName}" → "${bestMatch.name}"${bestMatch.shortName ? ` (${bestMatch.shortName})` : ''} (${(bestScore * 100).toFixed(1)}% via ${bestMethod})`);
+      console.log(
+        `🎯 Advanced match: "${externalTeamName}" → "${bestMatch.name}"${
+          bestMatch.shortName ? ` (${bestMatch.shortName})` : ''
+        } (${(bestScore * 100).toFixed(1)}% via ${bestMethod})`
+      );
     } else {
       console.log(`❌ No advanced match found for: "${externalTeamName}"`);
     }

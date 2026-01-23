@@ -33,12 +33,12 @@ type CompetitionsPageProps = {
 };
 
 const SectionCard = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
-  <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
     <div className="flex items-center mb-6">
-      <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+      <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
         {icon}
       </div>
-      <h2 className="text-lg md:text-xl font-bold text-neutral-900">{title}</h2>
+      <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{title}</h2>
     </div>
     {children}
   </div>
@@ -52,7 +52,7 @@ const CompetitionCard = ({ competition, actionLabel, actionIcon, disabled = fals
 }) => (
   <Link
     href={`/competitions/${competition.id}`}
-    className={`bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-modern p-5 flex flex-col justify-between hover:shadow-modern-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
+    className={`bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-800 dark:to-gray-700 border border-primary-300/60 dark:border-gray-600 rounded-2xl shadow-modern p-5 flex flex-col justify-between hover:shadow-modern-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
     tabIndex={disabled ? -1 : 0}
     aria-disabled={disabled}
     style={{ textDecoration: 'none', color: 'inherit' }}
@@ -63,7 +63,7 @@ const CompetitionCard = ({ competition, actionLabel, actionIcon, disabled = fals
           <img 
             src={competition.logo} 
             alt={`${competition.name} logo`}
-            className="h-8 w-8 object-contain flex-shrink-0"
+            className="h-8 w-8 object-contain dark:bg-white dark:p-0.5 dark:rounded flex-shrink-0"
           />
         ) : (
           <div className="h-8 w-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -72,9 +72,9 @@ const CompetitionCard = ({ competition, actionLabel, actionIcon, disabled = fals
             </span>
           </div>
         )}
-        <h3 className="text-lg font-bold text-neutral-900 flex-1">{competition.name}</h3>
+        <h3 className="text-lg font-bold text-neutral-900 dark:text-gray-100 flex-1">{competition.name}</h3>
       </div>
-      <div className="text-xs text-neutral-500 mb-3">
+      <div className="text-xs text-neutral-500 dark:text-gray-400 mb-3">
         <p><span className="font-medium">Start:</span> {formatDate(competition.startDate)}</p>
         <p><span className="font-medium">End:</span> {formatDate(competition.endDate)}</p>
       </div>
@@ -94,7 +94,7 @@ export default function CompetitionsPage({
   const { t } = useTranslation('common');
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f7f8fa' }}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
 
         {/* Joined Competitions */}

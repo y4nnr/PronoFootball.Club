@@ -166,18 +166,18 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
   return (
     <div className="mb-0">
       {/* Performance des 9 Derniers Matchs */}
-      <div className="bg-gradient-to-br from-primary-100 to-primary-200 border border-primary-300/60 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-800 dark:to-gray-700 border border-primary-300/60 dark:border-gray-600 rounded-2xl shadow-md dark:shadow-dark-modern p-6 hover:shadow-lg dark:hover:shadow-dark-modern-lg transition-all">
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-2">
                      {Array.from({ length: 9 }).map((_, index) => {
                        const game = lastGamesPerformance[index];
                        return game ? (
                          <div
                           key={game.gameId}
-                          className={`h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 font-bold text-sm shadow-modern p-2 bg-white border-2 ${
-                            game.result === 'no_bet' ? 'border-blue-300' :
-                            game.points === 3 ? 'border-yellow-400' :
-                            game.points === 1 ? 'border-green-400' :
-                            'border-red-400'
+                          className={`h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 dark:text-gray-200 font-bold text-sm shadow-modern dark:shadow-dark-modern p-2 bg-white dark:bg-gray-800 ${
+                            game.result === 'no_bet' ? 'border-2 border-black dark:border-white' :
+                            game.points === 3 ? 'border-2 border-yellow-400 dark:border-yellow-500' :
+                            game.points === 1 ? 'border-2 border-green-400 dark:border-green-500' :
+                            'border-2 border-red-400 dark:border-red-500'
                           }`}
                           title={game.result === 'no_bet' ? 
                             `${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore} (No bet placed)` :
@@ -190,15 +190,15 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
                     <img 
                       src={game.competitionLogo} 
                       alt={game.competition}
-                      className="w-5 h-5 object-contain"
+                      className="w-5 h-5 object-contain dark:bg-white dark:p-0.5 dark:rounded"
                     />
                   )}
-                  <span className="text-[11px] font-bold text-gray-700 truncate max-w-[70px]">
+                  <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate max-w-[70px]">
                     {abbreviateCompetitionName(removeSeasonFromName(game.competition))}
                   </span>
                 </div>
                 {/* Separator line */}
-                <div className="w-full border-t border-gray-300 mb-1"></div>
+                <div className="w-full border-t border-gray-300 dark:border-gray-600 mb-1"></div>
                 {/* Team logos and codes */}
                 <div className="flex items-center space-x-2 mb-1">
                   <div className="flex flex-col items-center">
@@ -228,7 +228,7 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
                              <div className="text-base font-bold">
                                {game.result === 'no_bet' ? 'shooter!' : game.points}
                              </div>
-                             <div className="text-[11px] font-bold text-gray-700">
+                             <div className="text-[11px] font-bold text-gray-700 dark:text-gray-300">
                                {new Date(game.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                              </div>
                            </div>
@@ -236,7 +236,7 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
             ) : (
               <div
                 key={`empty-${index}`}
-                className="h-18 rounded-xl flex items-center justify-center text-gray-400 font-bold text-sm shadow-modern border-2 border-dashed border-gray-300 bg-white"
+                className="h-18 rounded-xl flex items-center justify-center text-gray-400 dark:text-gray-500 font-bold text-sm shadow-modern border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
                 title="No data"
               >
                 ?
@@ -261,13 +261,13 @@ const ActiveCompetitionsSection = memo(({ competitions, t }: { competitions: Com
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-5" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-5" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+          <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <TrophyIcon className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('competitions.active')}</h2>
+          <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{t('competitions.active')}</h2>
         </div>
       </div>
       {activeCompetitions.length > 0 ? (
@@ -284,8 +284,8 @@ const ActiveCompetitionsSection = memo(({ competitions, t }: { competitions: Com
         </div>
       ) : (
         <div className="text-center py-8">
-          <TrophyIcon className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
-          <p className="text-neutral-500">{t('competitions.noActive')}</p>
+          <TrophyIcon className="h-12 w-12 text-neutral-300 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-neutral-500 dark:text-gray-400">{t('competitions.noActive')}</p>
         </div>
       )}
     </div>
@@ -297,13 +297,13 @@ ActiveCompetitionsSection.displayName = 'ActiveCompetitionsSection';
 // Available Competitions Section
 const AvailableCompetitionsSection = memo(({ competitions, t }: { competitions: Competition[]; t: (key: string) => string }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-modern border border-neutral-200/50 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-modern border border-neutral-200/50 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+          <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <TrophyIcon className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('availableCompetitions.title')}</h2>
+          <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{t('availableCompetitions.title')}</h2>
         </div>
       </div>
 
@@ -330,8 +330,8 @@ const AvailableCompetitionsSection = memo(({ competitions, t }: { competitions: 
         </div>
       ) : (
         <div className="text-center py-8">
-          <TrophyIcon className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
-          <p className="text-neutral-500">{t('availableCompetitions.noAvailable')}</p>
+          <TrophyIcon className="h-12 w-12 text-neutral-300 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-neutral-500 dark:text-gray-400">{t('availableCompetitions.noAvailable')}</p>
         </div>
       )}
     </div>
@@ -348,13 +348,13 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
   console.log('🎯 BettingGamesSection - Received games:', games?.length || 0, 'games');
   console.log('🎯 BettingGamesSection - Games data:', games);
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+          <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <PlayIcon className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('bettingGames.title')}</h2>
+          <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{t('bettingGames.title')}</h2>
         </div>
       </div>
 
@@ -411,8 +411,8 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
         </div>
       ) : (
         <div className="text-center py-8">
-          <PlayIcon className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
-          <p className="text-neutral-500">{t('bettingGames.placedBets')}</p>
+          <PlayIcon className="h-12 w-12 text-neutral-300 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-neutral-500 dark:text-gray-400">{t('bettingGames.placedBets')}</p>
         </div>
       )}
     </div>
@@ -427,13 +427,13 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
   const currentUserId = session?.user?.id;
   
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+          <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
             <CalendarIcon className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-lg md:text-xl font-bold text-neutral-900">{t('gamesOfDay.title')}</h2>
+          <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{t('gamesOfDay.title')}</h2>
         </div>
       </div>
 
@@ -726,8 +726,8 @@ export default function Dashboard() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="flex items-center justify-center py-32" style={{ backgroundColor: '#f7f8fa' }}>
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center py-32 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 dark:border-accent-dark-500"></div>
       </div>
     );
   }
@@ -738,13 +738,13 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-32" style={{ backgroundColor: '#f7f8fa' }}>
+      <div className="flex items-center justify-center py-32 bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Error</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
           <button
             onClick={fetchDashboardData}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+            className="bg-primary-600 hover:bg-primary-700 dark:bg-accent-dark-600 dark:hover:bg-accent-dark-700 text-white px-4 py-2 rounded-lg"
           >
             {t('common.retry')}
           </button>
@@ -754,7 +754,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ backgroundColor: '#f7f8fa' }}>
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
 
 
@@ -836,9 +836,9 @@ export default function Dashboard() {
           return null;
         })()}
 
-        <section className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-[1.15rem] flex items-center">
-            <span className="p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center mr-3">
+        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-dark-xl border border-gray-200 dark:border-gray-700 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-[1.15rem] flex items-center">
+            <span className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center mr-3">
               <ChartBarIcon className="h-6 w-6 text-white" />
             </span>
             Performance des derniers matchs
@@ -865,8 +865,8 @@ export default function Dashboard() {
         </div>
 
         {/* SSE Connection Status Footer - Subtle, at bottom */}
-        <div className="mt-12 mb-4 pt-4 border-t border-gray-200">
-          <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="mt-12 mb-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
             {/* Connection Status - Left side only */}
             <div className="flex items-center space-x-1.5">
               {connectionStatus === 'connected' && (
@@ -894,12 +894,12 @@ export default function Dashboard() {
               {/* Live Updates - Only show when active */}
               {(hasChanges || signalCount > 0) && (
                 <div className="flex items-center space-x-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary-600"></div>
                   <span>
                     {hasChanges ? 'Mise à jour' : `Signal ${signalCount}`}
                   </span>
                   {lastSignalId && (
-                    <span className="font-mono text-xs text-gray-400 ml-1">
+                    <span className="font-mono text-xs text-gray-400 dark:text-gray-500 ml-1">
                       ({lastSignalId})
                     </span>
                   )}
@@ -908,7 +908,7 @@ export default function Dashboard() {
               
               {/* Timestamp - Shows when last update occurred */}
               {lastUpdate && (
-                <span className="text-gray-400 font-mono text-xs">
+                <span className="text-gray-400 dark:text-gray-500 font-mono text-xs">
                   {lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </span>
               )}

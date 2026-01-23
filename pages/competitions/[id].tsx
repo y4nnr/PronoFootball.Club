@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import PlayersPerformanceWidget from '../../components/PlayersPerformanceWidget';
 import RankingEvolutionWidget from '../../components/RankingEvolutionWidget';
 import PlayerPointsProgressionWidget from '../../components/PlayerPointsProgressionWidget';
+import GameCard from '../../components/GameCard';
 
 interface CompetitionUser {
   id: string;
@@ -157,7 +158,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
     
     return (
       <div className="mt-3">
-        <div className="text-xs font-medium text-gray-700 mb-2">{examplesLabel}</div>
+        <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-2">{examplesLabel}</div>
         <div className="space-y-3">
           {cleanExamples.map((example, index) => {
           // Split into lines
@@ -171,17 +172,17 @@ export default function CompetitionDetails({ competition, competitionStats, game
           const diffLine = lines.find(l => l.includes('Différence:') || l.includes('Difference:')) || '';
           
           return (
-            <div key={index} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-              <div className="font-semibold text-sm text-gray-800 mb-2">{mainLine}</div>
+            <div key={index} className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3 shadow-sm">
+              <div className="font-semibold text-sm text-gray-800 dark:text-gray-100 mb-2">{mainLine}</div>
               {winnerLine && (
-                <div className="text-xs text-gray-700 mb-1 ml-2">
-                  <span className="font-medium">{winnerLine.split(':')[0]}:</span>
+                <div className="text-xs text-gray-700 dark:text-gray-200 mb-1 ml-2">
+                  <span className="font-medium dark:text-gray-300">{winnerLine.split(':')[0]}:</span>
                   <span className={
                     winnerLine.includes('PAS OK') || winnerLine.includes('NOT OK') 
-                      ? 'text-red-600 ml-1' 
+                      ? 'text-red-600 dark:text-red-300 ml-1' 
                       : winnerLine.includes('OK') 
-                        ? 'text-green-600 ml-1' 
-                        : 'text-gray-700 ml-1'
+                        ? 'text-green-600 dark:text-green-300 ml-1' 
+                        : 'text-gray-700 dark:text-gray-200 ml-1'
                   }>
                     {winnerLine.split(':')[1]?.trim()}
                   </span>
@@ -198,14 +199,14 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 const totalValue = totalMatch ? parseInt(totalMatch[1], 10) : null;
                 
                 // Color: green if Total ≤ 5 (regardless of winner), red if Total > 5
-                const totalColor = (totalValue !== null && totalValue <= 5) ? 'text-green-600' : 'text-red-600';
+                const totalColor = (totalValue !== null && totalValue <= 5) ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300';
                 
                 // Split calculation to highlight Total part
                 const totalRegex = /(Total\s*=\s*\d+)/i;
                 const calculationParts = calculation.split(totalRegex);
                 
                 return (
-                  <div className="text-xs text-gray-600 ml-2">
+                  <div className="text-xs text-gray-600 dark:text-gray-300 ml-2">
                     <div>
                       {calculationParts.map((part, idx) => {
                         if (totalRegex.test(part)) {
@@ -215,12 +216,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             </span>
                           );
                         }
-                        return <span key={idx}>{part}</span>;
+                        return <span key={idx} className="dark:text-gray-300">{part}</span>;
                       })}
                     </div>
                     {points && (
                       <div className="mt-1">
-                        <span className="font-bold text-gray-800">→ {points}</span>
+                        <span className="font-bold text-gray-800 dark:text-gray-100">→ {points}</span>
                       </div>
                     )}
                   </div>
@@ -424,11 +425,16 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
 
   const getPositionColor = (position: number) => {
+    const isLast = position === competitionStats.length;
     switch (position) {
-      case 1: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 2: return 'bg-slate-200 text-slate-800 border-slate-400'; // Silver/metallic gray for 2nd place
-      case 3: return 'bg-orange-100 text-orange-800 border-orange-200';
-      default: return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 1: return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-500/50';
+      case 2: return 'bg-slate-200 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-slate-400 dark:border-slate-600/50'; // Silver/metallic gray for 2nd place
+      case 3: return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-500/50';
+      default: 
+        if (isLast) {
+          return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-500/50'; // Pizza (last place)
+        }
+        return 'bg-blue-100 dark:bg-gray-700 text-blue-800 dark:text-gray-200 border-blue-200 dark:border-gray-600';
     }
   };
 
@@ -509,7 +515,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
      competition.status === 'active');
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f7f8fa' }}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="mb-8">
@@ -519,14 +525,14 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 <img 
                   src={competition.logo} 
                   alt={`${competition.name} logo`}
-                  className="h-12 w-12 object-contain flex-shrink-0"
+                  className="h-12 w-12 object-contain dark:bg-white dark:p-0.5 dark:rounded flex-shrink-0"
                 />
               ) : (
-                <div className="h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="h-12 w-12 bg-primary-600 dark:bg-accent-dark-600 rounded-full flex items-center justify-center flex-shrink-0">
                   <TrophyIcon className="h-8 w-8 text-white" />
                 </div>
               )}
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">
                 {competition.name}
               </h1>
             </div>
@@ -535,7 +541,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
               <button
                 onClick={handleJoinCompetition}
                 disabled={joiningCompetition}
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed transition-colors font-medium text-base flex-shrink-0"
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary-600 dark:bg-accent-dark-600 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-accent-dark-700 disabled:bg-primary-400 dark:disabled:bg-accent-dark-700 disabled:cursor-not-allowed transition-colors font-medium text-base flex-shrink-0"
               >
                 {joiningCompetition ? (
                   <>
@@ -551,7 +557,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
               </button>
             )}
           </div>
-          <p className="text-gray-600 mb-3">
+          <p className="text-gray-600 dark:text-gray-400 mb-3">
             {descriptionKey ? t(`competitionDescriptions.${descriptionKey}`) : competition.description}
           </p>
           {/* Mobile: Button below description */}
@@ -559,7 +565,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
             <button
               onClick={handleJoinCompetition}
               disabled={joiningCompetition}
-              className="md:hidden px-3 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-primary-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-1.5 text-sm w-full justify-center min-h-[44px]"
+              className="md:hidden px-3 py-3 bg-primary-600 dark:bg-accent-dark-600 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-accent-dark-700 disabled:bg-primary-400 dark:disabled:bg-accent-dark-700 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-1.5 text-sm w-full justify-center min-h-[44px]"
             >
               {joiningCompetition ? (
                 <>
@@ -579,48 +585,48 @@ export default function CompetitionDetails({ competition, competitionStats, game
         {/* Competition Info Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           {/* Period */}
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-2 md:space-x-3 mb-2">
-              <div className="p-2 md:p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
+              <div className="p-2 md:p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                 <CalendarIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
               </div>
-              <div className="text-[10px] sm:text-xs md:text-xs lg:text-sm text-gray-900 text-center flex-1 min-w-0">
+              <div className="text-[10px] sm:text-xs md:text-xs lg:text-sm text-gray-900 dark:text-gray-100 text-center flex-1 min-w-0">
                 <div className="space-y-0.5 md:space-y-1">
                   <p className="font-bold text-[10px] sm:text-xs md:text-xs lg:text-sm whitespace-nowrap leading-tight">{formatDate(competition.startDate)}</p>
-                  <p className="text-gray-500 text-[9px] sm:text-[10px] md:text-[10px] lg:text-xs">{t('competition.to')}</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-[9px] sm:text-[10px] md:text-[10px] lg:text-xs">{t('competition.to')}</p>
                   <p className="font-bold text-[10px] sm:text-xs md:text-xs lg:text-sm whitespace-nowrap leading-tight">{formatDate(competition.endDate)}</p>
                 </div>
               </div>
             </div>
-            <h3 className="text-xs md:text-sm font-semibold text-gray-900">{t('competition.period')}</h3>
+            <h3 className="text-xs md:text-sm font-semibold text-gray-900 dark:text-gray-100">{t('competition.period')}</h3>
           </div>
 
           {/* Participants */}
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-2 md:space-x-3 mb-2">
-              <div className="p-2 md:p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
+              <div className="p-2 md:p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                 <UsersIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
               </div>
-              <span className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900">{competition._count.users}</span>
+              <span className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100">{competition._count.users}</span>
             </div>
-            <h3 className="text-xs md:text-sm font-semibold text-gray-900">{t('competition.participants')}</h3>
+            <h3 className="text-xs md:text-sm font-semibold text-gray-900 dark:text-gray-100">{t('competition.participants')}</h3>
           </div>
 
           {/* Games */}
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-2 md:space-x-3 mb-2">
-              <div className="p-2 md:p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
+              <div className="p-2 md:p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                 <ChartBarIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
               </div>
-              <span className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900">{competition._count.games}</span>
+              <span className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100">{competition._count.games}</span>
             </div>
-            <h3 className="text-xs md:text-sm font-semibold text-gray-900">{t('competition.matches')}</h3>
+            <h3 className="text-xs md:text-sm font-semibold text-gray-900 dark:text-gray-100">{t('competition.matches')}</h3>
           </div>
 
           {/* Status */}
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-2 md:space-x-3 mb-2">
-              <div className="p-2 md:p-3 bg-primary-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
+              <div className="p-2 md:p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                 <span className="text-white text-base md:text-lg font-bold">
                   {competition.status === 'ACTIVE' || competition.status === 'active' ? '▶' : 
                    competition.status === 'UPCOMING' || competition.status === 'upcoming' ? '⏳' :
@@ -628,29 +634,29 @@ export default function CompetitionDetails({ competition, competitionStats, game
                    competition.status === 'CANCELLED' || competition.status === 'cancelled' ? '✗' : '?'}
                 </span>
               </div>
-              <span className="text-sm md:text-base lg:text-lg font-bold text-gray-900 truncate">{translateCompetitionStatus(competition.status)}</span>
+              <span className="text-sm md:text-base lg:text-lg font-bold text-gray-900 dark:text-gray-100 truncate">{translateCompetitionStatus(competition.status)}</span>
             </div>
-            <h3 className="text-xs md:text-sm font-semibold text-gray-900">{t('competition.status')}</h3>
+            <h3 className="text-xs md:text-sm font-semibold text-gray-900 dark:text-gray-100">{t('competition.status')}</h3>
           </div>
         </div>
 
         {/* Competition Progress Bar */}
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <div className="p-2 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+              <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
                 <ChartBarIcon className="h-5 w-5 text-white" />
               </div>
               <span className="md:hidden">Progression</span>
               <span className="hidden md:inline">Progression de la compétition</span>
             </h3>
-            <div className="text-sm md:text-base text-gray-600 font-bold">
+            <div className="text-sm md:text-base text-gray-600 dark:text-gray-300 font-bold">
               {games.filter(g => g.status === 'FINISHED').length} / {competition._count.games} matchs joués
             </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-8 relative">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-8 relative">
             <div 
-              className="bg-gradient-to-r from-primary-500 to-primary-600 h-8 rounded-full transition-all duration-500 ease-out flex items-center justify-center relative"
+              className="bg-gradient-to-r from-primary-500 to-primary-600 dark:from-accent-dark-500 dark:to-accent-dark-600 h-8 rounded-full transition-all duration-500 ease-out flex items-center justify-center relative"
               style={{ 
                 width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 : 0}%` 
               }}
@@ -660,7 +666,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
               </span>
             </div>
           </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-2">
+          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
             <span className="font-bold">0%</span>
             <span className="font-bold">100%</span>
           </div>
@@ -670,32 +676,32 @@ export default function CompetitionDetails({ competition, competitionStats, game
         {(competition.status === 'COMPLETED' || competition.status === 'completed') && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Winner */}
-            <div className={`bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6 ${!competition.winner ? 'opacity-60' : ''}`}>
+            <div className={`bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 border border-yellow-200 dark:border-yellow-700 rounded-xl p-6 ${!competition.winner ? 'opacity-60' : ''}`}>
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-yellow-500 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-yellow-500 dark:bg-yellow-600 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold">
                     🏆
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-yellow-800">{t('competition.champion')}</h3>
-                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-yellow-900">{competition.winner ? competition.winner.name : '—'}</p>
-                  <p className="text-sm text-yellow-700">{competition.winner ? t('competition.competitionWinner') : t('competition.noWinnerSet')}</p>
+                  <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-300">{t('competition.champion')}</h3>
+                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-yellow-900 dark:text-yellow-200">{competition.winner ? competition.winner.name : '—'}</p>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400">{competition.winner ? t('competition.competitionWinner') : t('competition.noWinnerSet')}</p>
                 </div>
               </div>
             </div>
             {/* Last Place */}
-            <div className={`bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-6 ${!competition.lastPlace ? 'opacity-60' : ''}`}>
+            <div className={`bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border border-red-200 dark:border-red-700 rounded-xl p-6 ${!competition.lastPlace ? 'opacity-60' : ''}`}>
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-red-500 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-red-500 dark:bg-red-600 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold">
                     🍽️
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-red-800">{t('competition.dinnerHost')}</h3>
-                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-red-900">{competition.lastPlace ? competition.lastPlace.name : '—'}</p>
-                  <p className="text-sm text-red-700">{competition.lastPlace ? t('competition.owesEveryoneDinner') : t('competition.noWinnerSet')}</p>
+                  <h3 className="text-lg font-bold text-red-800 dark:text-red-300">{t('competition.dinnerHost')}</h3>
+                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-red-900 dark:text-red-200">{competition.lastPlace ? competition.lastPlace.name : '—'}</p>
+                  <p className="text-sm text-red-700 dark:text-red-400">{competition.lastPlace ? t('competition.owesEveryoneDinner') : t('competition.noWinnerSet')}</p>
                 </div>
               </div>
             </div>
@@ -704,43 +710,43 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
 
         {/* Current Ranking Section - Always visible for better UX */}
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-300 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center">
-              <div className="p-2 bg-primary-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
-                <TrophyIcon className="h-6 w-6 text-white" />
-              </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+                <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+                  <TrophyIcon className="h-6 w-6 text-white" />
+                </div>
               {(competition.status === 'COMPLETED' || (competition.status === 'COMPLETED' || competition.status === 'completed')) ? t('competition.finalRanking') : 'Classement en cours'}
             </h2>
           </div>
           <div className="overflow-x-auto">
             {competitionStats && competitionStats.length > 0 ? (
-              <table className="min-w-full divide-y divide-gray-200 table-fixed">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
+                <thead className="bg-gray-100 dark:bg-gray-800 border-b-2 border-gray-300 dark:border-gray-600">
                   <tr>
                     <th 
-                      className="w-8 md:w-16 px-1 md:px-4 py-1.5 md:py-2.5 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      className="w-8 md:w-16 px-1 md:px-4 py-1.5 md:py-2.5 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('position')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
-                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {t('competition.position')}
                           </span>
                           {sortColumn === 'position' && (
-                            <span className="text-gray-700 text-[9px] md:text-[10px] lg:text-xs">
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
                           {t('competition.position').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
+                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
                               {word}
                             </span>
                           ))}
                           {sortColumn === 'position' && (
-                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -748,28 +754,28 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-16 md:w-48 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      className="w-16 md:w-48 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('player')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
-                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {t('competition.player')}
                           </span>
                           {sortColumn === 'player' && (
-                            <span className="text-gray-700 text-[9px] md:text-[10px] lg:text-xs">
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
                           {t('competition.player').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
+                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
                               {word}
                             </span>
                           ))}
                           {sortColumn === 'player' && (
-                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -777,28 +783,28 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('points')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
-                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {t('competition.points')}
                           </span>
                           {sortColumn === 'points' && (
-                            <span className="text-gray-700 text-[9px] md:text-[10px] lg:text-xs">
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
                           {t('competition.points').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
+                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
                               {word}
                             </span>
                           ))}
                           {sortColumn === 'points' && (
-                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -806,28 +812,28 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('games')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
-                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {t('competition.games')}
                           </span>
                           {sortColumn === 'games' && (
-                            <span className="text-gray-700 text-[9px] md:text-[10px] lg:text-xs">
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
                           {t('competition.games').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
+                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
                               {word}
                             </span>
                           ))}
                           {sortColumn === 'games' && (
-                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -835,28 +841,28 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('average')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
-                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {t('competition.average')}
                           </span>
                           {sortColumn === 'average' && (
-                            <span className="text-gray-700 text-[9px] md:text-[10px] lg:text-xs">
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
                           {t('competition.average').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
+                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
                               {word}
                             </span>
                           ))}
                           {sortColumn === 'average' && (
-                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -864,28 +870,28 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('exactScores')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
-                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {t('competition.exactScores')}
                           </span>
                           {sortColumn === 'exactScores' && (
-                            <span className="text-gray-700 text-[9px] md:text-[10px] lg:text-xs">
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
                           {t('competition.exactScores').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
+                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
                               {word}
                             </span>
                           ))}
                           {sortColumn === 'exactScores' && (
-                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -893,28 +899,28 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-28 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      className="w-8 md:w-28 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('correctWinners')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
-                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {t('competition.correctWinners')}
                           </span>
                           {sortColumn === 'correctWinners' && (
-                            <span className="text-gray-700 text-[9px] md:text-[10px] lg:text-xs">
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
                           {t('competition.correctWinners').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
+                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
                               {word}
                             </span>
                           ))}
                           {sortColumn === 'correctWinners' && (
-                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -922,26 +928,26 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center md:cursor-pointer md:hover:bg-gray-100 transition-colors select-none"
+                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('shooters')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
                         <div className="hidden md:flex items-center justify-center space-x-0.5">
-                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             {t('competition.shooters')}
                           </span>
                           {sortColumn === 'shooters' && (
-                            <span className="text-gray-700 text-[9px] md:text-[10px] lg:text-xs">
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          <span className="text-[7px] font-bold text-gray-500 uppercase tracking-wider leading-none">
+                          <span className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
                             Shots
                           </span>
                           {sortColumn === 'shooters' && (
-                            <span className="hidden md:inline text-gray-700 text-[7px] mt-0.5">
+                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -950,7 +956,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                   {sortedStats.slice(0, 10).map((player, index) => {
                     // Determine row highlighting based on original position
                     const isFirst = player.position === 1;
@@ -960,44 +966,48 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     const isCurrentUser = player.userId === currentUserId;
                     
                     let rowBgClass = '';
-                    let rowBorderClass = '';
+                    let borderClass = '';
                     
                     if (isCurrentUser) {
-                      rowBgClass = 'bg-blue-50';
-                      rowBorderClass = '';
+                      rowBgClass = 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45';
+                      borderClass = '';
                     } else if (isFirst) {
-                      rowBgClass = 'bg-yellow-50/70';
-                      rowBorderClass = '';
+                      // Gold border and highlight for 1st place (light mode only)
+                      rowBgClass = 'bg-amber-50/50 dark:bg-gray-900';
+                      borderClass = '!border-l-4 !border-l-yellow-500 dark:!border-l-yellow-500';
                     } else if (isSecond) {
-                      rowBgClass = 'bg-slate-100/75'; // Silver/metallic gray background for 2nd place
-                      rowBorderClass = '';
+                      // Silver border and highlight for 2nd place (light mode only)
+                      rowBgClass = 'bg-slate-50/50 dark:bg-gray-900';
+                      borderClass = '!border-l-4 !border-l-slate-400 dark:!border-l-gray-300';
                     } else if (isThird) {
-                      rowBgClass = 'bg-orange-50/70';
-                      rowBorderClass = '';
+                      // Bronze border and highlight for 3rd place (light mode only)
+                      rowBgClass = 'bg-orange-50/50 dark:bg-gray-900';
+                      borderClass = '!border-l-4 !border-l-orange-600 dark:!border-l-orange-500';
                     } else if (isLast) {
-                      rowBgClass = 'bg-red-50/70';
-                      rowBorderClass = '';
+                      // Red border and highlight for last place (light mode only)
+                      rowBgClass = 'bg-red-50/50 dark:bg-gray-900';
+                      borderClass = '!border-l-4 !border-l-red-500 dark:!border-l-red-400';
                     }
                     
                     return (
-                    <tr key={player.userId} className={`${rowBgClass} ${rowBorderClass}`}>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200">
+                    <tr key={player.userId} className={rowBgClass}>
+                      <td className={`px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700 ${borderClass}`}>
                         <div className={`inline-flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded-full border-2 font-bold text-[10px] md:text-sm ${getPositionColor(player.position)}`}>
                           {getPositionIcon(player.position)}
                         </div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap border-r border-gray-200">
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap border-r border-gray-200 dark:border-gray-700">
                         {/* Mobile: Name below profile pic */}
                         <div className="flex md:hidden flex-col items-center min-w-0">
                           <img 
                             src={getUserAvatar(player.userName, player.profilePictureUrl)} 
                             alt={player.userName}
-                            className="w-8 h-8 rounded-full mb-1 object-cover border-2 border-gray-200 flex-shrink-0"
+                            className="w-8 h-8 rounded-full mb-1 object-cover border-2 border-gray-200 dark:border-gray-600 flex-shrink-0"
                           />
                           <div className="min-w-0 w-full text-center">
-                            <div className="text-[10px] font-medium text-gray-900 truncate">{player.userName}</div>
-                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-[9px] text-yellow-600 font-medium">{t('competition.champion')}</div>}
-                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === competitionStats.length && <div className="text-[9px] text-red-600 font-medium">{t('competition.dinnerHost')}</div>}
+                            <div className="text-[10px] font-medium text-gray-900 dark:text-gray-100 truncate">{player.userName}</div>
+                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-[9px] text-yellow-600 dark:text-yellow-400 font-medium">{t('competition.champion')}</div>}
+                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === competitionStats.length && <div className="text-[9px] text-red-600 dark:text-red-400 font-medium">{t('competition.dinnerHost')}</div>}
                           </div>
                         </div>
                         {/* Desktop: Name next to profile pic */}
@@ -1005,34 +1015,34 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           <img 
                             src={getUserAvatar(player.userName, player.profilePictureUrl)} 
                             alt={player.userName}
-                            className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-gray-200 flex-shrink-0"
+                            className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-gray-200 dark:border-gray-600 flex-shrink-0"
                           />
                           <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium text-gray-900 truncate">{player.userName}</div>
-                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-xs text-yellow-600 font-medium">{t('competition.champion')}</div>}
-                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === competitionStats.length && <div className="text-xs text-red-600 font-medium">{t('competition.dinnerHost')}</div>}
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{player.userName}</div>
+                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">{t('competition.champion')}</div>}
+                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === competitionStats.length && <div className="text-xs text-red-600 dark:text-red-400 font-medium">{t('competition.dinnerHost')}</div>}
                           </div>
                         </div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200">
-                        <div className="text-sm md:text-lg font-bold text-gray-900">{player.totalPoints}</div>
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                        <div className="text-sm md:text-lg font-bold text-gray-900 dark:text-gray-100">{player.totalPoints}</div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200">
-                        <div className="text-[10px] md:text-sm text-gray-900">{player.totalPredictions}</div>
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                        <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.totalPredictions}</div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200">
-                        <div className="text-[10px] md:text-sm text-gray-900">
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                        <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">
                           {player.totalPredictions > 0 ? (player.totalPoints / player.totalPredictions).toFixed(2) : '0.00'}
                         </div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200">
-                        <div className="text-[10px] md:text-sm text-gray-900">{player.exactScores || 0}</div>
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                        <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.exactScores || 0}</div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200">
-                        <div className="text-[10px] md:text-sm text-gray-900">{player.correctWinners || 0}</div>
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                        <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.correctWinners || 0}</div>
                       </td>
                       <td className="px-2 md:px-4 py-2 md:py-4 whitespace-nowrap text-center">
-                        <div className="text-[10px] md:text-sm text-gray-900">{player.shooters || 0}</div>
+                        <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.shooters || 0}</div>
                       </td>
                     </tr>
                     );
@@ -1040,19 +1050,19 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 </tbody>
               </table>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <p>{t('competition.noParticipantsYet')}</p>
               </div>
             )}
           </div>
           {competitionStats.length > 10 && (
-            <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 text-center">
-              <span className="text-sm text-gray-600">
+            <div className="px-6 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-center">
+              <span className="text-sm text-gray-600 dark:text-gray-300">
                 {t('competition.showingTop')} 10 {t('competition.of')} {competitionStats.length} {t('competition.participants')}
               </span>
               <button 
                 onClick={() => {/* TODO: Implement full ranking modal or page */}}
-                className="ml-2 text-sm text-primary-600 hover:text-primary-700 font-medium"
+                className="ml-2 text-sm text-primary-600 dark:text-accent-dark-400 hover:text-primary-700 dark:hover:text-accent-dark-400 font-medium"
               >
                 {t('competition.viewFullRanking')}
               </button>
@@ -1093,11 +1103,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
         )}
 
         {/* Games Section */}
-        <div className="bg-white rounded-2xl border border-gray-300 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)', overflow: 'hidden' }}>
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)', overflow: 'hidden' }}>
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center">
-                <div className="p-2 bg-primary-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+                <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
                   <ChartBarIcon className="h-6 w-6 text-white" />
                 </div>
                 <span className="md:hidden">
@@ -1108,12 +1118,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 </span>
               </h2>
               <div className="flex items-center space-x-4">
-                <div className="hidden md:block text-sm text-gray-500">
+                <div className="hidden md:block text-sm text-gray-500 dark:text-gray-400">
                   {showAllGames ? games.length : games.filter(g => g.status === 'UPCOMING' || g.status === 'LIVE').length} {t('competition.games')}
                 </div>
                 <button
                   onClick={() => setShowAllGames(!showAllGames)}
-                  className="px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors duration-200"
+                  className="px-4 py-2 text-sm font-medium text-primary-600 dark:text-white hover:text-primary-700 dark:hover:text-accent-dark-200 bg-primary-50 dark:bg-gray-700 hover:bg-primary-100 dark:hover:bg-gray-600 border border-primary-200 dark:border-gray-600 rounded-lg transition-colors duration-200"
                 >
                   {showAllGames ? t('competition.showBettingGames') : t('competition.showAllGames')}
                 </button>
@@ -1122,6 +1132,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
           <div className="p-6">
             {(() => {
+              if (!games || !Array.isArray(games)) {
+                return <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('competition.noActiveGamesFound')}</div>;
+              }
               const filteredGames = showAllGames ? games : games.filter(g => g.status === 'UPCOMING' || g.status === 'LIVE');
               // Sort finished games first (most recent first), then upcoming/live games chronologically
               const sortedGames = [...filteredGames].sort((a, b) => {
@@ -1143,342 +1156,203 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 }
               });
               return sortedGames && sortedGames.length > 0 ? (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
                   {sortedGames.map((game) => {
+                    try {
+                    // Prepare game data for GameCard component
+                    // Ensure date is a string (ISO format) and structure matches GameCard interface
+                    const gameCardData = {
+                      status: game.status,
+                      externalStatus: (game as any).externalStatus || null,
+                      date: typeof game.date === 'string' ? game.date : (game.date ? new Date(game.date).toISOString() : new Date().toISOString()),
+                      homeTeam: {
+                        name: game.homeTeam?.name || '',
+                        logo: game.homeTeam?.logo || null,
+                        shortName: game.homeTeam?.shortName || null,
+                      },
+                      awayTeam: {
+                        name: game.awayTeam?.name || '',
+                        logo: game.awayTeam?.logo || null,
+                        shortName: game.awayTeam?.shortName || null,
+                      },
+                      homeScore: game.homeScore ?? undefined,
+                      awayScore: game.awayScore ?? undefined,
+                      liveHomeScore: (game as any).liveHomeScore ?? undefined,
+                      liveAwayScore: (game as any).liveAwayScore ?? undefined,
+                      elapsedMinute: (game as any).elapsedMinute ?? null,
+                      sportType: competition.sportType ? String(competition.sportType) : null,
+                      competition: {
+                        name: competition.name,
+                        logo: competition.logo || null,
+                      },
+                      bets: ((game as any).bets || []).map((bet: any) => ({
+                        id: bet.id,
+                        userId: bet.userId,
+                        score1: bet.score1,
+                        score2: bet.score2,
+                        points: bet.points,
+                        user: {
+                          name: bet.user?.name || '',
+                          profilePictureUrl: bet.user?.profilePictureUrl || undefined,
+                        },
+                      })),
+                    };
+                    
                     // Only UPCOMING games are clickable for betting
                     const isOpen = game.status === 'UPCOMING';
-                    const userHasBet = game.bets.some(bet => bet.userId === currentUserId);
+                    const isFinished = game.status === 'FINISHED';
+                    const isExpanded = expandedGames.has(game.id);
                     
-                    // Determine border color based on user bet (same as home page)
-                    const getBorderColor = () => {
-                      if (userHasBet) {
-                        return 'border-blue-400 border-2'; // Blue border for games with bets
-                      }
-                      return 'border-neutral-200';
-                    };
-                    
-                    const getBackgroundColor = () => {
-                      if (userHasBet) {
-                        return 'bg-blue-50'; // Light blue background for games with bets
-                      }
-                      return 'bg-neutral-50'; // Default neutral background
-                    };
-                    
-                    const cardContent = (
-                      <div className={`${getBackgroundColor()} border rounded-xl md:rounded-2xl shadow flex flex-col items-stretch transition ${
-                        isOpen ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 
-                        game.status === 'FINISHED' ? 'hover:shadow-lg hover:border-primary-400 cursor-pointer' : 'cursor-default'
-                      } p-3 md:p-4 lg:p-5 gap-2 md:gap-3 ${getBorderColor()}`}
-                        onClick={() => {
-                          if (isOpen) {
-                            // Navigate to betting page for upcoming games only
-                            window.location.href = `/betting/${game.id}`;
-                          } else if (game.status === 'FINISHED') {
-                            // Toggle expansion for finished games
-                            toggleGameExpansion(game.id);
-                            // Fetch bets if not already loaded
-                            if (!gamesWithBets.has(game.id)) {
-                              fetchGameBets(game.id);
+                    return (
+                      <div key={game.id} className="w-full">
+                        <div
+                          onClick={(e) => {
+                            if (isFinished) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleGameExpansion(game.id);
+                              // Fetch bets if not already loaded
+                              if (!gamesWithBets.has(game.id)) {
+                                fetchGameBets(game.id);
+                              }
                             }
-                          }
-                          // LIVE games are not clickable (no action)
-                        }}
+                          }}
+                          className={isFinished ? 'cursor-pointer' : ''}
                         >
-                          {/* Date & Status */}
-                          <div className="flex items-center w-full justify-between pb-2 md:pb-3 border-b border-neutral-200">
-                            <div className="flex flex-col md:flex-row md:items-center md:space-x-1 md:space-x-2">
-                              {(() => {
-                                const date = new Date(game.date);
-                                const day = String(date.getDate()).padStart(2, '0');
-                                const month = String(date.getMonth() + 1).padStart(2, '0');
-                                const year = String(date.getFullYear()).slice(-2);
-                                const hour = String(date.getHours()).padStart(2, '0');
-                                const minute = String(date.getMinutes()).padStart(2, '0');
-                                return (
-                                  <>
-                                    <span className="text-[9px] md:text-[10px] lg:text-xs text-neutral-500">
-                                      {`${day}/${month}/${year}`}
-                                    </span>
-                                    <span className="text-[9px] md:text-[10px] lg:text-xs text-neutral-500 md:ml-1">
-                                      {`${hour}:${minute}`}
-                                    </span>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {userHasBet && (
-                                <div className="flex items-center">
-                                  <div className="flex items-center justify-center w-4 h-4 md:w-5 md:h-5 bg-blue-100 rounded-full">
-                                    <span className="text-blue-600 text-[10px] md:text-xs font-bold">✓</span>
-                                  </div>
-                                </div>
-                              )}
-                              <span className={`inline-block px-2.5 md:px-2 py-1 md:py-1 text-[10px] md:text-[10px] lg:text-xs rounded-full whitespace-nowrap ${
-                                game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
-                                game.status === 'UPCOMING' ? 'bg-blue-100 text-blue-800' :
-                                game.status === 'LIVE' ? 'bg-red-100 text-red-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                                {game.status === 'UPCOMING' && t('upcoming')}
-                                {game.status === 'FINISHED' && t('finished')}
-                                {game.status === 'LIVE' && t('live')}
-                                {game.status === 'CANCELLED' && t('cancelled')}
-                                {!['UPCOMING', 'FINISHED', 'LIVE', 'CANCELLED'].includes(game.status) && game.status}
-                              </span>
-                              {game.status === 'FINISHED' && (
-                                <span className="hidden md:inline text-[9px] md:text-[10px] lg:text-xs text-primary-600 font-medium ml-1 md:ml-2">
-                                  {loadingBets.has(game.id) ? 'Chargement...' : 'Voir les paris'}
-                                </span>
-                              )}
-                            </div>
+                          <div className={isFinished ? 'hover:opacity-90 transition-opacity' : ''}>
+                            <GameCard
+                              game={gameCardData}
+                              currentUserId={currentUserId}
+                              href={isOpen ? `/betting/${game.id}` : undefined}
+                              context="competition"
+                            />
                           </div>
-                          {/* Teams & Score */}
-                          <div className="flex items-center w-full justify-between py-2 md:py-3 border-b border-neutral-200">
-                            {/* Home Team */}
-                            <div className="flex flex-col md:flex-row items-center min-w-0 w-2/5 justify-end pr-1 md:pr-2 gap-1 md:gap-0">
-                              {/* Mobile: Logo on top, name below */}
-                              <div className="md:hidden flex flex-col items-center w-full">
-                                {game.homeTeam.logo ? (
-                                  <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-8 h-8 rounded-full object-cover border border-gray-200 mb-1 flex-shrink-0" />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 mb-1 flex-shrink-0">{game.homeTeam.name.substring(0,2)}</div>
-                                )}
-                                <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-                                  <span className="text-gray-900 font-medium text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.homeTeam)}</span>
-                                </div>
-                              </div>
-                              {/* Desktop: Name and logo side by side */}
-                              <div className="hidden md:flex items-center">
-                                <span className="text-gray-900 font-medium text-xs lg:text-sm text-right truncate max-w-[90px]">{game.homeTeam.name}</span>
-                                {game.homeTeam.logo ? (
-                                  <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-8 h-8 rounded-full ml-2 object-cover border border-gray-200" />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-gray-200 ml-2 flex items-center justify-center text-xs text-gray-500">{game.homeTeam.name.substring(0,2)}</div>
-                                )}
-                              </div>
+                        </div>
+                        
+                        {/* Expanded Bets Section for Finished Games */}
+                        {isFinished && isExpanded && (
+                          <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-xl md:rounded-b-2xl border-x border-b border-gray-300 dark:border-gray-700 px-4 md:px-6 pb-4 md:pb-6">
+                            <div className="flex items-center justify-between mb-2 md:mb-3">
+                              <h4 className="text-xs md:text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                Paris détaillés - {game.homeTeam?.name || ''} vs {game.awayTeam?.name || ''}
+                              </h4>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleGameExpansion(game.id);
+                                }}
+                                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
                             </div>
-                            {/* Score */}
-                            <div className="flex-1 flex justify-center min-w-[50px] md:min-w-[60px]">
-                              <span className="text-sm md:text-base lg:text-lg font-bold text-gray-900">
-                                {game.status === 'FINISHED' && typeof game.homeScore === 'number' && typeof game.awayScore === 'number'
-                                  ? `${game.homeScore} - ${game.awayScore}`
-                                  : '-'}
-                              </span>
-                            </div>
-                            {/* Away Team */}
-                            <div className="flex flex-col md:flex-row items-center min-w-0 w-2/5 justify-start pl-1 md:pl-2 gap-1 md:gap-0">
-                              {/* Mobile: Logo on top, name below */}
-                              <div className="md:hidden flex flex-col items-center w-full">
-                                {game.awayTeam.logo ? (
-                                  <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-8 h-8 rounded-full object-cover border border-gray-200 mb-1 flex-shrink-0" />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 mb-1 flex-shrink-0">{game.awayTeam.name.substring(0,2)}</div>
-                                )}
-                                <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-                                  <span className="text-gray-900 font-medium text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.awayTeam)}</span>
-                                </div>
+                            
+                            {loadingBets.has(game.id) ? (
+                              <div className="flex items-center justify-center py-3 md:py-4">
+                                <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-primary-600 dark:border-accent-dark-500"></div>
+                                <span className="ml-2 text-xs md:text-sm text-gray-600 dark:text-gray-400">Chargement des paris...</span>
                               </div>
-                              {/* Desktop: Logo and name side by side */}
-                              <div className="hidden md:flex items-center">
-                                {game.awayTeam.logo ? (
-                                  <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-8 h-8 rounded-full mr-2 object-cover border border-gray-200" />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-xs text-gray-500">{game.awayTeam.name.substring(0,2)}</div>
-                                )}
-                                <span className="text-gray-900 font-medium text-xs lg:text-sm text-left truncate max-w-[90px]">{game.awayTeam.name}</span>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Bets List */}
-                          {game.bets && game.bets.length > 0 && (
-                            <div className="w-full pt-2 md:pt-3">
-                              <div className="text-[9px] md:text-[10px] lg:text-[11px] text-neutral-500 font-semibold mb-1 ml-1 tracking-wide uppercase">{t('placedBets')}</div>
-                              <ul className="divide-y divide-neutral-100">
-                                {game.bets.map((bet) => (
-                                  <li key={bet.id} className="flex items-center py-0.5 md:py-1 first:pt-0 last:pb-0">
-                                    <img
-                                      src={bet.user.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(bet.user.name.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
-                                      alt={bet.user.name}
-                                      className="w-5 h-5 md:w-6 md:h-6 rounded-full border border-gray-200 object-cover mr-1.5 md:mr-2"
-                                      title={bet.user.name}
-                                    />
-                                    <span className="text-[10px] md:text-xs text-gray-700 mr-1.5 md:mr-2 truncate max-w-[70px] md:max-w-[80px]">{bet.user.name}</span>
-                                    {((game.status === 'LIVE' || game.status === 'FINISHED') && bet.score1 !== null && bet.score2 !== null) || 
-                                      (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
-                                      (() => {
-                                        const highlight = getBetHighlight(bet, game);
-                                        // For LIVE games: borders only, for FINISHED games: backgrounds
-                                        if (game.status === 'LIVE' && highlight) {
-                                          const borderColor = highlight === 'gold' ? 'border-yellow-400 border-2' :
-                                                             highlight === 'green' ? 'border-green-400 border-2' :
-                                                             highlight === 'red' ? 'border-red-400 border-2' :
-                                                             'border-gray-300 border';
-                                          return (
-                                            <span className={`text-[10px] md:text-xs font-mono text-gray-900 bg-transparent ${borderColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
-                                              {bet.score1} - {bet.score2}
-                                            </span>
-                                          );
-                                        } else if (game.status === 'FINISHED' && highlight) {
-                                          // For finished games: background color with border, black text
-                                          const bgColor = highlight === 'gold' ? 'bg-yellow-200 border-yellow-400 border-2' :
-                                                         highlight === 'green' ? 'bg-green-200 border-green-400 border-2' :
-                                                         highlight === 'red' ? 'bg-red-200 border-red-400 border-2' :
-                                                         'bg-gray-100';
-                                          return (
-                                            <span className={`text-[10px] md:text-xs font-mono text-gray-900 ${bgColor} rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold`}>
-                                              {bet.score1} - {bet.score2}
-                                            </span>
-                                          );
-                                        } else {
-                                          return (
-                                            <span className="text-[10px] md:text-xs font-mono text-gray-900 bg-gray-100 rounded px-1.5 md:px-2 py-0.5 ml-auto font-bold">
-                                              {bet.score1} - {bet.score2}
-                                            </span>
-                                          );
-                                        }
-                                      })()
-                                    ) : null}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          
-                          {/* Mobile: "Voir les paris" at bottom for finished games */}
-                          {game.status === 'FINISHED' && !expandedGames.has(game.id) && (
-                            <div className="md:hidden pt-2 border-t border-neutral-200">
-                              <span className="text-[10px] text-primary-600 font-medium">
-                                {loadingBets.has(game.id) ? 'Chargement...' : 'Voir les paris'}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {/* Expanded Bets Section for Finished Games */}
-                          {game.status === 'FINISHED' && expandedGames.has(game.id) && (
-                            <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-neutral-200">
-                              <div className="flex items-center justify-between mb-2 md:mb-3">
-                                <h4 className="hidden md:block text-xs md:text-sm font-semibold text-gray-900">
-                                  Paris détaillés - {game.homeTeam.name} vs {game.awayTeam.name}
-                                </h4>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleGameExpansion(game.id);
-                                  }}
-                                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
-                              </div>
-                              
-                              {loadingBets.has(game.id) ? (
-                                <div className="flex items-center justify-center py-3 md:py-4">
-                                  <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-primary-600"></div>
-                                  <span className="ml-2 text-xs md:text-sm text-gray-600">Chargement des paris...</span>
-                                </div>
-                              ) : (
-                                <div>
-                                  {gamesWithBets.get(game.id)?.length && gamesWithBets.get(game.id)!.length > 0 ? (
-                                    <div className="space-y-1.5 md:space-y-2">
-                                      {gamesWithBets.get(game.id)?.map((bet) => (
-                                        <div key={bet.id} className="flex items-center justify-between p-2 md:p-3 bg-gray-50 rounded-lg">
-                                          <div className="flex items-center space-x-1.5 md:space-x-2">
-                                            {bet.user.profilePictureUrl ? (
-                                              <img 
-                                                src={bet.user.profilePictureUrl} 
-                                                alt={bet.user.name}
-                                                className="w-5 h-5 md:w-6 md:h-6 rounded-full"
-                                              />
-                                            ) : (
-                                              <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-300 flex items-center justify-center text-[10px] md:text-xs font-medium text-gray-600">
-                                                {bet.user.name.charAt(0)}
-                                              </div>
-                                            )}
-                                            <div>
-                                              <p className="text-xs md:text-sm font-medium text-gray-900">{bet.user.name}</p>
-                                              <p className="text-[10px] md:text-xs text-gray-500">
-                                                {bet.score1} - {bet.score2}
-                                              </p>
+                            ) : (
+                              <div>
+                                {gamesWithBets.get(game.id)?.length && gamesWithBets.get(game.id)!.length > 0 ? (
+                                  <div className="space-y-1.5 md:space-y-2">
+                                    {gamesWithBets.get(game.id)?.map((bet: any) => (
+                                      <div key={bet.id} className="flex items-center justify-between p-2 md:p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                        <div className="flex items-center space-x-1.5 md:space-x-2">
+                                          {bet.user?.profilePictureUrl ? (
+                                            <img 
+                                              src={bet.user.profilePictureUrl} 
+                                              alt={bet.user?.name || ''}
+                                              className="w-5 h-5 md:w-6 md:h-6 rounded-full object-cover"
+                                            />
+                                          ) : (
+                                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-[10px] md:text-xs font-medium text-gray-600 dark:text-gray-300">
+                                              {bet.user?.name?.charAt(0) || '?'}
                                             </div>
-                                          </div>
-                                          <div className="text-right">
-                                            <div className={`text-xs md:text-sm font-bold ${
-                                              bet.points === 3 ? 'text-yellow-600' :
-                                              bet.points === 1 ? 'text-green-600' :
-                                              'text-red-600'
-                                            }`}>
-                                              {bet.points} pt{bet.points > 1 ? 's' : ''}
-                                            </div>
+                                          )}
+                                          <div>
+                                            <p className="text-xs md:text-sm font-medium text-gray-900 dark:text-gray-100">{bet.user?.name || 'Unknown'}</p>
+                                            <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
+                                              {bet.score1} - {bet.score2}
+                                            </p>
                                           </div>
                                         </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <div className="text-center py-3 md:py-4 text-xs md:text-sm text-gray-500">
-                                      Aucun pari trouvé pour ce match
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                                        <div className="text-right">
+                                          <div className={`text-xs md:text-sm font-bold ${
+                                            bet.points === 3 ? 'text-yellow-600 dark:text-yellow-400' :
+                                            bet.points === 1 ? 'text-green-600 dark:text-green-400' :
+                                            'text-red-600 dark:text-red-400'
+                                          }`}>
+                                            {bet.points} pt{bet.points > 1 ? 's' : ''}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-3 md:py-4 text-xs md:text-sm text-gray-500 dark:text-gray-400">
+                                    Aucun pari trouvé pour ce match
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     );
-                    return isOpen ? (
-                      <Link href={`/betting/${game.id}`} key={game.id} className="block">
-                        {cardContent}
-                      </Link>
-                    ) : (
-                      <div key={game.id}>{cardContent}</div>
-                    );
+                    } catch (error) {
+                      console.error('Error rendering game card:', error, game);
+                      return <div key={game.id} className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">Error loading game</div>;
+                    }
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">{t('competition.noActiveGamesFound')}</div>
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('competition.noActiveGamesFound')}</div>
               );
             })()}
           </div>
         </div>
 
         {/* Rules Widget */}
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-6" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <BookOpenIcon className="h-6 w-6 text-primary-600 mr-2" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-6" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <BookOpenIcon className="h-5 w-5 text-white" />
+            </div>
             {t('competition.rules.title')}
           </h2>
           
           {competition.sportType === 'RUGBY' ? (
             <div className="space-y-4">
-              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                <h3 className="font-bold text-green-800 mb-2">{t('competition.rules.rugby.threePoints')}</h3>
-                <p className="text-sm text-gray-700 mb-2">{t('competition.rules.rugby.threePointsDesc')}</p>
+              <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 dark:border-green-500 p-4 rounded">
+                <h3 className="font-bold text-green-800 dark:text-green-300 mb-2">{t('competition.rules.rugby.threePoints')}</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{t('competition.rules.rugby.threePointsDesc')}</p>
                 {renderRugbyExamples(t('competition.rules.rugby.threePointsExamples'))}
               </div>
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                <h3 className="font-bold text-blue-800 mb-2">{t('competition.rules.rugby.onePoint')}</h3>
-                <p className="text-sm text-gray-700">{t('competition.rules.rugby.onePointDesc')}</p>
+              <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 dark:border-blue-500 p-4 rounded">
+                <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-2">{t('competition.rules.rugby.onePoint')}</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{t('competition.rules.rugby.onePointDesc')}</p>
               </div>
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <h3 className="font-bold text-red-800 mb-2">{t('competition.rules.rugby.zeroPoints')}</h3>
-                <p className="text-sm text-gray-700">{t('competition.rules.rugby.zeroPointsDesc')}</p>
+              <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 dark:border-red-500 p-4 rounded">
+                <h3 className="font-bold text-red-800 dark:text-red-300 mb-2">{t('competition.rules.rugby.zeroPoints')}</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{t('competition.rules.rugby.zeroPointsDesc')}</p>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                <h3 className="font-bold text-green-800 mb-2">{t('competition.rules.football.threePoints')}</h3>
-                <p className="text-sm text-gray-700">{t('competition.rules.football.threePointsDesc')}</p>
+              <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 dark:border-green-500 p-4 rounded">
+                <h3 className="font-bold text-green-800 dark:text-green-300 mb-2">{t('competition.rules.football.threePoints')}</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{t('competition.rules.football.threePointsDesc')}</p>
               </div>
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                <h3 className="font-bold text-blue-800 mb-2">{t('competition.rules.football.onePoint')}</h3>
-                <p className="text-sm text-gray-700">{t('competition.rules.football.onePointDesc')}</p>
+              <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 dark:border-blue-500 p-4 rounded">
+                <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-2">{t('competition.rules.football.onePoint')}</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{t('competition.rules.football.onePointDesc')}</p>
               </div>
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <h3 className="font-bold text-red-800 mb-2">{t('competition.rules.football.zeroPoints')}</h3>
-                <p className="text-sm text-gray-700">{t('competition.rules.football.zeroPointsDesc')}</p>
+              <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 dark:border-red-500 p-4 rounded">
+                <h3 className="font-bold text-red-800 dark:text-red-300 mb-2">{t('competition.rules.football.zeroPoints')}</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{t('competition.rules.football.zeroPointsDesc')}</p>
               </div>
             </div>
           )}
@@ -1553,6 +1427,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         status: true,
         homeScore: true,
         awayScore: true,
+        liveHomeScore: true,
+        liveAwayScore: true,
+        elapsedMinute: true,
+        externalStatus: true,
         homeTeam: {
           select: { id: true, name: true, logo: true, shortName: true }
         },
@@ -1583,6 +1461,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
               userId: true,
               score1: true,
               score2: true,
+              points: true,
               user: {
                 select: { id: true, name: true, profilePictureUrl: true }
               }

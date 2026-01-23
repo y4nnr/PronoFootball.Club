@@ -4,15 +4,40 @@ import { useSession, signOut } from 'next-auth/react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect } from 'react';
-import { HomeIcon, PencilSquareIcon, ChartBarIcon, CalendarIcon, UserGroupIcon, ShieldCheckIcon, ArrowLeftIcon, UserIcon, ArrowRightOnRectangleIcon, TrophyIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, PencilSquareIcon, ChartBarIcon, CalendarIcon, UserGroupIcon, ShieldCheckIcon, ArrowLeftIcon, UserIcon, ArrowRightOnRectangleIcon, TrophyIcon, ArrowPathIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
+import { useTheme } from '../contexts/ThemeContext';
 import logoPng from '../logo.png';
+import logoDarkPng from '../logo-dark.png';
+
+type Theme = 'light' | 'dark';
 
 export default function Navbar() {
   const { data: session } = useSession();
   const { t } = useTranslation('common');
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const [profileOpen, setProfileOpen] = useState(false);
   const [adminEditOpen, setAdminEditOpen] = useState(false);
+  
+  // Get initial theme synchronously to prevent logo flash
+  const [initialTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'light';
+    try {
+      const savedTheme = localStorage.getItem('theme') as Theme | null;
+      if (savedTheme) return savedTheme;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
+  
+  // Use initial theme on first render, then sync with context theme once mounted
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const currentTheme = mounted ? theme : initialTheme;
   // Get profile picture from session directly (no fetch needed)
   // Use persistent state to prevent blinking on navigation
   // Initialize to null to avoid hydration mismatch (will be loaded from localStorage after mount)
@@ -198,6 +223,7 @@ export default function Navbar() {
     { name: t('admin.competitions.title'), href: '/admin/competitions', icon: <CalendarIcon className="size-5 text-orange-400" /> },
     { name: t('dashboard.admin.manageTeams'), href: '/admin/teams', icon: <ShieldCheckIcon className="size-5 text-orange-400" /> },
     { name: t('dashboard.admin.manageUsers'), href: '/admin/users', icon: <UserGroupIcon className="size-5 text-orange-400" /> },
+    { name: 'Live Sync', href: '/admin/live-sync', icon: <ArrowPathIcon className="size-5 text-orange-400" /> },
   ];
 
   const filteredNavigation = navigationItems.filter(item => item.showFor.includes(isAdmin ? 'admin' : 'user'));
@@ -240,7 +266,9 @@ export default function Navbar() {
         }`}
         style={isActive ? {
           background: 'rgba(255, 255, 255, 0.15)',
-          borderBottom: '3px solid rgba(255, 255, 255, 0.9)',
+          borderBottom: theme === 'dark' 
+            ? '3px solid var(--accent-500)' // Uses CSS variable for accent color
+            : '3px solid rgba(255, 255, 255, 0.9)',
           WebkitFontSmoothing: 'antialiased',
           MozOsxFontSmoothing: 'grayscale',
           transform: 'translateZ(0)',
@@ -285,7 +313,7 @@ export default function Navbar() {
   // Mobile bottom navigation bar
   // Mobile nav shows until 820px (using custom tablet: breakpoint)
   const MobileBottomNav = () => (
-    <div className="fixed bottom-0 left-0 right-0 z-40 tablet:hidden bg-gray-800 backdrop-blur-lg border-t-2 border-white shadow-2xl" style={{ boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.5), 0 -4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
+    <div className="fixed bottom-0 left-0 right-0 z-40 tablet:hidden bg-gray-800 dark:bg-gray-900 backdrop-blur-lg border-t-2 border-white dark:border-accent-dark-500 shadow-2xl" style={{ boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.5), 0 -4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
       <div className="flex items-center justify-around px-2 py-2 safe-area-inset-bottom">
         {filteredNavigation.map(item => {
           const isActive = router.pathname.startsWith(item.href);
@@ -300,7 +328,9 @@ export default function Navbar() {
               }`}
               style={isActive ? {
                 background: 'rgba(255, 255, 255, 0.15)',
-                borderBottom: '3px solid rgba(255, 255, 255, 0.9)',
+                borderBottom: theme === 'dark'
+                  ? '3px solid var(--accent-500)' // Uses CSS variable for accent color
+                  : '3px solid rgba(255, 255, 255, 0.9)',
                 WebkitFontSmoothing: 'antialiased',
                 MozOsxFontSmoothing: 'grayscale',
                 transform: 'translateZ(0)',
@@ -341,7 +371,7 @@ export default function Navbar() {
   return (
     <>
       {/* Navbar border: consistent until 820px (tablet:), then increase */}
-      <nav className="fixed top-0 left-0 w-full bg-gray-800 backdrop-blur-lg shadow-2xl border-b-2 tablet:border-b-3 xl:border-b-4 border-white z-40" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
+      <nav className="fixed top-0 left-0 w-full bg-gray-800 dark:bg-gray-900 backdrop-blur-lg shadow-2xl border-b-2 tablet:border-b-3 xl:border-b-4 dark:xl:border-b-2 border-white dark:border-accent-dark-500 z-40" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Navbar height: consistent until 820px (tablet:), then increase */}
           <div className={`flex items-center h-16 tablet:h-20 xl:h-24 py-1 tablet:py-2 ${
@@ -355,17 +385,10 @@ export default function Navbar() {
                 href="/"
                 className="flex items-center text-white hover:text-white transition-colors select-none"
               >
-                {/* Logo size: increased since name is now in the logo */}
-                <div className="flex items-center justify-center mt-2 tablet:mt-3 xl:mt-4 -ml-8 tablet:-ml-8 xl:-ml-20 2xl:-ml-24">
-                  <Image
-                    src={logoPng}
-                    alt="Toopil"
-                    width={300}
-                    height={300}
-                    priority
-                    className="w-[216px] h-[216px] tablet:w-60 tablet:h-60 xl:w-[336px] xl:h-[336px] 2xl:w-96 2xl:h-96 object-contain transition-transform duration-200 hover:scale-105"
-                  />
-                </div>
+                {/* Site name as text - left aligned with padding */}
+                <span className="text-white text-xl tablet:text-3xl xl:text-4xl 2xl:text-5xl font-bold tracking-tight pl-2 tablet:pl-4">
+                  Toopil.app
+                </span>
               </Link>
             </div>
 
@@ -381,7 +404,7 @@ export default function Navbar() {
                   <button
                     onClick={() => setAdminEditOpen(v => !v)}
                     className={`group inline-flex flex-col items-center justify-center gap-1.5 md:gap-2 lg:gap-3 rounded-lg transition-all duration-200 w-[90px] md:w-[100px] lg:w-[115px] xl:w-[128px] h-[50px] md:h-[56px] lg:h-[62px] xl:h-[68px] shrink-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 ${
-                      router.pathname.startsWith('/admin/competitions') || router.pathname.startsWith('/admin/teams') || router.pathname.startsWith('/admin/users')
+                      router.pathname.startsWith('/admin/competitions') || router.pathname.startsWith('/admin/teams') || router.pathname.startsWith('/admin/users') || router.pathname.startsWith('/admin/live-sync')
                         ? 'bg-white/10 text-orange-400 shadow-md' 
                         : 'text-orange-400 hover:text-orange-300 hover:bg-white/5'
                     }`}
@@ -395,14 +418,14 @@ export default function Navbar() {
                   </button>
                   {/* Admin Edit Dropdown */}
                   {adminEditOpen && (
-                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-fade-in">
+                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-300 py-2 z-50 animate-fade-in">
                       {adminEditItems.map(item => (
                         <Link
                           key={item.href}
                           href={item.href}
                           className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                             router.pathname.startsWith(item.href)
-                              ? 'bg-primary-50 text-primary-600 shadow-sm' : 'text-gray-700 hover:bg-gray-50'
+                              ? 'bg-gray-50 text-gray-900 shadow-sm' : 'text-gray-700 hover:bg-gray-50'
                           }`}
                           onClick={() => setAdminEditOpen(false)}
                         >
@@ -410,7 +433,7 @@ export default function Navbar() {
                           <span>{item.name}</span>
                         </Link>
                       ))}
-                      <div className="border-t border-gray-200 my-2"></div>
+                      <div className="border-t border-gray-300 my-2"></div>
                       <button
                         onClick={() => { setAdminEditOpen(false); signOut({ callbackUrl: '/login' }); }}
                         className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-50 transition-all duration-200"
@@ -492,27 +515,54 @@ export default function Navbar() {
                 </button>
               )}
               {/* Profile dropdown */}
-              {session?.user && profileOpen && (
-                <div className={`absolute right-0 w-48 bg-white rounded-xl shadow-modern-lg border border-neutral-200/50 py-2 z-50 animate-fade-in ${
+              {session?.user && (
+                <div className={`absolute right-0 w-48 bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700 py-2 z-50 transition-all duration-300 ease-in-out ${
                   isMobile 
                     ? 'top-full mt-2' // Mobile: always minimized, menu just below with small gap
                     : 'top-full' // Desktop: always minimized position (no animation)
+                } ${
+                  profileOpen 
+                    ? 'opacity-100 translate-x-0' 
+                    : 'opacity-0 translate-x-full pointer-events-none'
                 }`}
-                style={{ boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}
                 >
+                  {/* Theme Toggle - At the top */}
+                  <div className="px-4 py-3 border-b border-gray-300 dark:border-gray-700">
+                    <div className="flex items-center justify-center gap-2">
+                      <SunIcon className="w-5 h-5 shrink-0 text-gray-600 dark:text-gray-400" />
+                      <button
+                        onClick={toggleTheme}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:ring-offset-2 ${
+                          theme === 'dark' ? 'bg-primary-600 dark:bg-accent-dark-500' : 'bg-gray-300 dark:bg-gray-600'
+                        }`}
+                        role="switch"
+                        aria-checked={theme === 'dark'}
+                        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <MoonIcon className="w-5 h-5 shrink-0 text-gray-600 dark:text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="border-t border-gray-300 dark:border-gray-700 my-1"></div>
                   <Link
                     href="/profile"
-                    className="flex items-center gap-3 px-4 py-2.5 text-neutral-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors duration-200"
+                    className="flex items-center gap-3 px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white rounded-lg transition-colors duration-200"
                     onClick={() => setProfileOpen(false)}
                   >
-                    <UserIcon className="w-5 h-5 shrink-0 text-primary-600" />
+                    <UserIcon className="w-5 h-5 shrink-0 text-gray-600 dark:text-gray-400" />
                     <span className="flex-1 min-w-0 break-words text-sm font-medium">Mon Profile</span>
                   </Link>
+                  <div className="border-t border-gray-300 dark:border-gray-700 my-1"></div>
                   <button
                     onClick={() => { setProfileOpen(false); signOut({ callbackUrl: '/login' }); }}
-                    className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-neutral-700 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors duration-200"
+                    className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400 rounded-lg transition-colors duration-200"
                   >
-                    <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0 text-red-600" />
+                    <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0 text-red-600 dark:text-red-400" />
                     <span className="flex-1 min-w-0 break-words text-sm font-medium">Déconnexion</span>
                   </button>
                 </div>

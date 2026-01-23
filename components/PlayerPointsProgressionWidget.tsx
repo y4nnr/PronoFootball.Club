@@ -1,5 +1,6 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface PlayerPointsProgressionWidgetProps {
   competitionId: string;
@@ -50,6 +51,8 @@ const PlayerPointsProgressionWidget = memo(({
   competitionId, 
   currentUserId 
 }: PlayerPointsProgressionWidgetProps) => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
   const [playerData, setPlayerData] = useState<PlayerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -243,10 +246,38 @@ const PlayerPointsProgressionWidget = memo(({
     return dayRankings;
   };
 
+  // Dark mode color mapping - same colors as Évolution du Classement but with opacity
+  const getDarkModeColor = (lightColor: { bg: string; border: string }, colorIndex: number) => {
+    // Use the same color palette as Évolution du Classement but with opacity to tone it down
+    const brightColors = [
+      { bg: 'rgba(31, 119, 180, 0.6)', border: '#1F77B4' }, // blue with opacity
+      { bg: 'rgba(44, 160, 44, 0.6)', border: '#2CA02C' }, // green with opacity
+      { bg: 'rgba(255, 127, 14, 0.6)', border: '#FF7F0E' }, // orange with opacity
+      { bg: 'rgba(214, 39, 40, 0.6)', border: '#D62728' }, // red with opacity
+      { bg: 'rgba(148, 103, 189, 0.6)', border: '#9467BD' }, // purple with opacity
+      { bg: 'rgba(140, 86, 75, 0.6)', border: '#8C564B' }, // brown/tan with opacity
+      { bg: 'rgba(188, 189, 34, 0.6)', border: '#BCBD22' }, // yellow-green with opacity
+      { bg: 'rgba(23, 190, 207, 0.6)', border: '#17BECF' }, // teal/cyan with opacity
+      { bg: 'rgba(127, 127, 127, 0.6)', border: '#7F7F7F' }, // gray with opacity
+      { bg: 'rgba(31, 119, 180, 0.6)', border: '#1F77B4' }, // blue (repeat)
+      { bg: 'rgba(44, 160, 44, 0.6)', border: '#2CA02C' }, // green (repeat)
+      { bg: 'rgba(255, 127, 14, 0.6)', border: '#FF7F0E' }, // orange (repeat)
+      { bg: 'rgba(214, 39, 40, 0.6)', border: '#D62728' }, // red (repeat)
+      { bg: 'rgba(148, 103, 189, 0.6)', border: '#9467BD' }, // purple (repeat)
+    ];
+    return brightColors[colorIndex % brightColors.length];
+  };
+
   // Get color for a game day by date
   const getGameDayColor = (date: string) => {
     const gameDay = allGameDays.get(date);
-    return gameDay ? GAME_DAY_COLORS[gameDay.colorIndex % GAME_DAY_COLORS.length] : GAME_DAY_COLORS[0];
+    const colorIndex = gameDay ? gameDay.colorIndex % GAME_DAY_COLORS.length : 0;
+    const lightColor = GAME_DAY_COLORS[colorIndex];
+    
+    if (isDarkMode) {
+      return getDarkModeColor(lightColor, colorIndex);
+    }
+    return lightColor;
   };
 
   // Format date for display
@@ -276,26 +307,26 @@ const PlayerPointsProgressionWidget = memo(({
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-600 rounded-full shadow mr-3 flex items-center justify-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
               <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Progression des Points par Journée</h2>
-              <p className="text-sm text-gray-500">Cliquez sur une journée pour afficher le classement intermédiaire</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Progression des Points par Journée</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur une journée pour afficher le classement intermédiaire</p>
             </div>
           </div>
         </div>
         <div className="animate-pulse space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-              <div className="h-6 bg-gray-200 rounded flex-1"></div>
-              <div className="w-12 h-6 bg-gray-200 rounded"></div>
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
+              <div className="w-12 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
           ))}
         </div>
@@ -305,13 +336,13 @@ const PlayerPointsProgressionWidget = memo(({
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
         <div className="text-center py-8">
           <div className="text-red-500 text-4xl mb-3">⚠️</div>
           <p className="text-red-500 mb-2">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="text-blue-500 text-sm hover:underline"
+            className="text-primary-600 dark:text-accent-dark-500 text-sm hover:underline"
           >
             Retry
           </button>
@@ -322,23 +353,23 @@ const PlayerPointsProgressionWidget = memo(({
 
   if (playerData.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-600 rounded-full shadow mr-3 flex items-center justify-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
               <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Progression des Points par Journée</h2>
-              <p className="text-sm text-gray-500">Cliquez sur une journée pour afficher le classement intermédiaire</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Progression des Points par Journée</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur une journée pour afficher le classement intermédiaire</p>
             </div>
           </div>
         </div>
         <div className="text-center py-8">
-          <div className="text-gray-400 text-4xl mb-3">📊</div>
-          <p className="text-gray-500">Aucun point attribué pour l'instant.</p>
+          <div className="text-gray-400 dark:text-gray-500 text-4xl mb-3">📊</div>
+          <p className="text-gray-500 dark:text-gray-400">Aucun point attribué pour l'instant.</p>
         </div>
       </div>
     );
@@ -346,7 +377,7 @@ const PlayerPointsProgressionWidget = memo(({
 
   return (
     <div 
-      className="bg-white border border-gray-200 rounded-xl shadow-2xl p-4 mb-8 w-full relative"
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-8 w-full relative"
       onClick={(e) => {
         // Reset if clicking anywhere except on slices
         const target = e.target as HTMLElement;
@@ -361,16 +392,16 @@ const PlayerPointsProgressionWidget = memo(({
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center mb-6">
-          <div className="p-2 bg-primary-600 rounded-full shadow mr-3 flex items-center justify-center">
+          <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
             <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               Progression des Points par Journée{selectedDay ? (
                 <span 
-                  className="ml-2 px-2 py-1 rounded text-gray-800 text-lg font-semibold"
+                  className="ml-2 px-2 py-1 rounded text-gray-800 dark:text-gray-200 text-lg font-semibold"
                   style={{ 
                     backgroundColor: getGameDayColor(selectedDay.date).bg,
                     borderColor: getGameDayColor(selectedDay.date).border
@@ -380,7 +411,7 @@ const PlayerPointsProgressionWidget = memo(({
                 </span>
               ) : ''}
             </h2>
-            <p className="text-sm text-gray-500">Cliquez sur une journée pour afficher le classement intermédiaire</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur une journée pour afficher le classement intermédiaire</p>
           </div>
         </div>
       </div>
@@ -423,15 +454,15 @@ const PlayerPointsProgressionWidget = memo(({
           >
             {/* Player Info */}
             <div className="flex items-center space-x-3 w-36 flex-shrink-0">
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-600">
+              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
                 {selectedDay ? index + 1 : player.rank}
               </div>
               <img
                 src={player.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player.userName.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
                 alt={player.userName}
-                className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 dark:bg-white dark:p-0.5"
               />
-              <span className="text-sm font-medium text-gray-900 truncate flex-1">
+              <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex-1">
                 {player.userName}
               </span>
             </div>
@@ -439,7 +470,7 @@ const PlayerPointsProgressionWidget = memo(({
             {/* Progress Bar with Integrated Score */}
             <div className="flex-1 relative">
               <div 
-                className="h-10 bg-gray-100 rounded-lg overflow-hidden flex shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                className="h-10 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
                 style={{ width: `${(player.totalPoints / maxTotalPoints) * availableBarWidth}%` }}
               >
                 {(() => {
@@ -466,15 +497,15 @@ const PlayerPointsProgressionWidget = memo(({
                         key={gameDay.date}
                         className={`relative h-full cursor-pointer transition-all duration-200 ${
                           selectedDay && selectedDay.date === gameDay.date
-                            ? 'ring-2 ring-blue-500 ring-opacity-70 shadow-lg transform scale-105'
+                            ? 'ring-2 ring-lime-500 ring-opacity-70 shadow-lg transform scale-105'
                             : ''
                         }`}
                         style={{ 
                           width: `${width}%`,
                           opacity: selectedDay !== null && selectedDay.date !== gameDay.date ? 0.2 : 1,
                           backgroundColor: colorObj.bg,
-                          border: `1px solid ${colorObj.border}`,
-                          borderRight: '1px solid rgba(255, 255, 255, 0.25)'
+                          border: isDarkMode ? 'none' : `1px solid ${colorObj.border}`,
+                          borderRight: isDarkMode ? 'none' : '1px solid rgba(255, 255, 255, 0.25)'
                         }}
                         data-slice
                         onClick={(e) => {
@@ -494,7 +525,7 @@ const PlayerPointsProgressionWidget = memo(({
                               {Array.from({ length: gameDay.points - 1 }, (_, i) => (
                                 <div
                                   key={i}
-                                  className="absolute w-px bg-white/30 top-0 bottom-0"
+                                  className={`absolute w-px top-0 bottom-0 ${isDarkMode ? 'bg-white/10' : 'bg-white/30'}`}
                                   style={{
                                     left: `${((i + 1) / gameDay.points) * 100}%`
                                   }}
@@ -502,7 +533,7 @@ const PlayerPointsProgressionWidget = memo(({
                               ))}
                             </div>
                           )}
-            <div className="text-xs font-bold text-gray-800 relative z-10">
+            <div className={`text-xs font-bold relative z-10 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
               +{gameDay.points}
             </div>
                         </div>
@@ -514,8 +545,8 @@ const PlayerPointsProgressionWidget = memo(({
               
               {/* Score Badge - Integrated at the end of the bar */}
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-2">
-                <div className="bg-gray-100 border border-gray-300 rounded-lg px-3 py-1.5 shadow-sm">
-                  <span className="text-sm font-semibold text-gray-700">
+                <div className="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 shadow-sm">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     {selectedDay ? 
                       (() => {
                         const selectedGameDay = player.gameDays.find(gd => gd.date === selectedDay.date);
@@ -536,7 +567,7 @@ const PlayerPointsProgressionWidget = memo(({
                       : player.totalPoints
                     }
                   </span>
-                  <span className="text-xs text-gray-500 ml-1">pts</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">pts</span>
                 </div>
               </div>
             </div>
