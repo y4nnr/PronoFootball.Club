@@ -310,7 +310,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               )}
               <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
                 game.status === 'FINISHED' ? 'bg-green-500 text-white' :
-                game.status === 'UPCOMING' ? 'bg-blue-500 text-white' :
+                game.status === 'UPCOMING' ? 'bg-blue-500 dark:bg-blue-400 text-white' :
                 'bg-gray-500 text-white'
               } ${
                 isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
@@ -373,7 +373,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               )}
               <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
                 game.status === 'FINISHED' ? 'bg-green-500 text-white' :
-                game.status === 'UPCOMING' ? 'bg-blue-500 text-white' :
+                game.status === 'UPCOMING' ? 'bg-blue-500 dark:bg-blue-400 text-white' :
                 'bg-gray-500 text-white'
               } ${
                 isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
