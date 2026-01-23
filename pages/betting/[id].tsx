@@ -969,9 +969,37 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    // Get active competitions (same logic as API)
+    // Get user ID to filter by user's competitions (same logic as dashboard API)
+    const user = await prisma.user.findUnique({
+      where: { email: session.user?.email || '' },
+      select: { id: true }
+    });
+
+    if (!user) {
+      return {
+        notFound: true
+      };
+    }
+
+    // Get user's competition participation via CompetitionUser table (same as dashboard API)
+    const userCompetitions = await prisma.competitionUser.findMany({
+      where: { userId: user.id },
+      select: { competitionId: true }
+    });
+    const userCompetitionIds = userCompetitions.map(cu => cu.competitionId);
+
+    if (userCompetitionIds.length === 0) {
+      return {
+        notFound: true
+      };
+    }
+
+    // Get active competitions that the user is part of (same logic as dashboard API)
     const activeCompetitions = await prisma.competition.findMany({
       where: {
+        id: {
+          in: userCompetitionIds
+        },
         status: { 
           in: ['ACTIVE', 'active', 'UPCOMING', 'upcoming'] 
         },
@@ -979,20 +1007,33 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       select: { id: true }
     });
 
-    // Fetch the closest upcoming games for betting from all active competitions, sorted by date
-    // Get ALL games from active competitions, sorted by date
-    // Only include games that haven't started yet (date >= now)
+    // Use same date filter as dashboard API: tomorrow onwards (to match "Matchs à venir" section)
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    
+    // Check if current game is from today (might be in "Matchs du jour" instead of "Matchs à venir")
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const isCurrentGameToday = gameDate >= startOfDay && gameDate < endOfDay;
+
+    // Fetch games using the same logic as dashboard API
+    // Get ALL games from user's active competitions, sorted by date
+    // Only include UPCOMING games from tomorrow onwards (same as dashboard "Matchs à venir")
+    // But also include the current game if it's from today (so it appears in carousel)
     const allGamesQuery = await prisma.game.findMany({
       where: {
         competitionId: {
           in: activeCompetitions.map(comp => comp.id)
         },
-        status: {
-          in: ['UPCOMING', 'LIVE'] // Include both upcoming and live games
-        },
-        date: {
-          gte: now // Only games in the future (not in the past)
-        }
+        status: 'UPCOMING', // Only UPCOMING games (same as dashboard API)
+        OR: [
+          {
+            date: {
+              gte: endOfDay // Tomorrow onwards (same as dashboard "Matchs à venir")
+            }
+          },
+          ...(isCurrentGameToday ? [{
+            id: gameId // Include current game if it's from today
+          }] : [])
+        ]
       },
       include: {
         homeTeam: {
