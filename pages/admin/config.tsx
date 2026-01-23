@@ -9,49 +9,6 @@ export default function AdminConfig() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { t } = useTranslation('common');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated' && (session.user as { role?: string })?.role !== 'admin') {
-      router.push('/dashboard');
-    }
-  }, [status, router, session]);
-
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [campaignsRes, gamesRes] = await Promise.all([
-        fetch('/api/admin/campaigns'),
-        fetch('/api/admin/games')
-      ]);
-
-      if (!campaignsRes.ok || !gamesRes.ok) throw new Error('Failed to fetch data');
-
-      await Promise.all([
-        campaignsRes.json(),
-        gamesRes.json()
-      ]);
-
-      // campaigns and games are no longer used in the component
-    } catch (error) {
-      console.error('Error fetching admin data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchData();
-    }
-  }, [status, fetchData]);
-
-export default function AdminConfig() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const { t } = useTranslation('common');
   const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
 
