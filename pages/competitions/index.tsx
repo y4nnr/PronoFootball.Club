@@ -79,7 +79,7 @@ const CompetitionCard = ({ competition, actionLabel, actionIcon, disabled = fals
         <p><span className="font-medium">End:</span> {formatDate(competition.endDate)}</p>
       </div>
     </div>
-    <div className="mt-2 flex items-center justify-center px-3 py-1.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-modern bg-primary-600 text-white">
+    <div className="mt-2 flex items-center justify-center px-3 py-1.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-modern bg-primary-600 dark:bg-accent-dark-600 text-white">
       {actionIcon}
       <span className="ml-2">{actionLabel}</span>
     </div>
