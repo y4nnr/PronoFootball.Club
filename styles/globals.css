@@ -155,12 +155,12 @@
   --foreground: #171717;
   
   /* Accent Color Variables - Change these to update accent color everywhere */
-  /* Current: Coral Pink (#F88379) - Testing new accent color */
-  --accent-400: rgb(253, 184, 176);  /* FDB8B0 (lighter) */
-  --accent-500: rgb(248, 131, 121);  /* F88379 (base: Coral Pink) */
-  --accent-600: rgb(232, 90, 77);    /* E85A4D (darker) */
-  --accent-700: rgb(217, 74, 61);    /* D94A3D (darker) */
-  --accent-900: rgb(139, 31, 21);    /* 8B1F15 (darkest) */
+  /* Current: Bright Blue (#0096FF) - Testing new accent color */
+  --accent-400: rgb(102, 191, 255);  /* 66BFFF (lighter) */
+  --accent-500: rgb(0, 150, 255);    /* 0096FF (base: Bright Blue) */
+  --accent-600: rgb(0, 120, 204);    /* 0078CC (darker) */
+  --accent-700: rgb(0, 96, 163);     /* 0060A3 (darker) */
+  --accent-900: rgb(0, 51, 87);      /* 003357 (darkest) */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -168,21 +168,21 @@
     --background: #0a0a0a;
     --foreground: #ededed;
     /* Ensure accent colors are available in dark mode */
-    --accent-400: rgb(253, 184, 176);
-    --accent-500: rgb(248, 131, 121);
-    --accent-600: rgb(232, 90, 77);
-    --accent-700: rgb(217, 74, 61);
-    --accent-900: rgb(139, 31, 21);
+    --accent-400: rgb(102, 191, 255);
+    --accent-500: rgb(0, 150, 255);
+    --accent-600: rgb(0, 120, 204);
+    --accent-700: rgb(0, 96, 163);
+    --accent-900: rgb(0, 51, 87);
   }
 }
 
 /* Also ensure accent colors are available when .dark class is applied */
 .dark {
-  --accent-400: rgb(253, 184, 176);
-  --accent-500: rgb(248, 131, 121);
-  --accent-600: rgb(232, 90, 77);
-  --accent-700: rgb(217, 74, 61);
-  --accent-900: rgb(139, 31, 21);
+  --accent-400: rgb(102, 191, 255);
+  --accent-500: rgb(0, 150, 255);
+  --accent-600: rgb(0, 120, 204);
+  --accent-700: rgb(0, 96, 163);
+  --accent-900: rgb(0, 51, 87);
 }
 
 body {
