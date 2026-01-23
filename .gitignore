@@ -96,3 +96,4 @@ backups/
 !scripts/migrate-production-data.sql
 node_modules/
 .env.*
+ecosystem.config.js
