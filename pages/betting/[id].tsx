@@ -599,7 +599,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                           </div>
                           
                           {gameItem.bets && gameItem.bets.length > 0 && (
-                            <div className="mt-1.5 sm:mt-2 p-0.5 sm:p-1 md:p-1.5 rounded bg-blue-100 dark:!bg-gray-600">
+                            <div className="mt-1.5 sm:mt-2 p-0.5 sm:p-1 md:p-1.5 rounded bg-blue-100 dark:!bg-gray-600 border border-blue-300 dark:border-accent-dark-500">
                               <div className="text-[10px] sm:text-xs font-semibold text-blue-700 dark:!text-white">
                                 {gameItem.bets[0].score1}-{gameItem.bets[0].score2}
                               </div>
