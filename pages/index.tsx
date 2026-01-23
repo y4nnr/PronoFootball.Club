@@ -186,8 +186,8 @@ export default function Home() {
               href="/"
               className="flex items-center text-white hover:text-white transition-colors select-none"
             >
-              <span className="text-primary-400 dark:text-accent-dark-400 text-xl tablet:text-3xl xl:text-4xl 2xl:text-5xl font-bold tracking-tight pl-2 tablet:pl-4">
-                Toopil.app
+              <span className="text-white text-xl tablet:text-3xl xl:text-4xl 2xl:text-5xl font-bold tracking-tight pl-2 tablet:pl-4">
+                Toopil<span className="dark:text-accent-dark-400">.app</span>
               </span>
             </Link>
           </div>
