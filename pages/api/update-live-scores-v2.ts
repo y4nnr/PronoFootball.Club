@@ -431,8 +431,8 @@ export default async function handler(
     
     // Combine LIVE games, recently finished games, and FINISHED games with externalId for validation
     // Deduplicate by game ID
-    const uniqueGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames, ...finishedGamesWithExternalId];
-    const uniqueGamesToCheck = uniqueGamesToCheck.filter((game, index, self) => 
+    const allGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames, ...finishedGamesWithExternalId];
+    const uniqueGamesToCheck = allGamesToCheck.filter((game, index, self) => 
       index === self.findIndex(g => g.id === game.id)
     );
     console.log(`📊 Total games to check for updates: ${uniqueGamesToCheck.length} (${ourLiveGames.length} LIVE + ${recentlyFinishedGames.length} potentially finished + ${finishedGamesWithExternalId.length} FINISHED with externalId)`);
