@@ -287,8 +287,19 @@ export default async function handler(
           if (matchingMatch) {
             console.log(`   ✅ Found match by date/team search: ${matchingMatch.homeTeam.name} vs ${matchingMatch.awayTeam.name} (ID: ${matchingMatch.id}, Status: ${matchingMatch.externalStatus})`);
             matchesByDate.push(matchingMatch);
+            
+            // Special logging for target game
+            if (game.homeTeam.name.includes('Bordeaux') && game.awayTeam.name.includes('Stade')) {
+              console.log(`   🎯 TARGET GAME MATCH FOUND! External ID: ${matchingMatch.id}`);
+              console.log(`      Our DB: ${game.homeTeam.name} vs ${game.awayTeam.name} (Game ID: ${game.id})`);
+              console.log(`      External: ${matchingMatch.homeTeam.name} vs ${matchingMatch.awayTeam.name} (External ID: ${matchingMatch.id})`);
+            }
           } else {
             console.log(`   ⚠️ No match found for ${game.homeTeam.name} vs ${game.awayTeam.name} on ${dateStr}`);
+            console.log(`      Searched ${dateMatches.length} matches from API`);
+            if (dateMatches.length > 0) {
+              console.log(`      Sample matches: ${dateMatches.slice(0, 3).map(m => `${m.homeTeam.name} vs ${m.awayTeam.name} (ID: ${m.id})`).join(', ')}`);
+            }
           }
         } catch (error) {
           console.log(`   ⚠️ Could not search for ${game.homeTeam.name} vs ${game.awayTeam.name}:`, error);
@@ -456,16 +467,45 @@ export default async function handler(
     // Log the target game if it's in our list
     const targetGame = allGamesToCheck.find(g => 
       (g.homeTeam.name.includes('Bordeaux') && g.awayTeam.name.includes('Stade Francais')) ||
-      (g.homeTeam.name.includes('Bordeaux') && g.awayTeam.name.includes('Stade'))
+      (g.homeTeam.name.includes('Bordeaux') && g.awayTeam.name.includes('Stade')) ||
+      (g.homeTeam.name.includes('Bordeaux Begles') && g.awayTeam.name.includes('Stade Francais'))
     );
     if (targetGame) {
       console.log(`🎯 TARGET GAME FOUND IN OUR DB: ${targetGame.homeTeam.name} vs ${targetGame.awayTeam.name}`);
-      console.log(`   Game ID: ${targetGame.id}, Status: ${targetGame.status}, Date: ${targetGame.date}`);
+      console.log(`   Game ID: ${targetGame.id}, Status: ${targetGame.status}, Date: ${targetGame.date ? new Date(targetGame.date).toISOString() : 'MISSING'}`);
       console.log(`   External ID: ${targetGame.externalId || 'NOT SET'}`);
+      console.log(`   Competition: ${targetGame.competition.name}`);
+      console.log(`   Is in ourLiveGames: ${ourLiveGames.some(g => g.id === targetGame.id)}`);
+      console.log(`   Is in recentlyFinishedGames: ${recentlyFinishedGames.some(g => g.id === targetGame.id)}`);
     } else {
       console.log(`⚠️ TARGET GAME NOT FOUND IN ourLiveGames or recentlyFinishedGames`);
       console.log(`   Looking for: Bordeaux Begles vs Stade Francais Paris`);
-      console.log(`   Available games: ${allGamesToCheck.map(g => `${g.homeTeam.name} vs ${g.awayTeam.name}`).join(', ')}`);
+      console.log(`   ourLiveGames count: ${ourLiveGames.length}`);
+      console.log(`   recentlyFinishedGames count: ${recentlyFinishedGames.length}`);
+      console.log(`   Available games: ${allGamesToCheck.slice(0, 5).map(g => `${g.homeTeam.name} vs ${g.awayTeam.name} (${g.status})`).join(', ')}${allGamesToCheck.length > 5 ? '...' : ''}`);
+      
+      // Also check if the game exists in DB but with different status
+      const { prisma } = await import('../../lib/prisma');
+      const dbGame = await prisma.game.findFirst({
+        where: {
+          homeTeam: { name: { contains: 'Bordeaux' } },
+          awayTeam: { name: { contains: 'Stade Francais' } },
+          competition: { sportType: 'RUGBY' }
+        },
+        include: {
+          homeTeam: true,
+          awayTeam: true,
+          competition: true
+        },
+        orderBy: { date: 'desc' }
+      });
+      
+      if (dbGame) {
+        console.log(`   🔍 Found game in DB with different status: ${dbGame.homeTeam.name} vs ${dbGame.awayTeam.name}`);
+        console.log(`      Status: ${dbGame.status}, Date: ${dbGame.date ? new Date(dbGame.date).toISOString() : 'MISSING'}`);
+        console.log(`      External ID: ${dbGame.externalId || 'NOT SET'}`);
+        console.log(`      Why not in allGamesToCheck: ${dbGame.status !== 'LIVE' ? `Status is ${dbGame.status}, not LIVE` : 'Date might be outside 2-hour window'}`);
+      }
     }
     
     // Verify that all teams are rugby teams
