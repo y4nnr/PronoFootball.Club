@@ -631,6 +631,22 @@ export default async function handler(
             (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id) &&
             game.competition.sportType === 'RUGBY' // Double-check: ensure it's a rugby competition
           );
+          
+          // CRITICAL: If found by team name matching, verify date is reasonable
+          if (matchingGame && externalMatch.utcDate && matchingGame.date) {
+            const apiMatchDate = new Date(externalMatch.utcDate);
+            const dbGameDate = new Date(matchingGame.date);
+            const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
+            
+            // Reject if dates are more than 60 days apart (likely different season)
+            if (daysDiff > 60) {
+              console.log(`   ⚠️ Team name match found but date is from different season - rejecting`);
+              console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${matchingGame.competition.name})`);
+              console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
+              console.log(`      Date difference: ${daysDiff.toFixed(1)} days`);
+              matchingGame = null; // Reject the match
+            }
+          }
         }
 
         if (!matchingGame) {
