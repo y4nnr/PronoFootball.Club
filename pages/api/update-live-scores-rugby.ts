@@ -613,6 +613,8 @@ export default async function handler(
         // If not found by externalId or externalId match was rejected, try team name matching
         if (!matchingGame) {
           console.log(`   No valid match by externalId, trying team name matching...`);
+          console.log(`   🔍 Searching for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+          console.log(`   📋 Available teams in DB (${uniqueTeams.length}): ${uniqueTeams.slice(0, 10).map(t => t.name).join(', ')}${uniqueTeams.length > 10 ? '...' : ''}`);
           
           // Use matching for both teams (only match against rugby teams)
           const homeMatch = rugbyAPI.findBestTeamMatch(externalMatch.homeTeam.name, uniqueTeams);
@@ -631,9 +633,17 @@ export default async function handler(
             console.log(`⚠️ No HIGH CONFIDENCE team matches found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
             if (homeMatch && homeMatch.score < MIN_TEAM_MATCH_CONFIDENCE) {
               console.log(`   Home match score ${(homeMatch.score * 100).toFixed(1)}% is below threshold ${(MIN_TEAM_MATCH_CONFIDENCE * 100).toFixed(1)}%`);
+              console.log(`   Home match details: DB team="${homeMatch.team.name}", shortName="${homeMatch.team.shortName || 'N/A'}"`);
             }
             if (awayMatch && awayMatch.score < MIN_TEAM_MATCH_CONFIDENCE) {
               console.log(`   Away match score ${(awayMatch.score * 100).toFixed(1)}% is below threshold ${(MIN_TEAM_MATCH_CONFIDENCE * 100).toFixed(1)}%`);
+              console.log(`   Away match details: DB team="${awayMatch.team.name}", shortName="${awayMatch.team.shortName || 'N/A'}"`);
+            }
+            if (!homeMatch) {
+              console.log(`   ❌ Home team "${externalMatch.homeTeam.name}" not found in DB at all`);
+            }
+            if (!awayMatch) {
+              console.log(`   ❌ Away team "${externalMatch.awayTeam.name}" not found in DB at all`);
             }
             continue;
           }
