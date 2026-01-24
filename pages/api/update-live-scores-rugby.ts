@@ -1030,9 +1030,16 @@ export default async function handler(
     }
 
     // OpenAI Fallback: Try to match failed games using AI
+    console.log(`📊 DEBUG: Total failed matches collected: ${failedMatches.length}`);
     if (failedMatches.length > 0) {
       console.log(`🤖 Attempting OpenAI fallback for ${failedMatches.length} failed matches...`);
+      console.log(`📋 Failed matches:`, failedMatches.map(fm => ({
+        external: `${fm.externalMatch.homeTeam.name} vs ${fm.externalMatch.awayTeam.name}`,
+        reason: fm.reason,
+        id: fm.externalMatch.id
+      })));
       const openAIApiKey = process.env.OPENAI_API_KEY || null;
+      console.log(`🔑 OpenAI API key present: ${openAIApiKey ? 'YES' : 'NO'}`);
       
       if (openAIApiKey) {
         try {
