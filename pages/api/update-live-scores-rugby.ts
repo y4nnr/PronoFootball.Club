@@ -621,16 +621,22 @@ export default async function handler(
         if (matchingGame) {
           console.log(`   Found potential match by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
           
-          // CRITICAL: Verify team names match
+          // CRITICAL: Verify team names match with HIGH confidence (>= 90%)
+          // External IDs can be reused, so we need strict validation
           const homeMatch = rugbyAPI.findBestTeamMatch(externalMatch.homeTeam.name, uniqueTeams);
           const awayMatch = rugbyAPI.findBestTeamMatch(externalMatch.awayTeam.name, uniqueTeams);
           
-          // Both teams must match the externalIdMatch game
-          const homeMatchesGame = homeMatch && (
+          // Require HIGH confidence (>= 90%) for team matches when validating externalId
+          const MIN_TEAM_MATCH_CONFIDENCE = 0.9; // 90%
+          const homeMatchConfident = homeMatch && homeMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
+          const awayMatchConfident = awayMatch && awayMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
+          
+          // Both teams must match the externalIdMatch game with HIGH confidence
+          const homeMatchesGame = homeMatchConfident && (
             homeMatch.team.id === matchingGame.homeTeam.id || 
             homeMatch.team.id === matchingGame.awayTeam.id
           );
-          const awayMatchesGame = awayMatch && (
+          const awayMatchesGame = awayMatchConfident && (
             awayMatch.team.id === matchingGame.homeTeam.id || 
             awayMatch.team.id === matchingGame.awayTeam.id
           );
@@ -687,13 +693,15 @@ export default async function handler(
                 const dbGameDate = new Date(matchingGame.date);
                 const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
                 
-                // For rugby, seasons typically run Sep-Jun, so allow up to 30 days difference
-                // But reject if dates are more than 60 days apart (likely different season)
-                if (daysDiff > 60) {
-                  console.log(`   ⚠️ ExternalId match found but date is from different season - rejecting`);
+                // CRITICAL: External IDs can be reused across different games/seasons
+                // Be VERY strict with date validation - reject if more than 7 days apart
+                // This prevents matching games from different weeks/seasons with same external ID
+                if (daysDiff > 7) {
+                  console.log(`   ⚠️ ExternalId match found but date is too far apart - rejecting`);
                   console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${matchingGame.competition.name})`);
                   console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
-                  console.log(`      Date difference: ${daysDiff.toFixed(1)} days`);
+                  console.log(`      Date difference: ${daysDiff.toFixed(1)} days (threshold: 7 days)`);
+                  console.log(`      External IDs can be reused - this is likely a different game!`);
                   
                   // CRITICAL: Clear the wrong externalId from the database to prevent future wrong matches
                   const gameIdToClear = matchingGame.id;
