@@ -1042,7 +1042,10 @@ export default async function handler(
       console.log(`🔑 OpenAI API key present: ${openAIApiKey ? 'YES' : 'NO'}`);
       
       if (openAIApiKey) {
+        let openAIMatchedCount = 0;
+        let openAIExternalIdSetCount = 0;
         try {
+          console.log(`🤖 Calling OpenAI API with ${failedMatches.length} failed matches...`);
           // Prepare requests for OpenAI
           const openAIRequests = failedMatches.map(fm => ({
             externalHome: fm.externalMatch.homeTeam.name,
@@ -1052,6 +1055,7 @@ export default async function handler(
 
           // Batch process with OpenAI
           const openAIResults = await matchTeamsWithOpenAI(openAIRequests, openAIApiKey);
+          console.log(`🤖 OpenAI returned ${openAIResults.size} results`);
 
           // Process OpenAI matches
           for (const failedMatch of failedMatches) {
@@ -1097,6 +1101,10 @@ export default async function handler(
                         data: { externalId: externalMatchForUpdate.id.toString() }
                       });
                       console.log(`   ✅ Set externalId ${externalMatchForUpdate.id} for future direct matching`);
+                      openAIExternalIdSetCount++;
+                      openAIMatchedCount++;
+                      (global as any).openAIMatchedCount = openAIMatchedCount;
+                      (global as any).openAIExternalIdSetCount = openAIExternalIdSetCount;
                     } catch (error) {
                       console.error(`   ❌ Error setting externalId:`, error);
                     }
@@ -1113,8 +1121,10 @@ export default async function handler(
               console.log(`❌ OpenAI could not match: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
             }
           }
+          console.log(`🤖 OpenAI Summary: ${openAIMatchedCount} matches found, ${openAIExternalIdSetCount} externalIds set`);
         } catch (error) {
           console.error(`❌ Error in OpenAI fallback matching:`, error);
+          console.error(`❌ Error details:`, error instanceof Error ? error.message : String(error));
         }
       } else {
         console.log(`⚠️ OpenAI API key not configured - skipping AI fallback`);
@@ -1245,7 +1255,9 @@ export default async function handler(
       debug: {
         failedMatchesCount: failedMatches.length,
         openAIAttempted: failedMatches.length > 0,
-        openAIKeyPresent: !!process.env.OPENAI_API_KEY
+        openAIKeyPresent: !!process.env.OPENAI_API_KEY,
+        openAIMatchedCount: (global as any).openAIMatchedCount || 0,
+        openAIExternalIdSetCount: (global as any).openAIExternalIdSetCount || 0
       }
     });
 
