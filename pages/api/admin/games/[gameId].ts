@@ -85,13 +85,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         gameStatus = status as GameStatus;
       } else {
         // Auto-calculate status based on scores and date
+        // IMPORTANT: Add safety checks to prevent marking future games as LIVE
+        // Only mark as LIVE if date is at least 2 minutes in the past
+        const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
+        const isPast = gameDate < now; // Explicitly check date is in the past
+        const isPastBy2Minutes = gameDate <= twoMinutesAgo;
+        
         if (
           normalizedHomeScore !== undefined && normalizedHomeScore !== null &&
           normalizedAwayScore !== undefined && normalizedAwayScore !== null &&
-          gameDate <= now
+          isPast
         ) {
           gameStatus = GameStatus.FINISHED;
-        } else if (gameDate <= now) {
+        } else if (isPastBy2Minutes && isPast) {
+          // Only mark as LIVE if date is at least 2 minutes in the past AND actually in the past
           gameStatus = GameStatus.LIVE;
         } else {
           gameStatus = GameStatus.UPCOMING;
