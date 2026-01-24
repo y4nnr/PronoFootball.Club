@@ -523,7 +523,20 @@ export default async function handler(
             console.log(`      DB: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
             console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
             console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%)` : 'NOT FOUND'}, Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%)` : 'NOT FOUND'}`);
+            
+            // CRITICAL: Clear the wrong externalId from the database to prevent future wrong matches
+            const gameIdToClear = matchingGame.id;
             matchingGame = null; // Reject the match
+            
+            try {
+              await prisma.game.update({
+                where: { id: gameIdToClear },
+                data: { externalId: null }
+              });
+              console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear} - team names don't match`);
+            } catch (error) {
+              console.error(`   ❌ Error clearing externalId:`, error);
+            }
           } else {
             // CRITICAL: Verify competition name makes sense for rugby
             // Reject if external competition is clearly a football competition
