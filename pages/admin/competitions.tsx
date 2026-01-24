@@ -423,7 +423,7 @@ export default function AdminCompetitions() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-[rgb(20,20,20)]">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -444,7 +444,7 @@ export default function AdminCompetitions() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {competitions.length > 0 ? (
               competitions.map((competition) => (
@@ -467,7 +467,7 @@ export default function AdminCompetitions() {
                           competition.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
                           competition.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
                           competition.status === 'upcoming' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
-                          'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+                          'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-800 dark:text-gray-300'
                         }`}>
                           {t(`admin.competitions.status.${competition.status.toLowerCase()}`)}
                         </span>
@@ -495,8 +495,8 @@ export default function AdminCompetitions() {
 
         {/* New Competition Modal */}
         {showNewCompetitionModal && (
-          <div className="fixed inset-0 bg-gray-900/50 dark:bg-gray-900/75 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex justify-center items-center p-4">
-            <div className="relative p-6 border border-gray-200 dark:border-gray-700 w-full max-w-2xl shadow-xl rounded-xl bg-white dark:bg-gray-800 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-gray-900/50 dark:bg-[rgb(20,20,20)]/75 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex justify-center items-center p-4">
+            <div className="relative p-6 border border-gray-200 dark:border-gray-600 w-full max-w-2xl shadow-xl rounded-xl bg-white dark:bg-[rgb(38,38,38)] max-h-[90vh] overflow-y-auto">
               <h3 className="text-xl font-semibold leading-6 text-gray-900 dark:text-white mb-6">{t('admin.competitions.new')}</h3>
               
               {/* Competition Type Selection */}
@@ -556,7 +556,7 @@ export default function AdminCompetitions() {
                         value={newCompetitionData.name}
                         onChange={handleNewCompetitionInputChange}
                         required
-                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white"
                       />
                     </div>
                     <div>
@@ -567,7 +567,7 @@ export default function AdminCompetitions() {
                         value={newCompetitionData.description}
                         onChange={handleNewCompetitionInputChange}
                         rows={3}
-                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white"
                       ></textarea>
                     </div>
                     <div>
@@ -579,7 +579,7 @@ export default function AdminCompetitions() {
                         value={newCompetitionData.startDate}
                         onChange={handleNewCompetitionInputChange}
                         required
-                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white"
                       />
                     </div>
                     <div>
@@ -591,7 +591,7 @@ export default function AdminCompetitions() {
                         value={newCompetitionData.endDate}
                         onChange={handleNewCompetitionInputChange}
                         required
-                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white"
                       />
                     </div>
                   </>

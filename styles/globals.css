@@ -155,12 +155,12 @@
   --foreground: #171717;
   
   /* Accent Color Variables - Change these to update accent color everywhere */
-  /* Current: Scarlet (#FF2400) - Dark mode accent color */
-  --accent-400: rgb(255, 100, 50);    /* FF6432 (lighter scarlet) */
-  --accent-500: rgb(255, 36, 0);      /* FF2400 (base: Scarlet) */
-  --accent-600: rgb(220, 30, 0);      /* DC1E00 (darker) */
-  --accent-700: rgb(180, 25, 0);      /* B41900 (darker) */
-  --accent-900: rgb(120, 15, 0);      /* 780F00 (darkest) */
+  /* Current: Lime Green (#32CD32) - Dark mode accent color */
+  --accent-400: rgb(100, 255, 100);   /* 64FF64 (lighter lime green) */
+  --accent-500: rgb(50, 205, 50);     /* 32CD32 (base: Lime Green) */
+  --accent-600: rgb(40, 160, 40);     /* 28A028 (darker) */
+  --accent-700: rgb(30, 120, 30);     /* 1E781E (darker) */
+  --accent-900: rgb(20, 80, 20);      /* 145014 (darkest) */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -168,21 +168,21 @@
     --background: #0c0c0c;
     --foreground: #ededed;
     /* Ensure accent colors are available in dark mode */
-    --accent-400: rgb(255, 100, 50);    /* FF6432 (lighter scarlet) */
-    --accent-500: rgb(255, 36, 0);      /* FF2400 (base: Scarlet) */
-    --accent-600: rgb(220, 30, 0);      /* DC1E00 (darker) */
-    --accent-700: rgb(180, 25, 0);      /* B41900 (darker) */
-    --accent-900: rgb(120, 15, 0);      /* 780F00 (darkest) */
+    --accent-400: rgb(100, 255, 100);   /* 64FF64 (lighter lime green) */
+    --accent-500: rgb(50, 205, 50);     /* 32CD32 (base: Lime Green) */
+    --accent-600: rgb(40, 160, 40);     /* 28A028 (darker) */
+    --accent-700: rgb(30, 120, 30);     /* 1E781E (darker) */
+    --accent-900: rgb(20, 80, 20);      /* 145014 (darkest) */
   }
 }
 
 /* Also ensure accent colors are available when .dark class is applied */
 .dark {
-  --accent-400: rgb(255, 100, 50);    /* FF6432 (lighter scarlet) */
-  --accent-500: rgb(255, 36, 0);      /* FF2400 (base: Scarlet) */
-  --accent-600: rgb(220, 30, 0);      /* DC1E00 (darker) */
-  --accent-700: rgb(180, 25, 0);      /* B41900 (darker) */
-  --accent-900: rgb(120, 15, 0);      /* 780F00 (darkest) */
+  --accent-400: rgb(100, 255, 100);   /* 64FF64 (lighter lime green) */
+  --accent-500: rgb(50, 205, 50);     /* 32CD32 (base: Lime Green) */
+  --accent-600: rgb(40, 160, 40);     /* 28A028 (darker) */
+  --accent-700: rgb(30, 120, 30);     /* 1E781E (darker) */
+  --accent-900: rgb(20, 80, 20);      /* 145014 (darkest) */
 }
 
 body {

@@ -377,7 +377,7 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-[rgb(20,20,20)]">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -397,26 +397,26 @@ export default function AdminUsers() {
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-blue-500 dark:border-blue-400">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm p-4 border-l-4 border-blue-500 dark:border-blue-400">
               <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total</div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.total}</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-green-500 dark:border-green-400">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm p-4 border-l-4 border-green-500 dark:border-green-400">
               <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Actifs</div>
               <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{stats.active}</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-yellow-500 dark:border-yellow-400">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm p-4 border-l-4 border-yellow-500 dark:border-yellow-400">
               <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">En attente</div>
               <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">{stats.inactive}</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border-l-4 border-purple-500 dark:border-purple-400">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm p-4 border-l-4 border-purple-500 dark:border-purple-400">
               <div className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Admins</div>
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">{stats.admins}</div>
             </div>
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+          <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-2">
               {/* Search */}
               <div className="flex-1">
@@ -427,7 +427,7 @@ export default function AdminUsers() {
                     placeholder="Rechercher par nom, email..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
+                    className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
                   />
                 </div>
               </div>
@@ -439,7 +439,7 @@ export default function AdminUsers() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                     statusFilter === 'all'
                       ? 'bg-primary-600 dark:bg-accent-dark-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[rgb(45,45,45)]'
                   }`}
                 >
                   Tous
@@ -518,7 +518,7 @@ export default function AdminUsers() {
             </button>
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
             {filteredAndSortedUsers.length === 0 ? (
               <div className="p-12 text-center">
                 <p className="text-gray-500 dark:text-gray-400 text-lg">Aucun utilisateur trouvé</p>
@@ -529,7 +529,7 @@ export default function AdminUsers() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-900/50">
+                  <thead className="bg-gray-50 dark:bg-[rgb(20,20,20)]/50">
                     <tr>
                       <th className="px-3 py-2 text-left"></th>
                       <th className="px-3 py-2 text-left">
@@ -620,14 +620,14 @@ export default function AdminUsers() {
                       <th className="px-3 py-2 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="bg-white dark:bg-[rgb(38,38,38)] divide-y divide-gray-200 dark:divide-gray-600">
                     {filteredAndSortedUsers.map((user) => (
                       <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <td className="px-3 py-2 whitespace-nowrap">
                           <img
                             src={user.profilePictureUrl || DEFAULT_AVATAR}
                             alt={user.name + ' avatar'}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm"
+                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] shadow-sm"
                             onError={e => (e.currentTarget.src = DEFAULT_AVATAR)}
                           />
                         </td>
@@ -712,7 +712,7 @@ export default function AdminUsers() {
               </div>
             )}
             {filteredAndSortedUsers.length > 0 && (
-              <div className="bg-gray-50 dark:bg-gray-900/50 px-3 py-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="bg-gray-50 dark:bg-[rgb(20,20,20)]/50 px-3 py-2 border-t border-gray-200 dark:border-gray-600">
                 <p className="text-xs text-gray-600 dark:text-gray-400">
                   Affichage de <span className="font-medium">{filteredAndSortedUsers.length}</span> utilisateur{filteredAndSortedUsers.length > 1 ? 's' : ''}
                   {searchQuery || statusFilter !== 'all' || roleFilter !== 'all' ? (

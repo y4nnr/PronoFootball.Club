@@ -278,7 +278,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
     }`}>
       {/* Competition Name & Logo - Section 1: Darker shade (top) */}
       {game.competition && (
-        <div className="flex items-center justify-between gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gray-200 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600">
+        <div className="flex items-center justify-between gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gray-200 dark:bg-[rgb(40,40,40)] border-b border-gray-300 dark:border-gray-600">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {game.competition.logo ? (
               <img 
@@ -568,7 +568,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                     } else {
                       // For upcoming games: default styling with light background and border
                       return (
-                        <span className="text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm">
+                        <span className="text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm">
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>

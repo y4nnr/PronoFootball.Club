@@ -463,7 +463,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 -mt-8 sm:mt-0">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-[rgb(12,12,12)] dark:via-[rgb(12,12,12)] dark:to-[rgb(12,12,12)] -mt-8 sm:mt-0">
       <div className="max-w-6xl mx-auto px-2 sm:px-4 pt-0 pb-2 sm:pt-3 sm:pb-3 md:pt-4 md:pb-4">
         {/* Modern Status Header */}
         <div className="mb-0 sm:mb-3 md:mb-4">
@@ -476,7 +476,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-gray-100 dark:border-gray-600 overflow-hidden">
           <div className="p-2 sm:p-4 md:p-6">
 
             {/* Game Navigation */}
@@ -489,7 +489,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                   <button
                     onClick={() => scrollCarousel('left')}
                     disabled={!canScrollLeft}
-                    className={`absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 dark:bg-gray-700/90 hover:bg-white dark:hover:bg-gray-700 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
+                    className={`absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 dark:bg-[rgb(40,40,40)]/90 hover:bg-white dark:hover:bg-[rgb(40,40,40)] rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
                       canScrollLeft 
                         ? 'opacity-100 hover:scale-110' 
                         : 'opacity-0 pointer-events-none'
@@ -504,7 +504,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                   <button
                     onClick={() => scrollCarousel('right')}
                     disabled={!canScrollRight}
-                    className={`absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 dark:bg-gray-700/90 hover:bg-white dark:hover:bg-gray-700 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
+                    className={`absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 dark:bg-[rgb(40,40,40)]/90 hover:bg-white dark:hover:bg-[rgb(40,40,40)] rounded-full shadow-lg flex items-center justify-center transition-all duration-200 ${
                       canScrollRight 
                         ? 'opacity-100 hover:scale-110' 
                         : 'opacity-0 pointer-events-none'
@@ -551,11 +551,11 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                           className={`relative p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl transition-all duration-300 flex-shrink-0 w-[120px] sm:w-[140px] md:w-[180px] min-w-[120px] sm:min-w-[140px] md:min-w-[180px] scroll-snap-start my-0.5 sm:my-1 ${
                             gameItem.bets && gameItem.bets.length > 0
                               ? index === actualCurrentGameIndex
-                                ? 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-4 border-blue-500 dark:border-accent-dark-500 shadow-2xl transform scale-105 z-10'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-blue-500 dark:border-accent-dark-500 shadow-lg hover:shadow-xl hover:scale-102'
+                                ? 'bg-white dark:bg-[rgb(38,38,38)] text-gray-700 dark:text-gray-200 border-4 border-blue-500 dark:border-accent-dark-500 shadow-2xl transform scale-105 z-10'
+                                : 'bg-white dark:bg-[rgb(38,38,38)] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[rgb(40,40,40)] border-2 border-blue-500 dark:border-accent-dark-500 shadow-lg hover:shadow-xl hover:scale-102'
                               : index === actualCurrentGameIndex
-                                ? 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-4 border-gray-400 dark:border-gray-600 shadow-2xl transform scale-105 z-10'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 shadow-lg hover:shadow-xl hover:scale-102'
+                                ? 'bg-white dark:bg-[rgb(38,38,38)] text-gray-700 dark:text-gray-200 border-4 border-gray-400 dark:border-gray-600 shadow-2xl transform scale-105 z-10'
+                                : 'bg-white dark:bg-[rgb(38,38,38)] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[rgb(40,40,40)] border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 shadow-lg hover:shadow-xl hover:scale-102'
                           }`}
                         >
                         {/* Bet Status Indicator */}
@@ -650,7 +650,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                       disabled={actualCurrentGameIndex === 0}
                       className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold transition-all duration-200 ${
                         actualCurrentGameIndex === 0
-                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                          ? 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-400 dark:text-gray-500 cursor-not-allowed'
                           : 'bg-primary-600 dark:bg-accent-dark-600 text-white hover:bg-primary-700 dark:hover:bg-accent-dark-700 shadow-lg hover:shadow-xl transform hover:scale-105'
                       }`}
                     >
@@ -662,7 +662,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                       disabled={actualCurrentGameIndex === allGamesList.length - 1 || actualCurrentGameIndex === -1}
                       className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold transition-all duration-200 ${
                         actualCurrentGameIndex === allGamesList.length - 1 || actualCurrentGameIndex === -1
-                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                          ? 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-400 dark:text-gray-500 cursor-not-allowed'
                           : 'bg-primary-600 dark:bg-accent-dark-600 text-white hover:bg-primary-700 dark:hover:bg-accent-dark-700 shadow-lg hover:shadow-xl transform hover:scale-105'
                       }`}
                     >
@@ -706,7 +706,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                   
                   {/* Date/Time Display - Top Center */}
                   <div className="flex items-center justify-center space-x-2 sm:space-x-4 mb-1.5 sm:mb-2 md:mb-3">
-                    <div className="flex items-center space-x-1 sm:space-x-2 bg-white dark:bg-gray-800 rounded-md sm:rounded-lg px-2 sm:px-3 md:px-4 py-1 sm:py-2 shadow-md border border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center space-x-1 sm:space-x-2 bg-white dark:bg-[rgb(38,38,38)] rounded-md sm:rounded-lg px-2 sm:px-3 md:px-4 py-1 sm:py-2 shadow-md border border-gray-200 dark:border-gray-600">
                       <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -718,7 +718,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                         })}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-1 sm:space-x-2 bg-white dark:bg-gray-800 rounded-md sm:rounded-lg px-2 sm:px-3 md:px-4 py-1 sm:py-2 shadow-md border border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center space-x-1 sm:space-x-2 bg-white dark:bg-[rgb(38,38,38)] rounded-md sm:rounded-lg px-2 sm:px-3 md:px-4 py-1 sm:py-2 shadow-md border border-gray-200 dark:border-gray-600">
                       <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -782,7 +782,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                     <span className="ml-3 text-gray-600 dark:text-gray-400">Chargement des données...</span>
                   </div>
                 ) : (
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-3 md:p-4 border border-gray-200 dark:border-gray-600 shadow-md">
+                  <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-lg p-2 sm:p-3 md:p-4 border border-gray-200 dark:border-gray-600 shadow-md">
                     <div className="flex items-stretch justify-between space-x-2 sm:space-x-4 md:space-x-6">
                       {/* Home Score */}
                       <div className="flex-1 flex flex-col">
@@ -798,7 +798,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                               max="99"
                               value={homeScore}
                               onChange={(e) => setHomeScore(e.target.value)}
-                              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 dark:focus:border-accent-dark-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-accent-dark-500/20 text-center text-lg sm:text-xl md:text-2xl font-bold py-1.5 sm:py-2 md:py-3 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 dark:focus:border-accent-dark-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-accent-dark-500/20 text-center text-lg sm:text-xl md:text-2xl font-bold py-1.5 sm:py-2 md:py-3 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               placeholder="0"
                               required
                             />
@@ -808,7 +808,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                               id="homeScoreDropdown"
                               value=""
                               onChange={(e) => setHomeScore(e.target.value)}
-                              className="w-12 sm:w-16 md:w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 dark:focus:border-accent-dark-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-accent-dark-500/20 cursor-pointer appearance-none text-xs sm:text-sm"
+                              className="w-12 sm:w-16 md:w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 focus:border-primary-500 dark:focus:border-accent-dark-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-accent-dark-500/20 cursor-pointer appearance-none text-xs sm:text-sm"
                               title="Sélectionner un score"
                               style={{ 
                                 paddingTop: '0.375rem', 
@@ -846,7 +846,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                               max="99"
                               value={awayScore}
                               onChange={(e) => setAwayScore(e.target.value)}
-                              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 dark:focus:border-accent-dark-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-accent-dark-500/20 text-center text-lg sm:text-xl md:text-2xl font-bold py-1.5 sm:py-2 md:py-3 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 shadow-sm focus:border-primary-500 dark:focus:border-accent-dark-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-accent-dark-500/20 text-center text-lg sm:text-xl md:text-2xl font-bold py-1.5 sm:py-2 md:py-3 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               placeholder="0"
                               required
                             />
@@ -856,7 +856,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                               id="awayScoreDropdown"
                               value=""
                               onChange={(e) => setAwayScore(e.target.value)}
-                              className="w-12 sm:w-16 md:w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 dark:focus:border-accent-dark-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-accent-dark-500/20 cursor-pointer appearance-none text-xs sm:text-sm"
+                              className="w-12 sm:w-16 md:w-20 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 focus:border-primary-500 dark:focus:border-accent-dark-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-accent-dark-500/20 cursor-pointer appearance-none text-xs sm:text-sm"
                               title="Sélectionner un score"
                               style={{ 
                                 paddingTop: '0.375rem', 
@@ -915,7 +915,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                         router.push('/dashboard');
                       }
                     }}
-                    className="px-6 sm:px-8 py-3 sm:py-3.5 md:py-4 text-base sm:text-lg font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="px-6 sm:px-8 py-3 sm:py-3.5 md:py-4 text-base sm:text-lg font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-[rgb(38,38,38)] border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 dark:hover:bg-[rgb(40,40,40)] hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     {t('betting.cancel')}
                   </button>

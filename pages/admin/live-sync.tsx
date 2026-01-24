@@ -251,8 +251,8 @@ export default function AdminLiveSync() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-[rgb(20,20,20)] text-gray-900 dark:text-white">
+      <header className="border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(20,20,20)] px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">
@@ -270,13 +270,13 @@ export default function AdminLiveSync() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <section className="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+        <section className="mb-6 bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-600">
           <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Filters</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
               <label className="block text-sm mb-2 font-medium text-gray-700 dark:text-gray-300">Sport</label>
               <select
-                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
+                className="w-full bg-white dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
                 value={sportType}
                 onChange={(e) =>
                   setSportType(e.target.value as "ALL" | "FOOTBALL" | "RUGBY")
@@ -291,7 +291,7 @@ export default function AdminLiveSync() {
             <div>
               <label className="block text-sm mb-1">Status</label>
               <select
-                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
+                className="w-full bg-white dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
                 value={statusFilter}
                 onChange={(e) =>
                   setStatusFilter(
@@ -320,7 +320,7 @@ export default function AdminLiveSync() {
                 type="number"
                 min={10}
                 max={1440}
-                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
+                className="w-full bg-white dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
                 value={minutesBack}
                 onChange={(e) => setMinutesBack(Number(e.target.value) || 60)}
               />
@@ -332,7 +332,7 @@ export default function AdminLiveSync() {
                 type="number"
                 min={10}
                 max={500}
-                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
+                className="w-full bg-white dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
                 value={limit}
                 onChange={(e) => setLimit(Number(e.target.value) || 200)}
               />
@@ -358,8 +358,8 @@ export default function AdminLiveSync() {
           </div>
         )}
 
-        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex items-center justify-between">
+        <section className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[rgb(20,20,20)]/50 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Live Sync Games</h2>
             <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
               {loading ? "Loading…" : `${games.length} games`}
@@ -368,7 +368,7 @@ export default function AdminLiveSync() {
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-xs">
-              <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300">
+              <thead className="bg-gray-50 dark:bg-[rgb(20,20,20)]/50 text-gray-700 dark:text-gray-300">
                 <tr>
                   <th className="px-3 py-2 text-left w-8"></th>
                   <th className="px-3 py-2 text-left">Last Sync</th>
@@ -381,7 +381,7 @@ export default function AdminLiveSync() {
                   <th className="px-3 py-2 text-left">Game ID</th>
                 </tr>
               </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="bg-white dark:bg-[rgb(38,38,38)] divide-y divide-gray-200 dark:divide-gray-600">
                 {games.length === 0 && !loading && (
                   <tr>
                     <td
@@ -420,7 +420,7 @@ export default function AdminLiveSync() {
                             ? "bg-red-50 dark:bg-red-900/20"
                             : g.status === "LIVE"
                             ? "bg-blue-50 dark:bg-blue-900/10"
-                            : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                            : "bg-white dark:bg-[rgb(38,38,38)] hover:bg-gray-50 dark:hover:bg-[rgb(40,40,40)]"
                         }`}
                       >
                         <td className="px-3 py-2 align-top">
@@ -499,7 +499,7 @@ export default function AdminLiveSync() {
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr className="bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
+                        <tr className="bg-gray-50 dark:bg-[rgb(20,20,20)]/50 border-t border-gray-200 dark:border-gray-600">
                           <td colSpan={9} className="px-3 py-4">
                             {isLoadingExt ? (
                               <div className="text-sm text-gray-600 dark:text-gray-400">Loading external match data...</div>
@@ -516,7 +516,7 @@ export default function AdminLiveSync() {
                                   </button>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 text-xs">
-                                  <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                  <div className="bg-gray-100 dark:bg-[rgb(38,38,38)] rounded-lg p-3 border border-gray-200 dark:border-gray-600">
                                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Our Database</h4>
                                     <div className="space-y-1 text-gray-700 dark:text-gray-300">
                                       <div><span className="text-gray-600 dark:text-gray-400">Teams:</span> <span className="text-gray-900 dark:text-white">{g.homeTeam.name} vs {g.awayTeam.name}</span></div>
@@ -528,7 +528,7 @@ export default function AdminLiveSync() {
                                       <div><span className="text-gray-600 dark:text-gray-400">External ID:</span> <span className="text-gray-900 dark:text-white">{g.externalId || "-"}</span></div>
                                     </div>
                                   </div>
-                                  <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                  <div className="bg-gray-100 dark:bg-[rgb(38,38,38)] rounded-lg p-3 border border-gray-200 dark:border-gray-600">
                                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">External API</h4>
                                     <div className="space-y-1 text-gray-700 dark:text-gray-300">
                                       <div><span className="text-gray-600 dark:text-gray-400">Teams:</span> <span className="text-gray-900 dark:text-white">{g.externalMatch.homeTeam.name || "-"} vs {g.externalMatch.awayTeam.name || "-"}</span></div>

@@ -51,7 +51,7 @@ export default function AdminConfig() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-[rgb(20,20,20)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-accent-dark-500 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">{t('admin.loading')}</p>
@@ -61,7 +61,7 @@ export default function AdminConfig() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-[rgb(20,20,20)]">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -73,7 +73,7 @@ export default function AdminConfig() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Link
             href="/admin/competitions"
-            className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="group relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-600 overflow-hidden"
           >
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
@@ -94,7 +94,7 @@ export default function AdminConfig() {
 
           <Link
             href="/admin/teams"
-            className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="group relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-600 overflow-hidden"
           >
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
@@ -115,7 +115,7 @@ export default function AdminConfig() {
 
           <Link
             href="/admin/users"
-            className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="group relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-600 overflow-hidden"
           >
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
@@ -136,7 +136,7 @@ export default function AdminConfig() {
 
           <Link
             href="/admin/live-sync"
-            className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="group relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-600 overflow-hidden"
           >
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">

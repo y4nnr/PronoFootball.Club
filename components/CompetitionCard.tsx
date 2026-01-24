@@ -36,7 +36,7 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
     <div className="relative">
       <Link
         href={`/competitions/${competition.id}`}
-        className={`bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-800 dark:to-gray-700 border border-primary-300/60 dark:border-gray-600 rounded-2xl shadow-modern dark:shadow-dark-modern pt-1 px-5 pb-5 flex flex-col justify-between hover:shadow-modern-lg dark:hover:shadow-dark-modern-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
+        className={`bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-2xl shadow-modern dark:shadow-dark-modern pt-1 px-5 pb-5 flex flex-col justify-between hover:shadow-modern-lg dark:hover:shadow-dark-modern-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
         tabIndex={disabled ? -1 : 0}
         aria-disabled={disabled}
         style={{ textDecoration: 'none', color: 'inherit' }}

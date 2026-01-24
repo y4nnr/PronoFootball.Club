@@ -137,7 +137,7 @@ export default function TeamsAdmin() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-[rgb(20,20,20)] flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-accent-dark-500 mx-auto"></div>
             <p className="mt-4 text-gray-600 dark:text-gray-400">{t('dashboard.loading')}</p>
@@ -148,8 +148,8 @@ export default function TeamsAdmin() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-md">
+      <div className="min-h-screen bg-gray-50 dark:bg-[rgb(20,20,20)] flex items-center justify-center">
+        <div className="text-center p-6 bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 max-w-md">
           <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-3">Erreur</h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">{error}</p>
           <button
@@ -164,7 +164,7 @@ export default function TeamsAdmin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-[rgb(20,20,20)]">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -185,7 +185,7 @@ export default function TeamsAdmin() {
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+          <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-4 mb-6">
             <div className="flex flex-col md:flex-row gap-3">
               {/* Search */}
               <div className="flex-1">
@@ -208,7 +208,7 @@ export default function TeamsAdmin() {
                     placeholder={t('admin.teams.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
+                    className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
                   />
                 </div>
               </div>
@@ -220,7 +220,7 @@ export default function TeamsAdmin() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                     sportFilter === 'ALL'
                       ? 'bg-primary-600 dark:bg-accent-dark-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[rgb(45,45,45)]'
                   }`}
                 >
                   Tous
@@ -230,7 +230,7 @@ export default function TeamsAdmin() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                     sportFilter === 'FOOTBALL'
                       ? 'bg-blue-600 dark:bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[rgb(45,45,45)]'
                   }`}
                 >
                   Football
@@ -240,7 +240,7 @@ export default function TeamsAdmin() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                     sportFilter === 'RUGBY'
                       ? 'bg-orange-600 dark:bg-orange-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[rgb(45,45,45)]'
                   }`}
                 >
                   Rugby
@@ -254,7 +254,7 @@ export default function TeamsAdmin() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                     categoryFilter === 'ALL'
                       ? 'bg-primary-600 dark:bg-accent-dark-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[rgb(45,45,45)]'
                   }`}
                 >
                   Toutes
@@ -264,7 +264,7 @@ export default function TeamsAdmin() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                     categoryFilter === 'NATIONAL'
                       ? 'bg-yellow-600 dark:bg-yellow-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[rgb(45,45,45)]'
                   }`}
                 >
                   Nationales
@@ -274,7 +274,7 @@ export default function TeamsAdmin() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                     categoryFilter === 'CLUB'
                       ? 'bg-green-600 dark:bg-green-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[rgb(45,45,45)]'
                   }`}
                 >
                   Clubs
@@ -289,7 +289,7 @@ export default function TeamsAdmin() {
                     <select
                       value={countryFilter}
                       onChange={(e) => setCountryFilter(e.target.value)}
-                      className="px-3 py-1.5 text-xs font-medium border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
+                      className="px-3 py-1.5 text-xs font-medium border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500"
                     >
                       <option value="ALL">Tous les pays</option>
                       {countries.map(country => (
@@ -332,7 +332,7 @@ export default function TeamsAdmin() {
           const showSportSections = sportFilter === 'ALL' && !showSingleColumn;
           
           return filteredTeams.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 p-12 text-center">
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('admin.teams.noTeams')}</p>
             </div>
           ) : showSingleColumn ? (
@@ -416,8 +416,8 @@ export default function TeamsAdmin() {
                   </h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Football National Teams */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[rgb(20,20,20)]/50">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                           <span className="mr-2">🏆</span>
                           Équipes nationales ({footballNational.length})
@@ -433,7 +433,7 @@ export default function TeamsAdmin() {
                                 <img
                                   src={team.logo || DEFAULT_LOGO}
                                   alt={team.name + ' logo'}
-                                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm"
+                                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] shadow-sm"
                                   onError={(e) => {
                                     const target = e.currentTarget;
                                     if (target.src !== DEFAULT_LOGO) {
@@ -478,8 +478,8 @@ export default function TeamsAdmin() {
                     </div>
 
                     {/* Football Club Teams */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[rgb(20,20,20)]/50">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                           <span className="mr-2">⚽</span>
                           Équipes de club ({footballClub.length})
@@ -495,7 +495,7 @@ export default function TeamsAdmin() {
                                 <img
                                   src={team.logo || DEFAULT_LOGO}
                                   alt={team.name + ' logo'}
-                                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm"
+                                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] shadow-sm"
                                   onError={(e) => {
                                     const target = e.currentTarget;
                                     if (target.src !== DEFAULT_LOGO) {
@@ -551,8 +551,8 @@ export default function TeamsAdmin() {
                   </h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Rugby National Teams */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[rgb(20,20,20)]/50">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                           <span className="mr-2">🏆</span>
                           Équipes nationales ({rugbyNational.length})
@@ -568,7 +568,7 @@ export default function TeamsAdmin() {
                                 <img
                                   src={team.logo || DEFAULT_LOGO}
                                   alt={team.name + ' logo'}
-                                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm"
+                                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] shadow-sm"
                                   onError={(e) => {
                                     const target = e.currentTarget;
                                     if (target.src !== DEFAULT_LOGO) {
@@ -613,8 +613,8 @@ export default function TeamsAdmin() {
                     </div>
 
                     {/* Rugby Club Teams */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[rgb(20,20,20)]/50">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                           <span className="mr-2">🏉</span>
                           Équipes de club ({rugbyClub.length})
@@ -630,7 +630,7 @@ export default function TeamsAdmin() {
                                 <img
                                   src={team.logo || DEFAULT_LOGO}
                                   alt={team.name + ' logo'}
-                                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm"
+                                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] shadow-sm"
                                   onError={(e) => {
                                     const target = e.currentTarget;
                                     if (target.src !== DEFAULT_LOGO) {
@@ -680,8 +680,8 @@ export default function TeamsAdmin() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* National Teams Column */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[rgb(20,20,20)]/50">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                     <span className="mr-2">🏆</span>
                     Équipes nationales ({nationalTeams.length})
@@ -697,7 +697,7 @@ export default function TeamsAdmin() {
                           <img
                             src={team.logo || DEFAULT_LOGO}
                             alt={team.name + ' logo'}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm"
+                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] shadow-sm"
                             onError={(e) => {
                               const target = e.currentTarget;
                               if (target.src !== DEFAULT_LOGO) {
@@ -753,8 +753,8 @@ export default function TeamsAdmin() {
               </div>
 
               {/* Club Teams Column */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-[rgb(20,20,20)]/50">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                     <span className="mr-2">⚽</span>
                     Équipes de club ({clubTeams.length})
@@ -770,7 +770,7 @@ export default function TeamsAdmin() {
                           <img
                             src={team.logo || DEFAULT_LOGO}
                             alt={team.name + ' logo'}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm"
+                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)] shadow-sm"
                             onError={(e) => {
                               const target = e.currentTarget;
                               if (target.src !== DEFAULT_LOGO) {
@@ -830,14 +830,14 @@ export default function TeamsAdmin() {
 
         {/* Add/Edit Modal */}
         {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 dark:bg-gray-900/75 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 relative border border-gray-200 dark:border-gray-700">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 dark:bg-[rgb(20,20,20)]/75 backdrop-blur-sm">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-xl w-full max-w-md p-6 relative border border-gray-200 dark:border-gray-600">
               <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">{modalMode === 'add' ? 'Ajouter une équipe' : 'Modifier l\'équipe'}</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom de l'équipe<span className="text-red-500 dark:text-red-400">*</span></label>
                   <input
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500"
                     placeholder={t('admin.teams.namePlaceholder')}
                     value={name}
                     onChange={e => setName(e.target.value)}
@@ -847,7 +847,7 @@ export default function TeamsAdmin() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nom court</label>
                   <input
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500"
                     placeholder={t('admin.teams.shortNamePlaceholder')}
                     value={shortName}
                     onChange={e => setShortName(e.target.value)}
@@ -857,7 +857,7 @@ export default function TeamsAdmin() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo URL</label>
                   <input
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500"
                     placeholder={t('admin.teams.logoPlaceholder')}
                     value={logo}
                     onChange={e => setLogo(e.target.value)}
@@ -867,7 +867,7 @@ export default function TeamsAdmin() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catégorie</label>
                   <select
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500"
                     value={category}
                     onChange={e => setCategory(e.target.value as 'NATIONAL' | 'CLUB')}
                     disabled={loading}
@@ -881,7 +881,7 @@ export default function TeamsAdmin() {
               <div className="mt-6 flex justify-end space-x-3">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
+                  className="px-4 py-2 bg-gray-200 dark:bg-[rgb(40,40,40)] text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-[rgb(45,45,45)] transition font-medium"
                   disabled={loading}
                 >
                   Annuler
@@ -900,14 +900,14 @@ export default function TeamsAdmin() {
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 dark:bg-gray-900/75 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6 relative border border-gray-200 dark:border-gray-700">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 dark:bg-[rgb(20,20,20)]/75 backdrop-blur-sm">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-xl w-full max-w-sm p-6 relative border border-gray-200 dark:border-gray-600">
               <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Supprimer l'équipe</h2>
               <p className="mb-6 text-gray-700 dark:text-gray-300">Êtes-vous sûr de vouloir supprimer cette équipe ? Cette action est irréversible.</p>
               <div className="flex justify-end space-x-3">
                   <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
+                  className="px-4 py-2 bg-gray-200 dark:bg-[rgb(40,40,40)] text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-[rgb(45,45,45)] transition font-medium"
                   disabled={deleteLoading}
                   >
                   Annuler

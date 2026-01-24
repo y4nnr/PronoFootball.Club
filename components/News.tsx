@@ -120,7 +120,7 @@ export default function News() {
               className="relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-lg overflow-hidden animate-pulse"
             >
               {/* Header skeleton */}
-              <div className="flex items-center gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-700 dark:to-gray-700 border-b border-gray-300 dark:border-accent-dark-500">
+              <div className="flex items-center gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500">
                 <div className="w-16 h-3 bg-gray-300 dark:bg-gray-600 rounded" />
                 <div className="flex items-center gap-2 flex-1">
                   <div className="w-6 h-6 md:w-7 md:h-7 rounded bg-gray-300 dark:bg-gray-600" />
@@ -155,7 +155,7 @@ export default function News() {
               className="relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-lg dark:shadow-dark-modern-lg overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600"
             >
               {/* Header Section - Date & Competition (similar to GameCard) */}
-              <div className="flex items-center gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-700 dark:to-gray-700 border-b border-gray-300 dark:border-accent-dark-500">
+              <div className="flex items-center gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500">
                 {/* Date */}
                 <div className="flex items-center gap-2 flex-shrink-0 bg-white dark:bg-[rgb(38,38,38)] px-2.5 py-1 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm">
                   <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
