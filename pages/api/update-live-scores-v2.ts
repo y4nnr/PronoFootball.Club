@@ -509,7 +509,7 @@ export default async function handler(
               console.log(`   ⚠️ ExternalId match found but team names don't match - rejecting`);
               console.log(`      DB: ${externalIdMatch.homeTeam.name} vs ${externalIdMatch.awayTeam.name}`);
               console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-              console.log(`      Home match: ${homeMatch ? homeMatch.team.name : 'NOT FOUND'}, Away match: ${awayMatch ? awayMatch.team.name : 'NOT FOUND'}`);
+              console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, method: ${homeMatch.method})` : 'NOT FOUND'}, Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, method: ${awayMatch.method})` : 'NOT FOUND'}`);
             } else {
               // CRITICAL: Verify competition name makes sense for football
               // Reject if external competition is clearly a rugby competition
@@ -526,16 +526,25 @@ export default async function handler(
                 if (externalMatch.utcDate) {
                   const apiMatchDate = new Date(externalMatch.utcDate);
                   const dbGameDate = new Date(externalIdMatch.date);
-                  const hoursDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60);
+                  const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
                   
-                  if (hoursDiff <= 1) {
-                    matchingGame = externalIdMatch;
-                    matchConfidence = 'HIGH';
-                    matchMethod = 'externalId + team names + competition + date verified';
-                    console.log(`   ✅ HIGH CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
-                    console.log(`      Team names verified, competition verified, date verified: ${hoursDiff.toFixed(2)} hours difference`);
+                  // For football, reject if dates are more than 7 days apart (likely different matchday/season)
+                  if (daysDiff > 7) {
+                    console.log(`   ⚠️ ExternalId match found but date is from different season/matchday - rejecting`);
+                    console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${externalIdMatch.competition.name})`);
+                    console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
+                    console.log(`      Date difference: ${daysDiff.toFixed(1)} days`);
                   } else {
-                    console.log(`   ⚠️ ExternalId match found, team names match, competition match, but date differs by ${hoursDiff.toFixed(2)} hours - rejecting`);
+                    const hoursDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60);
+                    if (hoursDiff <= 1) {
+                      matchingGame = externalIdMatch;
+                      matchConfidence = 'HIGH';
+                      matchMethod = 'externalId + team names + competition + date verified';
+                      console.log(`   ✅ HIGH CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+                      console.log(`      Team names verified, competition verified, date verified: ${hoursDiff.toFixed(2)} hours difference`);
+                    } else {
+                      console.log(`   ⚠️ ExternalId match found, team names match, competition match, but date differs by ${hoursDiff.toFixed(2)} hours - rejecting`);
+                    }
                   }
                 } else {
                   // Team names match and competition is correct but no date to verify
