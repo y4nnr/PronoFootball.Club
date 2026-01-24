@@ -500,9 +500,39 @@ export default async function handler(
           game.competition.sportType === 'RUGBY'
         );
 
-        // If not found by externalId, try team name matching
+        // If found by externalId, verify team names match (external IDs can be reused or point to wrong games)
+        if (matchingGame) {
+          console.log(`   Found potential match by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+          
+          // CRITICAL: Verify team names match
+          const homeMatch = rugbyAPI.findBestTeamMatch(externalMatch.homeTeam.name, uniqueTeams);
+          const awayMatch = rugbyAPI.findBestTeamMatch(externalMatch.awayTeam.name, uniqueTeams);
+          
+          // Both teams must match the externalIdMatch game
+          const homeMatchesGame = homeMatch && (
+            homeMatch.team.id === matchingGame.homeTeam.id || 
+            homeMatch.team.id === matchingGame.awayTeam.id
+          );
+          const awayMatchesGame = awayMatch && (
+            awayMatch.team.id === matchingGame.homeTeam.id || 
+            awayMatch.team.id === matchingGame.awayTeam.id
+          );
+          
+          if (!homeMatchesGame || !awayMatchesGame) {
+            console.log(`   ⚠️ ExternalId match found but team names don't match - rejecting`);
+            console.log(`      DB: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+            console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            console.log(`      Home match: ${homeMatch ? homeMatch.team.name : 'NOT FOUND'}, Away match: ${awayMatch ? awayMatch.team.name : 'NOT FOUND'}`);
+            matchingGame = null; // Reject the match
+          } else {
+            console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+            console.log(`      Team names verified: ${homeMatch.team.name} and ${awayMatch.team.name}`);
+          }
+        }
+
+        // If not found by externalId or externalId match was rejected, try team name matching
         if (!matchingGame) {
-          console.log(`   No match by externalId, trying team name matching...`);
+          console.log(`   No valid match by externalId, trying team name matching...`);
           
           // Use matching for both teams (only match against rugby teams)
           const homeMatch = rugbyAPI.findBestTeamMatch(externalMatch.homeTeam.name, uniqueTeams);
@@ -523,8 +553,6 @@ export default async function handler(
             (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id) &&
             game.competition.sportType === 'RUGBY' // Double-check: ensure it's a rugby competition
           );
-        } else {
-          console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
         }
 
         if (!matchingGame) {

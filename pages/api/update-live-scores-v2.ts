@@ -486,27 +486,54 @@ export default async function handler(
           });
 
           if (externalIdMatch) {
-            // Verify externalId match with date
-            if (externalMatch.utcDate) {
-              const apiMatchDate = new Date(externalMatch.utcDate);
-              const dbGameDate = new Date(externalIdMatch.date);
-              const hoursDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60);
-              
-              if (hoursDiff <= 1) {
-                matchingGame = externalIdMatch;
-                matchConfidence = 'HIGH';
-                matchMethod = 'externalId + date verified';
-                console.log(`   ✅ HIGH CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
-                console.log(`      Date verified: ${hoursDiff.toFixed(2)} hours difference`);
-              } else {
-                console.log(`   ⚠️ ExternalId match found but date differs by ${hoursDiff.toFixed(2)} hours - rejecting`);
-              }
+            // CRITICAL: Verify team names match (external IDs can be reused or point to wrong games)
+            const allTeams = allGamesToCheck.flatMap(game => [
+              { id: game.homeTeam.id, name: game.homeTeam.name, shortName: game.homeTeam.shortName },
+              { id: game.awayTeam.id, name: game.awayTeam.name, shortName: game.awayTeam.shortName }
+            ]);
+            
+            const homeMatch = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, allTeams);
+            const awayMatch = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, allTeams);
+            
+            // Both teams must match the externalIdMatch game
+            const homeMatchesGame = homeMatch && (
+              homeMatch.team.id === externalIdMatch.homeTeam.id || 
+              homeMatch.team.id === externalIdMatch.awayTeam.id
+            );
+            const awayMatchesGame = awayMatch && (
+              awayMatch.team.id === externalIdMatch.homeTeam.id || 
+              awayMatch.team.id === externalIdMatch.awayTeam.id
+            );
+            
+            if (!homeMatchesGame || !awayMatchesGame) {
+              console.log(`   ⚠️ ExternalId match found but team names don't match - rejecting`);
+              console.log(`      DB: ${externalIdMatch.homeTeam.name} vs ${externalIdMatch.awayTeam.name}`);
+              console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+              console.log(`      Home match: ${homeMatch ? homeMatch.team.name : 'NOT FOUND'}, Away match: ${awayMatch ? awayMatch.team.name : 'NOT FOUND'}`);
             } else {
-              // No date to verify, but externalId match is still pretty reliable
-              matchingGame = externalIdMatch;
-              matchConfidence = 'MEDIUM';
-              matchMethod = 'externalId (no date verification)';
-              console.log(`   ⚠️ MEDIUM CONFIDENCE: Found by externalId (no date to verify): ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+              // Team names match, now verify date
+              if (externalMatch.utcDate) {
+                const apiMatchDate = new Date(externalMatch.utcDate);
+                const dbGameDate = new Date(externalIdMatch.date);
+                const hoursDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60);
+                
+                if (hoursDiff <= 1) {
+                  matchingGame = externalIdMatch;
+                  matchConfidence = 'HIGH';
+                  matchMethod = 'externalId + team names + date verified';
+                  console.log(`   ✅ HIGH CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+                  console.log(`      Team names verified, date verified: ${hoursDiff.toFixed(2)} hours difference`);
+                } else {
+                  console.log(`   ⚠️ ExternalId match found, team names match, but date differs by ${hoursDiff.toFixed(2)} hours - rejecting`);
+                }
+              } else {
+                // Team names match but no date to verify
+                matchingGame = externalIdMatch;
+                matchConfidence = 'MEDIUM';
+                matchMethod = 'externalId + team names verified (no date)';
+                console.log(`   ⚠️ MEDIUM CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+                console.log(`      Team names verified, but no date to verify`);
+              }
             }
           }
         }
