@@ -436,6 +436,8 @@ export class RugbyAPI {
     return name
       .toLowerCase()
       .trim()
+      // Remove content in parentheses (e.g., "Bordeaux Begles (UBB)" -> "Bordeaux Begles")
+      .replace(/\s*\([^)]*\)/g, '')
       // Remove common prefixes that don't help matching
       .replace(/^(fc|cf|sc|ac|as|us|rc|stade|olympique|racing|union|sporting|athletic|club|football|rugby)\s+/i, '')
       .replace(/^(the|le|la|les|de|du|des|et|and)\s+/i, '')
