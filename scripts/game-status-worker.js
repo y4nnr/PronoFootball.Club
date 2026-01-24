@@ -38,7 +38,7 @@ async function flipDueGames() {
     UPDATE "Game"
     SET "status" = 'LIVE'
     WHERE "status" = 'UPCOMING'
-      AND "date" <= NOW()
+      AND "date" <= (NOW() - INTERVAL '2 minutes')
   `;
   if (updated > 0) {
     console.log(`✅ Flipped ${updated} game(s) to LIVE at ${new Date().toISOString()}`);
