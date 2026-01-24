@@ -149,8 +149,9 @@ Return the JSON array now:`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('❌ OpenAI API error:', errorText);
+      console.error(`❌ OpenAI API status: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json() as {
@@ -158,7 +159,10 @@ Return the JSON array now:`;
     };
 
     const content = data.choices?.[0]?.message?.content?.trim();
+    console.log(`📝 OpenAI raw response length: ${content?.length || 0} characters`);
     if (!content) {
+      console.error('❌ OpenAI returned empty response');
+      console.error('❌ OpenAI response data:', JSON.stringify(data, null, 2));
       throw new Error('Empty response from OpenAI');
     }
 
@@ -167,9 +171,20 @@ Return the JSON array now:`;
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
       jsonContent = jsonMatch[0];
+      console.log(`📝 Extracted JSON from OpenAI response (${jsonContent.length} chars)`);
+    } else {
+      console.log(`⚠️ No JSON array found in OpenAI response, using full content`);
     }
 
-    const aiMatches = JSON.parse(jsonContent) as Array<{
+    let aiMatches: Array<{
+      pair: number;
+      homeMatch: { name: string; confidence: number } | null;
+      awayMatch: { name: string; confidence: number } | null;
+      reasoning?: string;
+    }>;
+    
+    try {
+      aiMatches = JSON.parse(jsonContent) as Array<{
       pair: number;
       homeMatch: { name: string; confidence: number } | null;
       awayMatch: { name: string; confidence: number } | null;
