@@ -230,7 +230,7 @@ export default function ProfilePage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[rgb(20,20,20)]">
         <div className="text-xl text-neutral-700 dark:text-gray-300">{t('dashboard.loading') || 'Loading...'}</div>
       </div>
     );
@@ -238,14 +238,14 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[rgb(20,20,20)]">
         <div className="text-xl text-red-600 dark:text-red-400">{t('profile.messages.loadError')}</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen pb-20 md:pb-8">
+    <div className="bg-gray-50 dark:bg-[rgb(20,20,20)] min-h-screen pb-20 md:pb-8">
       <div className="max-w-7xl mx-auto pt-8 px-4 sm:px-6 lg:px-8">
         {/* Success/Error Messages */}
         {successMessage && (
@@ -274,7 +274,7 @@ export default function ProfilePage() {
         )}
 
         {/* Profile Header Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-4">
+        <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-4">
           <div className="px-8 py-6">
             {/* User Name and Info */}
             <div>
@@ -298,19 +298,19 @@ export default function ProfilePage() {
         {/* Stats Cards Row */}
         {!editing && userStats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 text-center">
               <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-600 dark:text-accent-dark-400 mb-1">{userStats.totalPoints}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Points totaux</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 text-center">
               <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-600 dark:text-accent-dark-400 mb-1">{userStats.totalPredictions}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Pronostics</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 text-center">
               <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-600 dark:text-accent-dark-400 mb-1">{userStats.accuracy.toFixed(1)}%</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Précision</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6 text-center">
               <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-600 dark:text-accent-dark-400 mb-1">{userStats.competitionsWon}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Compétitions gagnées</div>
             </div>
@@ -323,7 +323,7 @@ export default function ProfilePage() {
           <div className="lg:col-span-2">
             {!editing ? (
               /* View Mode - Timeline/About Section */
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+              <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                   <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">À propos</h2>
                 </div>
@@ -356,15 +356,15 @@ export default function ProfilePage() {
               </div>
             ) : (
               /* Edit Mode */
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[rgb(20,20,20)]/50">
                   <div className="flex justify-between items-center">
                     <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">Modifier le profil</h2>
                     <div className="flex space-x-3">
                       <button
                         onClick={handleCancel}
                         disabled={saving}
-                        className="inline-flex items-center px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 shadow-sm font-medium"
+                        className="inline-flex items-center px-4 py-2 bg-gray-600 dark:bg-[rgb(40,40,40)] text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 shadow-sm font-medium"
                       >
                         <XMarkIcon className="h-4 w-4 mr-2" />
                         {t('profile.cancel') || 'Annuler'}
@@ -392,7 +392,7 @@ export default function ProfilePage() {
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                         placeholder={t('profile.placeholders.fullName') || 'Entrez votre nom complet'}
                       />
                     </div>
@@ -402,7 +402,7 @@ export default function ProfilePage() {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
                         placeholder={t('profile.placeholders.email') || 'Entrez votre e-mail'}
                       />
                     </div>
@@ -412,7 +412,7 @@ export default function ProfilePage() {
                         type="text"
                         value={profile.role}
                         disabled
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 capitalize cursor-not-allowed"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-[rgb(20,20,20)] text-gray-600 dark:text-gray-400 capitalize cursor-not-allowed"
                       />
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('profile.helpText.role') || 'Le rôle ne peut pas être modifié'}</p>
                     </div>
@@ -426,7 +426,7 @@ export default function ProfilePage() {
                           year: 'numeric' 
                         })}
                         disabled
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-[rgb(20,20,20)] text-gray-600 dark:text-gray-400 cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -442,7 +442,7 @@ export default function ProfilePage() {
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 ${
                           password && confirmPassword && password !== confirmPassword ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                         }`}
                         placeholder={t('profile.placeholders.password') || 'Entrez votre nouveau mot de passe'}
@@ -454,7 +454,7 @@ export default function ProfilePage() {
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 ${
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 ${
                           password && confirmPassword && password !== confirmPassword ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                         }`}
                         placeholder="Confirmez votre nouveau mot de passe"
@@ -504,7 +504,7 @@ export default function ProfilePage() {
                         type="url"
                         value={profilePictureUrl}
                         onChange={(e) => setProfilePictureUrl(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder={t('profile.placeholders.profileUrl') || 'https://example.com/image.jpg'}
                       />
                     </div>
@@ -512,7 +512,7 @@ export default function ProfilePage() {
 
                   {profilePictureMethod === 'upload' && (
                     <div>
-                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors bg-gray-50 dark:bg-gray-900/30">
+                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors bg-gray-50 dark:bg-[rgb(20,20,20)]/30">
                         <div className="space-y-1 text-center">
                           {!selectedFile ? (
                             <>
@@ -520,7 +520,7 @@ export default function ProfilePage() {
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
                               <div className="flex text-sm text-gray-600 dark:text-gray-400">
-                                <label className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-primary-600 dark:text-accent-dark-400 hover:text-primary-500 dark:hover:text-accent-dark-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500 dark:focus-within:ring-accent-dark-500">
+                                <label className="relative cursor-pointer bg-white dark:bg-[rgb(38,38,38)] rounded-md font-medium text-primary-600 dark:text-accent-dark-400 hover:text-primary-500 dark:hover:text-accent-dark-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500 dark:focus-within:ring-accent-dark-500">
                                   <span>{t('profile.uploadFileText') || 'Téléverser un fichier'}</span>
                                   <input
                                     type="file"
@@ -571,7 +571,7 @@ export default function ProfilePage() {
           {/* Right Column - Sidebar (for future content) */}
           <div className="lg:col-span-1">
             {!editing && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                   <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">Statistiques</h2>
                 </div>

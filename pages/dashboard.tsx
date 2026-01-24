@@ -173,7 +173,7 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
                        return game ? (
                          <div
                           key={game.gameId}
-                          className={`h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 dark:text-gray-200 font-bold text-sm shadow-modern dark:shadow-dark-modern p-2 bg-white dark:bg-gray-800 ${
+                          className={`h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 dark:text-gray-200 font-bold text-sm shadow-modern dark:shadow-dark-modern p-2 bg-white dark:bg-[rgb(38,38,38)] ${
                             game.result === 'no_bet' ? 'border-2 border-black dark:border-white' :
                             game.points === 3 ? 'border-2 border-yellow-400 dark:border-yellow-500' :
                             game.points === 1 ? 'border-2 border-green-400 dark:border-green-500' :
@@ -236,7 +236,7 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
             ) : (
               <div
                 key={`empty-${index}`}
-                className="h-18 rounded-xl flex items-center justify-center text-gray-400 dark:text-gray-500 font-bold text-sm shadow-modern border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+                className="h-18 rounded-xl flex items-center justify-center text-gray-400 dark:text-gray-500 font-bold text-sm shadow-modern border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(38,38,38)]"
                 title="No data"
               >
                 ?
@@ -261,7 +261,7 @@ const ActiveCompetitionsSection = memo(({ competitions, t }: { competitions: Com
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-5" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-5" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -297,7 +297,7 @@ ActiveCompetitionsSection.displayName = 'ActiveCompetitionsSection';
 // Available Competitions Section
 const AvailableCompetitionsSection = memo(({ competitions, t }: { competitions: Competition[]; t: (key: string) => string }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-modern border border-neutral-200/50 dark:border-gray-700 p-6">
+    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-modern border border-neutral-200/50 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -348,7 +348,7 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
   console.log('🎯 BettingGamesSection - Received games:', games?.length || 0, 'games');
   console.log('🎯 BettingGamesSection - Games data:', games);
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -428,7 +428,7 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
   const currentUserId = session?.user?.id;
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -728,7 +728,7 @@ export default function Dashboard() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="flex items-center justify-center py-32 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <div className="flex items-center justify-center py-32 bg-gray-50 dark:bg-[rgb(20,20,20)] min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 dark:border-accent-dark-500"></div>
       </div>
     );
@@ -740,7 +740,7 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-32 bg-gray-50 dark:bg-gray-900">
+      <div className="flex items-center justify-center py-32 bg-gray-50 dark:bg-[rgb(20,20,20)]">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Error</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
@@ -756,7 +756,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-gray-50 dark:bg-[rgb(20,20,20)] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
 
 

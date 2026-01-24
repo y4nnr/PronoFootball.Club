@@ -307,7 +307,7 @@ const PlayerPointsProgressionWidget = memo(({
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
@@ -324,9 +324,9 @@ const PlayerPointsProgressionWidget = memo(({
         <div className="animate-pulse space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
-              <div className="w-12 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="w-8 h-8 bg-gray-200 dark:bg-[rgb(40,40,40)] rounded-full"></div>
+              <div className="h-6 bg-gray-200 dark:bg-[rgb(40,40,40)] rounded flex-1"></div>
+              <div className="w-12 h-6 bg-gray-200 dark:bg-[rgb(40,40,40)] rounded"></div>
             </div>
           ))}
         </div>
@@ -336,7 +336,7 @@ const PlayerPointsProgressionWidget = memo(({
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
         <div className="text-center py-8">
           <div className="text-red-500 text-4xl mb-3">⚠️</div>
           <p className="text-red-500 mb-2">{error}</p>
@@ -353,7 +353,7 @@ const PlayerPointsProgressionWidget = memo(({
 
   if (playerData.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
@@ -377,7 +377,7 @@ const PlayerPointsProgressionWidget = memo(({
 
   return (
     <div 
-      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-8 w-full relative"
+      className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-8 w-full relative"
       onClick={(e) => {
         // Reset if clicking anywhere except on slices
         const target = e.target as HTMLElement;
@@ -454,7 +454,7 @@ const PlayerPointsProgressionWidget = memo(({
           >
             {/* Player Info */}
             <div className="flex items-center space-x-3 w-36 flex-shrink-0">
-              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
+              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[rgb(40,40,40)] flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
                 {selectedDay ? index + 1 : player.rank}
               </div>
               <img
@@ -470,7 +470,7 @@ const PlayerPointsProgressionWidget = memo(({
             {/* Progress Bar with Integrated Score */}
             <div className="flex-1 relative">
               <div 
-                className="h-10 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                className="h-10 bg-gray-100 dark:bg-[rgb(40,40,40)] rounded-lg overflow-hidden flex shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
                 style={{ width: `${(player.totalPoints / maxTotalPoints) * availableBarWidth}%` }}
               >
                 {(() => {
@@ -545,7 +545,7 @@ const PlayerPointsProgressionWidget = memo(({
               
               {/* Score Badge - Integrated at the end of the bar */}
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-2">
-                <div className="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 shadow-sm">
+                <div className="bg-gray-100 dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 shadow-sm">
                   <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     {selectedDay ? 
                       (() => {

@@ -165,7 +165,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0c0c0c;
     --foreground: #ededed;
     /* Ensure accent colors are available in dark mode */
     --accent-400: rgb(255, 100, 50);    /* FF6432 (lighter scarlet) */
@@ -197,7 +197,7 @@ html, body {
 
 html.dark, html.dark body,
 .dark html, .dark body {
-  background: #111827 !important;
+  background: #0c0c0c !important;
 }
 
 /* Footer white border - ensure it's always visible */

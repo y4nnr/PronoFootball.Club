@@ -313,7 +313,7 @@ export default function Navbar() {
   // Mobile bottom navigation bar
   // Mobile nav shows until 820px (using custom tablet: breakpoint)
   const MobileBottomNav = () => (
-    <div className="fixed bottom-0 left-0 right-0 z-40 tablet:hidden bg-gray-800 dark:bg-gray-900 backdrop-blur-lg border-t-2 border-white dark:border-accent-dark-500 shadow-2xl" style={{ boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.5), 0 -4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
+    <div className="fixed bottom-0 left-0 right-0 z-40 tablet:hidden bg-gray-800 dark:bg-[rgb(20,20,20)] backdrop-blur-lg border-t-2 border-white dark:border-accent-dark-500 shadow-2xl" style={{ boxShadow: '0 -10px 25px -5px rgba(0, 0, 0, 0.5), 0 -4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
       <div className="flex items-center justify-around px-2 py-2 safe-area-inset-bottom">
         {filteredNavigation.map(item => {
           const isActive = router.pathname.startsWith(item.href);
@@ -371,7 +371,7 @@ export default function Navbar() {
   return (
     <>
       {/* Navbar border: consistent until 820px (tablet:), then increase */}
-      <nav className="fixed top-0 left-0 w-full bg-gray-800 dark:bg-gray-900 backdrop-blur-lg shadow-2xl border-b-2 tablet:border-b-3 xl:border-b-4 dark:xl:border-b-2 border-white dark:border-accent-dark-500 z-40" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
+      <nav className="fixed top-0 left-0 w-full bg-gray-800 dark:bg-[rgb(20,20,20)] backdrop-blur-lg shadow-2xl border-b-2 tablet:border-b-3 xl:border-b-4 dark:xl:border-b-2 border-white dark:border-accent-dark-500 z-40" style={{ boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Navbar height: consistent until 820px (tablet:), then increase */}
           <div className={`flex items-center h-16 tablet:h-20 xl:h-24 py-1 tablet:py-2 ${
@@ -516,7 +516,7 @@ export default function Navbar() {
               )}
               {/* Profile dropdown */}
               {session?.user && (
-                <div className={`absolute right-0 w-48 bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700 py-2 z-50 transition-all duration-300 ease-in-out ${
+                <div className={`absolute right-0 w-48 bg-white dark:bg-[rgb(38,38,38)] rounded-xl md:rounded-2xl shadow-lg border border-gray-300 dark:border-gray-700 py-2 z-50 transition-all duration-300 ease-in-out ${
                   isMobile 
                     ? 'top-full mt-2' // Mobile: always minimized, menu just below with small gap
                     : 'top-full' // Desktop: always minimized position (no animation)

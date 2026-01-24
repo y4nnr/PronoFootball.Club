@@ -65,7 +65,7 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
                 <p><span className="font-medium">End:</span> {formatDate(competition.endDate)}</p>
               </div>
               {typeof userRanking === 'number' && (
-                <span className="px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-primary-600 dark:bg-gray-700 text-white dark:text-gray-200 text-xs md:text-sm font-bold">
+                <span className="px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-primary-600 dark:bg-[rgb(40,40,40)] text-white dark:text-gray-200 text-xs md:text-sm font-bold">
                   {t('competition.yourPosition')}: {userRanking}
                 </span>
               )}
@@ -80,7 +80,7 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
                 {competition.gamesPlayed}/{competition.totalGames} matchs
               </span>
             </div>
-            <div className="relative w-full bg-neutral-200 dark:bg-gray-700 rounded-full h-8">
+            <div className="relative w-full bg-neutral-200 dark:bg-[rgb(40,40,40)] rounded-full h-8">
               <div 
                 className="bg-gradient-to-r from-primary-500 to-primary-600 dark:from-accent-dark-500 dark:to-accent-dark-600 h-8 rounded-full transition-all duration-300 ease-out flex items-center justify-center"
                 style={{ width: `${competition.progressPercentage}%`, minWidth: competition.progressPercentage === 0 ? '0%' : 'auto' }}

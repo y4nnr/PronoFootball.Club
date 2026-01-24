@@ -2,9 +2,9 @@ export default function Footer() {
   return (
     <>
       {/* White border line - separate element to ensure visibility against white background */}
-      <div className="w-full bg-white dark:bg-gray-800" style={{ height: '4px', boxShadow: '0 -2px 4px rgba(0,0,0,0.1)' }}></div>
+      <div className="w-full bg-white dark:bg-[rgb(38,38,38)]" style={{ height: '4px', boxShadow: '0 -2px 4px rgba(0,0,0,0.1)' }}></div>
       <footer 
-        className="w-full bg-gray-800 dark:bg-gray-900 backdrop-blur-lg shadow-2xl mt-auto border-t border-white dark:border-accent-dark-500" 
+        className="w-full bg-gray-800 dark:bg-[rgb(20,20,20)] backdrop-blur-lg shadow-2xl mt-auto border-t border-white dark:border-accent-dark-500" 
         style={{ minHeight: 96 }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

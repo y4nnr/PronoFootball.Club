@@ -305,13 +305,13 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
   };
 
   return (
-    <div className="bg-[#f3f4f6] dark:bg-gray-900 min-h-screen">
+    <div className="bg-[#f3f4f6] dark:bg-[rgb(20,20,20)] min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
 
 
         {/* Remarque Banner - much more visible */}
         {!loading && leaderboardData && (
-          <div className="bg-accent-100 dark:bg-gray-800 border border-accent-400 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-lg p-4 mb-8 shadow">
+          <div className="bg-accent-100 dark:bg-[rgb(38,38,38)] border border-accent-400 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-lg p-4 mb-8 shadow">
             <p className="text-base">
               <strong>{t('note')}:</strong> {t('stats.streakNotice')}
             </p>
@@ -319,7 +319,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
         )}
 
         {/* Statistiques Personnelles */}
-        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <section className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
               <span className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -332,7 +332,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               <select
                 value={selectedSportPersonal}
                 onChange={(e) => setSelectedSportPersonal(e.target.value as 'ALL' | 'FOOTBALL' | 'RUGBY')}
-                className="px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-600 dark:focus:ring-blue-500 focus:border-primary-600 dark:focus:border-blue-500"
+                className="px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-600 dark:focus:ring-blue-500 focus:border-primary-600 dark:focus:border-blue-500"
               >
                 <option value="ALL">{t('stats.allSports') || 'Tous'}</option>
                 <option value="FOOTBALL">{t('stats.football') || 'Football'}</option>
@@ -340,7 +340,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               </select>
             </div>
             {/* Sport Filter Tabs - Desktop only */}
-            <div className="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-[rgb(38,38,38)] rounded-lg p-1">
               <button
                 onClick={() => setSelectedSportPersonal('ALL')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -439,7 +439,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
         </section>
 
         {/* Statistiques Globales */}
-        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 mb-8 border border-gray-200 dark:border-gray-700" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <section className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl p-6 mb-8 border border-gray-200 dark:border-gray-700" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
               <span className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -452,7 +452,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               <select
                 value={selectedSportGlobal}
                 onChange={(e) => setSelectedSportGlobal(e.target.value as 'ALL' | 'FOOTBALL' | 'RUGBY')}
-                className="px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-600 dark:focus:ring-blue-500 focus:border-primary-600 dark:focus:border-blue-500"
+                className="px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-600 dark:focus:ring-blue-500 focus:border-primary-600 dark:focus:border-blue-500"
               >
                 <option value="ALL">{t('stats.allSports') || 'Tous'}</option>
                 <option value="FOOTBALL">{t('stats.football') || 'Football'}</option>
@@ -460,7 +460,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               </select>
             </div>
             {/* Sport Filter Tabs - Desktop only */}
-            <div className="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-[rgb(38,38,38)] rounded-lg p-1">
               <button
                 onClick={() => setSelectedSportGlobal('ALL')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -513,8 +513,8 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     <React.Fragment key={player.id}>
                       <div
                         className={"flex items-center justify-between p-3 rounded-xl border border-primary-300/60 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" + 
-                          (expandedUserId === player.id ? " ring-2 ring-primary-400 dark:ring-accent-dark-500 bg-blue-100 dark:bg-gray-700" : "") +
-                          (player.id === currentUser.id ? " bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : " bg-white dark:bg-gray-800")}
+                          (expandedUserId === player.id ? " ring-2 ring-primary-400 dark:ring-accent-dark-500 bg-blue-100 dark:bg-[rgb(40,40,40)]" : "") +
+                          (player.id === currentUser.id ? " bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : " bg-white dark:bg-[rgb(38,38,38)]")}
                         onClick={() => handleUserClick(player)}
                         title="Voir le détail par compétition"
                       >
@@ -535,7 +535,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                       
                       {/* Inline Breakdown - Only for this specific player */}
                       {expandedUserId === player.id && (
-                        <div className="mt-2 p-3 bg-neutral-50 dark:bg-gray-700 border border-neutral-200/50 dark:border-gray-600 rounded-lg">
+                        <div className="mt-2 p-3 bg-neutral-50 dark:bg-[rgb(40,40,40)] border border-neutral-200/50 dark:border-gray-600 rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-medium text-neutral-600 dark:text-gray-300">
                               {t('pointsBreakdownByCompetition') || 'Points breakdown by competition'}
@@ -595,7 +595,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 ) : leaderboardData?.topPlayersByAverage ? (
                   leaderboardData.topPlayersByAverage.slice(0, 10).map((player, index) => (
                     <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-primary-300/60 dark:border-gray-600 ${
-                      player.id === currentUser.id ? "bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-gray-800"
+                      player.id === currentUser.id ? "bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(38,38,38)]"
                     }`}>
                       <div className="flex items-center space-x-3">
                         <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500 dark:text-yellow-400' : index === 1 ? 'text-gray-400 dark:text-gray-500' : index === 2 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'}`}>{index + 1}.</span>
@@ -638,7 +638,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     .slice(0, 10)
                     .map((player, index) => (
                       <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 dark:border-gray-600 ${
-                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-gray-800"
+                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(38,38,38)]"
                       }`}>
                         <div className="flex items-center space-x-3">
                           <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500 dark:text-yellow-400' : index === 1 ? 'text-gray-400 dark:text-gray-500' : index === 2 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'}`}>{index + 1}.</span>
@@ -681,7 +681,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     .slice(0, 10)
                     .map((player, index) => (
                       <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 dark:border-gray-600 ${
-                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-gray-800"
+                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(38,38,38)]"
                       }`}>
                         <div className="flex items-center space-x-3">
                           <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500 dark:text-yellow-400' : index === 1 ? 'text-gray-400 dark:text-gray-500' : index === 2 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'}`}>{index + 1}.</span>
@@ -724,7 +724,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     .slice(0, 10)
                     .map((player, index) => (
                       <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 dark:border-gray-600 ${
-                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-gray-800"
+                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-gray-800 ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(38,38,38)]"
                       }`}>
                         <div className="flex items-center space-x-3">
                           <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-red-500 dark:text-red-400' : index === 1 ? 'text-orange-500 dark:text-orange-400' : index === 2 ? 'text-yellow-500 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-300'}`}>{index + 1}.</span>
@@ -775,7 +775,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     return sortedWinCounts.map((winCount, groupIndex) => (
                       <div key={winCount} className={`pl-4 py-3 rounded-xl mb-2 flex flex-col border-l-8 ${
                         groupIndex === 0 ? 'border-yellow-400 dark:border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' :
-                        groupIndex === 1 ? 'border-gray-400 dark:border-gray-500 bg-gray-50 dark:bg-gray-800' :
+                        groupIndex === 1 ? 'border-gray-400 dark:border-gray-500 bg-gray-50 dark:bg-[rgb(38,38,38)]' :
                         groupIndex === 2 ? 'border-orange-400 dark:border-orange-500 bg-orange-50 dark:bg-orange-900/20' :
                         'border-blue-400 dark:border-accent-dark-500 bg-blue-50 dark:bg-accent-dark-900/20'
                       }`}>
@@ -784,7 +784,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {groupedByWins[winCount].map((player) => (
-                            <div key={player.name} className="flex items-start space-x-3 bg-white dark:bg-gray-800 rounded-lg p-4 shadow border border-gray-200 dark:border-gray-700 min-w-0 flex-1">
+                            <div key={player.name} className="flex items-start space-x-3 bg-white dark:bg-[rgb(38,38,38)] rounded-lg p-4 shadow border border-gray-200 dark:border-gray-700 min-w-0 flex-1">
                               <img 
                                 src={getUserAvatar(player.name)} 
                                 alt={player.name}
@@ -794,7 +794,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                                 <div className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-2">{player.name}</div>
                                 <div className="space-y-1">
                                   {player.wonCompetitions.split(', ').map((competition, index) => (
-                                    <div key={index} className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded border dark:border-gray-600">
+                                    <div key={index} className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[rgb(40,40,40)] px-2 py-1 rounded border dark:border-gray-600">
                                       {competition.trim()}
                                     </div>
                                   ))}
@@ -816,14 +816,14 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
 
 
         {/* Palmarès Section */}
-        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <section className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <div className="flex items-center mb-6">
             <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
               <TrophyIcon className="h-6 w-6 text-white" />
             </div>
             <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">Historique des Compétitions</h2>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-neutral-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-md border border-neutral-200 dark:border-gray-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-neutral-200 dark:divide-gray-700">
                 <thead className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-700 dark:to-gray-600">
@@ -848,7 +848,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-neutral-200 dark:divide-gray-700">
+                <tbody className="bg-white dark:bg-[rgb(38,38,38)] divide-y divide-neutral-200 dark:divide-gray-700">
                   {loading ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center">

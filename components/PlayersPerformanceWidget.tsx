@@ -127,7 +127,7 @@ const PlayerPerformanceRow = memo(({
           })() : (
             <div
               key={`empty-${index}`}
-              className="flex-1 min-w-0 h-8 rounded-md flex items-center justify-center text-gray-400 dark:text-gray-400 font-bold text-xs border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+              className="flex-1 min-w-0 h-8 rounded-md flex items-center justify-center text-gray-400 dark:text-gray-400 font-bold text-xs border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(38,38,38)]"
               title="No data"
             >
               ?
@@ -139,7 +139,7 @@ const PlayerPerformanceRow = memo(({
       {/* Total Points */}
       <div className="ml-3 w-16 flex-shrink-0">
         <div className={`h-8 rounded-md flex items-center justify-center text-gray-800 dark:text-gray-200 font-bold text-sm border ${
-          isCurrentUser ? 'border-blue-300 dark:border-blue-300 bg-blue-100 dark:bg-gray-700' : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800'
+          isCurrentUser ? 'border-blue-300 dark:border-blue-300 bg-blue-100 dark:bg-[rgb(40,40,40)]' : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-[rgb(38,38,38)]'
         }`}>
           {totalPoints}
         </div>
@@ -162,7 +162,7 @@ const PlayersPerformanceWidget = memo(({
 
   if (playersPerformance.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
         <div className="text-center py-8">
           <div className="text-gray-400 dark:text-gray-500 text-4xl mb-3">📊</div>
           <p className="text-gray-500 dark:text-gray-400">Aucune donnée de performance disponible</p>
@@ -175,7 +175,7 @@ const PlayersPerformanceWidget = memo(({
   const games = playersPerformance[0]?.lastGamesPerformance || [];
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl dark:shadow-dark-xl p-3 mb-8 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+    <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl dark:shadow-dark-xl p-3 mb-8 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center">
           <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
@@ -191,7 +191,7 @@ const PlayersPerformanceWidget = memo(({
 
       {/* Games Header - Hidden on smaller screens when it doesn't fit */}
       <div className="mb-2 hidden xl:block">
-        <div className="flex items-center py-2 px-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+        <div className="flex items-center py-2 px-3 bg-gray-50 dark:bg-[rgb(40,40,40)] rounded-md">
           {/* Player Profile Area - Empty space to match player row structure */}
           <div className="flex items-center space-x-2 min-w-0 w-32">
             {/* Empty space to match avatar + name area */}
@@ -203,7 +203,7 @@ const PlayersPerformanceWidget = memo(({
               return game ? (
                 <div
                   key={game.gameId}
-                  className="flex-1 min-w-0 h-16 rounded-md flex flex-col items-center justify-center text-gray-700 dark:text-gray-200 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-0.5 py-1"
+                  className="flex-1 min-w-0 h-16 rounded-md flex flex-col items-center justify-center text-gray-700 dark:text-gray-200 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(38,38,38)] px-0.5 py-1"
                   title={`${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore}`}
                   style={{ minWidth: '0', maxWidth: '100%' }}
                 >
@@ -241,7 +241,7 @@ const PlayersPerformanceWidget = memo(({
               ) : (
                 <div
                   key={`empty-${index}`}
-                  className="flex-1 min-w-0 h-16 rounded-md flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+                  className="flex-1 min-w-0 h-16 rounded-md flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(38,38,38)]"
                 >
                   ?
                 </div>
@@ -250,7 +250,7 @@ const PlayersPerformanceWidget = memo(({
           </div>
           {/* Total Points Header */}
           <div className="ml-3 w-16 flex-shrink-0">
-            <div className="h-16 rounded-md flex items-center justify-center text-gray-700 dark:text-gray-200 text-xs font-semibold border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+            <div className="h-16 rounded-md flex items-center justify-center text-gray-700 dark:text-gray-200 text-xs font-semibold border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-[rgb(38,38,38)]">
               Total
             </div>
           </div>

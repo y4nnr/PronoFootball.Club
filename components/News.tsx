@@ -91,7 +91,7 @@ export default function News() {
 
   return (
     <section
-      className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-700 p-5"
+      className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-700 p-5"
       style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
     >
       <div className="flex items-center justify-between mb-4">
@@ -117,7 +117,7 @@ export default function News() {
           {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => (
             <div
               key={idx}
-              className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-lg overflow-hidden animate-pulse"
+              className="relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-lg overflow-hidden animate-pulse"
             >
               {/* Header skeleton */}
               <div className="flex items-center gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-700 dark:to-gray-700 border-b border-gray-300 dark:border-accent-dark-500">
@@ -129,8 +129,8 @@ export default function News() {
               </div>
               {/* Content skeleton */}
               <div className="px-3 md:px-4 py-3 md:py-4 space-y-2">
-                <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded" />
-                <div className="w-5/6 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="w-full h-3 bg-gray-200 dark:bg-[rgb(40,40,40)] rounded" />
+                <div className="w-5/6 h-3 bg-gray-200 dark:bg-[rgb(40,40,40)] rounded" />
               </div>
             </div>
           ))}
@@ -152,12 +152,12 @@ export default function News() {
           {items.map((item, index) => (
             <div
               key={`${item.date}-${index}`}
-              className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-lg dark:shadow-dark-modern-lg overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600"
+              className="relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-lg dark:shadow-dark-modern-lg overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600"
             >
               {/* Header Section - Date & Competition (similar to GameCard) */}
               <div className="flex items-center gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-700 dark:to-gray-700 border-b border-gray-300 dark:border-accent-dark-500">
                 {/* Date */}
-                <div className="flex items-center gap-2 flex-shrink-0 bg-white dark:bg-gray-800 px-2.5 py-1 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm">
+                <div className="flex items-center gap-2 flex-shrink-0 bg-white dark:bg-[rgb(38,38,38)] px-2.5 py-1 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm">
                   <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
