@@ -907,7 +907,14 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                   </button>
                   <button
                     type="button"
-                    onClick={() => router.push('/dashboard')}
+                    onClick={() => {
+                      // Go back to previous page, or fallback to dashboard if no history
+                      if (window.history.length > 1) {
+                        router.back();
+                      } else {
+                        router.push('/dashboard');
+                      }
+                    }}
                     className="px-6 sm:px-8 py-3 sm:py-3.5 md:py-4 text-base sm:text-lg font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     {t('betting.cancel')}
