@@ -649,18 +649,30 @@ export default async function handler(
           );
           
           // CRITICAL: If found by team name matching, verify date is reasonable
-          if (matchingGame && externalMatch.utcDate && matchingGame.date) {
-            const apiMatchDate = new Date(externalMatch.utcDate);
-            const dbGameDate = new Date(matchingGame.date);
-            const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
-            
-            // Reject if dates are more than 60 days apart (likely different season)
-            if (daysDiff > 60) {
-              console.log(`   ⚠️ Team name match found but date is from different season - rejecting`);
-              console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${matchingGame.competition.name})`);
-              console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
-              console.log(`      Date difference: ${daysDiff.toFixed(1)} days`);
-              matchingGame = null; // Reject the match
+          if (matchingGame) {
+            // ALWAYS verify date - this is critical to prevent matching games from different seasons
+            if (externalMatch.utcDate && matchingGame.date) {
+              const apiMatchDate = new Date(externalMatch.utcDate);
+              const dbGameDate = new Date(matchingGame.date);
+              const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
+              
+              // Reject if dates are more than 30 days apart (very strict - prevents cross-season matches)
+              // Changed from 60 to 30 days to be more strict
+              if (daysDiff > 30) {
+                console.log(`   ⚠️ Team name match found but date is from different season - REJECTING`);
+                console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${matchingGame.competition.name})`);
+                console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
+                console.log(`      Date difference: ${daysDiff.toFixed(1)} days (threshold: 30 days)`);
+                matchingGame = null; // Reject the match
+              } else {
+                console.log(`   ✅ Date verified: ${daysDiff.toFixed(1)} days difference (within 30 day threshold)`);
+              }
+            } else {
+              // If no date available, be very cautious - reject the match
+              console.log(`   ⚠️ Team name match found but NO DATE available for verification - REJECTING for safety`);
+              console.log(`      DB Date: ${matchingGame.date ? new Date(matchingGame.date).toISOString().split('T')[0] : 'MISSING'}`);
+              console.log(`      API Date: ${externalMatch.utcDate ? new Date(externalMatch.utcDate).toISOString().split('T')[0] : 'MISSING'}`);
+              matchingGame = null; // Reject the match - too risky without date verification
             }
           }
         }
