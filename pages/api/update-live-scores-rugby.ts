@@ -222,6 +222,7 @@ export default async function handler(
     // Always try fetching by ID if we have externalId (more reliable than date queries)
     // Also check for games with externalStatus FT but still LIVE (need to be updated to FINISHED)
     const gamesWithExternalId = ourLiveGames.filter(game => game.externalId);
+    const gamesWithoutExternalId = ourLiveGames.filter(game => !game.externalId);
     
     // gamesNeedingUpdate was already defined above, reuse it
     if (gamesWithExternalId.length > 0 || gamesNeedingUpdate.length > 0) {
@@ -256,6 +257,49 @@ export default async function handler(
       const newMatches = matchesById.filter(m => !existingIds.has(m.id));
       allExternalMatches = [...allExternalMatches, ...newMatches];
       console.log(`📊 Total external rugby matches after ID lookup: ${allExternalMatches.length} (${newMatches.length} new from ID lookup)`);
+    }
+    
+    // CRITICAL FIX: For games WITHOUT externalId, also search by date and team names
+    // This is what the Admin tool does and it works! We should do the same here.
+    if (gamesWithoutExternalId.length > 0) {
+      console.log(`🔍 Found ${gamesWithoutExternalId.length} LIVE rugby games WITHOUT externalId - searching by date and team names...`);
+      const matchesByDate: any[] = [];
+      
+      for (const game of gamesWithoutExternalId) {
+        try {
+          const gameDate = new Date(game.date);
+          const dateStr = gameDate.toISOString().split('T')[0];
+          console.log(`   🔍 Searching for ${game.homeTeam.name} vs ${game.awayTeam.name} on ${dateStr}...`);
+          
+          // Get matches for this specific date
+          const dateMatches = await rugbyAPI.getMatchesByDateRange(dateStr, dateStr);
+          console.log(`   📊 Found ${dateMatches.length} matches on ${dateStr}`);
+          
+          // Try to find matching match by team names (similar to Admin tool logic)
+          const matchingMatch = dateMatches.find(m => {
+            const homeMatch = m.homeTeam.name.toLowerCase().includes(game.homeTeam.name.toLowerCase()) ||
+                             game.homeTeam.name.toLowerCase().includes(m.homeTeam.name.toLowerCase());
+            const awayMatch = m.awayTeam.name.toLowerCase().includes(game.awayTeam.name.toLowerCase()) ||
+                             game.awayTeam.name.toLowerCase().includes(m.awayTeam.name.toLowerCase());
+            return homeMatch && awayMatch;
+          });
+          
+          if (matchingMatch) {
+            console.log(`   ✅ Found match by date/team search: ${matchingMatch.homeTeam.name} vs ${matchingMatch.awayTeam.name} (ID: ${matchingMatch.id}, Status: ${matchingMatch.externalStatus})`);
+            matchesByDate.push(matchingMatch);
+          } else {
+            console.log(`   ⚠️ No match found for ${game.homeTeam.name} vs ${game.awayTeam.name} on ${dateStr}`);
+          }
+        } catch (error) {
+          console.log(`   ⚠️ Could not search for ${game.homeTeam.name} vs ${game.awayTeam.name}:`, error);
+        }
+      }
+      
+      // Merge with existing matches (avoid duplicates)
+      const existingIds = new Set(allExternalMatches.map(m => m.id));
+      const newMatches = matchesByDate.filter(m => !existingIds.has(m.id));
+      allExternalMatches = [...allExternalMatches, ...newMatches];
+      console.log(`📊 Total external rugby matches after date/team search: ${allExternalMatches.length} (${newMatches.length} new from date/team search)`);
     }
 
     // If no external matches, check if we need to auto-finish old LIVE games
@@ -408,6 +452,21 @@ export default async function handler(
     // Combine LIVE games and recently finished games for matching
     const allGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames];
     console.log(`📊 Total rugby games to check for updates: ${allGamesToCheck.length} (${ourLiveGames.length} LIVE + ${recentlyFinishedGames.length} potentially finished)`);
+    
+    // Log the target game if it's in our list
+    const targetGame = allGamesToCheck.find(g => 
+      (g.homeTeam.name.includes('Bordeaux') && g.awayTeam.name.includes('Stade Francais')) ||
+      (g.homeTeam.name.includes('Bordeaux') && g.awayTeam.name.includes('Stade'))
+    );
+    if (targetGame) {
+      console.log(`🎯 TARGET GAME FOUND IN OUR DB: ${targetGame.homeTeam.name} vs ${targetGame.awayTeam.name}`);
+      console.log(`   Game ID: ${targetGame.id}, Status: ${targetGame.status}, Date: ${targetGame.date}`);
+      console.log(`   External ID: ${targetGame.externalId || 'NOT SET'}`);
+    } else {
+      console.log(`⚠️ TARGET GAME NOT FOUND IN ourLiveGames or recentlyFinishedGames`);
+      console.log(`   Looking for: Bordeaux Begles vs Stade Francais Paris`);
+      console.log(`   Available games: ${allGamesToCheck.map(g => `${g.homeTeam.name} vs ${g.awayTeam.name}`).join(', ')}`);
+    }
     
     // Verify that all teams are rugby teams
     const nonRugbyTeams = allGamesToCheck.filter(game => 
