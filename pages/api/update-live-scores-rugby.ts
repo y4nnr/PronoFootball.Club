@@ -618,11 +618,23 @@ export default async function handler(
           const homeMatch = rugbyAPI.findBestTeamMatch(externalMatch.homeTeam.name, uniqueTeams);
           const awayMatch = rugbyAPI.findBestTeamMatch(externalMatch.awayTeam.name, uniqueTeams);
 
-          console.log(`   Home match: ${homeMatch ? homeMatch.team.name : 'NOT FOUND'} (external: ${externalMatch.homeTeam.name})`);
-          console.log(`   Away match: ${awayMatch ? awayMatch.team.name : 'NOT FOUND'} (external: ${externalMatch.awayTeam.name})`);
+          console.log(`   Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, method: ${homeMatch.method})` : 'NOT FOUND'} (external: ${externalMatch.homeTeam.name})`);
+          console.log(`   Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, method: ${awayMatch.method})` : 'NOT FOUND'} (external: ${externalMatch.awayTeam.name})`);
 
-          if (!homeMatch || !awayMatch) {
-            console.log(`⚠️ No team matches found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+          // CRITICAL: Require BOTH teams to match with HIGH confidence (at least 0.85 weighted score)
+          // This prevents false positives from low-confidence matches
+          const MIN_TEAM_MATCH_CONFIDENCE = 0.85;
+          const homeMatchConfident = homeMatch && homeMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
+          const awayMatchConfident = awayMatch && awayMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
+
+          if (!homeMatchConfident || !awayMatchConfident) {
+            console.log(`⚠️ No HIGH CONFIDENCE team matches found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            if (homeMatch && homeMatch.score < MIN_TEAM_MATCH_CONFIDENCE) {
+              console.log(`   Home match score ${(homeMatch.score * 100).toFixed(1)}% is below threshold ${(MIN_TEAM_MATCH_CONFIDENCE * 100).toFixed(1)}%`);
+            }
+            if (awayMatch && awayMatch.score < MIN_TEAM_MATCH_CONFIDENCE) {
+              console.log(`   Away match score ${(awayMatch.score * 100).toFixed(1)}% is below threshold ${(MIN_TEAM_MATCH_CONFIDENCE * 100).toFixed(1)}%`);
+            }
             continue;
           }
 
