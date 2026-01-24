@@ -525,8 +525,22 @@ export default async function handler(
             console.log(`      Home match: ${homeMatch ? homeMatch.team.name : 'NOT FOUND'}, Away match: ${awayMatch ? awayMatch.team.name : 'NOT FOUND'}`);
             matchingGame = null; // Reject the match
           } else {
-            console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
-            console.log(`      Team names verified: ${homeMatch.team.name} and ${awayMatch.team.name}`);
+            // CRITICAL: Verify competition name makes sense for rugby
+            // Reject if external competition is clearly a football competition
+            const externalCompName = externalMatch.competition?.name?.toLowerCase() || '';
+            const footballKeywords = ['premier league', 'ligue 1', 'serie a', 'bundesliga', 'la liga', 'champions league', 'europa league', 'league two', 'league one', 'championship', 'world cup', 'euro'];
+            const isFootballCompetition = footballKeywords.some(keyword => externalCompName.includes(keyword));
+            
+            if (isFootballCompetition) {
+              console.log(`   ⚠️ ExternalId match found but competition is wrong sport - rejecting`);
+              console.log(`      DB Competition: ${matchingGame.competition.name} (RUGBY)`);
+              console.log(`      API Competition: ${externalMatch.competition?.name || 'unknown'} (appears to be FOOTBALL)`);
+              matchingGame = null; // Reject the match
+            } else {
+              console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+              console.log(`      Team names verified: ${homeMatch.team.name} and ${awayMatch.team.name}`);
+              console.log(`      Competition verified: ${externalMatch.competition?.name || 'unknown'}`);
+            }
           }
         }
 

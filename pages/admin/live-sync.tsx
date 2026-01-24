@@ -146,6 +146,9 @@ export default function AdminLiveSync() {
       const params = new URLSearchParams();
       if (game.externalId) {
         params.set('externalId', game.externalId);
+        // Also pass gameId and sportType so endpoint can determine which API to use
+        params.set('gameId', game.id);
+        params.set('sportType', game.competition.sportType);
       } else {
         params.set('gameId', game.id);
         params.set('sportType', game.competition.sportType);

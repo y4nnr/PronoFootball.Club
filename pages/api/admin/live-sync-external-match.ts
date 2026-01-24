@@ -73,37 +73,95 @@ export default async function handler(
       return res.status(500).json({ externalMatch: null, error: 'API-FOOTBALL not found in environment variables' });
     }
 
-    // If we have externalId, fetch directly
+    // If we have externalId, fetch directly (but need to know sport type)
     if (externalId) {
+      // If we have gameId, fetch game first to determine sport type
+      let gameSportType: string | null = null;
+      if (gameId) {
+        try {
+          const { prisma } = await import('../../../lib/prisma');
+          const game = await prisma.game.findUnique({
+            where: { id: gameId },
+            include: {
+              competition: {
+                select: { sportType: true }
+              }
+            }
+          });
+          if (game) {
+            gameSportType = game.competition.sportType;
+          }
+        } catch (error) {
+          console.error('[ADMIN LIVE SYNC] Error fetching game for sport type:', error);
+        }
+      }
+      
+      // Use sportType from query if available, otherwise from game
+      const targetSportType = sportType || gameSportType;
+      
       try {
-        const apiSports = new ApiSportsV2(apiKey);
-        const match = await apiSports.getMatchById(parseInt(externalId, 10));
-        
-        if (match) {
-          const externalMatch = {
-            id: match.id,
-            status: match.status,
-            externalStatus: match.externalStatus,
-            elapsedMinute: match.elapsedMinute,
-            homeTeam: {
-              id: match.homeTeam.id,
-              name: match.homeTeam.name,
-            },
-            awayTeam: {
-              id: match.awayTeam.id,
-              name: match.awayTeam.name,
-            },
-            score: {
-              home: match.score.fullTime.home,
-              away: match.score.fullTime.away,
-            },
-            date: match.utcDate,
-            competition: {
-              id: match.competition.id,
-              name: match.competition.name,
-            },
-          };
-          return res.status(200).json({ externalMatch });
+        if (targetSportType === 'RUGBY') {
+          // Use Rugby API
+          const rugbyAPI = new RugbyAPI(apiKey);
+          const match = await rugbyAPI.getMatchById(parseInt(externalId, 10));
+          
+          if (match) {
+            const externalMatch = {
+              id: match.id,
+              status: match.status,
+              externalStatus: match.externalStatus,
+              elapsedMinute: match.elapsedMinute,
+              homeTeam: {
+                id: match.homeTeam.id,
+                name: match.homeTeam.name,
+              },
+              awayTeam: {
+                id: match.awayTeam.id,
+                name: match.awayTeam.name,
+              },
+              score: {
+                home: match.score.fullTime.home,
+                away: match.score.fullTime.away,
+              },
+              date: match.utcDate,
+              competition: {
+                id: match.competition.id,
+                name: match.competition.name,
+              },
+            };
+            return res.status(200).json({ externalMatch });
+          }
+        } else {
+          // Default to Football API (or if sportType is FOOTBALL or unknown)
+          const apiSports = new ApiSportsV2(apiKey);
+          const match = await apiSports.getMatchById(parseInt(externalId, 10));
+          
+          if (match) {
+            const externalMatch = {
+              id: match.id,
+              status: match.status,
+              externalStatus: match.externalStatus,
+              elapsedMinute: match.elapsedMinute,
+              homeTeam: {
+                id: match.homeTeam.id,
+                name: match.homeTeam.name,
+              },
+              awayTeam: {
+                id: match.awayTeam.id,
+                name: match.awayTeam.name,
+              },
+              score: {
+                home: match.score.fullTime.home,
+                away: match.score.fullTime.away,
+              },
+              date: match.utcDate,
+              competition: {
+                id: match.competition.id,
+                name: match.competition.name,
+              },
+            };
+            return res.status(200).json({ externalMatch });
+          }
         }
       } catch (error) {
         console.error('[ADMIN LIVE SYNC] Error fetching external match by ID:', error);

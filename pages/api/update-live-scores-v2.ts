@@ -511,28 +511,40 @@ export default async function handler(
               console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
               console.log(`      Home match: ${homeMatch ? homeMatch.team.name : 'NOT FOUND'}, Away match: ${awayMatch ? awayMatch.team.name : 'NOT FOUND'}`);
             } else {
-              // Team names match, now verify date
-              if (externalMatch.utcDate) {
-                const apiMatchDate = new Date(externalMatch.utcDate);
-                const dbGameDate = new Date(externalIdMatch.date);
-                const hoursDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60);
-                
-                if (hoursDiff <= 1) {
-                  matchingGame = externalIdMatch;
-                  matchConfidence = 'HIGH';
-                  matchMethod = 'externalId + team names + date verified';
-                  console.log(`   ✅ HIGH CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
-                  console.log(`      Team names verified, date verified: ${hoursDiff.toFixed(2)} hours difference`);
-                } else {
-                  console.log(`   ⚠️ ExternalId match found, team names match, but date differs by ${hoursDiff.toFixed(2)} hours - rejecting`);
-                }
+              // CRITICAL: Verify competition name makes sense for football
+              // Reject if external competition is clearly a rugby competition
+              const externalCompName = externalMatch.competition?.name?.toLowerCase() || '';
+              const rugbyKeywords = ['top 14', 'pro d2', 'six nations', 'champions cup', 'challenge cup', 'premiership', 'super rugby'];
+              const isRugbyCompetition = rugbyKeywords.some(keyword => externalCompName.includes(keyword));
+              
+              if (isRugbyCompetition) {
+                console.log(`   ⚠️ ExternalId match found but competition is wrong sport - rejecting`);
+                console.log(`      DB Competition: ${externalIdMatch.competition.name} (FOOTBALL)`);
+                console.log(`      API Competition: ${externalMatch.competition?.name || 'unknown'} (appears to be RUGBY)`);
               } else {
-                // Team names match but no date to verify
-                matchingGame = externalIdMatch;
-                matchConfidence = 'MEDIUM';
-                matchMethod = 'externalId + team names verified (no date)';
-                console.log(`   ⚠️ MEDIUM CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
-                console.log(`      Team names verified, but no date to verify`);
+                // Team names match and competition is correct, now verify date
+                if (externalMatch.utcDate) {
+                  const apiMatchDate = new Date(externalMatch.utcDate);
+                  const dbGameDate = new Date(externalIdMatch.date);
+                  const hoursDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60);
+                  
+                  if (hoursDiff <= 1) {
+                    matchingGame = externalIdMatch;
+                    matchConfidence = 'HIGH';
+                    matchMethod = 'externalId + team names + competition + date verified';
+                    console.log(`   ✅ HIGH CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+                    console.log(`      Team names verified, competition verified, date verified: ${hoursDiff.toFixed(2)} hours difference`);
+                  } else {
+                    console.log(`   ⚠️ ExternalId match found, team names match, competition match, but date differs by ${hoursDiff.toFixed(2)} hours - rejecting`);
+                  }
+                } else {
+                  // Team names match and competition is correct but no date to verify
+                  matchingGame = externalIdMatch;
+                  matchConfidence = 'MEDIUM';
+                  matchMethod = 'externalId + team names + competition verified (no date)';
+                  console.log(`   ⚠️ MEDIUM CONFIDENCE: Found by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+                  console.log(`      Team names verified, competition verified, but no date to verify`);
+                }
               }
             }
           }
