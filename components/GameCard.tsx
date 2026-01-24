@@ -403,15 +403,28 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
         {/* Score - PRIMARY: Largest and boldest - Maximum contrast */}
         <div className="flex-1 flex justify-center min-w-[60px] md:min-w-[80px]">
-          <span className={`text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 dark:text-gray-100 transition-all duration-300 ${
-            isHighlighted && (highlightType === 'score' || highlightType === 'both') ? 'animate-pulse scale-110 text-yellow-600' : ''
-          }`}>
-            {game.status === 'FINISHED' && typeof game.homeScore === 'number' && typeof game.awayScore === 'number'
-              ? `${game.homeScore} - ${game.awayScore}`
-              : game.status === 'LIVE' && typeof game.liveHomeScore === 'number' && typeof game.liveAwayScore === 'number'
-              ? `${game.liveHomeScore} - ${game.liveAwayScore}`
-              : <span className="text-gray-400 dark:text-gray-500">-</span>}
-          </span>
+          {(() => {
+            const homeScore = game.status === 'FINISHED' ? game.homeScore : game.liveHomeScore;
+            const awayScore = game.status === 'FINISHED' ? game.awayScore : game.liveAwayScore;
+            const hasTwoDigitScores = typeof homeScore === 'number' && typeof awayScore === 'number' && 
+                                      homeScore >= 10 && awayScore >= 10;
+            // Reduce font size when both scores are 2 digits
+            const fontSizeClass = hasTwoDigitScores 
+              ? 'text-xl md:text-2xl lg:text-3xl' 
+              : 'text-2xl md:text-3xl lg:text-4xl';
+            
+            return (
+              <span className={`${fontSizeClass} font-black text-gray-900 dark:text-gray-100 transition-all duration-300 ${
+                isHighlighted && (highlightType === 'score' || highlightType === 'both') ? 'animate-pulse scale-110 text-yellow-600' : ''
+              }`}>
+                {game.status === 'FINISHED' && typeof game.homeScore === 'number' && typeof game.awayScore === 'number'
+                  ? `${game.homeScore} - ${game.awayScore}`
+                  : game.status === 'LIVE' && typeof game.liveHomeScore === 'number' && typeof game.liveAwayScore === 'number'
+                  ? `${game.liveHomeScore} - ${game.liveAwayScore}`
+                  : <span className="text-gray-400 dark:text-gray-500">-</span>}
+              </span>
+            );
+          })()}
         </div>
         {/* Away Team */}
         <div className="flex flex-col items-center min-w-0 w-2/5 justify-start pl-1 md:pl-2 gap-1">
