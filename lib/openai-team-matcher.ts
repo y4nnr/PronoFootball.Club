@@ -185,11 +185,18 @@ Return the JSON array now:`;
     
     try {
       aiMatches = JSON.parse(jsonContent) as Array<{
-      pair: number;
-      homeMatch: { name: string; confidence: number } | null;
-      awayMatch: { name: string; confidence: number } | null;
-      reasoning?: string;
-    }>;
+        pair: number;
+        homeMatch: { name: string; confidence: number } | null;
+        awayMatch: { name: string; confidence: number } | null;
+        reasoning?: string;
+      }>;
+    } catch (parseError) {
+      console.error('❌ Failed to parse OpenAI JSON response:', parseError);
+      console.error('❌ JSON content:', jsonContent.substring(0, 500));
+      throw new Error(`Failed to parse OpenAI JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+    }
+    
+    console.log(`✅ Parsed ${aiMatches.length} matches from OpenAI response`);
 
     // Map AI results back to requests
     for (let i = 0; i < uncachedRequests.length; i++) {
