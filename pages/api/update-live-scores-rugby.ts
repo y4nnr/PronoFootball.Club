@@ -1084,27 +1084,182 @@ export default async function handler(
 
                   if (daysDiff <= 30) {
                     console.log(`✅ OpenAI match verified by date: ${daysDiff.toFixed(1)} days difference`);
-                    // Process this match (reuse the existing update logic)
-                    // We'll need to reprocess this external match
-                    const matchingGame = aiMatchingGame;
-                    const externalMatchForUpdate = externalMatch;
+                    console.log(`🎯 OpenAI found valid match: ${aiMatchingGame.homeTeam.name} vs ${aiMatchingGame.awayTeam.name} for external ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
                     
-                    // Continue with the update logic (similar to above)
-                    // For now, log that we found a match - full integration would require refactoring
-                    console.log(`🎯 OpenAI found valid match: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} for external ${externalMatchForUpdate.homeTeam.name} vs ${externalMatchForUpdate.awayTeam.name}`);
-                    console.log(`   Note: This match will be processed in the next sync cycle (externalId will be set)`);
+                    // Process the match immediately using the same update logic as the main loop
+                    // Skip if already processed in this sync
+                    if (updatedGameIds.has(aiMatchingGame.id)) {
+                      console.log(`⏭️ OpenAI match already processed in this sync: ${aiMatchingGame.homeTeam.name} vs ${aiMatchingGame.awayTeam.name}`);
+                      continue;
+                    }
                     
-                    // Set externalId for future direct matching
+                    // Get external scores
+                    let externalHomeScore: number | null = externalMatch.score.fullTime.home !== null && externalMatch.score.fullTime.home !== undefined 
+                      ? externalMatch.score.fullTime.home 
+                      : (aiMatchingGame.liveHomeScore !== null && aiMatchingGame.liveHomeScore !== undefined ? aiMatchingGame.liveHomeScore : null);
+                    let externalAwayScore: number | null = externalMatch.score.fullTime.away !== null && externalMatch.score.fullTime.away !== undefined 
+                      ? externalMatch.score.fullTime.away 
+                      : (aiMatchingGame.liveAwayScore !== null && aiMatchingGame.liveAwayScore !== undefined ? aiMatchingGame.liveAwayScore : null);
+                    
+                    // For LIVE games, if scores are null from both API and DB, set to 0 (game hasn't scored yet)
+                    if (externalMatch.status === 'LIVE') {
+                      if (externalHomeScore === null) {
+                        externalHomeScore = 0;
+                      }
+                      if (externalAwayScore === null) {
+                        externalAwayScore = 0;
+                      }
+                      if (externalHomeScore === 0 && externalAwayScore === 0 && (externalMatch.score.fullTime.home === null || externalMatch.score.fullTime.away === null)) {
+                        console.log(`   ⚠️ LIVE game with null scores from API - setting to 0-0 (game may not have scored yet)`);
+                      }
+                    }
+                    
+                    // Check if scores changed
+                    const homeScoreChanged = externalHomeScore !== aiMatchingGame.liveHomeScore;
+                    const awayScoreChanged = externalAwayScore !== aiMatchingGame.liveAwayScore;
+                    const scoresChanged = homeScoreChanged || awayScoreChanged;
+                    
+                    // Check if elapsedMinute changed
+                    const currentElapsed = (aiMatchingGame as any).elapsedMinute;
+                    const elapsedChanged = externalMatch.elapsedMinute !== null && 
+                                         externalMatch.elapsedMinute !== undefined &&
+                                         externalMatch.elapsedMinute !== currentElapsed;
+                    
+                    // Map external status to our status
+                    let newStatus = externalMatch.status;
+                    const newExternalStatus = externalMatch.externalStatus;
+                    
+                    // Ensure HT, 1H, 2H are LIVE
+                    if ((newExternalStatus === 'HT' || newExternalStatus === '1H' || newExternalStatus === '2H') && newStatus === 'FINISHED') {
+                      console.log(`   ⚠️ External status is ${newExternalStatus} (LIVE) but mapping returned FINISHED - correcting to LIVE`);
+                      newStatus = 'LIVE';
+                    }
+                    
+                    const statusChanged = newStatus !== aiMatchingGame.status;
+                    const shouldUpdate = scoresChanged || elapsedChanged || statusChanged || aiMatchingGame.status === 'LIVE';
+                    
+                    if (!shouldUpdate) {
+                      console.log(`   ⏭️ No changes needed for OpenAI match`);
+                      // Still set externalId for future direct matching
+                      try {
+                        await prisma.game.update({
+                          where: { id: aiMatchingGame.id },
+                          data: { externalId: externalMatch.id.toString() }
+                        });
+                        console.log(`   ✅ Set externalId ${externalMatch.id} for future direct matching`);
+                        openAIExternalIdSetCount++;
+                      } catch (error) {
+                        console.error(`   ❌ Error setting externalId:`, error);
+                      }
+                      continue;
+                    }
+                    
+                    // Prepare update data
+                    const updateData: any = {
+                      externalId: externalMatch.id.toString(),
+                      externalStatus: newExternalStatus,
+                      status: newStatus,
+                      lastSyncAt: new Date()
+                    };
+                    
+                    // Always update scores
+                    updateData.liveHomeScore = externalHomeScore;
+                    updateData.liveAwayScore = externalAwayScore;
+                    console.log(`   📊 Setting scores: ${externalHomeScore}-${externalAwayScore} (externalStatus: ${newExternalStatus})`);
+                    
+                    // Add elapsedMinute if available
+                    if (externalMatch.elapsedMinute !== null && externalMatch.elapsedMinute !== undefined) {
+                      updateData.elapsedMinute = externalMatch.elapsedMinute;
+                      console.log(`   ⏱️ Setting elapsedMinute: ${externalMatch.elapsedMinute}'`);
+                    } else {
+                      if (newExternalStatus === 'HT') {
+                        console.log(`   ⏱️ Half-time (HT) - elapsedMinute is null (expected)`);
+                      } else {
+                        console.log(`   ⚠️ No elapsedMinute in external match (status: ${newExternalStatus})`);
+                      }
+                    }
+                    
+                    // If game is finished, also update final scores
+                    if (newStatus === 'FINISHED' && (newExternalStatus === 'FT' || newExternalStatus === 'AET' || newExternalStatus === 'PEN')) {
+                      updateData.homeScore = externalHomeScore;
+                      updateData.awayScore = externalAwayScore;
+                      if (newExternalStatus === 'AET') {
+                        updateData.decidedBy = 'AET';
+                      } else if (newExternalStatus === 'PEN') {
+                        updateData.decidedBy = 'AET';
+                      } else {
+                        updateData.decidedBy = 'FT';
+                      }
+                      updateData.finishedAt = new Date();
+                    }
+                    
+                    // Update the game
                     try {
-                      await prisma.game.update({
-                        where: { id: matchingGame.id },
-                        data: { externalId: externalMatchForUpdate.id.toString() }
+                      const updatedGame = await prisma.game.update({
+                        where: { id: aiMatchingGame.id },
+                        data: updateData,
+                        include: {
+                          homeTeam: true,
+                          awayTeam: true,
+                          competition: true
+                        }
                       });
-                      console.log(`   ✅ Set externalId ${externalMatchForUpdate.id} for future direct matching`);
-                      openAIExternalIdSetCount++;
+                      
+                      console.log(`   ✅ OpenAI match updated successfully: ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
+                      console.log(`      Status: ${aiMatchingGame.status} → ${updatedGame.status}`);
+                      console.log(`      Scores: ${aiMatchingGame.liveHomeScore ?? '-'}-${aiMatchingGame.liveAwayScore ?? '-'} → ${updatedGame.liveHomeScore}-${updatedGame.liveAwayScore}`);
+                      console.log(`      ExternalId: ${updatedGame.externalId}`);
+                      
+                      updatedGameIds.add(aiMatchingGame.id);
+                      matchedCount++;
                       openAIMatchedCount++;
+                      openAIExternalIdSetCount++;
+                      
+                      // Add to updatedGames for response
+                      if (!updatedGames.find(g => g.id === updatedGame.id)) {
+                        updatedGames.push({
+                          id: updatedGame.id,
+                          homeTeam: updatedGame.homeTeam.name,
+                          awayTeam: updatedGame.awayTeam.name,
+                          oldHomeScore: aiMatchingGame.liveHomeScore ?? 0,
+                          oldAwayScore: aiMatchingGame.liveAwayScore ?? 0,
+                          newHomeScore: updatedGame.liveHomeScore ?? 0,
+                          newAwayScore: updatedGame.liveAwayScore ?? 0,
+                          elapsedMinute: updatedGame.elapsedMinute,
+                          status: updatedGame.status,
+                          externalStatus: updatedGame.externalStatus,
+                          decidedBy: updatedGame.decidedBy,
+                          lastSyncAt: updatedGame.lastSyncAt?.toISOString(),
+                          scoreChanged: scoresChanged,
+                          statusChanged: statusChanged
+                        });
+                      }
+                      
+                      // Recalculate bets if game finished
+                      if (newStatus === 'FINISHED' && externalHomeScore !== null && externalAwayScore !== null) {
+                        const competition = await prisma.competition.findUnique({
+                          where: { id: aiMatchingGame.competitionId },
+                          select: { sportType: true }
+                        });
+                        
+                        const { calculateBetPoints, getScoringSystemForSport } = await import('../../lib/scoring-systems');
+                        const scoringSystem = getScoringSystemForSport(competition?.sportType || 'RUGBY');
+                        
+                        const bets = await prisma.bet.findMany({ where: { gameId: aiMatchingGame.id } });
+                        for (const bet of bets) {
+                          const points = calculateBetPoints(
+                            { score1: bet.score1, score2: bet.score2 },
+                            { home: externalHomeScore, away: externalAwayScore },
+                            scoringSystem
+                          );
+                          await prisma.bet.update({ where: { id: bet.id }, data: { points } });
+                        }
+                        
+                        await updateShootersForCompetition(aiMatchingGame.competitionId);
+                        console.log(`💰 Calculated points for ${bets.length} bets in OpenAI-matched finished game`);
+                      }
                     } catch (error) {
-                      console.error(`   ❌ Error setting externalId:`, error);
+                      console.error(`   ❌ Error updating OpenAI-matched game:`, error);
                     }
                   } else {
                     console.log(`⚠️ OpenAI match rejected: date difference ${daysDiff.toFixed(1)} days > 30`);
