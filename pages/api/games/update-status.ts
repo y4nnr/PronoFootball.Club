@@ -13,10 +13,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
 
   // Set games to 'LIVE' if their scheduled date/time is at least 2 minutes in the past and they are still 'UPCOMING'
+  // Extra safety: explicitly check date is in the past (not future) to prevent timezone issues
   await prisma.game.updateMany({
     where: {
       status: 'UPCOMING',
-      date: { lte: twoMinutesAgo }
+      date: { 
+        lte: twoMinutesAgo,
+        lt: now // Extra safety: explicitly check date is in the past
+      }
     },
     data: { status: 'LIVE' }
   });

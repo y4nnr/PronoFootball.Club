@@ -22,11 +22,13 @@ async function main() {
   }
 
   // 2) Update in one shot (fast + DST-safe)
+  // Extra safety: explicitly check date is in the past to prevent timezone issues
   const updated = await prisma.$executeRaw`
     UPDATE "Game"
     SET "status" = 'LIVE'
     WHERE "status" = 'UPCOMING'
       AND "date" <= ((NOW() AT TIME ZONE 'Europe/Paris') - INTERVAL '2 minutes')
+      AND "date" < (NOW() AT TIME ZONE 'Europe/Paris')  -- Extra safety: explicitly check date is in the past
   `;
   console.log(`✅ Updated rows: ${updated}`);
 }

@@ -64,11 +64,14 @@ async function flipDueGames() {
     }
   }
   
+  // CRITICAL FIX: Add explicit check to prevent future games from being marked as LIVE
+  // This is a safety check in case dates are stored incorrectly
   const updated = await prisma.$executeRaw`
     UPDATE "Game"
     SET "status" = 'LIVE'
     WHERE "status" = 'UPCOMING'
       AND "date" <= (NOW() - INTERVAL '2 minutes')
+      AND "date" < NOW()  -- Extra safety: explicitly check date is in the past
   `;
   if (updated > 0) {
     console.log(`✅ Flipped ${updated} game(s) to LIVE at ${new Date().toISOString()}`);

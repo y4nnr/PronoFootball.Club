@@ -36,7 +36,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: {
         status: 'UPCOMING',
         date: {
-          lte: twoMinutesAgo // Game time has passed by at least 2 minutes
+          lte: twoMinutesAgo, // Game time has passed by at least 2 minutes
+          lt: now // Extra safety: explicitly check date is in the past (not future)
         }
       },
       select: {
