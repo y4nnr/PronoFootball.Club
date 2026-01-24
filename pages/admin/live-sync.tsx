@@ -505,7 +505,16 @@ export default function AdminLiveSync() {
                               <div className="text-sm text-gray-600 dark:text-gray-400">Loading external match data...</div>
                             ) : g.externalMatch ? (
                               <div className="space-y-3">
-                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">External API Data Comparison</h3>
+                                <div className="flex items-center justify-between mb-2">
+                                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">External API Data Comparison</h3>
+                                  <button
+                                    onClick={() => handleResetGame(g.id)}
+                                    disabled={resettingGame === g.id}
+                                    className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {resettingGame === g.id ? 'Resetting...' : 'Reset Game'}
+                                  </button>
+                                </div>
                                 <div className="grid grid-cols-2 gap-4 text-xs">
                                   <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Our Database</h4>
