@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../lib/prisma';
 import { ApiSportsV2 } from '../../lib/api-sports-api-v2';
 import { API_CONFIG } from '../../lib/api-config';
+import { matchTeamsWithOpenAI } from '../../lib/openai-team-matcher';
 
 // Helper function to update shooters for all users in a competition
 async function updateShootersForCompetition(competitionId: string) {
@@ -569,6 +570,35 @@ export default async function handler(
 
           if (!homeMatch || !awayMatch) {
             console.log(`⚠️ No team matches found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            // Collect for OpenAI fallback
+            failedMatches.push({
+              externalMatch,
+              homeMatch,
+              awayMatch,
+              reason: 'no_team_match'
+            });
+            continue;
+          }
+          
+          // Check confidence - if below 90%, use OpenAI
+          const MIN_TEAM_MATCH_CONFIDENCE = 0.9; // 90%
+          const homeMatchConfident = homeMatch && homeMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
+          const awayMatchConfident = awayMatch && awayMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
+          const overallConfidence = homeMatch && awayMatch 
+            ? (homeMatch.score + awayMatch.score) / 2 
+            : (homeMatch?.score || awayMatch?.score || 0);
+          
+          if (!homeMatchConfident || !awayMatchConfident || overallConfidence < 0.9) {
+            console.log(`⚠️ Confidence below 90% for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            console.log(`   Overall confidence: ${(overallConfidence * 100).toFixed(1)}% (threshold: 90%)`);
+            console.log(`   🤖 Will use OpenAI to verify and guarantee 100% match`);
+            failedMatches.push({
+              externalMatch,
+              homeMatch,
+              awayMatch,
+              reason: 'confidence_below_90_percent',
+              matchConfidence: overallConfidence < 0.85 ? 'LOW' : 'MEDIUM'
+            });
             continue;
           }
 
@@ -687,6 +717,16 @@ export default async function handler(
             },
             reason: 'No matching game found in database',
           });
+          
+          // Collect for OpenAI fallback
+          const homeMatch = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, uniqueTeams);
+          const awayMatch = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, uniqueTeams);
+          failedMatches.push({
+            externalMatch,
+            homeMatch,
+            awayMatch,
+            reason: 'no_match_found'
+          });
           continue;
         }
         
@@ -744,6 +784,7 @@ export default async function handler(
             console.log(`      Reason: ${rejectionReason}`);
             console.log(`      Match method: ${matchMethod}`);
             console.log(`      This could cause wrong final score - REJECTED for safety`);
+            console.log(`   🤖 Will use OpenAI to verify and guarantee 100% match`);
             
             rejectedMatches.push({
               externalMatch: {
@@ -754,6 +795,17 @@ export default async function handler(
               },
               reason: rejectionReason,
               details: `Method: ${matchMethod}, Date diff: ${dateDiff?.toFixed(2) || 'N/A'}h`,
+            });
+            
+            // Collect for OpenAI fallback
+            const homeMatch = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, uniqueTeams);
+            const awayMatch = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, uniqueTeams);
+            failedMatches.push({
+              externalMatch,
+              homeMatch,
+              awayMatch,
+              reason: 'low_confidence_rejected',
+              matchConfidence: 'LOW'
             });
             continue; // Skip this match
           }
@@ -1156,7 +1208,14 @@ export default async function handler(
       attribution: apiSports.getAttributionText(),
       apiVersion: 'V2',
       lastSync: new Date().toISOString(),
-      hasUpdates: updatedGames.length > 0
+      hasUpdates: updatedGames.length > 0,
+      debug: {
+        failedMatchesCount: failedMatches.length,
+        openAIAttempted: failedMatches.length > 0,
+        openAIKeyPresent: !!process.env.OPENAI_API_KEY,
+        openAIMatchedCount,
+        openAIExternalIdSetCount
+      }
     });
 
   } catch (error) {
