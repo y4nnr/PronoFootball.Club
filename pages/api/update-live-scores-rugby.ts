@@ -660,7 +660,7 @@ export default async function handler(
               externalMatch,
               homeMatch,
               awayMatch,
-              reason: !homeMatchConfident || !awayMatchConfident ? 'low_confidence' : 'no_match'
+              reason: 'low_confidence_or_no_match'
             });
             continue;
           }
