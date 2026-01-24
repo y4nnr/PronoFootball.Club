@@ -511,6 +511,37 @@ export default async function handler(
               console.log(`      DB: ${externalIdMatch.homeTeam.name} vs ${externalIdMatch.awayTeam.name}`);
               console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
               console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, method: ${homeMatch.method})` : 'NOT FOUND'}, Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, method: ${awayMatch.method})` : 'NOT FOUND'}`);
+              
+              // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
+              const gameIdToClear = externalIdMatch.id;
+              const wasIncorrectlyFinished = externalIdMatch.status === 'FINISHED' && externalIdMatch.externalId === externalMatch.id.toString();
+              
+              try {
+                const clearData: any = { 
+                  externalId: null,
+                  externalStatus: null
+                };
+                
+                // If game was incorrectly marked as FINISHED due to wrong match, reset it
+                if (wasIncorrectlyFinished) {
+                  console.log(`   ⚠️ Game was incorrectly marked as FINISHED due to wrong external match - resetting status`);
+                  clearData.status = 'UPCOMING';
+                  clearData.homeScore = null;
+                  clearData.awayScore = null;
+                  clearData.liveHomeScore = null;
+                  clearData.liveAwayScore = null;
+                  clearData.finishedAt = null;
+                  clearData.decidedBy = null;
+                }
+                
+                await prisma.game.update({
+                  where: { id: gameIdToClear },
+                  data: clearData
+                });
+                console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear} - team names don't match${wasIncorrectlyFinished ? ' and reset status/scores' : ''}`);
+              } catch (error) {
+                console.error(`   ❌ Error clearing externalId:`, error);
+              }
             } else {
               // CRITICAL: Verify competition name makes sense for football
               // Reject if external competition is clearly a rugby competition
