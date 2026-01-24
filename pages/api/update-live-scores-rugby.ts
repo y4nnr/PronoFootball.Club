@@ -1058,9 +1058,18 @@ export default async function handler(
           console.log(`🤖 OpenAI returned ${openAIResults.size} results`);
 
           // Process OpenAI matches
+          console.log(`🤖 Processing ${failedMatches.length} failed matches with OpenAI results...`);
           for (const failedMatch of failedMatches) {
             const resultKey = `${failedMatch.externalMatch.homeTeam.name}|${failedMatch.externalMatch.awayTeam.name}`;
             const aiResult = openAIResults.get(resultKey);
+            
+            console.log(`🤖 Checking OpenAI result for: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
+            console.log(`   Result key: ${resultKey}`);
+            console.log(`   OpenAI result exists: ${!!aiResult}`);
+            if (aiResult) {
+              console.log(`   Home match: ${aiResult.homeMatch ? `${aiResult.homeMatch.team.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
+              console.log(`   Away match: ${aiResult.awayMatch ? `${aiResult.awayMatch.team.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
+            }
 
             if (aiResult && aiResult.homeMatch && aiResult.awayMatch) {
               console.log(`🤖 OpenAI matched: ${failedMatch.externalMatch.homeTeam.name} → ${aiResult.homeMatch.team.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);

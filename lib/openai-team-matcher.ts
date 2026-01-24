@@ -211,13 +211,31 @@ Return the JSON array now:`;
       }
 
       // Find matching DB teams
+      console.log(`   🔍 OpenAI returned for pair ${i + 1}:`);
+      console.log(`      Home: ${aiResult.homeMatch ? `${aiResult.homeMatch.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
+      console.log(`      Away: ${aiResult.awayMatch ? `${aiResult.awayMatch.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
+      console.log(`      Available DB teams: ${req.dbTeams.map(t => t.name).join(', ')}`);
+      
       const homeMatch = aiResult.homeMatch && aiResult.homeMatch.confidence >= 0.8
         ? req.dbTeams.find(t => t.name === aiResult.homeMatch!.name)
         : null;
-
+      
       const awayMatch = aiResult.awayMatch && aiResult.awayMatch.confidence >= 0.8
         ? req.dbTeams.find(t => t.name === aiResult.awayMatch!.name)
         : null;
+      
+      if (aiResult.homeMatch && aiResult.homeMatch.confidence >= 0.8 && !homeMatch) {
+        console.log(`   ⚠️ OpenAI home match "${aiResult.homeMatch.name}" not found in DB teams (confidence: ${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);
+      }
+      if (aiResult.awayMatch && aiResult.awayMatch.confidence >= 0.8 && !awayMatch) {
+        console.log(`   ⚠️ OpenAI away match "${aiResult.awayMatch.name}" not found in DB teams (confidence: ${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)`);
+      }
+      if (aiResult.homeMatch && aiResult.homeMatch.confidence < 0.8) {
+        console.log(`   ⚠️ OpenAI home match confidence ${(aiResult.homeMatch.confidence * 100).toFixed(1)}% is below 0.8 threshold`);
+      }
+      if (aiResult.awayMatch && aiResult.awayMatch.confidence < 0.8) {
+        console.log(`   ⚠️ OpenAI away match confidence ${(aiResult.awayMatch.confidence * 100).toFixed(1)}% is below 0.8 threshold`);
+      }
 
       const result: MatchResult = {
         homeMatch: homeMatch
@@ -228,6 +246,8 @@ Return the JSON array now:`;
           : null,
         reasoning: aiResult.reasoning,
       };
+      
+      console.log(`   ✅ Final result: home=${homeMatch ? homeMatch.name : 'null'}, away=${awayMatch ? awayMatch.name : 'null'}`);
 
       results.set(`${req.externalHome}|${req.externalAway}`, result);
 
