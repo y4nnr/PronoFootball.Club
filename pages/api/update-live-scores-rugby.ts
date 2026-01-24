@@ -1023,6 +1023,17 @@ export default async function handler(
           newStatus = 'LIVE';
         }
         
+        // CRITICAL: Prevent invalid status transitions
+        // A game cannot "un-start" - once LIVE, it can only go to FINISHED, not back to UPCOMING
+        // The external API might show NS/UPCOMING if it's slow to update or the game is delayed
+        if (matchingGame.status === 'LIVE' && newStatus === 'UPCOMING') {
+          console.log(`   ⚠️ BLOCKING invalid status transition: LIVE → UPCOMING`);
+          console.log(`      External API shows ${newExternalStatus} (mapped to UPCOMING), but game is already LIVE`);
+          console.log(`      This can happen if external API is slow to update or game is delayed`);
+          console.log(`      Keeping status as LIVE - will update when external API shows game has started`);
+          newStatus = 'LIVE'; // Keep it as LIVE
+        }
+        
         const statusChanged = newStatus !== matchingGame.status;
         
         console.log(`   Status check: current=${matchingGame.status}, new=${newStatus}, external=${newExternalStatus}, changed=${statusChanged}`);
