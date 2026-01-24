@@ -811,6 +811,15 @@ export default async function handler(
           }
         }
         
+        // CRITICAL: Don't update games if external API shows NS (Not Started) or TBD
+        // Games that haven't started should remain UPCOMING, not be marked as LIVE
+        if (externalMatch.externalStatus === 'NS' || externalMatch.externalStatus === 'TBD' || externalMatch.externalStatus === 'POST') {
+          console.log(`   ⏭️ Skipping update: External API shows ${externalMatch.externalStatus} (Not Started/Postponed)`);
+          console.log(`      Game ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} should remain ${matchingGame.status}`);
+          console.log(`      Will not update status or scores until game actually starts`);
+          continue; // Skip this match - game hasn't started yet
+        }
+        
         // FINAL VALIDATION: Log full match details before applying update
         matchedCount++;
         console.log(`✅ Matched ${matchedCount}/${allExternalMatches.length}: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
