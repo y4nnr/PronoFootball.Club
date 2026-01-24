@@ -125,6 +125,80 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   // Get user's bet points for competition context
   const userBet = currentUserId ? game.bets.find(bet => bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) : null;
   const userPoints = userBet?.points;
+  
+  // Compute which bets should be displayed (outside render to avoid issues)
+  const displayableBets = (() => {
+    // Early return if no bets
+    if (!game.bets) {
+      return [];
+    }
+    if (!Array.isArray(game.bets)) {
+      return [];
+    }
+    if (game.bets.length === 0) {
+      return [];
+    }
+    
+    // Filter to only bets with valid numeric scores
+    const betsWithValidScores = game.bets.filter(bet => {
+      if (!bet) return false;
+      const hasScore1 = typeof bet.score1 === 'number' && !isNaN(bet.score1) && bet.score1 >= 0;
+      const hasScore2 = typeof bet.score2 === 'number' && !isNaN(bet.score2) && bet.score2 >= 0;
+      return hasScore1 && hasScore2;
+    });
+    
+    if (!betsWithValidScores || betsWithValidScores.length === 0) {
+      return [];
+    }
+    
+    // Filter based on game status
+    const filtered = betsWithValidScores.filter(bet => {
+      if (game.status === 'LIVE' || game.status === 'FINISHED') {
+        return true;
+      }
+      return bet.userId === currentUserId;
+    });
+    
+    // Final check
+    return filtered && filtered.length > 0 ? filtered : [];
+  })();
+  
+  // Explicit check - if no displayable bets, set to empty array
+  // Make this check extremely strict
+  const hasDisplayableBets = Boolean(
+    displayableBets && 
+    Array.isArray(displayableBets) && 
+    displayableBets.length > 0 &&
+    displayableBets.some(bet => 
+      bet && 
+      typeof bet.score1 === 'number' && 
+      typeof bet.score2 === 'number' &&
+      !isNaN(bet.score1) &&
+      !isNaN(bet.score2)
+    )
+  );
+  
+  // Debug logging - always log when section might render
+  if (process.env.NODE_ENV === 'development') {
+    if (game.bets && game.bets.length > 0) {
+      console.log('🔍 GameCard Debug:', {
+        homeTeam: game.homeTeam?.name,
+        awayTeam: game.awayTeam?.name,
+        status: game.status,
+        betsCount: game.bets.length,
+        displayableBetsCount: displayableBets.length,
+        hasDisplayableBets,
+        bets: game.bets.map(b => ({ 
+          id: b.id, 
+          userId: b.userId, 
+          score1: b.score1, 
+          score2: b.score2,
+          score1Type: typeof b.score1,
+          score2Type: typeof b.score2
+        }))
+      });
+    }
+  }
 
   // Helper function to determine bet highlight for LIVE and FINISHED games
   const getBetHighlight = (bet: Bet) => {
@@ -203,7 +277,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   };
   
   const cardContent = (
-    <div className={`bg-white dark:bg-gray-800 border-2 ${userHasBet ? 'border-blue-500 dark:border-accent-dark-500' : 'border-gray-300 dark:border-gray-700'} rounded-xl md:rounded-2xl shadow-lg dark:shadow-dark-modern-lg flex flex-col items-stretch transition overflow-hidden ${isClickable ? `hover:shadow-xl dark:hover:shadow-dark-xl ${userHasBet ? 'hover:border-blue-600 dark:hover:border-accent-dark-500' : 'hover:border-gray-400 dark:hover:border-gray-600'} cursor-pointer transform hover:scale-[1.01]` : 'cursor-default'} ${
+    <div className={`bg-white dark:bg-gray-800 border-2 ${userHasBet ? 'border-blue-500 dark:border-white' : 'border-gray-300 dark:border-gray-700'} rounded-xl md:rounded-2xl shadow-lg dark:shadow-dark-modern-lg flex flex-col items-stretch transition overflow-hidden self-start ${isClickable ? `hover:shadow-xl dark:hover:shadow-dark-xl ${userHasBet ? 'hover:border-blue-600 dark:hover:border-white' : 'hover:border-gray-400 dark:hover:border-gray-600'} cursor-pointer transform hover:scale-[1.01]` : 'cursor-default'} ${
       isHighlighted ? 
         highlightType === 'status' ? 'animate-bounce ring-4 ring-blue-400 ring-opacity-75' :
         highlightType === 'both' ? 'animate-pulse ring-4 ring-purple-400 ring-opacity-75' :
@@ -229,8 +303,8 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               <span className="hidden md:inline">{game.competition.name}</span>
             </span>
           </div>
-          {/* Tick on the right (mobile and desktop) */}
-          {userHasBet && (
+          {/* Tick on the right (mobile and desktop) - Removed per user request */}
+          {/* {userHasBet && (
             <div className="flex items-center flex-shrink-0">
               {context === 'home' ? (
                 <div className="flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-accent-dark-700 rounded-full border border-blue-300 dark:border-accent-dark-500">
@@ -255,11 +329,11 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                 )
               )}
             </div>
-          )}
+          )} */}
         </div>
       )}
       {/* Section 2: Date/Time & Status - Dedicated section for better visibility (Mobile) */}
-      <div className="flex items-center justify-between w-full px-3 md:px-4 py-3 md:hidden bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between w-full px-3 md:px-4 py-3 md:hidden bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         {/* Date/Time on left */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
           <div className="flex items-center gap-1.5">
@@ -277,12 +351,12 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
             <div className="flex flex-col items-end gap-1.5">
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 text-white font-bold shadow-md">
+                <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 dark:bg-red-600 text-white font-bold shadow-md">
                   {t('live')}
                 </span>
               </div>
               {game.externalStatus === 'HT' ? (
-                <span className="inline-flex items-center px-2.5 py-1 bg-orange-500 text-white rounded-full text-[10px] font-bold animate-pulse border-2 border-orange-300 shadow-md">
+                <span className="inline-flex items-center px-2.5 py-1 bg-orange-500 dark:bg-orange-600 text-white rounded-full text-[10px] font-bold animate-pulse border-2 border-orange-300 dark:border-orange-500 shadow-md">
                   MT
                 </span>
               ) : game.elapsedMinute !== null && game.elapsedMinute !== undefined ? (
@@ -304,9 +378,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           ) : (
             <div className="flex items-center gap-1.5">
               <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
-                game.status === 'FINISHED' ? 'bg-green-500 text-white' :
-                game.status === 'UPCOMING' ? 'bg-blue-500 dark:bg-blue-400 text-white' :
-                'bg-gray-500 text-white'
+                game.status === 'FINISHED' ? 'bg-gray-100 dark:bg-gray-700 border-2 border-black dark:border-white text-gray-700 dark:text-gray-300' :
+                game.status === 'UPCOMING' ? 'bg-gray-100 dark:bg-gray-700 border-2 border-blue-500 dark:border-blue-600 text-gray-700 dark:text-gray-300' :
+                'bg-gray-500 dark:bg-gray-600 text-white'
               } ${
                 isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
               }`}>
@@ -319,7 +393,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       </div>
       {/* Section 2: Date/Time & Status - Dedicated section for better visibility (Desktop) */}
-      <div className="hidden md:flex md:items-center w-full justify-between px-3 md:px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+      <div className="hidden md:flex md:items-center w-full justify-between px-3 md:px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         {/* Date/Time on left */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -336,11 +410,11 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {game.status === 'LIVE' ? (
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 text-white font-bold shadow-md">
+              <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 dark:bg-red-600 text-white font-bold shadow-md">
                 {t('live')}
               </span>
               {game.externalStatus === 'HT' ? (
-                <span className="inline-flex items-center px-2.5 py-1 bg-orange-500 text-white rounded-full text-[10px] font-bold animate-pulse border-2 border-orange-300 shadow-md">
+                <span className="inline-flex items-center px-2.5 py-1 bg-orange-500 dark:bg-orange-600 text-white rounded-full text-[10px] font-bold animate-pulse border-2 border-orange-300 dark:border-orange-500 shadow-md">
                   MT
                 </span>
               ) : game.elapsedMinute !== null && game.elapsedMinute !== undefined ? (
@@ -362,9 +436,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           ) : (
             <div className="flex items-center gap-1.5">
               <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
-                game.status === 'FINISHED' ? 'bg-green-500 text-white' :
-                game.status === 'UPCOMING' ? 'bg-blue-500 dark:bg-blue-400 text-white' :
-                'bg-gray-500 text-white'
+                game.status === 'FINISHED' ? 'bg-gray-100 dark:bg-gray-700 border-2 border-black dark:border-white text-gray-700 dark:text-gray-300' :
+                game.status === 'UPCOMING' ? 'bg-gray-100 dark:bg-gray-700 border-2 border-blue-500 dark:border-blue-600 text-gray-700 dark:text-gray-300' :
+                'bg-gray-500 dark:bg-gray-600 text-white'
               } ${
                 isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
               }`}>
@@ -377,13 +451,13 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       </div>
       {/* Teams & Score - Section 3: Light gray (primary section) */}
-      <div className="flex items-center w-full justify-between py-4 md:py-6 px-3 md:px-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center w-full justify-between py-4 md:py-6 px-3 md:px-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           {/* Home Team */}
         <div className="flex flex-col items-center min-w-0 w-2/5 justify-end pr-1 md:pr-2 gap-1">
           {/* Mobile: Logo on top, name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.homeTeam.logo ? (
-              <div className={`w-10 h-10 dark:w-12 dark:h-12 rounded-full border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md bg-white dark:bg-white p-0.5 flex items-center justify-center ${(game.homeTeam.name.toLowerCase().includes('juventus') || game.homeTeam.name.toLowerCase().includes('tottenham') || game.homeTeam.name.toLowerCase().includes('scotland') || game.homeTeam.name.toLowerCase().includes('england') || game.homeTeam.name.toLowerCase().includes('wales') || game.homeTeam.name.toLowerCase().includes('italy') || game.homeTeam.name.toLowerCase().includes('france') || game.homeTeam.name.toLowerCase().includes('ireland')) ? 'dark:p-0.5' : ''}`}>
+              <div className={`w-10 h-10 dark:w-12 dark:h-12 mb-2 flex-shrink-0 flex items-center justify-center`}>
                 <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-full h-full object-contain" />
               </div>
             ) : (
@@ -396,7 +470,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {/* Desktop: Logo on top, name below */}
           <div className="hidden md:flex flex-col items-center">
             {game.homeTeam.logo ? (
-              <div className={`w-12 h-12 dark:w-14 dark:h-14 rounded-full border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md bg-white dark:bg-white p-1 flex items-center justify-center ${(game.homeTeam.name.toLowerCase().includes('juventus') || game.homeTeam.name.toLowerCase().includes('tottenham') || game.homeTeam.name.toLowerCase().includes('scotland') || game.homeTeam.name.toLowerCase().includes('england') || game.homeTeam.name.toLowerCase().includes('wales') || game.homeTeam.name.toLowerCase().includes('italy') || game.homeTeam.name.toLowerCase().includes('france') || game.homeTeam.name.toLowerCase().includes('ireland')) ? 'dark:p-1' : ''}`}>
+              <div className={`w-12 h-12 dark:w-14 dark:h-14 mb-2 flex-shrink-0 flex items-center justify-center`}>
                 <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-full h-full object-contain" />
               </div>
             ) : (
@@ -430,7 +504,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {/* Mobile: Logo on top, name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.awayTeam.logo ? (
-              <div className={`w-10 h-10 dark:w-12 dark:h-12 rounded-full border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md bg-white dark:bg-white p-0.5 flex items-center justify-center ${(game.awayTeam.name.toLowerCase().includes('juventus') || game.awayTeam.name.toLowerCase().includes('tottenham') || game.awayTeam.name.toLowerCase().includes('scotland') || game.awayTeam.name.toLowerCase().includes('england') || game.awayTeam.name.toLowerCase().includes('wales') || game.awayTeam.name.toLowerCase().includes('italy') || game.awayTeam.name.toLowerCase().includes('france') || game.awayTeam.name.toLowerCase().includes('ireland')) ? 'dark:p-0.5' : ''}`}>
+              <div className={`w-10 h-10 dark:w-12 dark:h-12 mb-2 flex-shrink-0 flex items-center justify-center`}>
                 <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-full h-full object-contain" />
               </div>
             ) : (
@@ -443,7 +517,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {/* Desktop: Logo on top, name below */}
           <div className="hidden md:flex flex-col items-center">
             {game.awayTeam.logo ? (
-              <div className={`w-12 h-12 dark:w-14 dark:h-14 rounded-full border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md bg-white dark:bg-white p-1 flex items-center justify-center ${(game.awayTeam.name.toLowerCase().includes('juventus') || game.awayTeam.name.toLowerCase().includes('tottenham') || game.awayTeam.name.toLowerCase().includes('scotland') || game.awayTeam.name.toLowerCase().includes('england') || game.awayTeam.name.toLowerCase().includes('wales') || game.awayTeam.name.toLowerCase().includes('italy') || game.awayTeam.name.toLowerCase().includes('france') || game.awayTeam.name.toLowerCase().includes('ireland')) ? 'dark:p-1' : ''}`}>
+              <div className={`w-12 h-12 dark:w-14 dark:h-14 mb-2 flex-shrink-0 flex items-center justify-center`}>
                 <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-full h-full object-contain" />
               </div>
             ) : (
@@ -454,14 +528,11 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       </div>
       {/* Bets List - Section 4: Matching main section style (bottom) */}
-      {(() => {
-        // Filter out bets that don't have scores (for UPCOMING games, scores are hidden)
-        const betsWithScores = game.bets?.filter(bet => bet.score1 !== null && bet.score2 !== null) || [];
-        return betsWithScores.length > 0 && (
-          <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-gray-800/50">
+      {hasDisplayableBets === true ? (
+          <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-gray-800">
             <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-2.5 md:mb-3 uppercase tracking-wide">{t('placedBets')}</div>
             <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {betsWithScores.map((bet) => (
+              {displayableBets.map((bet) => (
               <li key={bet.id} className="flex items-center py-2 first:pt-0 last:pb-0">
                 <img
                   src={bet.user.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(bet.user.name.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
@@ -478,40 +549,25 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                     // NOTE: These colors are kept the same in dark mode to preserve production color coding
                     // Gold = exact score, Green = correct result, Red = no match
                     if (game.status === 'LIVE' && highlight) {
-                      const textColor = highlight === 'gold' ? 'text-yellow-700' :
-                                       highlight === 'green' ? 'text-green-700' :
-                                       highlight === 'red' ? 'text-red-700' :
-                                       'text-gray-700';
-                      const bgColor = highlight === 'gold' ? 'bg-yellow-50' :
-                                     highlight === 'green' ? 'bg-green-50' :
-                                     highlight === 'red' ? 'bg-red-50' :
-                                     'bg-gray-100';
-                      const borderClass = highlight === 'gold' ? 'border border-yellow-300' :
-                                         highlight === 'green' ? 'border border-green-300' :
-                                         highlight === 'red' ? 'border border-red-300' :
-                                         'border border-gray-300';
+                      // Use same style as UPCOMING but with colored borders
+                      const borderClass = highlight === 'gold' ? 'border-2 border-yellow-500 dark:border-yellow-600' :
+                                         highlight === 'green' ? 'border-2 border-green-500 dark:border-green-600' :
+                                         highlight === 'red' ? 'border-2 border-red-500 dark:border-red-600' :
+                                         'border border-gray-300 dark:border-gray-600';
                       return (
-                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}>
+                        <span className={`text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}>
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
                       );
                     } else if (game.status === 'FINISHED' && highlight) {
-                      // For finished games: colored text with light background and border
-                      const textColor = highlight === 'gold' ? 'text-yellow-700' :
-                                       highlight === 'green' ? 'text-green-700' :
-                                       highlight === 'red' ? 'text-red-700' :
-                                       'text-gray-700';
-                      const bgColor = highlight === 'gold' ? 'bg-yellow-50' :
-                                     highlight === 'green' ? 'bg-green-50' :
-                                     highlight === 'red' ? 'bg-red-50' :
-                                     'bg-gray-100';
-                      const borderClass = highlight === 'gold' ? 'border border-yellow-300' :
-                                         highlight === 'green' ? 'border border-green-300' :
-                                         highlight === 'red' ? 'border border-red-300' :
-                                         'border border-gray-300';
+                      // Use same style as UPCOMING but with colored borders
+                      const borderClass = highlight === 'gold' ? 'border-2 border-yellow-500 dark:border-yellow-600' :
+                                         highlight === 'green' ? 'border-2 border-green-500 dark:border-green-600' :
+                                         highlight === 'red' ? 'border-2 border-red-500 dark:border-red-600' :
+                                         'border border-gray-300 dark:border-gray-600';
                       return (
-                        <span className={`text-xs font-mono ${textColor} ${bgColor} ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}>
+                        <span className={`text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}>
                           <span className="md:hidden">{bet.score1}-{bet.score2}</span>
                           <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
                         </span>
@@ -531,8 +587,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               ))}
             </ul>
           </div>
-        );
-      })()}
+        ) : null}
     </div>
   );
   

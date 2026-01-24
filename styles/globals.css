@@ -155,12 +155,12 @@
   --foreground: #171717;
   
   /* Accent Color Variables - Change these to update accent color everywhere */
-  /* Current: Bright Blue (#0096FF) - Final accent color */
-  --accent-400: rgb(102, 191, 255);  /* 66BFFF (lighter) */
-  --accent-500: rgb(0, 150, 255);    /* 0096FF (base: Bright Blue) */
-  --accent-600: rgb(0, 120, 204);    /* 0078CC (darker) */
-  --accent-700: rgb(0, 96, 163);     /* 0060A3 (darker) */
-  --accent-900: rgb(0, 51, 87);      /* 003357 (darkest) */
+  /* Current: Scarlet (#FF2400) - Dark mode accent color */
+  --accent-400: rgb(255, 100, 50);    /* FF6432 (lighter scarlet) */
+  --accent-500: rgb(255, 36, 0);      /* FF2400 (base: Scarlet) */
+  --accent-600: rgb(220, 30, 0);      /* DC1E00 (darker) */
+  --accent-700: rgb(180, 25, 0);      /* B41900 (darker) */
+  --accent-900: rgb(120, 15, 0);      /* 780F00 (darkest) */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -168,21 +168,21 @@
     --background: #0a0a0a;
     --foreground: #ededed;
     /* Ensure accent colors are available in dark mode */
-    --accent-400: rgb(102, 191, 255);
-    --accent-500: rgb(0, 150, 255);
-    --accent-600: rgb(0, 120, 204);
-    --accent-700: rgb(0, 96, 163);
-    --accent-900: rgb(0, 51, 87);
+    --accent-400: rgb(255, 100, 50);    /* FF6432 (lighter scarlet) */
+    --accent-500: rgb(255, 36, 0);      /* FF2400 (base: Scarlet) */
+    --accent-600: rgb(220, 30, 0);      /* DC1E00 (darker) */
+    --accent-700: rgb(180, 25, 0);      /* B41900 (darker) */
+    --accent-900: rgb(120, 15, 0);      /* 780F00 (darkest) */
   }
 }
 
 /* Also ensure accent colors are available when .dark class is applied */
 .dark {
-  --accent-400: rgb(102, 191, 255);
-  --accent-500: rgb(0, 150, 255);
-  --accent-600: rgb(0, 120, 204);
-  --accent-700: rgb(0, 96, 163);
-  --accent-900: rgb(0, 51, 87);
+  --accent-400: rgb(255, 100, 50);    /* FF6432 (lighter scarlet) */
+  --accent-500: rgb(255, 36, 0);      /* FF2400 (base: Scarlet) */
+  --accent-600: rgb(220, 30, 0);      /* DC1E00 (darker) */
+  --accent-700: rgb(180, 25, 0);      /* B41900 (darker) */
+  --accent-900: rgb(120, 15, 0);      /* 780F00 (darkest) */
 }
 
 body {

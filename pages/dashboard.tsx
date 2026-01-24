@@ -359,7 +359,7 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
       </div>
 
       {games && games.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 items-start">
           {games.map((game) => {
             const bets = game.allUserBets.map((bet: UserBet) => {
               if (currentUserId && bet.userId === currentUserId && game.userBet) {
@@ -372,8 +372,8 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
               return bet;
             });
             return (
-              <GameCard 
-                key={game.id} 
+              <div key={game.id} className="self-start">
+                <GameCard 
                 game={{ 
                   status: game.status,
                   date: game.date,
@@ -406,6 +406,7 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
                 isHighlighted={highlightedGames.has(game.id)}
                 highlightType={highlightedGames.get(game.id) || 'score'}
               />
+              </div>
             );
           })}
         </div>
@@ -437,7 +438,7 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 items-start">
         {games.map((game) => {
           const bets = game.allUserBets.map((bet: UserBet) => {
             if (currentUserId && bet.userId === currentUserId && game.userBet) {
@@ -450,8 +451,8 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
             return bet;
           });
           return (
-            <GameCard 
-              key={game.id} 
+            <div key={game.id} className="self-start">
+              <GameCard 
               game={{ 
                 status: game.status,
                 date: game.date,
@@ -484,6 +485,7 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
               isHighlighted={highlightedGames.has(game.id)}
               highlightType={highlightedGames.get(game.id) || 'score'}
             />
+            </div>
           );
         })}
       </div>
