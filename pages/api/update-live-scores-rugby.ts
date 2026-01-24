@@ -1130,11 +1130,30 @@ export default async function handler(
       if (openAIApiKey) {
         try {
           console.log(`🤖 Calling OpenAI API with ${failedMatches.length} failed matches...`);
-          // Prepare requests for OpenAI
+          // Prepare requests for OpenAI with full game context (date, competition, teams)
           const openAIRequests = failedMatches.map(fm => ({
             externalHome: fm.externalMatch.homeTeam.name,
             externalAway: fm.externalMatch.awayTeam.name,
-            dbTeams: uniqueTeams,
+            externalDate: fm.externalMatch.utcDate || null,
+            externalCompetition: fm.externalMatch.competition?.name || null,
+            dbGames: allGamesToCheck.map(game => ({
+              id: game.id,
+              homeTeam: {
+                id: game.homeTeam.id,
+                name: game.homeTeam.name,
+                shortName: (game.homeTeam as any).shortName || null
+              },
+              awayTeam: {
+                id: game.awayTeam.id,
+                name: game.awayTeam.name,
+                shortName: (game.awayTeam as any).shortName || null
+              },
+              date: game.date ? game.date.toISOString() : null,
+              competition: {
+                name: game.competition.name
+              }
+            })),
+            dbTeams: uniqueTeams, // Keep for backward compatibility
           }));
 
           // Batch process with OpenAI
@@ -1181,28 +1200,28 @@ export default async function handler(
               console.log(`   Away match: ${aiResult.awayMatch ? `${aiResult.awayMatch.team.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
             }
 
-            // Trust OpenAI results - if OpenAI says it's a match with confidence >= 0.85, we accept it
+            // Trust OpenAI results - if OpenAI says it's a match with overallConfidence >= 0.85, we accept it
             // OpenAI is used as a fallback when rule-based matching has low confidence, so we trust its judgment
             const MIN_OPENAI_CONFIDENCE = 0.85; // 85% - high confidence threshold for OpenAI
-            const openAIHomeConfident = aiResult?.homeMatch && aiResult.homeMatch.confidence >= MIN_OPENAI_CONFIDENCE;
-            const openAIAwayConfident = aiResult?.awayMatch && aiResult.awayMatch.confidence >= MIN_OPENAI_CONFIDENCE;
+            const openAIConfident = aiResult?.overallConfidence && aiResult.overallConfidence >= MIN_OPENAI_CONFIDENCE;
+            const hasGameId = aiResult?.gameId && aiResult.gameId !== null;
             
-            if (aiResult && openAIHomeConfident && openAIAwayConfident) {
-              console.log(`🤖 OpenAI matched with HIGH CONFIDENCE: ${failedMatch.externalMatch.homeTeam.name} → ${aiResult.homeMatch.team.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);
-              console.log(`🤖 OpenAI matched with HIGH CONFIDENCE: ${failedMatch.externalMatch.awayTeam.name} → ${aiResult.awayMatch.team.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)`);
+            if (aiResult && openAIConfident && hasGameId) {
+              console.log(`🤖 OpenAI matched with HIGH CONFIDENCE: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
+              console.log(`   Game ID: ${aiResult.gameId}`);
+              console.log(`   Overall Confidence: ${(aiResult.overallConfidence! * 100).toFixed(1)}%`);
+              if (aiResult.homeMatch) {
+                console.log(`   Home: ${failedMatch.externalMatch.homeTeam.name} → ${aiResult.homeMatch.team.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);
+              }
+              if (aiResult.awayMatch) {
+                console.log(`   Away: ${failedMatch.externalMatch.awayTeam.name} → ${aiResult.awayMatch.team.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)`);
+              }
+              console.log(`   Reasoning: ${aiResult.reasoning || 'N/A'}`);
               console.log(`   ✅ OpenAI guarantees 100% match - accepting without further validation`);
-              console.log(`   🔍 Looking for game with teams: ${aiResult.homeMatch.team.name} (ID: ${aiResult.homeMatch.team.id}) and ${aiResult.awayMatch.team.name} (ID: ${aiResult.awayMatch.team.id})`);
-              console.log(`   📋 Available games in allGamesToCheck: ${allGamesToCheck.length}`);
-              console.log(`   📋 Sample games:`, allGamesToCheck.slice(0, 3).map(g => ({
-                id: g.id,
-                home: `${g.homeTeam.name} (${g.homeTeam.id})`,
-                away: `${g.awayTeam.name} (${g.awayTeam.id})`
-              })));
 
-              // Find the game with both matched teams
+              // Find the game by ID (OpenAI told us which game it is!)
               const aiMatchingGame = allGamesToCheck.find(game =>
-                (game.homeTeam.id === aiResult.homeMatch!.team.id || game.awayTeam.id === aiResult.homeMatch!.team.id) &&
-                (game.homeTeam.id === aiResult.awayMatch!.team.id || game.awayTeam.id === aiResult.awayMatch!.team.id) &&
+                game.id === aiResult.gameId &&
                 game.competition.sportType === 'RUGBY' &&
                 !updatedGameIds.has(game.id)
               );

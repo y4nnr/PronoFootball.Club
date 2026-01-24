@@ -20,24 +20,33 @@ interface TeamMatch {
 }
 
 interface MatchRequest {
+  // External API data
   externalHome: string;
   externalAway: string;
+  externalDate: string | null;
+  externalCompetition: string | null;
+  
+  // Our database games to match against
+  dbGames: Array<{
+    id: string;
+    homeTeam: { id: string; name: string; shortName?: string | null };
+    awayTeam: { id: string; name: string; shortName?: string | null };
+    date: string | null;
+    competition: { name: string };
+  }>;
+  
+  // All available teams (for backward compatibility and team matching)
   dbTeams: Team[];
-}
-
-interface MatchResult {
-  homeMatch: { team: Team; confidence: number } | null;
-  awayMatch: { team: Team; confidence: number } | null;
-  reasoning?: string;
 }
 
 // Simple in-memory cache (could be upgraded to Redis in production)
 const matchCache = new Map<string, MatchResult>();
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-function getCacheKey(externalHome: string, externalAway: string, dbTeamIds: string[]): string {
-  const sortedIds = [...dbTeamIds].sort().join(',');
-  return `${externalHome}|${externalAway}|${sortedIds}`;
+function getCacheKey(externalHome: string, externalAway: string, externalDate: string | null, dbGameIds: string[]): string {
+  const sortedIds = [...dbGameIds].sort().join(',');
+  const dateStr = externalDate ? externalDate.split('T')[0] : 'no-date';
+  return `${externalHome}|${externalAway}|${dateStr}|${sortedIds}`;
 }
 
 /**
@@ -51,13 +60,15 @@ export async function matchTeamsWithOpenAI(
   const results = new Map<string, MatchResult>();
 
   if (!apiKey || requests.length === 0) {
-    // Return null matches if no API key
-    requests.forEach(req => {
-      results.set(`${req.externalHome}|${req.externalAway}`, {
-        homeMatch: null,
-        awayMatch: null,
+      // Return null matches if no API key
+      requests.forEach(req => {
+        results.set(`${req.externalHome}|${req.externalAway}`, {
+          gameId: null,
+          homeMatch: null,
+          awayMatch: null,
+          overallConfidence: null,
+        });
       });
-    });
     return results;
   }
 
@@ -66,8 +77,8 @@ export async function matchTeamsWithOpenAI(
   const cacheKeys: string[] = [];
 
   for (const req of requests) {
-    const dbTeamIds = req.dbTeams.map(t => t.id).sort();
-    const cacheKey = getCacheKey(req.externalHome, req.externalAway, dbTeamIds);
+    const dbGameIds = req.dbGames.map(g => g.id).sort();
+    const cacheKey = getCacheKey(req.externalHome, req.externalAway, req.externalDate, dbGameIds);
     cacheKeys.push(cacheKey);
 
     const cached = matchCache.get(cacheKey);
@@ -84,42 +95,64 @@ export async function matchTeamsWithOpenAI(
 
   // Batch all uncached requests in a single API call
   try {
-    const dbTeamsList = uncachedRequests[0].dbTeams; // All requests should have same dbTeams
-    const dbTeamsText = dbTeamsList.map(t => 
-      `- "${t.name}"${t.shortName ? ` (${t.shortName})` : ''}`
-    ).join('\n');
+    // Build the prompt with full game context
+    const matchPairs = uncachedRequests.map((req, idx) => {
+      const externalDateStr = req.externalDate 
+        ? new Date(req.externalDate).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+        : 'Date unknown';
+      
+      const dbGamesText = req.dbGames.map((game, gameIdx) => {
+        const gameDateStr = game.date 
+          ? new Date(game.date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+          : 'Date unknown';
+        return `    Game ${gameIdx + 1}: "${game.homeTeam.name}" vs "${game.awayTeam.name}"\n` +
+               `      Competition: ${game.competition.name}\n` +
+               `      Date/Time: ${gameDateStr}\n` +
+               `      Game ID: ${game.id}`;
+      }).join('\n');
+      
+      return `${idx + 1}. External API Match:\n` +
+             `   Teams: "${req.externalHome}" vs "${req.externalAway}"\n` +
+             `   Competition: ${req.externalCompetition || 'Unknown'}\n` +
+             `   Date/Time: ${externalDateStr}\n` +
+             `   \n` +
+             `   Our Database Games to match against:\n${dbGamesText}`;
+    }).join('\n\n');
 
-    const matchPairs = uncachedRequests.map((req, idx) => 
-      `${idx + 1}. External API: "${req.externalHome}" vs "${req.externalAway}"`
-    ).join('\n');
+    const prompt = `You are a game matching assistant for a sports betting platform.
 
-    const prompt = `You are a team name matching assistant for a sports betting platform.
+I need you to determine if an external API match corresponds to one of our database games. You must consider ALL factors: team names, date/time, and competition.
 
-I need you to match external API team names with database team names. The external API names may have variations, abbreviations, or different formatting.
+For each external API match, compare it with our database games and determine:
+1. Which database game (if any) matches the external API match
+2. The confidence level (0.0-1.0) that they are the same game
+3. Which teams from the external API correspond to which teams in the database game
 
-Database teams available:
-${dbTeamsText}
-
-External API team pairs to match:
+External API Matches and Our Database Games:
 ${matchPairs}
 
-For each pair, return a JSON array with this exact format:
+For each external API match, return a JSON array with this exact format:
 [
   {
     "pair": 1,
+    "gameId": "database-game-id-if-matched-or-null",
     "homeMatch": {"name": "exact database team name", "confidence": 0.0-1.0},
     "awayMatch": {"name": "exact database team name", "confidence": 0.0-1.0},
-    "reasoning": "brief explanation"
+    "overallConfidence": 0.0-1.0,
+    "reasoning": "brief explanation of why this match was chosen or rejected"
   },
   ...
 ]
 
 Rules:
 - Match confidence should be 0.0-1.0 (1.0 = perfect match, 0.0 = no match)
-- Only return matches with confidence >= 0.85 (85%) - we need HIGH confidence to guarantee 100% match
-- If no good match with confidence >= 0.85, set the match to null
-- Use exact database team names (case-sensitive)
-- Consider abbreviations, nicknames, and common variations
+- Only return matches with overallConfidence >= 0.85 (85%) - we need HIGH confidence to guarantee 100% match
+- Consider ALL factors together: team names, date/time (within same day is good, same hour is better), and competition name
+- If teams match but date is very different (>7 days), reject the match (likely different season/game)
+- If teams match but competition is clearly different, reject the match
+- Use exact database team names (case-sensitive) from the game you matched
+- Consider abbreviations, nicknames, and common variations in team names
+- If no good match with overallConfidence >= 0.85, set gameId to null and matches to null
 - Be very confident in your matches - this is critical for a betting platform
 - Return ONLY valid JSON, no other text
 
@@ -179,16 +212,20 @@ Return the JSON array now:`;
 
     let aiMatches: Array<{
       pair: number;
+      gameId: string | null;
       homeMatch: { name: string; confidence: number } | null;
       awayMatch: { name: string; confidence: number } | null;
+      overallConfidence: number | null;
       reasoning?: string;
     }>;
     
     try {
       aiMatches = JSON.parse(jsonContent) as Array<{
         pair: number;
+        gameId: string | null;
         homeMatch: { name: string; confidence: number } | null;
         awayMatch: { name: string; confidence: number } | null;
+        overallConfidence: number | null;
         reasoning?: string;
       }>;
       console.log(`✅ Parsed ${aiMatches.length} matches from OpenAI response`);
@@ -211,22 +248,51 @@ Return the JSON array now:`;
         continue;
       }
 
-      // Find matching DB teams
+      // Find matching DB teams from the matched game
       console.log(`   🔍 OpenAI returned for pair ${i + 1}:`);
+      console.log(`      Game ID: ${aiResult.gameId || 'null'}`);
+      console.log(`      Overall Confidence: ${aiResult.overallConfidence ? (aiResult.overallConfidence * 100).toFixed(1) + '%' : 'null'}`);
       console.log(`      Home: ${aiResult.homeMatch ? `${aiResult.homeMatch.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
       console.log(`      Away: ${aiResult.awayMatch ? `${aiResult.awayMatch.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
-      console.log(`      Available DB teams: ${req.dbTeams.map(t => t.name).join(', ')}`);
+      console.log(`      Reasoning: ${aiResult.reasoning || 'N/A'}`);
       
-      // Trust OpenAI more - accept matches with confidence >= 0.85 (85%)
+      // Trust OpenAI more - accept matches with overallConfidence >= 0.85 (85%)
       // OpenAI is used as a fallback when rule-based matching has low confidence, so we trust its judgment
       const MIN_OPENAI_CONFIDENCE = 0.85; // 85% - high confidence threshold for OpenAI
-      const homeMatch = aiResult.homeMatch && aiResult.homeMatch.confidence >= MIN_OPENAI_CONFIDENCE
-        ? req.dbTeams.find(t => t.name === aiResult.homeMatch!.name)
-        : null;
       
-      const awayMatch = aiResult.awayMatch && aiResult.awayMatch.confidence >= MIN_OPENAI_CONFIDENCE
-        ? req.dbTeams.find(t => t.name === aiResult.awayMatch!.name)
-        : null;
+      // If OpenAI found a gameId and has high overall confidence, use that game's teams
+      let homeMatch: Team | null = null;
+      let awayMatch: Team | null = null;
+      
+      if (aiResult.gameId && aiResult.overallConfidence && aiResult.overallConfidence >= MIN_OPENAI_CONFIDENCE) {
+        // Find the matched game
+        const matchedGame = req.dbGames.find(g => g.id === aiResult.gameId);
+        if (matchedGame) {
+          // Use teams from the matched game
+          if (aiResult.homeMatch && aiResult.homeMatch.name === matchedGame.homeTeam.name) {
+            homeMatch = { id: matchedGame.homeTeam.id, name: matchedGame.homeTeam.name, shortName: matchedGame.homeTeam.shortName || null };
+          } else if (aiResult.homeMatch && aiResult.homeMatch.name === matchedGame.awayTeam.name) {
+            // Teams might be swapped
+            homeMatch = { id: matchedGame.awayTeam.id, name: matchedGame.awayTeam.name, shortName: matchedGame.awayTeam.shortName || null };
+          }
+          
+          if (aiResult.awayMatch && aiResult.awayMatch.name === matchedGame.awayTeam.name) {
+            awayMatch = { id: matchedGame.awayTeam.id, name: matchedGame.awayTeam.name, shortName: matchedGame.awayTeam.shortName || null };
+          } else if (aiResult.awayMatch && aiResult.awayMatch.name === matchedGame.homeTeam.name) {
+            // Teams might be swapped
+            awayMatch = { id: matchedGame.homeTeam.id, name: matchedGame.homeTeam.name, shortName: matchedGame.homeTeam.shortName || null };
+          }
+        }
+      } else {
+        // Fallback to team name matching if no gameId or low confidence
+        homeMatch = aiResult.homeMatch && aiResult.homeMatch.confidence >= MIN_OPENAI_CONFIDENCE
+          ? req.dbTeams.find(t => t.name === aiResult.homeMatch!.name) || null
+          : null;
+        
+        awayMatch = aiResult.awayMatch && aiResult.awayMatch.confidence >= MIN_OPENAI_CONFIDENCE
+          ? req.dbTeams.find(t => t.name === aiResult.awayMatch!.name) || null
+          : null;
+      }
       
       if (aiResult.homeMatch && aiResult.homeMatch.confidence >= MIN_OPENAI_CONFIDENCE && !homeMatch) {
         console.log(`   ⚠️ OpenAI home match "${aiResult.homeMatch.name}" not found in DB teams (confidence: ${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);
@@ -242,22 +308,24 @@ Return the JSON array now:`;
       }
 
       const result: MatchResult = {
-        homeMatch: homeMatch
+        gameId: aiResult.gameId || null,
+        homeMatch: homeMatch && aiResult.homeMatch
           ? { team: homeMatch, confidence: aiResult.homeMatch.confidence }
           : null,
-        awayMatch: awayMatch
+        awayMatch: awayMatch && aiResult.awayMatch
           ? { team: awayMatch, confidence: aiResult.awayMatch.confidence }
           : null,
+        overallConfidence: aiResult.overallConfidence || null,
         reasoning: aiResult.reasoning,
       };
       
-      console.log(`   ✅ Final result: home=${homeMatch ? homeMatch.name : 'null'}, away=${awayMatch ? awayMatch.name : 'null'}`);
+      console.log(`   ✅ Final result: gameId=${result.gameId || 'null'}, overallConfidence=${result.overallConfidence ? (result.overallConfidence * 100).toFixed(1) + '%' : 'null'}, home=${homeMatch ? homeMatch.name : 'null'}, away=${awayMatch ? awayMatch.name : 'null'}`);
 
       results.set(`${req.externalHome}|${req.externalAway}`, result);
 
       // Cache the result
-      const dbTeamIds = req.dbTeams.map(t => t.id).sort();
-      const cacheKey = getCacheKey(req.externalHome, req.externalAway, dbTeamIds);
+      const dbGameIds = req.dbGames.map(g => g.id).sort();
+      const cacheKey = getCacheKey(req.externalHome, req.externalAway, req.externalDate, dbGameIds);
       matchCache.set(cacheKey, result);
 
       // Clean old cache entries (simple cleanup - could be improved)
@@ -271,13 +339,15 @@ Return the JSON array now:`;
 
   } catch (error) {
     console.error('Error matching teams with OpenAI:', error);
-    // Return null matches on error (fallback to rule-based)
-    uncachedRequests.forEach(req => {
-      results.set(`${req.externalHome}|${req.externalAway}`, {
-        homeMatch: null,
-        awayMatch: null,
+      // Return null matches on error (fallback to rule-based)
+      uncachedRequests.forEach(req => {
+        results.set(`${req.externalHome}|${req.externalAway}`, {
+          gameId: null,
+          homeMatch: null,
+          awayMatch: null,
+          overallConfidence: null,
+        });
       });
-    });
   }
 
   return results;
