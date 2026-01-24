@@ -1139,9 +1139,21 @@ export default async function handler(
 
           // Batch process with OpenAI
           console.log(`🤖 Calling OpenAI with ${openAIRequests.length} requests...`);
+          console.log(`🤖 Sample requests (first 3):`, openAIRequests.slice(0, 3).map(r => ({
+            external: `${r.externalHome} vs ${r.externalAway}`,
+            dbTeamsCount: r.dbTeams.length
+          })));
           const openAIResults = await matchTeamsWithOpenAI(openAIRequests, openAIApiKey);
           console.log(`🤖 OpenAI returned ${openAIResults.size} results`);
-          console.log(`🤖 OpenAI result keys:`, Array.from(openAIResults.keys()).slice(0, 5));
+          console.log(`🤖 OpenAI result keys (first 10):`, Array.from(openAIResults.keys()).slice(0, 10));
+          
+          // Log sample results to see what OpenAI returned
+          const sampleResults = Array.from(openAIResults.entries()).slice(0, 3);
+          for (const [key, result] of sampleResults) {
+            console.log(`🤖 Sample result for "${key}":`);
+            console.log(`   Home: ${result.homeMatch ? `${result.homeMatch.team.name} (${(result.homeMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
+            console.log(`   Away: ${result.awayMatch ? `${result.awayMatch.team.name} (${(result.awayMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
+          }
 
           // Process OpenAI matches
           console.log(`🤖 Processing ${failedMatches.length} failed matches with OpenAI results...`);
@@ -1179,6 +1191,13 @@ export default async function handler(
               console.log(`🤖 OpenAI matched with HIGH CONFIDENCE: ${failedMatch.externalMatch.homeTeam.name} → ${aiResult.homeMatch.team.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);
               console.log(`🤖 OpenAI matched with HIGH CONFIDENCE: ${failedMatch.externalMatch.awayTeam.name} → ${aiResult.awayMatch.team.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)`);
               console.log(`   ✅ OpenAI guarantees 100% match - accepting without further validation`);
+              console.log(`   🔍 Looking for game with teams: ${aiResult.homeMatch.team.name} (ID: ${aiResult.homeMatch.team.id}) and ${aiResult.awayMatch.team.name} (ID: ${aiResult.awayMatch.team.id})`);
+              console.log(`   📋 Available games in allGamesToCheck: ${allGamesToCheck.length}`);
+              console.log(`   📋 Sample games:`, allGamesToCheck.slice(0, 3).map(g => ({
+                id: g.id,
+                home: `${g.homeTeam.name} (${g.homeTeam.id})`,
+                away: `${g.awayTeam.name} (${g.awayTeam.id})`
+              })));
 
               // Find the game with both matched teams
               const aiMatchingGame = allGamesToCheck.find(game =>
@@ -1187,6 +1206,14 @@ export default async function handler(
                 game.competition.sportType === 'RUGBY' &&
                 !updatedGameIds.has(game.id)
               );
+              
+              if (!aiMatchingGame) {
+                console.log(`   ❌ No game found in allGamesToCheck with teams ${aiResult.homeMatch.team.name} and ${aiResult.awayMatch.team.name}`);
+                console.log(`   🔍 Checking if teams exist in any games...`);
+                const homeTeamGames = allGamesToCheck.filter(g => g.homeTeam.id === aiResult.homeMatch!.team.id || g.awayTeam.id === aiResult.homeMatch!.team.id);
+                const awayTeamGames = allGamesToCheck.filter(g => g.homeTeam.id === aiResult.awayMatch!.team.id || g.awayTeam.id === aiResult.awayMatch!.team.id);
+                console.log(`   📊 Games with home team: ${homeTeamGames.length}, Games with away team: ${awayTeamGames.length}`);
+              }
 
               if (aiMatchingGame) {
                 // Verify date
@@ -1385,7 +1412,17 @@ export default async function handler(
                 console.log(`⚠️ OpenAI matched teams but no game found in DB`);
               }
             } else {
-              console.log(`❌ OpenAI could not match: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
+              if (!aiResult) {
+                console.log(`❌ OpenAI returned no result for: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
+                console.log(`   Result key searched: "${resultKey}"`);
+              } else if (!openAIHomeConfident || !openAIAwayConfident) {
+                console.log(`❌ OpenAI result confidence too low for: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
+                console.log(`   Home confident: ${openAIHomeConfident} (${aiResult.homeMatch ? (aiResult.homeMatch.confidence * 100).toFixed(1) + '%' : 'null'})`);
+                console.log(`   Away confident: ${openAIAwayConfident} (${aiResult.awayMatch ? (aiResult.awayMatch.confidence * 100).toFixed(1) + '%' : 'null'})`);
+                console.log(`   Threshold: 85%`);
+              } else {
+                console.log(`❌ OpenAI matched but game not found or other issue: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
+              }
             }
           }
           console.log(`🤖 OpenAI Summary: ${openAIMatchedCount} matches found, ${openAIExternalIdSetCount} externalIds set`);
