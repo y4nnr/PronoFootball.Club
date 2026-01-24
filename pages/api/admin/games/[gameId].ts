@@ -105,6 +105,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           date: gameDate,
           homeScore: normalizedHomeScore,
           awayScore: normalizedAwayScore,
+          // Clear live scores if final scores are cleared or status is not LIVE/FINISHED
+          liveHomeScore: (normalizedHomeScore === null && normalizedAwayScore === null) || gameStatus !== 'LIVE' ? null : undefined,
+          liveAwayScore: (normalizedHomeScore === null && normalizedAwayScore === null) || gameStatus !== 'LIVE' ? null : undefined,
+          // Clear elapsedMinute if status is not LIVE
+          elapsedMinute: gameStatus !== 'LIVE' ? null : undefined,
+          // Clear externalId if status is UPCOMING (game hasn't started yet)
+          externalId: gameStatus === 'UPCOMING' ? null : undefined,
+          externalStatus: gameStatus === 'UPCOMING' ? null : undefined,
           status: gameStatus,
         },
       });

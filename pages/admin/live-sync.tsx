@@ -83,6 +83,7 @@ export default function AdminLiveSync() {
   const [error, setError] = useState<string | null>(null);
   const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set());
   const [loadingExternal, setLoadingExternal] = useState<Set<string>>(new Set());
+  const [resettingGame, setResettingGame] = useState<string | null>(null);
 
   const [sportType, setSportType] = useState<"ALL" | "FOOTBALL" | "RUGBY">("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "UPCOMING" | "LIVE" | "FINISHED" | "CANCELLED">("ALL");
@@ -183,6 +184,46 @@ export default function AdminLiveSync() {
         next.delete(game.id);
         return next;
       });
+    }
+  };
+
+  const handleResetGame = async (gameId: string) => {
+    if (!confirm('Reset this game? This will clear all scores, set status to UPCOMING, and clear external ID.')) {
+      return;
+    }
+    
+    setResettingGame(gameId);
+    try {
+      const game = games.find(g => g.id === gameId);
+      if (!game) {
+        throw new Error('Game not found');
+      }
+      
+      const response = await fetch(`/api/admin/games/${gameId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          homeTeamId: game.homeTeam.id,
+          awayTeamId: game.awayTeam.id,
+          date: game.date,
+          homeScore: null,
+          awayScore: null,
+          status: 'UPCOMING',
+        }),
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to reset game');
+      }
+      
+      // Refresh games list
+      fetchGames();
+    } catch (err) {
+      console.error('[ADMIN LIVE SYNC] Error resetting game:', err);
+      alert(err instanceof Error ? err.message : 'Failed to reset game');
+    } finally {
+      setResettingGame(null);
     }
   };
 
