@@ -1223,6 +1223,8 @@ export default async function handler(
     }
 
     console.log(`✅ Successfully updated ${updatedGames.length} rugby games with API-Sports.io data`);
+    console.log(`📊 DEBUG: Final failedMatches.length = ${failedMatches.length}`);
+    console.log(`📊 DEBUG: Final matchedCount = ${matchedCount}`);
 
     if (updatedGames.length > 0) {
       console.log('🔔 Live score updates found - call /api/trigger-games-refresh to update frontend');
@@ -1239,7 +1241,12 @@ export default async function handler(
       attribution: rugbyAPI.getAttributionText(),
       apiVersion: 'RUGBY',
       lastSync: new Date().toISOString(),
-      hasUpdates: updatedGames.length > 0
+      hasUpdates: updatedGames.length > 0,
+      debug: {
+        failedMatchesCount: failedMatches.length,
+        openAIAttempted: failedMatches.length > 0,
+        openAIKeyPresent: !!process.env.OPENAI_API_KEY
+      }
     });
 
   } catch (error) {
