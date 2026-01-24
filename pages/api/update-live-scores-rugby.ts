@@ -696,6 +696,14 @@ export default async function handler(
                 console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
                 console.log(`      Date difference: ${daysDiff.toFixed(1)} days (threshold: 30 days)`);
                 matchingGame = null; // Reject the match
+                
+                // Collect for OpenAI fallback (date validation failed but teams matched)
+                failedMatches.push({
+                  externalMatch,
+                  homeMatch,
+                  awayMatch,
+                  reason: 'date_validation_failed'
+                });
               } else {
                 console.log(`   ✅ Date verified: ${daysDiff.toFixed(1)} days difference (within 30 day threshold)`);
               }
@@ -705,16 +713,45 @@ export default async function handler(
               console.log(`      DB Date: ${matchingGame.date ? new Date(matchingGame.date).toISOString().split('T')[0] : 'MISSING'}`);
               console.log(`      API Date: ${externalMatch.utcDate ? new Date(externalMatch.utcDate).toISOString().split('T')[0] : 'MISSING'}`);
               matchingGame = null; // Reject the match - too risky without date verification
+              
+              // Collect for OpenAI fallback (date validation failed but teams matched)
+              failedMatches.push({
+                externalMatch,
+                homeMatch,
+                awayMatch,
+                reason: 'date_validation_failed_no_date'
+              });
             }
           } else {
             console.log(`   ❌ No game found in DB with both matched teams: ${homeMatch?.team.name || 'N/A'} and ${awayMatch?.team.name || 'N/A'}`);
             console.log(`      Searched ${allGamesToCheck.length} games`);
+            
+            // Collect for OpenAI fallback (teams matched but no game found)
+            failedMatches.push({
+              externalMatch,
+              homeMatch,
+              awayMatch,
+              reason: 'no_game_found'
+            });
           }
         }
 
         if (!matchingGame) {
           console.log(`⚠️ No matching rugby game found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
           console.log(`   Searched in ${allGamesToCheck.length} rugby games`);
+          
+          // Only add to failedMatches if we haven't already (to avoid duplicates)
+          const alreadyCollected = failedMatches.some(fm => 
+            fm.externalMatch.id === externalMatch.id
+          );
+          if (!alreadyCollected) {
+            failedMatches.push({
+              externalMatch,
+              homeMatch: null,
+              awayMatch: null,
+              reason: 'no_match_after_all_attempts'
+            });
+          }
           continue;
         }
         
