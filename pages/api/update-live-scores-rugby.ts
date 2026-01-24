@@ -768,14 +768,25 @@ export default async function handler(
         // Get external scores
         // IMPORTANT: For LIVE games, use scores from API even if they're 0 (game just started)
         // Only use existing scores if API doesn't provide them (null means not available, 0 means no score yet)
-        let externalHomeScore = externalMatch.score.fullTime.home !== null ? externalMatch.score.fullTime.home : matchingGame.liveHomeScore;
-        let externalAwayScore = externalMatch.score.fullTime.away !== null ? externalMatch.score.fullTime.away : matchingGame.liveAwayScore;
+        let externalHomeScore: number | null = externalMatch.score.fullTime.home !== null && externalMatch.score.fullTime.home !== undefined 
+          ? externalMatch.score.fullTime.home 
+          : (matchingGame.liveHomeScore !== null && matchingGame.liveHomeScore !== undefined ? matchingGame.liveHomeScore : null);
+        let externalAwayScore: number | null = externalMatch.score.fullTime.away !== null && externalMatch.score.fullTime.away !== undefined 
+          ? externalMatch.score.fullTime.away 
+          : (matchingGame.liveAwayScore !== null && matchingGame.liveAwayScore !== undefined ? matchingGame.liveAwayScore : null);
         
-        // For LIVE games, if scores are null from API but game is LIVE, set to 0 (game hasn't scored yet)
-        if (externalMatch.status === 'LIVE' && externalHomeScore === null && externalAwayScore === null) {
-          externalHomeScore = 0;
-          externalAwayScore = 0;
-          console.log(`   ⚠️ LIVE game with null scores from API - setting to 0-0 (game may not have scored yet)`);
+        // For LIVE games, if scores are null from both API and DB, set to 0 (game hasn't scored yet)
+        // This ensures the UI shows "0 - 0" instead of "-"
+        if (externalMatch.status === 'LIVE') {
+          if (externalHomeScore === null) {
+            externalHomeScore = 0;
+          }
+          if (externalAwayScore === null) {
+            externalAwayScore = 0;
+          }
+          if (externalHomeScore === 0 && externalAwayScore === 0 && (externalMatch.score.fullTime.home === null || externalMatch.score.fullTime.away === null)) {
+            console.log(`   ⚠️ LIVE game with null scores from API - setting to 0-0 (game may not have scored yet)`);
+          }
         }
 
         // Check if scores changed
