@@ -495,9 +495,11 @@ export default async function handler(
         console.log(`🔍 Processing ${processedCount}/${allExternalMatches.length}: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name} (ID: ${externalMatch.id})`);
 
         // First, try to find game by externalId (most reliable)
+        // BUT: Skip games that were already matched in this sync run to prevent overwriting correct matches
         let matchingGame = allGamesToCheck.find(game => 
           game.externalId === externalMatch.id.toString() &&
-          game.competition.sportType === 'RUGBY'
+          game.competition.sportType === 'RUGBY' &&
+          !updatedGameIds.has(game.id) // CRITICAL: Don't rematch games already processed in this sync
         );
 
         // If found by externalId, verify team names match (external IDs can be reused or point to wrong games)
