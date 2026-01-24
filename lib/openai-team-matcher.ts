@@ -116,10 +116,11 @@ For each pair, return a JSON array with this exact format:
 
 Rules:
 - Match confidence should be 0.0-1.0 (1.0 = perfect match, 0.0 = no match)
-- Only return matches with confidence >= 0.8
-- If no good match, set the match to null
+- Only return matches with confidence >= 0.85 (85%) - we need HIGH confidence to guarantee 100% match
+- If no good match with confidence >= 0.85, set the match to null
 - Use exact database team names (case-sensitive)
 - Consider abbreviations, nicknames, and common variations
+- Be very confident in your matches - this is critical for a betting platform
 - Return ONLY valid JSON, no other text
 
 Return the JSON array now:`;
@@ -216,25 +217,28 @@ Return the JSON array now:`;
       console.log(`      Away: ${aiResult.awayMatch ? `${aiResult.awayMatch.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
       console.log(`      Available DB teams: ${req.dbTeams.map(t => t.name).join(', ')}`);
       
-      const homeMatch = aiResult.homeMatch && aiResult.homeMatch.confidence >= 0.8
+      // Trust OpenAI more - accept matches with confidence >= 0.85 (85%)
+      // OpenAI is used as a fallback when rule-based matching has low confidence, so we trust its judgment
+      const MIN_OPENAI_CONFIDENCE = 0.85; // 85% - high confidence threshold for OpenAI
+      const homeMatch = aiResult.homeMatch && aiResult.homeMatch.confidence >= MIN_OPENAI_CONFIDENCE
         ? req.dbTeams.find(t => t.name === aiResult.homeMatch!.name)
         : null;
       
-      const awayMatch = aiResult.awayMatch && aiResult.awayMatch.confidence >= 0.8
+      const awayMatch = aiResult.awayMatch && aiResult.awayMatch.confidence >= MIN_OPENAI_CONFIDENCE
         ? req.dbTeams.find(t => t.name === aiResult.awayMatch!.name)
         : null;
       
-      if (aiResult.homeMatch && aiResult.homeMatch.confidence >= 0.8 && !homeMatch) {
+      if (aiResult.homeMatch && aiResult.homeMatch.confidence >= MIN_OPENAI_CONFIDENCE && !homeMatch) {
         console.log(`   ⚠️ OpenAI home match "${aiResult.homeMatch.name}" not found in DB teams (confidence: ${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);
       }
-      if (aiResult.awayMatch && aiResult.awayMatch.confidence >= 0.8 && !awayMatch) {
+      if (aiResult.awayMatch && aiResult.awayMatch.confidence >= MIN_OPENAI_CONFIDENCE && !awayMatch) {
         console.log(`   ⚠️ OpenAI away match "${aiResult.awayMatch.name}" not found in DB teams (confidence: ${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)`);
       }
-      if (aiResult.homeMatch && aiResult.homeMatch.confidence < 0.8) {
-        console.log(`   ⚠️ OpenAI home match confidence ${(aiResult.homeMatch.confidence * 100).toFixed(1)}% is below 0.8 threshold`);
+      if (aiResult.homeMatch && aiResult.homeMatch.confidence < MIN_OPENAI_CONFIDENCE) {
+        console.log(`   ⚠️ OpenAI home match confidence ${(aiResult.homeMatch.confidence * 100).toFixed(1)}% is below ${(MIN_OPENAI_CONFIDENCE * 100).toFixed(0)}% threshold`);
       }
-      if (aiResult.awayMatch && aiResult.awayMatch.confidence < 0.8) {
-        console.log(`   ⚠️ OpenAI away match confidence ${(aiResult.awayMatch.confidence * 100).toFixed(1)}% is below 0.8 threshold`);
+      if (aiResult.awayMatch && aiResult.awayMatch.confidence < MIN_OPENAI_CONFIDENCE) {
+        console.log(`   ⚠️ OpenAI away match confidence ${(aiResult.awayMatch.confidence * 100).toFixed(1)}% is below ${(MIN_OPENAI_CONFIDENCE * 100).toFixed(0)}% threshold`);
       }
 
       const result: MatchResult = {

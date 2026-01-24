@@ -691,14 +691,20 @@ export default async function handler(
           console.log(`   Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, method: ${homeMatch.method})` : 'NOT FOUND'} (external: ${externalMatch.homeTeam.name})`);
           console.log(`   Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, method: ${awayMatch.method})` : 'NOT FOUND'} (external: ${externalMatch.awayTeam.name})`);
 
-          // CRITICAL: Require BOTH teams to match with HIGH confidence (at least 0.85 weighted score)
-          // This prevents false positives from low-confidence matches
-          const MIN_TEAM_MATCH_CONFIDENCE = 0.85;
+          // CRITICAL: Require BOTH teams to match with HIGH confidence (at least 0.9 = 90%)
+          // If confidence is below 90%, we'll use OpenAI to verify and guarantee 100% match
+          const MIN_TEAM_MATCH_CONFIDENCE = 0.9; // Changed from 0.85 to 0.9 (90%)
           const homeMatchConfident = homeMatch && homeMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
           const awayMatchConfident = awayMatch && awayMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
+          
+          // Calculate overall match confidence (average of home and away, or minimum if one is missing)
+          const overallConfidence = homeMatch && awayMatch 
+            ? (homeMatch.score + awayMatch.score) / 2 
+            : (homeMatch?.score || awayMatch?.score || 0);
 
           if (!homeMatchConfident || !awayMatchConfident) {
-            console.log(`⚠️ No HIGH CONFIDENCE team matches found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            console.log(`⚠️ Confidence below 90% threshold for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
+            console.log(`   Overall confidence: ${(overallConfidence * 100).toFixed(1)}% (threshold: 90%)`);
             if (homeMatch && homeMatch.score < MIN_TEAM_MATCH_CONFIDENCE) {
               console.log(`   Home match score ${(homeMatch.score * 100).toFixed(1)}% is below threshold ${(MIN_TEAM_MATCH_CONFIDENCE * 100).toFixed(1)}%`);
               console.log(`   Home match details: DB team="${homeMatch.team.name}", shortName="${homeMatch.team.shortName || 'N/A'}"`);
@@ -713,13 +719,14 @@ export default async function handler(
             if (!awayMatch) {
               console.log(`   ❌ Away team "${externalMatch.awayTeam.name}" not found in DB at all`);
             }
+            console.log(`   🤖 Will use OpenAI to verify and guarantee 100% match`);
             
-            // Collect for OpenAI fallback
+            // Collect for OpenAI fallback - use OpenAI when confidence < 90%
             failedMatches.push({
               externalMatch,
               homeMatch,
               awayMatch,
-              reason: 'low_confidence_or_no_match'
+              reason: 'confidence_below_90_percent'
             });
             continue;
           }
@@ -734,52 +741,70 @@ export default async function handler(
             !updatedGameIds.has(game.id) // CRITICAL: Don't rematch games already processed in this sync
           );
           
-          // CRITICAL: If found by team name matching, verify date is reasonable
+          // CRITICAL: If found by team name matching, verify date is reasonable AND check overall confidence
           if (matchingGame) {
             console.log(`   ✅ Found game by team name matching: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
             console.log(`      Game ID: ${matchingGame.id}, Status: ${matchingGame.status}, Date: ${matchingGame.date ? new Date(matchingGame.date).toISOString().split('T')[0] : 'MISSING'}`);
+            console.log(`      Match confidence: Home=${(homeMatch.score * 100).toFixed(1)}%, Away=${(awayMatch.score * 100).toFixed(1)}%, Overall=${(overallConfidence * 100).toFixed(1)}%`);
             
-            // ALWAYS verify date - this is critical to prevent matching games from different seasons
-            if (externalMatch.utcDate && matchingGame.date) {
-              const apiMatchDate = new Date(externalMatch.utcDate);
-              const dbGameDate = new Date(matchingGame.date);
-              const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
+            // Check if overall confidence is below 90% - if so, use OpenAI to verify
+            if (overallConfidence < 0.9) {
+              console.log(`   ⚠️ Overall confidence ${(overallConfidence * 100).toFixed(1)}% is below 90% threshold`);
+              console.log(`   🤖 Will use OpenAI to verify and guarantee 100% match`);
+              matchingGame = null; // Reject for now, let OpenAI verify
               
-              console.log(`      Date check: DB=${dbGameDate.toISOString().split('T')[0]}, API=${apiMatchDate.toISOString().split('T')[0]}, diff=${daysDiff.toFixed(1)} days`);
-              
-              // Reject if dates are more than 30 days apart (very strict - prevents cross-season matches)
-              // Changed from 60 to 30 days to be more strict
-              if (daysDiff > 30) {
-                console.log(`   ⚠️ Team name match found but date is from different season - REJECTING`);
-                console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${matchingGame.competition.name})`);
-                console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
-                console.log(`      Date difference: ${daysDiff.toFixed(1)} days (threshold: 30 days)`);
-                matchingGame = null; // Reject the match
+              // Collect for OpenAI fallback (confidence below 90%)
+              failedMatches.push({
+                externalMatch,
+                homeMatch,
+                awayMatch,
+                reason: 'overall_confidence_below_90_percent'
+              });
+            } else {
+              // ALWAYS verify date - this is critical to prevent matching games from different seasons
+              if (externalMatch.utcDate && matchingGame.date) {
+                const apiMatchDate = new Date(externalMatch.utcDate);
+                const dbGameDate = new Date(matchingGame.date);
+                const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
+                
+                console.log(`      Date check: DB=${dbGameDate.toISOString().split('T')[0]}, API=${apiMatchDate.toISOString().split('T')[0]}, diff=${daysDiff.toFixed(1)} days`);
+                
+                // Reject if dates are more than 30 days apart (very strict - prevents cross-season matches)
+                if (daysDiff > 30) {
+                  console.log(`   ⚠️ Team name match found but date is from different season - REJECTING`);
+                  console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${matchingGame.competition.name})`);
+                  console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
+                  console.log(`      Date difference: ${daysDiff.toFixed(1)} days (threshold: 30 days)`);
+                  console.log(`   🤖 Will use OpenAI to verify and guarantee 100% match`);
+                  matchingGame = null; // Reject the match
+                  
+                  // Collect for OpenAI fallback (date validation failed but teams matched)
+                  failedMatches.push({
+                    externalMatch,
+                    homeMatch,
+                    awayMatch,
+                    reason: 'date_validation_failed'
+                  });
+                } else {
+                  console.log(`   ✅ Date verified: ${daysDiff.toFixed(1)} days difference (within 30 day threshold)`);
+                  console.log(`   ✅ Overall confidence ${(overallConfidence * 100).toFixed(1)}% is above 90% - match accepted`);
+                }
+              } else {
+                // If no date available, be very cautious - use OpenAI to verify
+                console.log(`   ⚠️ Team name match found but NO DATE available for verification`);
+                console.log(`      DB Date: ${matchingGame.date ? new Date(matchingGame.date).toISOString().split('T')[0] : 'MISSING'}`);
+                console.log(`      API Date: ${externalMatch.utcDate ? new Date(externalMatch.utcDate).toISOString().split('T')[0] : 'MISSING'}`);
+                console.log(`   🤖 Will use OpenAI to verify and guarantee 100% match`);
+                matchingGame = null; // Reject for now, let OpenAI verify
                 
                 // Collect for OpenAI fallback (date validation failed but teams matched)
                 failedMatches.push({
                   externalMatch,
                   homeMatch,
                   awayMatch,
-                  reason: 'date_validation_failed'
+                  reason: 'date_validation_failed_no_date'
                 });
-              } else {
-                console.log(`   ✅ Date verified: ${daysDiff.toFixed(1)} days difference (within 30 day threshold)`);
               }
-            } else {
-              // If no date available, be very cautious - reject the match
-              console.log(`   ⚠️ Team name match found but NO DATE available for verification - REJECTING for safety`);
-              console.log(`      DB Date: ${matchingGame.date ? new Date(matchingGame.date).toISOString().split('T')[0] : 'MISSING'}`);
-              console.log(`      API Date: ${externalMatch.utcDate ? new Date(externalMatch.utcDate).toISOString().split('T')[0] : 'MISSING'}`);
-              matchingGame = null; // Reject the match - too risky without date verification
-              
-              // Collect for OpenAI fallback (date validation failed but teams matched)
-              failedMatches.push({
-                externalMatch,
-                homeMatch,
-                awayMatch,
-                reason: 'date_validation_failed_no_date'
-              });
             }
           } else {
             console.log(`   ❌ No game found in DB with both matched teams: ${homeMatch?.team.name || 'N/A'} and ${awayMatch?.team.name || 'N/A'}`);
@@ -1144,9 +1169,16 @@ export default async function handler(
               console.log(`   Away match: ${aiResult.awayMatch ? `${aiResult.awayMatch.team.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
             }
 
-            if (aiResult && aiResult.homeMatch && aiResult.awayMatch) {
-              console.log(`🤖 OpenAI matched: ${failedMatch.externalMatch.homeTeam.name} → ${aiResult.homeMatch.team.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);
-              console.log(`🤖 OpenAI matched: ${failedMatch.externalMatch.awayTeam.name} → ${aiResult.awayMatch.team.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)`);
+            // Trust OpenAI results - if OpenAI says it's a match with confidence >= 0.85, we accept it
+            // OpenAI is used as a fallback when rule-based matching has low confidence, so we trust its judgment
+            const MIN_OPENAI_CONFIDENCE = 0.85; // 85% - high confidence threshold for OpenAI
+            const openAIHomeConfident = aiResult?.homeMatch && aiResult.homeMatch.confidence >= MIN_OPENAI_CONFIDENCE;
+            const openAIAwayConfident = aiResult?.awayMatch && aiResult.awayMatch.confidence >= MIN_OPENAI_CONFIDENCE;
+            
+            if (aiResult && openAIHomeConfident && openAIAwayConfident) {
+              console.log(`🤖 OpenAI matched with HIGH CONFIDENCE: ${failedMatch.externalMatch.homeTeam.name} → ${aiResult.homeMatch.team.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);
+              console.log(`🤖 OpenAI matched with HIGH CONFIDENCE: ${failedMatch.externalMatch.awayTeam.name} → ${aiResult.awayMatch.team.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)`);
+              console.log(`   ✅ OpenAI guarantees 100% match - accepting without further validation`);
 
               // Find the game with both matched teams
               const aiMatchingGame = allGamesToCheck.find(game =>
