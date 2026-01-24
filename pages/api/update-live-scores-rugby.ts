@@ -600,6 +600,13 @@ export default async function handler(
     for (const externalMatch of allExternalMatches) {
       try {
         processedCount++;
+        // Log specific game we're looking for
+        if (externalMatch.id === 49960 || (externalMatch.homeTeam.name.includes('Bordeaux') && externalMatch.awayTeam.name.includes('Stade'))) {
+          console.log(`🎯 FOUND TARGET EXTERNAL MATCH: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name} (ID: ${externalMatch.id})`);
+          console.log(`   Date: ${externalMatch.utcDate}, Status: ${externalMatch.externalStatus}, Score: ${externalMatch.score.fullTime.home}-${externalMatch.score.fullTime.away}`);
+          console.log(`   Competition: ${externalMatch.competition?.name || 'Unknown'}`);
+          console.log(`   Will try to match this with our DB games...`);
+        }
         console.log(`🔍 Processing ${processedCount}/${allExternalMatches.length}: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name} (ID: ${externalMatch.id})`);
 
         // First, try to find game by externalId (most reliable)
