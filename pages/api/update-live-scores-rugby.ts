@@ -1362,6 +1362,13 @@ export default async function handler(
                       newStatus = 'LIVE';
                     }
                     
+                    // CRITICAL: Prevent invalid status transitions (LIVE → UPCOMING)
+                    if (aiMatchingGame.status === 'LIVE' && newStatus === 'UPCOMING') {
+                      console.log(`   ⚠️ BLOCKING invalid status transition: LIVE → UPCOMING`);
+                      console.log(`      External API shows ${newExternalStatus} (mapped to UPCOMING), but game is already LIVE`);
+                      newStatus = 'LIVE'; // Keep it as LIVE
+                    }
+                    
                     const statusChanged = newStatus !== aiMatchingGame.status;
                     const shouldUpdate = scoresChanged || elapsedChanged || statusChanged || aiMatchingGame.status === 'LIVE';
                     
