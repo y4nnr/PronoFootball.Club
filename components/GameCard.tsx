@@ -151,16 +151,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
       return [];
     }
     
-    // Filter based on game status
-    const filtered = betsWithValidScores.filter(bet => {
-      if (game.status === 'LIVE' || game.status === 'FINISHED') {
-        return true;
-      }
-      return bet.userId === currentUserId;
-    });
-    
-    // Final check
-    return filtered && filtered.length > 0 ? filtered : [];
+    // For all game statuses, include all bets with valid scores
+    // The rendering logic will handle showing/hiding scores based on game status and user
+    return betsWithValidScores && betsWithValidScores.length > 0 ? betsWithValidScores : [];
   })();
   
   // Explicit check - if no displayable bets, set to empty array
