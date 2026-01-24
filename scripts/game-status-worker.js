@@ -34,6 +34,36 @@ async function releaseLeader() {
  * Uses DB-side NOW() (UTC on the timestamp-with-time-zone column).
  */
 async function flipDueGames() {
+  // CRITICAL: Add logging to diagnose why future games are being marked as LIVE
+  // Check what games would be updated BEFORE updating
+  const gamesToCheck = await prisma.$queryRaw`
+    SELECT id, date, "homeTeamId", "awayTeamId", status
+    FROM "Game"
+    WHERE "status" = 'UPCOMING'
+      AND "date" <= (NOW() - INTERVAL '2 minutes')
+    ORDER BY date DESC
+    LIMIT 10
+  `;
+  
+  if (gamesToCheck && Array.isArray(gamesToCheck) && gamesToCheck.length > 0) {
+    console.log(`🔍 Found ${gamesToCheck.length} UPCOMING games where date <= (NOW() - 2 minutes) (checking if this is correct)...`);
+    const now = new Date();
+    const nowUTC = now.toISOString();
+    for (const game of gamesToCheck) {
+      const gameDate = new Date(game.date);
+      const gameDateUTC = gameDate.toISOString();
+      const diffMs = now.getTime() - gameDate.getTime();
+      const diffMinutes = Math.round(diffMs / (1000 * 60));
+      console.log(`   ⚠️ Game ${game.id}:`);
+      console.log(`      Game date (UTC): ${gameDateUTC}`);
+      console.log(`      Current time (UTC): ${nowUTC}`);
+      console.log(`      Difference: ${diffMinutes} minutes (${diffMinutes < 0 ? 'FUTURE' : 'PAST'})`);
+      if (diffMinutes < -2) {
+        console.log(`      ❌ ERROR: This game is more than 2 minutes in the FUTURE but was selected! This is a bug!`);
+      }
+    }
+  }
+  
   const updated = await prisma.$executeRaw`
     UPDATE "Game"
     SET "status" = 'LIVE'
