@@ -1054,14 +1054,28 @@ export default async function handler(
           }));
 
           // Batch process with OpenAI
+          console.log(`🤖 Calling OpenAI with ${openAIRequests.length} requests...`);
           const openAIResults = await matchTeamsWithOpenAI(openAIRequests, openAIApiKey);
           console.log(`🤖 OpenAI returned ${openAIResults.size} results`);
+          console.log(`🤖 OpenAI result keys:`, Array.from(openAIResults.keys()).slice(0, 5));
 
           // Process OpenAI matches
           console.log(`🤖 Processing ${failedMatches.length} failed matches with OpenAI results...`);
           for (const failedMatch of failedMatches) {
             const resultKey = `${failedMatch.externalMatch.homeTeam.name}|${failedMatch.externalMatch.awayTeam.name}`;
+            console.log(`   🔍 Looking for result key: "${resultKey}"`);
             const aiResult = openAIResults.get(resultKey);
+            
+            // Also try to find by external ID if we know it
+            if (!aiResult && failedMatch.externalMatch.id) {
+              console.log(`   🔍 Trying to find match by external ID: ${failedMatch.externalMatch.id}`);
+              // Check if any result matches this external match
+              for (const [key, result] of openAIResults.entries()) {
+                if (result.homeMatch && result.awayMatch) {
+                  console.log(`      Checking key: "${key}"`);
+                }
+              }
+            }
             
             console.log(`🤖 Checking OpenAI result for: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
             console.log(`   Result key: ${resultKey}`);
