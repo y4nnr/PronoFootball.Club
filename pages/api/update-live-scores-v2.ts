@@ -375,19 +375,70 @@ export default async function handler(
       }
     });
 
-    console.log(`📊 Found ${ourLiveGames.length} LIVE games and ${recentlyFinishedGames.length} potentially finished games`);
+    // Also get FINISHED games with externalId to check for wrong matches (games incorrectly marked as FINISHED)
+    const finishedGamesWithExternalId = await prisma.game.findMany({
+      where: {
+        status: 'FINISHED',
+        externalId: { not: null },
+        competition: {
+          sportType: 'FOOTBALL'
+        },
+        // Only check games from the last 7 days to avoid checking old games
+        date: {
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        }
+      },
+      select: {
+        id: true,
+        status: true,
+        externalId: true,
+        externalStatus: true,
+        homeScore: true,
+        awayScore: true,
+        liveHomeScore: true,
+        liveAwayScore: true,
+        elapsedMinute: true,
+        date: true,
+        lastSyncAt: true,
+        competitionId: true,
+        homeTeam: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            sportType: true
+          }
+        },
+        awayTeam: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            sportType: true
+          }
+        },
+        competition: {
+          select: {
+            id: true,
+            name: true,
+            sportType: true
+          }
+        }
+      }
+    });
     
-    // Combine LIVE games and recently finished games for matching
-    // This ensures we can update games that are finished in the external API but still marked as LIVE in our DB
-    // Note: We only check LIVE games - another part of the app handles UPCOMING -> LIVE transitions
-    const allGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames];
-    console.log(`📊 Total games to check for updates: ${allGamesToCheck.length} (${ourLiveGames.length} LIVE + ${recentlyFinishedGames.length} potentially finished)`);
+    console.log(`📊 Found ${ourLiveGames.length} LIVE games, ${recentlyFinishedGames.length} potentially finished games, and ${finishedGamesWithExternalId.length} FINISHED games with externalId`);
     
-    // Use deduplicated games
-    const allGamesToCheck = uniqueGamesToCheck;
+    // Combine LIVE games, recently finished games, and FINISHED games with externalId for validation
+    // Deduplicate by game ID
+    const uniqueGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames, ...finishedGamesWithExternalId];
+    const uniqueGamesToCheck = uniqueGamesToCheck.filter((game, index, self) => 
+      index === self.findIndex(g => g.id === game.id)
+    );
+    console.log(`📊 Total games to check for updates: ${uniqueGamesToCheck.length} (${ourLiveGames.length} LIVE + ${recentlyFinishedGames.length} potentially finished + ${finishedGamesWithExternalId.length} FINISHED with externalId)`);
     
     // Verify that all teams are football teams
-    const nonFootballTeams = allGamesToCheck.filter(game => 
+    const nonFootballTeams = uniqueGamesToCheck.filter(game => 
       game.homeTeam.sportType !== 'FOOTBALL' || game.awayTeam.sportType !== 'FOOTBALL'
     );
     if (nonFootballTeams.length > 0) {
@@ -415,7 +466,7 @@ export default async function handler(
     // Get all teams from all games (LIVE + potentially finished) for matching
     // IMPORTANT: Only include teams that are actually football teams (sportType: 'FOOTBALL')
     // Include shortName for better matching (e.g., "Lyon" matches "Olympique Lyonnais")
-    const allOurTeams = allGamesToCheck
+    const allOurTeams = uniqueGamesToCheck
       .filter(game => game.homeTeam.sportType === 'FOOTBALL' && game.awayTeam.sportType === 'FOOTBALL')
       .flatMap(game => [
         { id: game.homeTeam.id, name: game.homeTeam.name, shortName: game.homeTeam.shortName },
@@ -427,8 +478,8 @@ export default async function handler(
       new Map(allOurTeams.map(team => [team.id, team])).values()
     );
     
-    console.log(`📊 Using ${uniqueTeams.length} unique football teams for matching (from ${allGamesToCheck.length} games)`);
-    console.log(`📊 LIVE games: ${ourLiveGames.length}, Recently finished: ${allGamesToCheck.length - ourLiveGames.length}`);
+    console.log(`📊 Using ${uniqueTeams.length} unique football teams for matching (from ${uniqueGamesToCheck.length} games)`);
+    console.log(`📊 LIVE games: ${ourLiveGames.length}, Recently finished: ${uniqueGamesToCheck.length - ourLiveGames.length}`);
     
     for (const externalMatch of allExternalMatches) {
       try {
@@ -484,14 +535,14 @@ export default async function handler(
 
         // Step 1B: If not found in LIVE games, try externalId matching (only if we have externalId)
         if (!matchingGame && externalMatch.id) {
-          const externalIdMatch = allGamesToCheck.find(game => {
+          const externalIdMatch = uniqueGamesToCheck.find(game => {
             if (!game.externalId || game.competition.sportType !== 'FOOTBALL') return false;
             return game.externalId.toString() === externalMatch.id.toString();
           });
 
           if (externalIdMatch) {
             // CRITICAL: Verify team names match (external IDs can be reused or point to wrong games)
-            const allTeams = allGamesToCheck.flatMap(game => [
+            const allTeams = uniqueGamesToCheck.flatMap(game => [
               { id: game.homeTeam.id, name: game.homeTeam.name, shortName: game.homeTeam.shortName },
               { id: game.awayTeam.id, name: game.awayTeam.name, shortName: game.awayTeam.shortName }
             ]);
@@ -699,7 +750,7 @@ export default async function handler(
           }
 
           // Find ALL potential games that match by teams
-          const potentialMatches = allGamesToCheck.filter(game => 
+          const potentialMatches = uniqueGamesToCheck.filter(game => 
             (game.homeTeam.id === homeMatch.team.id || game.awayTeam.id === homeMatch.team.id) &&
             (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id) &&
             game.competition.sportType === 'FOOTBALL'
@@ -803,7 +854,7 @@ export default async function handler(
 
         if (!matchingGame) {
           console.log(`⚠️ No matching football game found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-          console.log(`   Searched in ${allGamesToCheck.length} football games`);
+          console.log(`   Searched in ${uniqueGamesToCheck.length} football games`);
           unmatchedMatches.push({
             externalMatch: {
               home: externalMatch.homeTeam.name,
