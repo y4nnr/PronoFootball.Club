@@ -532,9 +532,6 @@ export default async function handler(
       }
     }
     
-    // Use deduplicated games
-    const uniqueGamesToCheck = uniqueGamesToCheck;
-    
     // Verify that all teams are rugby teams
     const nonRugbyTeams = uniqueGamesToCheck.filter(game => 
       game.homeTeam.sportType !== 'RUGBY' || game.awayTeam.sportType !== 'RUGBY'
