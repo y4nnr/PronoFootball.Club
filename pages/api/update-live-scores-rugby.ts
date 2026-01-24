@@ -628,10 +628,12 @@ export default async function handler(
 
           // Find the game that contains both matched teams
           // IMPORTANT: Verify that the matched game is actually a rugby game (double-check sportType)
+          // CRITICAL: Skip games already matched in this sync run to prevent overwriting correct matches
           matchingGame = allGamesToCheck.find(game => 
             (game.homeTeam.id === homeMatch.team.id || game.awayTeam.id === homeMatch.team.id) &&
             (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id) &&
-            game.competition.sportType === 'RUGBY' // Double-check: ensure it's a rugby competition
+            game.competition.sportType === 'RUGBY' && // Double-check: ensure it's a rugby competition
+            !updatedGameIds.has(game.id) // CRITICAL: Don't rematch games already processed in this sync
           );
           
           // CRITICAL: If found by team name matching, verify date is reasonable
