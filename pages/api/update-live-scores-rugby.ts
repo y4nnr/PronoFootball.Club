@@ -1031,6 +1031,8 @@ export default async function handler(
 
     // OpenAI Fallback: Try to match failed games using AI
     console.log(`📊 DEBUG: Total failed matches collected: ${failedMatches.length}`);
+    let openAIMatchedCount = 0;
+    let openAIExternalIdSetCount = 0;
     if (failedMatches.length > 0) {
       console.log(`🤖 Attempting OpenAI fallback for ${failedMatches.length} failed matches...`);
       console.log(`📋 Failed matches:`, failedMatches.map(fm => ({
@@ -1042,8 +1044,6 @@ export default async function handler(
       console.log(`🔑 OpenAI API key present: ${openAIApiKey ? 'YES' : 'NO'}`);
       
       if (openAIApiKey) {
-        let openAIMatchedCount = 0;
-        let openAIExternalIdSetCount = 0;
         try {
           console.log(`🤖 Calling OpenAI API with ${failedMatches.length} failed matches...`);
           // Prepare requests for OpenAI
