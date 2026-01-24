@@ -419,8 +419,8 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               }`}>
                 {game.status === 'FINISHED' && typeof game.homeScore === 'number' && typeof game.awayScore === 'number'
                   ? `${game.homeScore} - ${game.awayScore}`
-                  : game.status === 'LIVE' && typeof game.liveHomeScore === 'number' && typeof game.liveAwayScore === 'number'
-                  ? `${game.liveHomeScore} - ${game.liveAwayScore}`
+                  : game.status === 'LIVE' && (typeof game.liveHomeScore === 'number' || game.liveHomeScore === 0) && (typeof game.liveAwayScore === 'number' || game.liveAwayScore === 0)
+                  ? `${game.liveHomeScore ?? 0} - ${game.liveAwayScore ?? 0}`
                   : <span className="text-gray-400 dark:text-gray-500">-</span>}
               </span>
             );
