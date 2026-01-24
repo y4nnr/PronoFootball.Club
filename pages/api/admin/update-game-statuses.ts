@@ -29,11 +29,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log(`[GAME STATUS UPDATE] Starting at ${now.toISOString()}`);
 
     // Find games that should be LIVE (UPCOMING games where start time has passed)
+    // IMPORTANT: Add a 2-minute buffer to prevent marking games as LIVE too early.
+    // Games are scheduled for a specific time, but they often start 1-2 minutes later.
+    const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
     const gamesToUpdate = await prisma.game.findMany({
       where: {
         status: 'UPCOMING',
         date: {
-          lte: now // Game time has passed
+          lte: twoMinutesAgo // Game time has passed by at least 2 minutes
         }
       },
       select: {

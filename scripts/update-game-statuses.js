@@ -6,11 +6,13 @@ async function main() {
   console.log('🔄 Starting automatic game status update...');
 
   // 1) Log how many should flip (using DB-side local time)
+  // IMPORTANT: Add a 2-minute buffer to prevent marking games as LIVE too early.
+  // Games are scheduled for a specific time, but they often start 1-2 minutes later.
   const [{ count }] = await prisma.$queryRaw`
     SELECT COUNT(*)::int AS count
     FROM "Game"
     WHERE "status" = 'UPCOMING'
-      AND "date" <= (NOW() AT TIME ZONE 'Europe/Paris')
+      AND "date" <= ((NOW() AT TIME ZONE 'Europe/Paris') - INTERVAL '2 minutes')
   `;
   console.log(`📊 Found ${count} games that should be LIVE`);
 
@@ -24,7 +26,7 @@ async function main() {
     UPDATE "Game"
     SET "status" = 'LIVE'
     WHERE "status" = 'UPCOMING'
-      AND "date" <= (NOW() AT TIME ZONE 'Europe/Paris')
+      AND "date" <= ((NOW() AT TIME ZONE 'Europe/Paris') - INTERVAL '2 minutes')
   `;
   console.log(`✅ Updated rows: ${updated}`);
 }
