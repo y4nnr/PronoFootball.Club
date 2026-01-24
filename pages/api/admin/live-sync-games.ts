@@ -73,10 +73,21 @@ export default async function handler(
     const since = new Date(now.getTime() - minutesBack * 60 * 1000);
     const take = limit ? Math.min(parseInt(limit, 10) || 200, 500) : 200;
 
+    // Only show games from today (to avoid showing games from next week that were synced)
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+
     const where: any = {
       lastSyncAt: {
         not: null,
         gte: since,
+      },
+      // Only include games scheduled for today
+      date: {
+        gte: todayStart,
+        lte: todayEnd,
       },
     };
 

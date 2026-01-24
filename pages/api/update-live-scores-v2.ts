@@ -481,6 +481,14 @@ export default async function handler(
     console.log(`📊 Using ${uniqueTeams.length} unique football teams for matching (from ${uniqueGamesToCheck.length} games)`);
     console.log(`📊 LIVE games: ${ourLiveGames.length}, Recently finished: ${uniqueGamesToCheck.length - ourLiveGames.length}`);
     
+    // Collect failed matches for OpenAI fallback
+    const failedMatches: Array<{
+      externalMatch: any;
+      homeMatch: any;
+      awayMatch: any;
+      reason: string;
+    }> = [];
+    
     for (const externalMatch of allExternalMatches) {
       try {
         processedCount++;
@@ -550,21 +558,25 @@ export default async function handler(
             const homeMatch = apiSports.findBestTeamMatch(externalMatch.homeTeam.name, allTeams);
             const awayMatch = apiSports.findBestTeamMatch(externalMatch.awayTeam.name, allTeams);
             
-            // Both teams must match the externalIdMatch game
-            const homeMatchesGame = homeMatch && (
-              homeMatch.team.id === externalIdMatch.homeTeam.id || 
-              homeMatch.team.id === externalIdMatch.awayTeam.id
-            );
-            const awayMatchesGame = awayMatch && (
-              awayMatch.team.id === externalIdMatch.homeTeam.id || 
-              awayMatch.team.id === externalIdMatch.awayTeam.id
-            );
+            // CRITICAL: Both teams must match in CORRECT positions with HIGH confidence
+            // Check both normal and reversed positions
+            const homeMatchesHome = homeMatch && homeMatch.team.id === externalIdMatch.homeTeam.id;
+            const awayMatchesAway = awayMatch && awayMatch.team.id === externalIdMatch.awayTeam.id;
+            const homeMatchesAway = homeMatch && homeMatch.team.id === externalIdMatch.awayTeam.id;
+            const awayMatchesHome = awayMatch && awayMatch.team.id === externalIdMatch.homeTeam.id;
             
-            if (!homeMatchesGame || !awayMatchesGame) {
-              console.log(`   ⚠️ ExternalId match found but team names don't match - rejecting`);
+            // Require BOTH teams to match in the SAME orientation (both normal OR both reversed)
+            const matchesNormal = homeMatchesHome && awayMatchesAway;
+            const matchesReversed = homeMatchesAway && awayMatchesHome;
+            const teamsMatchCorrectly = matchesNormal || matchesReversed;
+            
+            if (!teamsMatchCorrectly) {
+              console.log(`   ⚠️ ExternalId match found but team names don't match in correct positions - rejecting`);
               console.log(`      DB: ${externalIdMatch.homeTeam.name} vs ${externalIdMatch.awayTeam.name}`);
               console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-              console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, method: ${homeMatch.method})` : 'NOT FOUND'}, Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, method: ${awayMatch.method})` : 'NOT FOUND'}`);
+              console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, method: ${homeMatch.method}, matches DB home: ${homeMatchesHome}, matches DB away: ${homeMatchesAway})` : 'NOT FOUND'}`);
+              console.log(`      Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, method: ${awayMatch.method}, matches DB home: ${awayMatchesHome}, matches DB away: ${awayMatchesAway})` : 'NOT FOUND'}`);
+              console.log(`      Normal match: ${matchesNormal}, Reversed match: ${matchesReversed}`);
               
               // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
               const gameIdToClear = externalIdMatch.id;
@@ -960,11 +972,43 @@ export default async function handler(
         
         // CRITICAL: Don't update games if external API shows NS (Not Started) or TBD
         // Games that haven't started should remain UPCOMING, not be marked as LIVE
+        // CRITICAL: Don't update games if external API shows NS (Not Started)
+        // Games that haven't started should remain UPCOMING, not be marked as LIVE
+        // If game is already LIVE but external API shows NS, reset it back to UPCOMING
+        // BUT: Still set externalId if game doesn't have one yet
         if (externalMatch.externalStatus === 'NS' || externalMatch.externalStatus === 'TBD' || externalMatch.externalStatus === 'POST') {
-          console.log(`   ⏭️ Skipping update: External API shows ${externalMatch.externalStatus} (Not Started/Postponed)`);
-          console.log(`      Game ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} should remain ${matchingGame.status}`);
-          console.log(`      Will not update status or scores until game actually starts`);
-          continue; // Skip this match - game hasn't started yet
+          console.log(`   ⏭️ External API shows ${externalMatch.externalStatus} (Not Started/Postponed)`);
+          console.log(`      Game ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} is currently ${matchingGame.status}`);
+          
+          // If game doesn't have externalId yet, set it (even though game hasn't started)
+          const needsExternalId = !matchingGame.externalId || matchingGame.externalId !== externalMatch.id.toString();
+          
+          // If game is incorrectly marked as LIVE, reset it to UPCOMING
+          if (matchingGame.status === 'LIVE') {
+            console.log(`   ⚠️ Game is LIVE but external API shows ${externalMatch.externalStatus} - resetting to UPCOMING`);
+            try {
+              const updateData: any = {
+                status: 'UPCOMING',
+                externalStatus: externalMatch.externalStatus,
+                liveHomeScore: null,
+                liveAwayScore: null,
+                elapsedMinute: null
+              };
+              if (needsExternalId) {
+                updateData.externalId = externalMatch.id.toString();
+                console.log(`   📝 Also setting externalId: ${externalMatch.id}`);
+              }
+              await prisma.game.update({
+                where: { id: matchingGame.id },
+                data: updateData
+              });
+              console.log(`   ✅ Reset game ${matchingGame.id} from LIVE to UPCOMING${needsExternalId ? ' and set externalId' : ''}`);
+              updatedGameIds.add(matchingGame.id);
+            } catch (error) {
+              console.error(`   ❌ Error resetting game status:`, error);
+            }
+          }
+          continue; // Skip further processing - game hasn't started yet
         }
         
         // FINAL VALIDATION: Log full match details before applying update
@@ -1059,12 +1103,21 @@ export default async function handler(
         // CRITICAL: Prevent invalid status transitions
         // A game cannot "un-start" - once LIVE, it can only go to FINISHED, not back to UPCOMING
         // The external API might show NS/UPCOMING if it's slow to update or the game is delayed
+        // CRITICAL: Prevent invalid status transitions
+        // A game cannot "un-start" - once LIVE, it can only go to FINISHED, not back to UPCOMING
+        // EXCEPTION: If external status is POST/NS/TBD, the game was postponed/not started, so reset to UPCOMING
         if (matchingGame.status === 'LIVE' && newStatus === 'UPCOMING') {
-          console.log(`   ⚠️ BLOCKING invalid status transition: LIVE → UPCOMING`);
-          console.log(`      External API shows ${newExternalStatus} (mapped to UPCOMING), but game is already LIVE`);
-          console.log(`      This can happen if external API is slow to update or game is delayed`);
-          console.log(`      Keeping status as LIVE - will update when external API shows game has started`);
-          newStatus = 'LIVE'; // Keep it as LIVE
+          // Allow transition if game was postponed/not started (POST/NS/TBD)
+          if (newExternalStatus === 'POST' || newExternalStatus === 'NS' || newExternalStatus === 'TBD') {
+            console.log(`   ✅ ALLOWING status transition: LIVE → UPCOMING (game was ${newExternalStatus})`);
+            // Status will be set to UPCOMING below
+          } else {
+            console.log(`   ⚠️ BLOCKING invalid status transition: LIVE → UPCOMING`);
+            console.log(`      External API shows ${newExternalStatus} (mapped to UPCOMING), but game is already LIVE`);
+            console.log(`      This can happen if external API is slow to update or game is delayed`);
+            console.log(`      Keeping status as LIVE - will update when external API shows game has started`);
+            newStatus = 'LIVE'; // Keep it as LIVE
+          }
         }
         
         const statusChanged = newStatus !== matchingGame.status;
@@ -1261,11 +1314,11 @@ export default async function handler(
     const remainingLiveGames = ourLiveGames.filter(game => !updatedGameIds.has(game.id));
     const remainingRecentlyFinished = recentlyFinishedGames.filter(game => !updatedGameIds.has(game.id));
     const remainingGamesToCheck = [...remainingLiveGames, ...remainingRecentlyFinished];
-    const uniqueGamesToCheck = remainingGamesToCheck.filter((game, index, self) => 
+    const uniqueRemainingGamesToCheck = remainingGamesToCheck.filter((game, index, self) => 
       index === self.findIndex(g => g.id === game.id)
     );
     
-    for (const game of uniqueGamesToCheck) {
+    for (const game of uniqueRemainingGamesToCheck) {
       try {
         const gameDate = new Date(game.date);
         const now = new Date();
@@ -1351,6 +1404,10 @@ export default async function handler(
         console.error(`❌ Error auto-finishing game ${game.id}:`, error);
       }
     }
+
+    // OpenAI Fallback: Initialize counters (even if not used)
+    let openAIMatchedCount = 0;
+    let openAIExternalIdSetCount = 0;
 
     // Final summary log
     console.log(`\n${'='.repeat(80)}`);

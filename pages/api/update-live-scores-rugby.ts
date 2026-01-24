@@ -695,21 +695,25 @@ export default async function handler(
           const homeMatchConfident = homeMatch && homeMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
           const awayMatchConfident = awayMatch && awayMatch.score >= MIN_TEAM_MATCH_CONFIDENCE;
           
-          // Both teams must match the externalIdMatch game with HIGH confidence
-          const homeMatchesGame = homeMatchConfident && (
-            homeMatch.team.id === matchingGame.homeTeam.id || 
-            homeMatch.team.id === matchingGame.awayTeam.id
-          );
-          const awayMatchesGame = awayMatchConfident && (
-            awayMatch.team.id === matchingGame.homeTeam.id || 
-            awayMatch.team.id === matchingGame.awayTeam.id
-          );
+          // CRITICAL: Both teams must match in CORRECT positions with HIGH confidence
+          // Check both normal and reversed positions
+          const homeMatchesHome = homeMatchConfident && homeMatch.team.id === matchingGame.homeTeam.id;
+          const awayMatchesAway = awayMatchConfident && awayMatch.team.id === matchingGame.awayTeam.id;
+          const homeMatchesAway = homeMatchConfident && homeMatch.team.id === matchingGame.awayTeam.id;
+          const awayMatchesHome = awayMatchConfident && awayMatch.team.id === matchingGame.homeTeam.id;
           
-          if (!homeMatchesGame || !awayMatchesGame) {
-            console.log(`   ⚠️ ExternalId match found but team names don't match with HIGH confidence - rejecting`);
+          // Require BOTH teams to match in the SAME orientation (both normal OR both reversed)
+          const matchesNormal = homeMatchesHome && awayMatchesAway;
+          const matchesReversed = homeMatchesAway && awayMatchesHome;
+          const teamsMatchCorrectly = matchesNormal || matchesReversed;
+          
+          if (!teamsMatchCorrectly) {
+            console.log(`   ⚠️ ExternalId match found but team names don't match in correct positions - rejecting`);
             console.log(`      DB: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
             console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-            console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, confident: ${homeMatchConfident})` : 'NOT FOUND'}, Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, confident: ${awayMatchConfident})` : 'NOT FOUND'}`);
+            console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, confident: ${homeMatchConfident}, matches DB home: ${homeMatchesHome}, matches DB away: ${homeMatchesAway})` : 'NOT FOUND'}`);
+            console.log(`      Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, confident: ${awayMatchConfident}, matches DB home: ${awayMatchesHome}, matches DB away: ${awayMatchesAway})` : 'NOT FOUND'}`);
+            console.log(`      Normal match: ${matchesNormal}, Reversed match: ${matchesReversed}`);
             console.log(`      External IDs can be reused - this is likely a different game!`);
             
             // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
@@ -787,60 +791,114 @@ export default async function handler(
                 console.error(`   ❌ Error clearing externalId:`, error);
               }
             } else {
-              // CRITICAL: Verify date is from the same season/year
-              // Reject matches from different seasons (external IDs can be reused across seasons)
-              if (externalMatch.utcDate && matchingGame.date) {
-                const apiMatchDate = new Date(externalMatch.utcDate);
-                const dbGameDate = new Date(matchingGame.date);
-                const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
+              // CRITICAL: Verify competition name matches (prevent matching Top 14 with Nationale, etc.)
+              const externalCompName = externalMatch.competition?.name?.toLowerCase() || '';
+              const dbCompName = matchingGame.competition.name.toLowerCase();
+              
+              // Check if competitions are clearly different (e.g., Top 14 vs Nationale)
+              // Both should contain the same key competition name
+              const hasTop14 = externalCompName.includes('top 14') || dbCompName.includes('top 14');
+              const hasNationale = externalCompName.includes('nationale') || dbCompName.includes('nationale');
+              const hasProD2 = externalCompName.includes('pro d2') || dbCompName.includes('pro d2');
+              
+              // If one is Top 14 and the other is Nationale/Pro D2, they're different
+              const isDifferentCompetition = 
+                (hasTop14 && (hasNationale || hasProD2)) ||
+                (hasNationale && hasProD2) ||
+                (!externalCompName.includes(dbCompName) && !dbCompName.includes(externalCompName) && externalCompName !== dbCompName);
+              
+              if (isDifferentCompetition) {
+                console.log(`   ⚠️ ExternalId match found but competition name doesn't match - rejecting`);
+                console.log(`      DB Competition: ${matchingGame.competition.name}`);
+                console.log(`      API Competition: ${externalMatch.competition?.name || 'unknown'}`);
+                console.log(`      External IDs can be reused - this is likely a different game!`);
                 
-                // CRITICAL: External IDs can be reused across different games/seasons
-                // Be VERY strict with date validation - reject if more than 7 days apart
-                // This prevents matching games from different weeks/seasons with same external ID
-                if (daysDiff > 7) {
-                  console.log(`   ⚠️ ExternalId match found but date is too far apart - rejecting`);
-                  console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${matchingGame.competition.name})`);
-                  console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
-                  console.log(`      Date difference: ${daysDiff.toFixed(1)} days (threshold: 7 days)`);
-                  console.log(`      External IDs can be reused - this is likely a different game!`);
+                // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
+                const gameIdToClear = matchingGame.id;
+                const wasIncorrectlyFinished = matchingGame.status === 'FINISHED' && matchingGame.externalId === externalMatch.id.toString();
+                matchingGame = null; // Reject the match
+                
+                try {
+                  const clearData: any = { 
+                    externalId: null,
+                    externalStatus: null
+                  };
                   
-                  // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
-                  const gameIdToClear = matchingGame.id;
-                  const wasIncorrectlyFinished = matchingGame.status === 'FINISHED' && matchingGame.externalId === externalMatch.id.toString();
-                  matchingGame = null; // Reject the match
-                  
-                  try {
-                    const clearData: any = { 
-                      externalId: null,
-                      externalStatus: null
-                    };
-                    
-                    // If game was incorrectly marked as FINISHED due to wrong match, reset it
-                    if (wasIncorrectlyFinished) {
-                      console.log(`   ⚠️ Game was incorrectly marked as FINISHED due to wrong external match - resetting status`);
-                      clearData.status = 'UPCOMING';
-                      clearData.homeScore = null;
-                      clearData.awayScore = null;
-                      clearData.liveHomeScore = null;
-                      clearData.liveAwayScore = null;
-                      clearData.finishedAt = null;
-                      clearData.decidedBy = null;
-                    }
-                    
-                    await prisma.game.update({
-                      where: { id: gameIdToClear },
-                      data: clearData
-                    });
-                    console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear}${wasIncorrectlyFinished ? ' and reset status/scores' : ''}`);
-                  } catch (error) {
-                    console.error(`   ❌ Error clearing externalId:`, error);
+                  // If game was incorrectly marked as FINISHED due to wrong match, reset it
+                  if (wasIncorrectlyFinished) {
+                    console.log(`   ⚠️ Game was incorrectly marked as FINISHED due to wrong external match - resetting status`);
+                    clearData.status = 'UPCOMING';
+                    clearData.homeScore = null;
+                    clearData.awayScore = null;
+                    clearData.liveHomeScore = null;
+                    clearData.liveAwayScore = null;
+                    clearData.finishedAt = null;
+                    clearData.decidedBy = null;
                   }
-                } else {
-                  console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
-                  console.log(`      Team names verified: ${homeMatch.team.name} and ${awayMatch.team.name}`);
-                  console.log(`      Competition verified: ${externalMatch.competition?.name || 'unknown'}`);
-                  console.log(`      Date verified: ${daysDiff.toFixed(1)} days difference`);
+                  
+                  await prisma.game.update({
+                    where: { id: gameIdToClear },
+                    data: clearData
+                  });
+                  console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear} - wrong competition${wasIncorrectlyFinished ? ' and reset status/scores' : ''}`);
+                } catch (error) {
+                  console.error(`   ❌ Error clearing externalId:`, error);
                 }
+              } else {
+                // CRITICAL: Verify date is from the same season/year
+                // Reject matches from different seasons (external IDs can be reused across seasons)
+                if (externalMatch.utcDate && matchingGame.date) {
+                  const apiMatchDate = new Date(externalMatch.utcDate);
+                  const dbGameDate = new Date(matchingGame.date);
+                  const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
+                  
+                  // CRITICAL: External IDs can be reused across different games/seasons
+                  // Be VERY strict with date validation - reject if more than 7 days apart
+                  // This prevents matching games from different weeks/seasons with same external ID
+                  if (daysDiff > 7) {
+                    console.log(`   ⚠️ ExternalId match found but date is too far apart - rejecting`);
+                    console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${matchingGame.competition.name})`);
+                    console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
+                    console.log(`      Date difference: ${daysDiff.toFixed(1)} days (threshold: 7 days)`);
+                    console.log(`      External IDs can be reused - this is likely a different game!`);
+                    
+                    // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
+                    const gameIdToClear = matchingGame.id;
+                    const wasIncorrectlyFinished = matchingGame.status === 'FINISHED' && matchingGame.externalId === externalMatch.id.toString();
+                    matchingGame = null; // Reject the match
+                    
+                    try {
+                      const clearData: any = { 
+                        externalId: null,
+                        externalStatus: null
+                      };
+                      
+                      // If game was incorrectly marked as FINISHED due to wrong match, reset it
+                      if (wasIncorrectlyFinished) {
+                        console.log(`   ⚠️ Game was incorrectly marked as FINISHED due to wrong external match - resetting status`);
+                        clearData.status = 'UPCOMING';
+                        clearData.homeScore = null;
+                        clearData.awayScore = null;
+                        clearData.liveHomeScore = null;
+                        clearData.liveAwayScore = null;
+                        clearData.finishedAt = null;
+                        clearData.decidedBy = null;
+                      }
+                      
+                      await prisma.game.update({
+                        where: { id: gameIdToClear },
+                        data: clearData
+                      });
+                      console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear}${wasIncorrectlyFinished ? ' and reset status/scores' : ''}`);
+                    } catch (error) {
+                      console.error(`   ❌ Error clearing externalId:`, error);
+                    }
+                  } else {
+                    console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+                    console.log(`      Team names verified: ${homeMatch.team.name} and ${awayMatch.team.name}`);
+                    console.log(`      Competition verified: ${externalMatch.competition?.name || 'unknown'}`);
+                    console.log(`      Date verified: ${daysDiff.toFixed(1)} days difference`);
+                  }
               } else {
                 // No date to verify - be more cautious
                 console.log(`   ⚠️ MEDIUM CONFIDENCE: Found by externalId but no date to verify`);
@@ -1016,31 +1074,40 @@ export default async function handler(
         // CRITICAL: Don't update games if external API shows NS (Not Started)
         // Games that haven't started should remain UPCOMING, not be marked as LIVE
         // If game is already LIVE but external API shows NS, reset it back to UPCOMING
-        if (externalMatch.externalStatus === 'NS' || externalMatch.externalStatus === 'POST') {
+        // BUT: Still set externalId if game doesn't have one yet
+        if (externalMatch.externalStatus === 'NS' || externalMatch.externalStatus === 'TBD' || externalMatch.externalStatus === 'POST') {
           console.log(`   ⏭️ External API shows ${externalMatch.externalStatus} (Not Started/Postponed)`);
           console.log(`      Game ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} is currently ${matchingGame.status}`);
           
+          // If game doesn't have externalId yet, set it (even though game hasn't started)
+          const needsExternalId = !matchingGame.externalId || matchingGame.externalId !== externalMatch.id.toString();
+          
           // If game is incorrectly marked as LIVE, reset it to UPCOMING
           if (matchingGame.status === 'LIVE') {
-            console.log(`   ⚠️ Game is LIVE but external API shows NS - resetting to UPCOMING`);
+            console.log(`   ⚠️ Game is LIVE but external API shows ${externalMatch.externalStatus} - resetting to UPCOMING`);
             try {
+              const updateData: any = {
+                status: 'UPCOMING',
+                externalStatus: externalMatch.externalStatus,
+                liveHomeScore: null,
+                liveAwayScore: null,
+                elapsedMinute: null
+              };
+              if (needsExternalId) {
+                updateData.externalId = externalMatch.id.toString();
+                console.log(`   📝 Also setting externalId: ${externalMatch.id}`);
+              }
               await prisma.game.update({
                 where: { id: matchingGame.id },
-                data: {
-                  status: 'UPCOMING',
-                  externalStatus: null,
-                  liveHomeScore: null,
-                  liveAwayScore: null,
-                  elapsedMinute: null
-                }
+                data: updateData
               });
-              console.log(`   ✅ Reset game ${matchingGame.id} from LIVE to UPCOMING`);
+              console.log(`   ✅ Reset game ${matchingGame.id} from LIVE to UPCOMING${needsExternalId ? ' and set externalId' : ''}`);
               updatedGameIds.add(matchingGame.id);
             } catch (error) {
               console.error(`   ❌ Error resetting game status:`, error);
             }
           }
-          continue; // Skip this match - game hasn't started yet
+          continue; // Skip further processing - game hasn't started yet
         }
         
         // Additional safety check: verify competition sportType
@@ -1055,8 +1122,10 @@ export default async function handler(
         }
         
         // Don't skip if game is FINISHED but externalStatus is FT (might need score update)
-        // Only skip if game is FINISHED AND has final scores
-        if (matchingGame.status === 'FINISHED' && matchingGame.homeScore !== null && matchingGame.awayScore !== null) {
+        // Only skip if game is FINISHED AND has final scores AND validation passed (externalId matches correctly)
+        // CRITICAL: Always validate FINISHED games to catch mismatches, even if they have scores
+        if (matchingGame.status === 'FINISHED' && matchingGame.homeScore !== null && matchingGame.awayScore !== null && matchingGame.externalId === externalMatch.id.toString()) {
+          // Only skip if externalId matches - if it doesn't match, validation above should have caught it
           console.log(`⏭️ Skipping already-finished rugby game with final scores: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
           continue;
         }
@@ -1173,13 +1242,20 @@ export default async function handler(
         
         // CRITICAL: Prevent invalid status transitions
         // A game cannot "un-start" - once LIVE, it can only go to FINISHED, not back to UPCOMING
+        // EXCEPTION: If external status is POST/NS/TBD, the game was postponed/not started, so reset to UPCOMING
         // The external API might show NS/UPCOMING if it's slow to update or the game is delayed
         if (matchingGame.status === 'LIVE' && newStatus === 'UPCOMING') {
-          console.log(`   ⚠️ BLOCKING invalid status transition: LIVE → UPCOMING`);
-          console.log(`      External API shows ${newExternalStatus} (mapped to UPCOMING), but game is already LIVE`);
-          console.log(`      This can happen if external API is slow to update or game is delayed`);
-          console.log(`      Keeping status as LIVE - will update when external API shows game has started`);
-          newStatus = 'LIVE'; // Keep it as LIVE
+          // Allow transition if game was postponed/not started (POST/NS/TBD)
+          if (newExternalStatus === 'POST' || newExternalStatus === 'NS' || newExternalStatus === 'TBD') {
+            console.log(`   ✅ ALLOWING status transition: LIVE → UPCOMING (game was ${newExternalStatus})`);
+            // Status will be set to UPCOMING below
+          } else {
+            console.log(`   ⚠️ BLOCKING invalid status transition: LIVE → UPCOMING`);
+            console.log(`      External API shows ${newExternalStatus} (mapped to UPCOMING), but game is already LIVE`);
+            console.log(`      This can happen if external API is slow to update or game is delayed`);
+            console.log(`      Keeping status as LIVE - will update when external API shows game has started`);
+            newStatus = 'LIVE'; // Keep it as LIVE
+          }
         }
         
         const statusChanged = newStatus !== matchingGame.status;
@@ -1321,6 +1397,7 @@ export default async function handler(
         
         if (matchingGame.status !== updatedGame.status) {
           console.log(`🔄 Status changed: ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} - ${matchingGame.status} → ${updatedGame.status}`);
+        }
         }
 
       } catch (error) {
@@ -1656,10 +1733,14 @@ export default async function handler(
               if (!aiResult) {
                 console.log(`❌ OpenAI returned no result for: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
                 console.log(`   Result key searched: "${resultKey}"`);
-              } else if (!openAIHomeConfident || !openAIAwayConfident) {
-                console.log(`❌ OpenAI result confidence too low for: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
-                console.log(`   Home confident: ${openAIHomeConfident} (${aiResult.homeMatch ? (aiResult.homeMatch.confidence * 100).toFixed(1) + '%' : 'null'})`);
-                console.log(`   Away confident: ${openAIAwayConfident} (${aiResult.awayMatch ? (aiResult.awayMatch.confidence * 100).toFixed(1) + '%' : 'null'})`);
+              } else if (!openAIConfident || !hasGameId) {
+                const homeConf = aiResult.homeMatch?.confidence || 0;
+                const awayConf = aiResult.awayMatch?.confidence || 0;
+                console.log(`❌ OpenAI result confidence too low or missing gameId for: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
+                console.log(`   Overall confident: ${openAIConfident} (${aiResult.overallConfidence ? (aiResult.overallConfidence * 100).toFixed(1) + '%' : 'null'})`);
+                console.log(`   Home confident: ${homeConf >= MIN_OPENAI_CONFIDENCE} (${(homeConf * 100).toFixed(1)}%)`);
+                console.log(`   Away confident: ${awayConf >= MIN_OPENAI_CONFIDENCE} (${(awayConf * 100).toFixed(1)}%)`);
+                console.log(`   Has gameId: ${hasGameId}`);
                 console.log(`   Threshold: 85%`);
               } else {
                 console.log(`❌ OpenAI matched but game not found or other issue: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
@@ -1815,4 +1896,3 @@ export default async function handler(
     });
   }
 }
-

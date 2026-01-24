@@ -383,7 +383,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {/* Mobile: Logo on top, name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.homeTeam.logo ? (
-              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className={`w-10 h-10 dark:w-12 dark:h-12 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md ${(game.homeTeam.name.toLowerCase().includes('juventus') || game.homeTeam.name.toLowerCase().includes('tottenham') || game.homeTeam.name.toLowerCase().includes('scotland') || game.homeTeam.name.toLowerCase().includes('england') || game.homeTeam.name.toLowerCase().includes('wales') || game.homeTeam.name.toLowerCase().includes('italy') || game.homeTeam.name.toLowerCase().includes('france') || game.homeTeam.name.toLowerCase().includes('ireland')) ? 'dark:bg-white dark:p-1' : ''}`} />
+              <div className={`w-10 h-10 dark:w-12 dark:h-12 rounded-full border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md bg-white dark:bg-white p-0.5 flex items-center justify-center ${(game.homeTeam.name.toLowerCase().includes('juventus') || game.homeTeam.name.toLowerCase().includes('tottenham') || game.homeTeam.name.toLowerCase().includes('scotland') || game.homeTeam.name.toLowerCase().includes('england') || game.homeTeam.name.toLowerCase().includes('wales') || game.homeTeam.name.toLowerCase().includes('italy') || game.homeTeam.name.toLowerCase().includes('france') || game.homeTeam.name.toLowerCase().includes('ireland')) ? 'dark:p-0.5' : ''}`}>
+                <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-full h-full object-contain" />
+              </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
             )}
@@ -394,7 +396,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {/* Desktop: Logo on top, name below */}
           <div className="hidden md:flex flex-col items-center">
             {game.homeTeam.logo ? (
-              <img src={game.homeTeam.logo} alt={game.homeTeam.name} className={`w-12 h-12 dark:w-14 dark:h-14 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md ${(game.homeTeam.name.toLowerCase().includes('juventus') || game.homeTeam.name.toLowerCase().includes('tottenham') || game.homeTeam.name.toLowerCase().includes('scotland') || game.homeTeam.name.toLowerCase().includes('england') || game.homeTeam.name.toLowerCase().includes('wales') || game.homeTeam.name.toLowerCase().includes('italy') || game.homeTeam.name.toLowerCase().includes('france') || game.homeTeam.name.toLowerCase().includes('ireland')) ? 'dark:bg-white dark:p-1' : ''}`} />
+              <div className={`w-12 h-12 dark:w-14 dark:h-14 rounded-full border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md bg-white dark:bg-white p-1 flex items-center justify-center ${(game.homeTeam.name.toLowerCase().includes('juventus') || game.homeTeam.name.toLowerCase().includes('tottenham') || game.homeTeam.name.toLowerCase().includes('scotland') || game.homeTeam.name.toLowerCase().includes('england') || game.homeTeam.name.toLowerCase().includes('wales') || game.homeTeam.name.toLowerCase().includes('italy') || game.homeTeam.name.toLowerCase().includes('france') || game.homeTeam.name.toLowerCase().includes('ireland')) ? 'dark:p-1' : ''}`}>
+                <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-full h-full object-contain" />
+              </div>
             ) : (
               <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
             )}
@@ -404,14 +408,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         {/* Score - PRIMARY: Largest and boldest - Maximum contrast */}
         <div className="flex-1 flex justify-center min-w-[60px] md:min-w-[80px]">
           {(() => {
-            const homeScore = game.status === 'FINISHED' ? game.homeScore : game.liveHomeScore;
-            const awayScore = game.status === 'FINISHED' ? game.awayScore : game.liveAwayScore;
-            const hasTwoDigitScores = typeof homeScore === 'number' && typeof awayScore === 'number' && 
-                                      homeScore >= 10 && awayScore >= 10;
-            // Reduce font size when both scores are 2 digits - make it smaller
-            const fontSizeClass = hasTwoDigitScores 
-              ? 'text-lg md:text-xl lg:text-2xl' 
-              : 'text-2xl md:text-3xl lg:text-4xl';
+            // Use consistent font size for both single and double digit scores
+            // Same size for live and finished scores
+            const fontSizeClass = 'text-lg md:text-xl lg:text-2xl';
             
             return (
               <span className={`${fontSizeClass} font-black text-gray-900 dark:text-gray-100 transition-all duration-300 ${
@@ -431,7 +430,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {/* Mobile: Logo on top, name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.awayTeam.logo ? (
-              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className={`w-10 h-10 dark:w-12 dark:h-12 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md ${(game.awayTeam.name.toLowerCase().includes('juventus') || game.awayTeam.name.toLowerCase().includes('tottenham') || game.awayTeam.name.toLowerCase().includes('scotland') || game.awayTeam.name.toLowerCase().includes('england') || game.awayTeam.name.toLowerCase().includes('wales') || game.awayTeam.name.toLowerCase().includes('italy') || game.awayTeam.name.toLowerCase().includes('france') || game.awayTeam.name.toLowerCase().includes('ireland')) ? 'dark:bg-white dark:p-1' : ''}`} />
+              <div className={`w-10 h-10 dark:w-12 dark:h-12 rounded-full border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md bg-white dark:bg-white p-0.5 flex items-center justify-center ${(game.awayTeam.name.toLowerCase().includes('juventus') || game.awayTeam.name.toLowerCase().includes('tottenham') || game.awayTeam.name.toLowerCase().includes('scotland') || game.awayTeam.name.toLowerCase().includes('england') || game.awayTeam.name.toLowerCase().includes('wales') || game.awayTeam.name.toLowerCase().includes('italy') || game.awayTeam.name.toLowerCase().includes('france') || game.awayTeam.name.toLowerCase().includes('ireland')) ? 'dark:p-0.5' : ''}`}>
+                <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-full h-full object-contain" />
+              </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
             )}
@@ -442,7 +443,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
           {/* Desktop: Logo on top, name below */}
           <div className="hidden md:flex flex-col items-center">
             {game.awayTeam.logo ? (
-              <img src={game.awayTeam.logo} alt={game.awayTeam.name} className={`w-12 h-12 dark:w-14 dark:h-14 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md ${(game.awayTeam.name.toLowerCase().includes('juventus') || game.awayTeam.name.toLowerCase().includes('tottenham') || game.awayTeam.name.toLowerCase().includes('scotland') || game.awayTeam.name.toLowerCase().includes('england') || game.awayTeam.name.toLowerCase().includes('wales') || game.awayTeam.name.toLowerCase().includes('italy') || game.awayTeam.name.toLowerCase().includes('france') || game.awayTeam.name.toLowerCase().includes('ireland')) ? 'dark:bg-white dark:p-1' : ''}`} />
+              <div className={`w-12 h-12 dark:w-14 dark:h-14 rounded-full border-2 border-gray-300 dark:border-gray-600 mb-2 flex-shrink-0 shadow-md bg-white dark:bg-white p-1 flex items-center justify-center ${(game.awayTeam.name.toLowerCase().includes('juventus') || game.awayTeam.name.toLowerCase().includes('tottenham') || game.awayTeam.name.toLowerCase().includes('scotland') || game.awayTeam.name.toLowerCase().includes('england') || game.awayTeam.name.toLowerCase().includes('wales') || game.awayTeam.name.toLowerCase().includes('italy') || game.awayTeam.name.toLowerCase().includes('france') || game.awayTeam.name.toLowerCase().includes('ireland')) ? 'dark:p-1' : ''}`}>
+                <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-full h-full object-contain" />
+              </div>
             ) : (
               <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
             )}
@@ -451,11 +454,14 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       </div>
       {/* Bets List - Section 4: Matching main section style (bottom) */}
-      {game.bets && game.bets.length > 0 && (
-        <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-gray-800/50">
-          <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-2.5 md:mb-3 uppercase tracking-wide">{t('placedBets')}</div>
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-            {game.bets.map((bet) => (
+      {(() => {
+        // Filter out bets that don't have scores (for UPCOMING games, scores are hidden)
+        const betsWithScores = game.bets?.filter(bet => bet.score1 !== null && bet.score2 !== null) || [];
+        return betsWithScores.length > 0 && (
+          <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-gray-800/50">
+            <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-2.5 md:mb-3 uppercase tracking-wide">{t('placedBets')}</div>
+            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+              {betsWithScores.map((bet) => (
               <li key={bet.id} className="flex items-center py-2 first:pt-0 last:pb-0">
                 <img
                   src={bet.user.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(bet.user.name.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
@@ -522,10 +528,11 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                   })()
                 ) : null}
               </li>
-            ))}
-          </ul>
-        </div>
-      )}
+              ))}
+            </ul>
+          </div>
+        );
+      })()}
     </div>
   );
   
