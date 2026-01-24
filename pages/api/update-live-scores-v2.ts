@@ -383,6 +383,9 @@ export default async function handler(
     const allGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames];
     console.log(`📊 Total games to check for updates: ${allGamesToCheck.length} (${ourLiveGames.length} LIVE + ${recentlyFinishedGames.length} potentially finished)`);
     
+    // Use deduplicated games
+    const allGamesToCheck = uniqueGamesToCheck;
+    
     // Verify that all teams are football teams
     const nonFootballTeams = allGamesToCheck.filter(game => 
       game.homeTeam.sportType !== 'FOOTBALL' || game.awayTeam.sportType !== 'FOOTBALL'
@@ -969,6 +972,37 @@ export default async function handler(
         if ((newExternalStatus === 'HT' || newExternalStatus === '1H' || newExternalStatus === '2H') && newStatus === 'FINISHED') {
           console.log(`⚠️ External status is ${newExternalStatus} (LIVE) but mapping returned FINISHED - correcting to LIVE`);
           newStatus = 'LIVE';
+        }
+        
+        // CRITICAL: Don't update games if external API shows NS (Not Started)
+        // Games that haven't started should remain UPCOMING, not be marked as LIVE
+        // If game is already LIVE but external API shows NS, reset it back to UPCOMING
+        if (newExternalStatus === 'NS' || newExternalStatus === 'TBD' || newExternalStatus === 'POST') {
+          console.log(`   ⏭️ External API shows ${newExternalStatus} (Not Started/Postponed)`);
+          console.log(`      Game ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} is currently ${matchingGame.status}`);
+          
+          // If game is incorrectly marked as LIVE, reset it to UPCOMING
+          if (matchingGame.status === 'LIVE') {
+            console.log(`   ⚠️ Game is LIVE but external API shows NS - resetting to UPCOMING`);
+            try {
+              await prisma.game.update({
+                where: { id: matchingGame.id },
+                data: {
+                  status: 'UPCOMING',
+                  externalStatus: null,
+                  liveHomeScore: null,
+                  liveAwayScore: null,
+                  elapsedMinute: null
+                }
+              });
+              console.log(`   ✅ Reset game ${matchingGame.id} from LIVE to UPCOMING`);
+              updatedGameIds.add(matchingGame.id);
+              continue; // Skip further processing
+            } catch (error) {
+              console.error(`   ❌ Error resetting game status:`, error);
+            }
+          }
+          continue; // Skip this match - game hasn't started yet
         }
         
         // CRITICAL: Prevent invalid status transitions

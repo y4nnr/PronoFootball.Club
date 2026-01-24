@@ -481,15 +481,15 @@ export default async function handler(
     console.log(`📊 Found ${ourLiveGames.length} LIVE rugby games, ${recentlyFinishedGames.length} potentially finished games, and ${finishedGamesWithExternalId.length} FINISHED games with externalId`);
     
     // Combine LIVE games, recently finished games, and FINISHED games with externalId for validation
-    const allGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames, ...finishedGamesWithExternalId];
     // Deduplicate by game ID
-    const uniqueGamesToCheck = allGamesToCheck.filter((game, index, self) => 
+    const uniqueGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames, ...finishedGamesWithExternalId];
+    const uniqueGamesToCheck = uniqueGamesToCheck.filter((game, index, self) => 
       index === self.findIndex(g => g.id === game.id)
     );
     console.log(`📊 Total rugby games to check for updates: ${uniqueGamesToCheck.length} (${ourLiveGames.length} LIVE + ${recentlyFinishedGames.length} potentially finished + ${finishedGamesWithExternalId.length} FINISHED with externalId)`);
     
     // Log the target game if it's in our list
-    const targetGame = allGamesToCheck.find(g => 
+    const targetGame = uniqueGamesToCheck.find(g => 
       (g.homeTeam.name.includes('Bordeaux') && g.awayTeam.name.includes('Stade Francais')) ||
       (g.homeTeam.name.includes('Bordeaux') && g.awayTeam.name.includes('Stade')) ||
       (g.homeTeam.name.includes('Bordeaux Begles') && g.awayTeam.name.includes('Stade Francais'))
@@ -506,7 +506,7 @@ export default async function handler(
       console.log(`   Looking for: Bordeaux Begles vs Stade Francais Paris`);
       console.log(`   ourLiveGames count: ${ourLiveGames.length}`);
       console.log(`   recentlyFinishedGames count: ${recentlyFinishedGames.length}`);
-      console.log(`   Available games: ${allGamesToCheck.slice(0, 5).map(g => `${g.homeTeam.name} vs ${g.awayTeam.name} (${g.status})`).join(', ')}${allGamesToCheck.length > 5 ? '...' : ''}`);
+      console.log(`   Available games: ${uniqueGamesToCheck.slice(0, 5).map(g => `${g.homeTeam.name} vs ${g.awayTeam.name} (${g.status})`).join(', ')}${uniqueGamesToCheck.length > 5 ? '...' : ''}`);
       
       // Also check if the game exists in DB but with different status
       const { prisma } = await import('../../lib/prisma');
@@ -528,12 +528,15 @@ export default async function handler(
         console.log(`   🔍 Found game in DB with different status: ${dbGame.homeTeam.name} vs ${dbGame.awayTeam.name}`);
         console.log(`      Status: ${dbGame.status}, Date: ${dbGame.date ? new Date(dbGame.date).toISOString() : 'MISSING'}`);
         console.log(`      External ID: ${dbGame.externalId || 'NOT SET'}`);
-        console.log(`      Why not in allGamesToCheck: ${dbGame.status !== 'LIVE' ? `Status is ${dbGame.status}, not LIVE` : 'Date might be outside 2-hour window'}`);
+        console.log(`      Why not in uniqueGamesToCheck: ${dbGame.status !== 'LIVE' ? `Status is ${dbGame.status}, not LIVE` : 'Date might be outside 2-hour window'}`);
       }
     }
     
+    // Use deduplicated games
+    const uniqueGamesToCheck = uniqueGamesToCheck;
+    
     // Verify that all teams are rugby teams
-    const nonRugbyTeams = allGamesToCheck.filter(game => 
+    const nonRugbyTeams = uniqueGamesToCheck.filter(game => 
       game.homeTeam.sportType !== 'RUGBY' || game.awayTeam.sportType !== 'RUGBY'
     );
     if (nonRugbyTeams.length > 0) {
@@ -550,7 +553,7 @@ export default async function handler(
     
     // Get all teams from all games (LIVE + potentially finished) for matching
     // IMPORTANT: Only include teams that are actually rugby teams (sportType: 'RUGBY')
-    const allOurTeams = allGamesToCheck
+    const allOurTeams = uniqueGamesToCheck
       .filter(game => game.homeTeam.sportType === 'RUGBY' && game.awayTeam.sportType === 'RUGBY')
       .flatMap(game => [
         { id: game.homeTeam.id, name: game.homeTeam.name, shortName: (game.homeTeam as any).shortName },
@@ -562,7 +565,7 @@ export default async function handler(
       new Map(allOurTeams.map(team => [team.id, team])).values()
     );
     
-    console.log(`📊 Using ${uniqueTeams.length} unique rugby teams for matching (from ${allGamesToCheck.length} games)`);
+    console.log(`📊 Using ${uniqueTeams.length} unique rugby teams for matching (from ${uniqueGamesToCheck.length} games)`);
     
     // Collect failed matches for OpenAI fallback
     const failedMatches: Array<{
@@ -574,7 +577,7 @@ export default async function handler(
     
     // First, try to match games with externalStatus FT/AET/PEN that are still LIVE
     // These should be in finishedMatches - let's match them explicitly
-    const gamesNeedingFinish = allGamesToCheck.filter(game => 
+    const gamesNeedingFinish = uniqueGamesToCheck.filter(game => 
       game.status === 'LIVE' && 
       (game.externalStatus === 'FT' || game.externalStatus === 'AET' || game.externalStatus === 'PEN')
     );
@@ -635,7 +638,7 @@ export default async function handler(
 
         // First, try to find game by externalId (most reliable)
         // BUT: Skip games that were already matched in this sync run to prevent overwriting correct matches
-        let matchingGame = allGamesToCheck.find(game => 
+        let matchingGame = uniqueGamesToCheck.find(game => 
           game.externalId === externalMatch.id.toString() &&
           game.competition.sportType === 'RUGBY' &&
           !updatedGameIds.has(game.id) // CRITICAL: Don't rematch games already processed in this sync
@@ -868,7 +871,7 @@ export default async function handler(
           // Find the game that contains both matched teams
           // IMPORTANT: Verify that the matched game is actually a rugby game (double-check sportType)
           // CRITICAL: Skip games already matched in this sync run to prevent overwriting correct matches
-          matchingGame = allGamesToCheck.find(game => 
+          matchingGame = uniqueGamesToCheck.find(game => 
             (game.homeTeam.id === homeMatch.team.id || game.awayTeam.id === homeMatch.team.id) &&
             (game.homeTeam.id === awayMatch.team.id || game.awayTeam.id === awayMatch.team.id) &&
             game.competition.sportType === 'RUGBY' && // Double-check: ensure it's a rugby competition
@@ -942,7 +945,7 @@ export default async function handler(
             }
           } else {
             console.log(`   ❌ No game found in DB with both matched teams: ${homeMatch?.team.name || 'N/A'} and ${awayMatch?.team.name || 'N/A'}`);
-            console.log(`      Searched ${allGamesToCheck.length} games`);
+            console.log(`      Searched ${uniqueGamesToCheck.length} games`);
             
             // Collect for OpenAI fallback (teams matched but no game found)
             failedMatches.push({
@@ -956,7 +959,7 @@ export default async function handler(
 
         if (!matchingGame) {
           console.log(`⚠️ No matching rugby game found for: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-          console.log(`   Searched in ${allGamesToCheck.length} rugby games`);
+          console.log(`   Searched in ${uniqueGamesToCheck.length} rugby games`);
           
           // Only add to failedMatches if we haven't already (to avoid duplicates)
           const alreadyCollected = failedMatches.some(fm => 
@@ -1311,7 +1314,7 @@ export default async function handler(
             externalAway: fm.externalMatch.awayTeam.name,
             externalDate: fm.externalMatch.utcDate || null,
             externalCompetition: fm.externalMatch.competition?.name || null,
-            dbGames: allGamesToCheck.map(game => ({
+            dbGames: uniqueGamesToCheck.map(game => ({
               id: game.id,
               homeTeam: {
                 id: game.homeTeam.id,
@@ -1395,17 +1398,17 @@ export default async function handler(
               console.log(`   ✅ OpenAI guarantees 100% match - accepting without further validation`);
 
               // Find the game by ID (OpenAI told us which game it is!)
-              const aiMatchingGame = allGamesToCheck.find(game =>
+              const aiMatchingGame = uniqueGamesToCheck.find(game =>
                 game.id === aiResult.gameId &&
                 game.competition.sportType === 'RUGBY' &&
                 !updatedGameIds.has(game.id)
               );
               
               if (!aiMatchingGame) {
-                console.log(`   ❌ No game found in allGamesToCheck with teams ${aiResult.homeMatch.team.name} and ${aiResult.awayMatch.team.name}`);
+                console.log(`   ❌ No game found in uniqueGamesToCheck with teams ${aiResult.homeMatch.team.name} and ${aiResult.awayMatch.team.name}`);
                 console.log(`   🔍 Checking if teams exist in any games...`);
-                const homeTeamGames = allGamesToCheck.filter(g => g.homeTeam.id === aiResult.homeMatch!.team.id || g.awayTeam.id === aiResult.homeMatch!.team.id);
-                const awayTeamGames = allGamesToCheck.filter(g => g.homeTeam.id === aiResult.awayMatch!.team.id || g.awayTeam.id === aiResult.awayMatch!.team.id);
+                const homeTeamGames = uniqueGamesToCheck.filter(g => g.homeTeam.id === aiResult.homeMatch!.team.id || g.awayTeam.id === aiResult.homeMatch!.team.id);
+                const awayTeamGames = uniqueGamesToCheck.filter(g => g.homeTeam.id === aiResult.awayMatch!.team.id || g.awayTeam.id === aiResult.awayMatch!.team.id);
                 console.log(`   📊 Games with home team: ${homeTeamGames.length}, Games with away team: ${awayTeamGames.length}`);
               }
 
