@@ -408,9 +408,9 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
             const awayScore = game.status === 'FINISHED' ? game.awayScore : game.liveAwayScore;
             const hasTwoDigitScores = typeof homeScore === 'number' && typeof awayScore === 'number' && 
                                       homeScore >= 10 && awayScore >= 10;
-            // Reduce font size when both scores are 2 digits
+            // Reduce font size when both scores are 2 digits - make it smaller
             const fontSizeClass = hasTwoDigitScores 
-              ? 'text-xl md:text-2xl lg:text-3xl' 
+              ? 'text-lg md:text-xl lg:text-2xl' 
               : 'text-2xl md:text-3xl lg:text-4xl';
             
             return (

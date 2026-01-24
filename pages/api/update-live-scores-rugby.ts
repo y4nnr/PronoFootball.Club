@@ -535,7 +535,20 @@ export default async function handler(
               console.log(`   ⚠️ ExternalId match found but competition is wrong sport - rejecting`);
               console.log(`      DB Competition: ${matchingGame.competition.name} (RUGBY)`);
               console.log(`      API Competition: ${externalMatch.competition?.name || 'unknown'} (appears to be FOOTBALL)`);
+              
+              // CRITICAL: Clear the wrong externalId from the database to prevent future wrong matches
+              const gameIdToClear = matchingGame.id;
               matchingGame = null; // Reject the match
+              
+              try {
+                await prisma.game.update({
+                  where: { id: gameIdToClear },
+                  data: { externalId: null }
+                });
+                console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear} - wrong sport`);
+              } catch (error) {
+                console.error(`   ❌ Error clearing externalId:`, error);
+              }
             } else {
               // CRITICAL: Verify date is from the same season/year
               // Reject matches from different seasons (external IDs can be reused across seasons)
@@ -551,7 +564,20 @@ export default async function handler(
                   console.log(`      DB Date: ${dbGameDate.toISOString().split('T')[0]} (${matchingGame.competition.name})`);
                   console.log(`      API Date: ${apiMatchDate.toISOString().split('T')[0]} (${externalMatch.competition?.name || 'unknown'})`);
                   console.log(`      Date difference: ${daysDiff.toFixed(1)} days`);
+                  
+                  // CRITICAL: Clear the wrong externalId from the database to prevent future wrong matches
+                  const gameIdToClear = matchingGame.id;
                   matchingGame = null; // Reject the match
+                  
+                  try {
+                    await prisma.game.update({
+                      where: { id: gameIdToClear },
+                      data: { externalId: null }
+                    });
+                    console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear}`);
+                  } catch (error) {
+                    console.error(`   ❌ Error clearing externalId:`, error);
+                  }
                 } else {
                   console.log(`   ✅ Found game by externalId: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
                   console.log(`      Team names verified: ${homeMatch.team.name} and ${awayMatch.team.name}`);
