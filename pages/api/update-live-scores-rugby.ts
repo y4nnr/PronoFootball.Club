@@ -642,10 +642,11 @@ export default async function handler(
           );
           
           if (!homeMatchesGame || !awayMatchesGame) {
-            console.log(`   ⚠️ ExternalId match found but team names don't match - rejecting`);
+            console.log(`   ⚠️ ExternalId match found but team names don't match with HIGH confidence - rejecting`);
             console.log(`      DB: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
             console.log(`      API: ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}`);
-            console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%)` : 'NOT FOUND'}, Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%)` : 'NOT FOUND'}`);
+            console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, confident: ${homeMatchConfident})` : 'NOT FOUND'}, Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, confident: ${awayMatchConfident})` : 'NOT FOUND'}`);
+            console.log(`      External IDs can be reused - this is likely a different game!`);
             
             // CRITICAL: Clear the wrong externalId from the database to prevent future wrong matches
             const gameIdToClear = matchingGame.id;
