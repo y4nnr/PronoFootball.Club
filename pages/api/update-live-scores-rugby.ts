@@ -648,16 +648,34 @@ export default async function handler(
             console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, confident: ${homeMatchConfident})` : 'NOT FOUND'}, Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, confident: ${awayMatchConfident})` : 'NOT FOUND'}`);
             console.log(`      External IDs can be reused - this is likely a different game!`);
             
-            // CRITICAL: Clear the wrong externalId from the database to prevent future wrong matches
+            // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
             const gameIdToClear = matchingGame.id;
+            const wasIncorrectlyFinished = matchingGame.status === 'FINISHED' && matchingGame.externalId === externalMatch.id.toString();
             matchingGame = null; // Reject the match
             
             try {
+              const clearData: any = { 
+                externalId: null,
+                externalStatus: null
+              };
+              
+              // If game was incorrectly marked as FINISHED due to wrong match, reset it
+              if (wasIncorrectlyFinished) {
+                console.log(`   ⚠️ Game was incorrectly marked as FINISHED due to wrong external match - resetting status`);
+                clearData.status = 'UPCOMING';
+                clearData.homeScore = null;
+                clearData.awayScore = null;
+                clearData.liveHomeScore = null;
+                clearData.liveAwayScore = null;
+                clearData.finishedAt = null;
+                clearData.decidedBy = null;
+              }
+              
               await prisma.game.update({
                 where: { id: gameIdToClear },
-                data: { externalId: null }
+                data: clearData
               });
-              console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear} - team names don't match`);
+              console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear} - team names don't match${wasIncorrectlyFinished ? ' and reset status/scores' : ''}`);
             } catch (error) {
               console.error(`   ❌ Error clearing externalId:`, error);
             }
@@ -673,16 +691,34 @@ export default async function handler(
               console.log(`      DB Competition: ${matchingGame.competition.name} (RUGBY)`);
               console.log(`      API Competition: ${externalMatch.competition?.name || 'unknown'} (appears to be FOOTBALL)`);
               
-              // CRITICAL: Clear the wrong externalId from the database to prevent future wrong matches
+              // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
               const gameIdToClear = matchingGame.id;
+              const wasIncorrectlyFinished = matchingGame.status === 'FINISHED' && matchingGame.externalId === externalMatch.id.toString();
               matchingGame = null; // Reject the match
               
               try {
+                const clearData: any = { 
+                  externalId: null,
+                  externalStatus: null
+                };
+                
+                // If game was incorrectly marked as FINISHED due to wrong match, reset it
+                if (wasIncorrectlyFinished) {
+                  console.log(`   ⚠️ Game was incorrectly marked as FINISHED due to wrong external match - resetting status`);
+                  clearData.status = 'UPCOMING';
+                  clearData.homeScore = null;
+                  clearData.awayScore = null;
+                  clearData.liveHomeScore = null;
+                  clearData.liveAwayScore = null;
+                  clearData.finishedAt = null;
+                  clearData.decidedBy = null;
+                }
+                
                 await prisma.game.update({
                   where: { id: gameIdToClear },
-                  data: { externalId: null }
+                  data: clearData
                 });
-                console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear} - wrong sport`);
+                console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear} - wrong sport${wasIncorrectlyFinished ? ' and reset status/scores' : ''}`);
               } catch (error) {
                 console.error(`   ❌ Error clearing externalId:`, error);
               }
@@ -704,16 +740,34 @@ export default async function handler(
                   console.log(`      Date difference: ${daysDiff.toFixed(1)} days (threshold: 7 days)`);
                   console.log(`      External IDs can be reused - this is likely a different game!`);
                   
-                  // CRITICAL: Clear the wrong externalId from the database to prevent future wrong matches
+                  // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
                   const gameIdToClear = matchingGame.id;
+                  const wasIncorrectlyFinished = matchingGame.status === 'FINISHED' && matchingGame.externalId === externalMatch.id.toString();
                   matchingGame = null; // Reject the match
                   
                   try {
+                    const clearData: any = { 
+                      externalId: null,
+                      externalStatus: null
+                    };
+                    
+                    // If game was incorrectly marked as FINISHED due to wrong match, reset it
+                    if (wasIncorrectlyFinished) {
+                      console.log(`   ⚠️ Game was incorrectly marked as FINISHED due to wrong external match - resetting status`);
+                      clearData.status = 'UPCOMING';
+                      clearData.homeScore = null;
+                      clearData.awayScore = null;
+                      clearData.liveHomeScore = null;
+                      clearData.liveAwayScore = null;
+                      clearData.finishedAt = null;
+                      clearData.decidedBy = null;
+                    }
+                    
                     await prisma.game.update({
                       where: { id: gameIdToClear },
-                      data: { externalId: null }
+                      data: clearData
                     });
-                    console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear}`);
+                    console.log(`   🧹 Cleared wrong externalId (${externalMatch.id}) from game ${gameIdToClear}${wasIncorrectlyFinished ? ' and reset status/scores' : ''}`);
                   } catch (error) {
                     console.error(`   ❌ Error clearing externalId:`, error);
                   }
