@@ -660,11 +660,16 @@ export default async function handler(
           
           // CRITICAL: If found by team name matching, verify date is reasonable
           if (matchingGame) {
+            console.log(`   ✅ Found game by team name matching: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name}`);
+            console.log(`      Game ID: ${matchingGame.id}, Status: ${matchingGame.status}, Date: ${matchingGame.date ? new Date(matchingGame.date).toISOString().split('T')[0] : 'MISSING'}`);
+            
             // ALWAYS verify date - this is critical to prevent matching games from different seasons
             if (externalMatch.utcDate && matchingGame.date) {
               const apiMatchDate = new Date(externalMatch.utcDate);
               const dbGameDate = new Date(matchingGame.date);
               const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
+              
+              console.log(`      Date check: DB=${dbGameDate.toISOString().split('T')[0]}, API=${apiMatchDate.toISOString().split('T')[0]}, diff=${daysDiff.toFixed(1)} days`);
               
               // Reject if dates are more than 30 days apart (very strict - prevents cross-season matches)
               // Changed from 60 to 30 days to be more strict
@@ -684,6 +689,9 @@ export default async function handler(
               console.log(`      API Date: ${externalMatch.utcDate ? new Date(externalMatch.utcDate).toISOString().split('T')[0] : 'MISSING'}`);
               matchingGame = null; // Reject the match - too risky without date verification
             }
+          } else {
+            console.log(`   ❌ No game found in DB with both matched teams: ${homeMatch?.team.name || 'N/A'} and ${awayMatch?.team.name || 'N/A'}`);
+            console.log(`      Searched ${allGamesToCheck.length} games`);
           }
         }
 
