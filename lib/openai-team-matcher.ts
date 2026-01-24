@@ -183,13 +183,6 @@ Return the JSON array now:`;
       reasoning?: string;
     }>;
     
-    let aiMatches: Array<{
-      pair: number;
-      homeMatch: { name: string; confidence: number } | null;
-      awayMatch: { name: string; confidence: number } | null;
-      reasoning?: string;
-    }>;
-    
     try {
       aiMatches = JSON.parse(jsonContent) as Array<{
         pair: number;
