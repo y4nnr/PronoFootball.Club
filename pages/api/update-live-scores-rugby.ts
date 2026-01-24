@@ -1103,8 +1103,6 @@ export default async function handler(
                       console.log(`   ✅ Set externalId ${externalMatchForUpdate.id} for future direct matching`);
                       openAIExternalIdSetCount++;
                       openAIMatchedCount++;
-                      (global as any).openAIMatchedCount = openAIMatchedCount;
-                      (global as any).openAIExternalIdSetCount = openAIExternalIdSetCount;
                     } catch (error) {
                       console.error(`   ❌ Error setting externalId:`, error);
                     }
@@ -1256,8 +1254,8 @@ export default async function handler(
         failedMatchesCount: failedMatches.length,
         openAIAttempted: failedMatches.length > 0,
         openAIKeyPresent: !!process.env.OPENAI_API_KEY,
-        openAIMatchedCount: (global as any).openAIMatchedCount || 0,
-        openAIExternalIdSetCount: (global as any).openAIExternalIdSetCount || 0
+        openAIMatchedCount: openAIMatchedCount,
+        openAIExternalIdSetCount: openAIExternalIdSetCount
       }
     });
 
