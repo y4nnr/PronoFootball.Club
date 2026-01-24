@@ -79,9 +79,29 @@ export default async function handler(
         }
       },
       include: {
-        homeTeam: true,
-        awayTeam: true,
-        competition: true
+        homeTeam: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            sportType: true
+          }
+        },
+        awayTeam: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            sportType: true
+          }
+        },
+        competition: {
+          select: {
+            id: true,
+            name: true,
+            sportType: true
+          }
+        }
       }
     });
     
