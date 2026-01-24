@@ -828,8 +828,10 @@ export default async function handler(
         };
 
         // Always update scores (even if same, to ensure sync)
+        // IMPORTANT: For LIVE games, always set scores (even if 0) to ensure UI displays them
         updateData.liveHomeScore = externalHomeScore;
         updateData.liveAwayScore = externalAwayScore;
+        console.log(`   📊 Setting scores: ${externalHomeScore}-${externalAwayScore} (externalStatus: ${newExternalStatus})`);
 
         // Add elapsedMinute if available
         if (externalMatch.elapsedMinute !== null && externalMatch.elapsedMinute !== undefined) {
