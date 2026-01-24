@@ -9,6 +9,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../lib/prisma';
 import { RugbyAPI } from '../../lib/api-rugby-v1';
 import { API_CONFIG } from '../../lib/api-config';
+import { matchTeamsWithOpenAI } from '../../lib/openai-team-matcher';
 
 // Helper function to update shooters for all users in a competition
 async function updateShootersForCompetition(competitionId: string) {
@@ -440,6 +441,14 @@ export default async function handler(
     
     console.log(`📊 Using ${uniqueTeams.length} unique rugby teams for matching (from ${allGamesToCheck.length} games)`);
     
+    // Collect failed matches for OpenAI fallback
+    const failedMatches: Array<{
+      externalMatch: any;
+      homeMatch: any;
+      awayMatch: any;
+      reason: string;
+    }> = [];
+    
     // First, try to match games with externalStatus FT/AET/PEN that are still LIVE
     // These should be in finishedMatches - let's match them explicitly
     const gamesNeedingFinish = allGamesToCheck.filter(game => 
@@ -645,6 +654,14 @@ export default async function handler(
             if (!awayMatch) {
               console.log(`   ❌ Away team "${externalMatch.awayTeam.name}" not found in DB at all`);
             }
+            
+            // Collect for OpenAI fallback
+            failedMatches.push({
+              externalMatch,
+              homeMatch,
+              awayMatch,
+              reason: !homeMatchConfident || !awayMatchConfident ? 'low_confidence' : 'no_match'
+            });
             continue;
           }
 
@@ -972,6 +989,91 @@ export default async function handler(
 
       } catch (error) {
         console.error(`❌ Error updating rugby match ${externalMatch.homeTeam.name} vs ${externalMatch.awayTeam.name}:`, error);
+      }
+    }
+
+    // OpenAI Fallback: Try to match failed games using AI
+    if (failedMatches.length > 0) {
+      console.log(`🤖 Attempting OpenAI fallback for ${failedMatches.length} failed matches...`);
+      const openAIApiKey = process.env.OPENAI_API_KEY || null;
+      
+      if (openAIApiKey) {
+        try {
+          // Prepare requests for OpenAI
+          const openAIRequests = failedMatches.map(fm => ({
+            externalHome: fm.externalMatch.homeTeam.name,
+            externalAway: fm.externalMatch.awayTeam.name,
+            dbTeams: uniqueTeams,
+          }));
+
+          // Batch process with OpenAI
+          const openAIResults = await matchTeamsWithOpenAI(openAIRequests, openAIApiKey);
+
+          // Process OpenAI matches
+          for (const failedMatch of failedMatches) {
+            const resultKey = `${failedMatch.externalMatch.homeTeam.name}|${failedMatch.externalMatch.awayTeam.name}`;
+            const aiResult = openAIResults.get(resultKey);
+
+            if (aiResult && aiResult.homeMatch && aiResult.awayMatch) {
+              console.log(`🤖 OpenAI matched: ${failedMatch.externalMatch.homeTeam.name} → ${aiResult.homeMatch.team.name} (${(aiResult.homeMatch.confidence * 100).toFixed(1)}%)`);
+              console.log(`🤖 OpenAI matched: ${failedMatch.externalMatch.awayTeam.name} → ${aiResult.awayMatch.team.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)`);
+
+              // Find the game with both matched teams
+              const aiMatchingGame = allGamesToCheck.find(game =>
+                (game.homeTeam.id === aiResult.homeMatch!.team.id || game.awayTeam.id === aiResult.homeMatch!.team.id) &&
+                (game.homeTeam.id === aiResult.awayMatch!.team.id || game.awayTeam.id === aiResult.awayMatch!.team.id) &&
+                game.competition.sportType === 'RUGBY' &&
+                !updatedGameIds.has(game.id)
+              );
+
+              if (aiMatchingGame) {
+                // Verify date
+                const externalMatch = failedMatch.externalMatch;
+                if (externalMatch.utcDate && aiMatchingGame.date) {
+                  const apiMatchDate = new Date(externalMatch.utcDate);
+                  const dbGameDate = new Date(aiMatchingGame.date);
+                  const daysDiff = Math.abs(apiMatchDate.getTime() - dbGameDate.getTime()) / (1000 * 60 * 60 * 24);
+
+                  if (daysDiff <= 30) {
+                    console.log(`✅ OpenAI match verified by date: ${daysDiff.toFixed(1)} days difference`);
+                    // Process this match (reuse the existing update logic)
+                    // We'll need to reprocess this external match
+                    const matchingGame = aiMatchingGame;
+                    const externalMatchForUpdate = externalMatch;
+                    
+                    // Continue with the update logic (similar to above)
+                    // For now, log that we found a match - full integration would require refactoring
+                    console.log(`🎯 OpenAI found valid match: ${matchingGame.homeTeam.name} vs ${matchingGame.awayTeam.name} for external ${externalMatchForUpdate.homeTeam.name} vs ${externalMatchForUpdate.awayTeam.name}`);
+                    console.log(`   Note: This match will be processed in the next sync cycle (externalId will be set)`);
+                    
+                    // Set externalId for future direct matching
+                    try {
+                      await prisma.game.update({
+                        where: { id: matchingGame.id },
+                        data: { externalId: externalMatchForUpdate.id.toString() }
+                      });
+                      console.log(`   ✅ Set externalId ${externalMatchForUpdate.id} for future direct matching`);
+                    } catch (error) {
+                      console.error(`   ❌ Error setting externalId:`, error);
+                    }
+                  } else {
+                    console.log(`⚠️ OpenAI match rejected: date difference ${daysDiff.toFixed(1)} days > 30`);
+                  }
+                } else {
+                  console.log(`⚠️ OpenAI match rejected: missing date for verification`);
+                }
+              } else {
+                console.log(`⚠️ OpenAI matched teams but no game found in DB`);
+              }
+            } else {
+              console.log(`❌ OpenAI could not match: ${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}`);
+            }
+          }
+        } catch (error) {
+          console.error(`❌ Error in OpenAI fallback matching:`, error);
+        }
+      } else {
+        console.log(`⚠️ OpenAI API key not configured - skipping AI fallback`);
       }
     }
 
