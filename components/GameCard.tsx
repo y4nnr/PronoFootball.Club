@@ -146,19 +146,13 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
     return game.bets.filter(bet => bet !== null && bet !== undefined);
   })();
   
-  // Explicit check - if no displayable bets, set to empty array
-  // Make this check extremely strict
+  // Check if there are any bets to display (regardless of whether they have scores)
+  // For UPCOMING games: show all users' names even if scores are null
+  // For LIVE/FINISHED games: show all users with their scores
   const hasDisplayableBets = Boolean(
     displayableBets && 
     Array.isArray(displayableBets) && 
-    displayableBets.length > 0 &&
-    displayableBets.some(bet => 
-      bet && 
-      typeof bet.score1 === 'number' && 
-      typeof bet.score2 === 'number' &&
-      !isNaN(bet.score1) &&
-      !isNaN(bet.score2)
-    )
+    displayableBets.length > 0
   );
   
   // Debug logging - always log when section might render
