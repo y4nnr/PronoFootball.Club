@@ -105,7 +105,7 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
     
     setIsLoadingMore(true);
     try {
-      const response = await fetch(`/api/user/dashboard-betting-games?page=${currentPage + 1}&limit=12`);
+      const response = await fetch(`/api/user/dashboard-betting-games?page=${currentPage + 1}&limit=12&includeToday=true`);
       const data = await response.json();
       
       if (data.games && data.games.length > 0) {
@@ -1027,33 +1027,23 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       select: { id: true }
     });
 
-    // Use same date filter as dashboard API: tomorrow onwards (to match "Matchs à venir" section)
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    
-    // Check if current game is from today (might be in "Matchs du jour" instead of "Matchs à venir")
+    // Include all games from today onwards for the betting carousel
+    // This ensures all of today's games (Ligue 1, Top 14, etc.) appear in the carousel
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const isCurrentGameToday = gameDate >= startOfDay && gameDate < endOfDay;
+    startOfDay.setHours(0, 0, 0, 0);
 
     // Fetch games using the same logic as dashboard API
     // Get ALL games from user's active competitions, sorted by date
-    // Only include UPCOMING games from tomorrow onwards (same as dashboard "Matchs à venir")
-    // But also include the current game if it's from today (so it appears in carousel)
+    // Include UPCOMING games from today onwards (for betting carousel, we need all upcoming games)
     const allGamesQuery = await prisma.game.findMany({
       where: {
         competitionId: {
           in: activeCompetitions.map(comp => comp.id)
         },
-        status: 'UPCOMING', // Only UPCOMING games (same as dashboard API)
-        OR: [
-          {
-            date: {
-              gte: endOfDay // Tomorrow onwards (same as dashboard "Matchs à venir")
-            }
-          },
-          ...(isCurrentGameToday ? [{
-            id: gameId // Include current game if it's from today
-          }] : [])
-        ]
+        status: 'UPCOMING', // Only UPCOMING games
+        date: {
+          gte: startOfDay // Today onwards (include all of today's games)
+        }
       },
       include: {
         homeTeam: {

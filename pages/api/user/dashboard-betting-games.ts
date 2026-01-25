@@ -57,11 +57,12 @@ export default async function handler(
   }
 
   // Get pagination parameters
-  const { page = '1', limit = '12' } = req.query;
+  const { page = '1', limit = '12', includeToday = 'false' } = req.query;
   const pageNum = parseInt(page as string, 10);
   const limitNumRaw = parseInt(limit as string, 10);
   const limitNum = Math.min(isNaN(limitNumRaw) ? 12 : limitNumRaw, 24); // hard cap at 24
   const offset = (pageNum - 1) * limitNum;
+  const shouldIncludeToday = includeToday === 'true'; // Betting UI passes this, dashboard doesn't
 
   const session = await getServerSession(req, res, authOptions);
 
@@ -108,9 +109,14 @@ export default async function handler(
       return res.status(200).json({ games: [], hasMore: false, total: 0 });
     }
 
-    // Get upcoming games from active competitions (excluding today's games to avoid duplication)
+    // Date filter: Dashboard excludes today (tomorrow onwards), Betting UI includes today
     const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    
+    // Use startOfDay for betting UI (includes today), endOfDay for dashboard (excludes today)
+    const dateFilter = shouldIncludeToday ? startOfDay : endOfDay;
     
     // First, get total count for pagination
     const totalCount = await prisma.game.count({
@@ -120,7 +126,7 @@ export default async function handler(
         },
         status: 'UPCOMING',
         date: {
-          gte: endOfDay // Only future games (tomorrow onwards)
+          gte: dateFilter
         }
       }
     });
@@ -133,7 +139,7 @@ export default async function handler(
         },
         status: 'UPCOMING', // Only games available for betting
         date: {
-          gte: endOfDay // Only future games (tomorrow onwards)
+          gte: dateFilter
         }
       },
       select: {
@@ -238,15 +244,16 @@ export default async function handler(
     console.log('📊 Games returned:', games.length, 'Total available:', totalCount, 'Has more:', hasMore);
     console.log('📊 User competitions:', userCompetitionIds.length);
     console.log('📊 Active competitions (user participating):', activeCompetitions.length);
-    console.log('📊 Date filter: >=', endOfDay.toISOString());
-    console.log('📊 Showing future games only (tomorrow onwards) to avoid duplication with "Matchs du jour"');
+    console.log('📊 Include today:', shouldIncludeToday);
+    console.log('📊 Date filter: >=', dateFilter.toISOString());
+    console.log('📊', shouldIncludeToday ? 'Showing all upcoming games from today onwards (betting carousel)' : 'Showing future games only (tomorrow onwards, dashboard)');
     
     if (games.length === 0) {
       console.log('⚠️ No betting games found - this might cause empty "Matchs à venir" section');
       console.log('🔍 Debug info:');
       console.log('  - User competition IDs:', userCompetitionIds);
       console.log('  - Active competitions (user participating):', activeCompetitions.map(c => c.id));
-      console.log('  - Date filter:', endOfDay.toISOString());
+      console.log('  - Date filter:', dateFilter.toISOString());
       console.log('  - Status filter: UPCOMING only');
     }
     
