@@ -139,21 +139,11 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
       return [];
     }
     
-    // Filter to only bets with valid numeric scores
-    const betsWithValidScores = game.bets.filter(bet => {
-      if (!bet) return false;
-      const hasScore1 = typeof bet.score1 === 'number' && !isNaN(bet.score1) && bet.score1 >= 0;
-      const hasScore2 = typeof bet.score2 === 'number' && !isNaN(bet.score2) && bet.score2 >= 0;
-      return hasScore1 && hasScore2;
-    });
-    
-    if (!betsWithValidScores || betsWithValidScores.length === 0) {
-      return [];
-    }
-    
-    // For all game statuses, include all bets with valid scores
+    // Include all bets (not just those with valid scores)
+    // For UPCOMING games: show all users' names, but only current user's score
+    // For LIVE/FINISHED games: show all users with their scores
     // The rendering logic will handle showing/hiding scores based on game status and user
-    return betsWithValidScores && betsWithValidScores.length > 0 ? betsWithValidScores : [];
+    return game.bets.filter(bet => bet !== null && bet !== undefined);
   })();
   
   // Explicit check - if no displayable bets, set to empty array

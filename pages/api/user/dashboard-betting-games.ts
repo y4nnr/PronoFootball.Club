@@ -44,6 +44,8 @@ interface BettingGame {
       name: string;
       profilePictureUrl?: string;
     };
+    score1: number | null;
+    score2: number | null;
   }[];
   betCount: number;
 }
@@ -226,7 +228,9 @@ export default async function handler(
             name: bet.user.name,
             profilePictureUrl: bet.user.profilePictureUrl || undefined
           },
-          // Only reveal scores for LIVE/FINISHED; current user's score always merged on client via userBet
+          // Show actual scores for LIVE/FINISHED games, hide for UPCOMING
+          score1: (game.status === 'LIVE' || game.status === 'FINISHED') ? bet.score1 : null,
+          score2: (game.status === 'LIVE' || game.status === 'FINISHED') ? bet.score2 : null,
           // We do not send createdAt here to keep payload small
         })),
         betCount,
