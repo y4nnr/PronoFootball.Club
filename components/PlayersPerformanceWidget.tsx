@@ -80,14 +80,14 @@ const PlayerPerformanceRow = memo(({
       isCurrentUser ? 'bg-blue-50 ring-1 ring-blue-200 dark:!bg-gray-700 dark:ring-1 dark:ring-accent-dark-500/50' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
     }`}>
       {/* Player Profile */}
-      <div className="flex items-center space-x-2 min-w-0 w-32">
+      <div className="flex items-center space-x-2.5 min-w-0 w-32">
         <img
           src={player.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player.userName.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
           alt={player.userName}
-          className="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-600 object-cover flex-shrink-0 dark:bg-white dark:p-0.5"
+          className="w-7 h-7 rounded-full border border-gray-200 dark:border-transparent object-cover flex-shrink-0"
         />
         <div className="min-w-0 flex-1">
-          <h3 className={`text-xs font-semibold truncate ${
+          <h3 className={`text-sm font-medium truncate ${
             isCurrentUser ? 'text-blue-700 dark:text-accent-dark-400' : 'text-gray-900 dark:text-gray-100'
           }`}>
             {player.userName}
@@ -127,7 +127,7 @@ const PlayerPerformanceRow = memo(({
           })() : (
             <div
               key={`empty-${index}`}
-              className="flex-1 min-w-0 h-8 rounded-md flex items-center justify-center text-gray-400 dark:text-gray-400 font-bold text-xs border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(38,38,38)]"
+              className="flex-1 min-w-0 h-8 rounded-md flex items-center justify-center text-gray-400 dark:text-gray-400 font-bold text-xs border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(50,50,50)]"
               title="No data"
             >
               ?
@@ -139,7 +139,7 @@ const PlayerPerformanceRow = memo(({
       {/* Total Points */}
       <div className="ml-3 w-16 flex-shrink-0">
         <div className={`h-8 rounded-md flex items-center justify-center text-gray-800 dark:text-gray-200 font-bold text-sm border ${
-          isCurrentUser ? 'border-blue-300 dark:border-blue-300 bg-blue-100 dark:bg-[rgb(40,40,40)]' : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-[rgb(38,38,38)]'
+          isCurrentUser ? 'border-blue-300 dark:border-blue-300 bg-blue-100 dark:bg-[rgb(40,40,40)]' : 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-[rgb(50,50,50)]'
         }`}>
           {totalPoints}
         </div>
@@ -162,8 +162,20 @@ const PlayersPerformanceWidget = memo(({
 
   if (playersPerformance.length === 0) {
     return (
-      <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="text-center py-8">
+      <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-lg shadow-2xl dark:shadow-dark-xl mb-8 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-3 pt-3 pb-2.5">
+          <div className="flex items-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
+              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Performance des 10 Derniers Matchs</h2>
+            </div>
+          </div>
+        </div>
+        <div className="p-3 text-center py-8">
           <div className="text-gray-400 dark:text-gray-500 text-4xl mb-3">📊</div>
           <p className="text-gray-500 dark:text-gray-400">Aucune donnée de performance disponible</p>
         </div>
@@ -175,23 +187,28 @@ const PlayersPerformanceWidget = memo(({
   const games = playersPerformance[0]?.lastGamesPerformance || [];
 
   return (
-    <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl dark:shadow-dark-xl p-3 mb-8 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center">
-          <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
-            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Performance des 10 Derniers Matchs</h2>
+    <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-lg shadow-2xl dark:shadow-dark-xl mb-8 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      {/* Header Section */}
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-3 pt-3 pb-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
+              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Performance des 10 Derniers Matchs</h2>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Main Content Area */}
+      <div className="p-3">
       {/* Games Header - Hidden on smaller screens when it doesn't fit */}
       <div className="mb-2 hidden xl:block">
-        <div className="flex items-center py-2 px-3 bg-gray-50 dark:bg-[rgb(40,40,40)] rounded-md">
+        <div className="flex items-center py-2 px-3 bg-gray-50 dark:bg-[rgb(50,50,50)] rounded-md">
           {/* Player Profile Area - Empty space to match player row structure */}
           <div className="flex items-center space-x-2 min-w-0 w-32">
             {/* Empty space to match avatar + name area */}
@@ -203,7 +220,7 @@ const PlayersPerformanceWidget = memo(({
               return game ? (
                 <div
                   key={game.gameId}
-                  className="flex-1 min-w-0 h-16 rounded-md flex flex-col items-center justify-center text-gray-700 dark:text-gray-200 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(38,38,38)] px-0.5 py-1"
+                  className="flex-1 min-w-0 h-16 rounded-md flex flex-col items-center justify-center text-gray-700 dark:text-gray-200 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(50,50,50)] px-0.5 py-1"
                   title={`${game.homeTeam} vs ${game.awayTeam} - ${game.actualScore}`}
                   style={{ minWidth: '0', maxWidth: '100%' }}
                 >
@@ -241,7 +258,7 @@ const PlayersPerformanceWidget = memo(({
               ) : (
                 <div
                   key={`empty-${index}`}
-                  className="flex-1 min-w-0 h-16 rounded-md flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(38,38,38)]"
+                  className="flex-1 min-w-0 h-16 rounded-md flex items-center justify-center text-gray-400 dark:text-gray-500 text-xs border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(50,50,50)]"
                 >
                   ?
                 </div>
@@ -250,7 +267,7 @@ const PlayersPerformanceWidget = memo(({
           </div>
           {/* Total Points Header */}
           <div className="ml-3 w-16 flex-shrink-0">
-            <div className="h-16 rounded-md flex items-center justify-center text-gray-700 dark:text-gray-200 text-xs font-semibold border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-[rgb(38,38,38)]">
+            <div className="h-16 rounded-md flex items-center justify-center text-gray-700 dark:text-gray-200 text-xs font-semibold border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-[rgb(50,50,50)]">
               Total
             </div>
           </div>
@@ -267,10 +284,11 @@ const PlayersPerformanceWidget = memo(({
           />
         ))}
       </div>
+      </div>
 
-      {/* Legend */}
-      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-center space-x-4 text-xs text-gray-600 dark:text-gray-400">
+      {/* Footer Section - Legend */}
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-3 pt-3 pb-3">
+        <div className="flex items-center justify-center space-x-4 text-xs text-gray-600 dark:text-gray-300">
           <div className="flex items-center space-x-1">
             <div 
               className={`w-2 h-2 rounded ${isDarkMode ? 'border-transparent' : 'border border-yellow-400 bg-yellow-100'}`}
@@ -279,7 +297,7 @@ const PlayersPerformanceWidget = memo(({
                 borderColor: '#FF7F0E'
               } : undefined}
             ></div>
-            <span className="font-medium text-xs dark:text-gray-300">Exact (3)</span>
+            <span className="font-medium text-xs dark:text-gray-200">Exact (3)</span>
           </div>
           <div className="flex items-center space-x-1">
             <div 
@@ -289,7 +307,7 @@ const PlayersPerformanceWidget = memo(({
                 borderColor: '#2CA02C'
               } : undefined}
             ></div>
-            <span className="font-medium text-xs dark:text-gray-300">Correct (1)</span>
+            <span className="font-medium text-xs dark:text-gray-200">Correct (1)</span>
           </div>
           <div className="flex items-center space-x-1">
             <div 
@@ -299,7 +317,7 @@ const PlayersPerformanceWidget = memo(({
                 borderColor: '#D62728'
               } : undefined}
             ></div>
-            <span className="font-medium text-xs dark:text-gray-300">Incorrect (0)</span>
+            <span className="font-medium text-xs dark:text-gray-200">Incorrect (0)</span>
           </div>
           <div className="flex items-center space-x-1">
             <div 
@@ -309,7 +327,7 @@ const PlayersPerformanceWidget = memo(({
                 borderColor: '#1F77B4'
               } : undefined}
             ></div>
-            <span className="font-medium text-xs dark:text-gray-300">No bet</span>
+            <span className="font-medium text-xs dark:text-gray-200">No bet</span>
           </div>
         </div>
       </div>

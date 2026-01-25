@@ -270,7 +270,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
   };
   
   const cardContent = (
-    <div className={`bg-white dark:bg-[rgb(38,38,38)] border-2 border-gray-300 dark:border-gray-700 rounded-xl md:rounded-2xl shadow-lg dark:shadow-dark-modern-lg flex flex-col items-stretch transition overflow-hidden self-start ${isClickable ? `hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600 cursor-pointer transform hover:scale-[1.01]` : 'cursor-default'} ${
+    <div className={`bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-2xl shadow-lg dark:shadow-dark-modern-lg flex flex-col items-stretch transition overflow-hidden self-start ${isClickable ? `hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600 cursor-pointer transform hover:scale-[1.01]` : 'cursor-default'} ${
       isHighlighted ? 
         highlightType === 'status' ? 'animate-bounce ring-4 ring-blue-400 ring-opacity-75' :
         highlightType === 'both' ? 'animate-pulse ring-4 ring-purple-400 ring-opacity-75' :
@@ -278,7 +278,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
     }`}>
       {/* Competition Name & Logo - Section 1: Darker shade (top) */}
       {game.competition && (
-        <div className="flex items-center justify-between gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gray-200 dark:bg-[rgb(40,40,40)] border-b border-gray-300 dark:border-gray-600">
+        <div className="flex items-center justify-between gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {game.competition.logo ? (
               <img 
@@ -326,7 +326,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       )}
       {/* Section 2: Date/Time & Status - Dedicated section for better visibility (Mobile) */}
-      <div className="flex items-center justify-between w-full px-3 md:px-4 py-3 md:hidden bg-gray-50 dark:bg-[rgb(38,38,38)] border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between w-full px-3 md:px-4 py-3 md:hidden bg-gray-50 dark:bg-[rgb(58,58,58)] border-b border-gray-200 dark:border-gray-600">
         {/* Date/Time on left */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
           <div className="flex items-center gap-1.5">
@@ -386,7 +386,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       </div>
       {/* Section 2: Date/Time & Status - Dedicated section for better visibility (Desktop) */}
-      <div className="hidden md:flex md:items-center w-full justify-between px-3 md:px-4 py-3 bg-gray-50 dark:bg-[rgb(38,38,38)] border-b border-gray-200 dark:border-gray-700">
+      <div className="hidden md:flex md:items-center w-full justify-between px-3 md:px-4 py-3 bg-gray-50 dark:bg-[rgb(58,58,58)] border-b border-gray-200 dark:border-gray-600">
         {/* Date/Time on left */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -444,7 +444,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
       </div>
       {/* Teams & Score - Section 3: Light gray (primary section) */}
-      <div className="flex items-center w-full justify-between py-4 md:py-6 px-3 md:px-4 bg-gray-50 dark:bg-[rgb(38,38,38)] border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center w-full justify-between py-4 md:py-6 px-3 md:px-4 bg-gray-50 dark:bg-[rgb(58,58,58)] border-b border-gray-200 dark:border-gray-600">
           {/* Home Team */}
         <div className="flex flex-col items-center min-w-0 w-2/5 justify-end pr-1 md:pr-2 gap-1">
           {/* Mobile: Logo on top, name below */}
@@ -522,7 +522,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
       </div>
       {/* Bets List - Section 4: Matching main section style (bottom) */}
       {hasDisplayableBets === true ? (
-          <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-[rgb(38,38,38)]">
+          <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-[rgb(58,58,58)]">
             <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-2.5 md:mb-3 uppercase tracking-wide">{t('placedBets')}</div>
             <ul className="divide-y divide-gray-200 dark:divide-gray-700">
               {displayableBets.map((bet) => (

@@ -80,21 +80,24 @@ const CountdownTimer = memo(({ nextGameDate, className = '', onCountdownComplete
   ];
 
   return (
-    <div className={`bg-white dark:bg-[rgb(38,38,38)] rounded-2xl p-5 border border-primary-200/50 dark:border-gray-600 ${className}`} style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-      {/* Header */}
-      <div className="flex items-center space-x-3 mb-4">
-        <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center">
-          <ClockIcon className="h-6 w-6 text-white" />
-        </div>
-        <h3 className="text-xl font-bold text-neutral-900 dark:text-gray-100">Prochain coup d'envoi</h3>
+    <div className={`bg-white dark:bg-[rgb(58,58,58)] rounded-2xl border border-primary-200/50 dark:border-gray-600 overflow-hidden ${className}`} style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      {/* Header Section */}
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+          <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+            <ClockIcon className="h-6 w-6 text-white" />
+          </div>
+          Prochain coup d'envoi
+        </h3>
       </div>
-
-      {/* Countdown Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+      {/* Content Section */}
+      <div className="p-6">
+        {/* Countdown Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
         {timeUnits.map((unit, index) => (
           <div
             key={unit.label}
-            className="relative bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(38,38,38)] rounded-xl p-3 md:p-4 border border-primary-300/60 dark:border-gray-600 shadow-modern hover:shadow-modern-lg transition-all duration-300"
+            className="relative bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(58,58,58)] dark:to-[rgb(56,56,56)] rounded-xl p-3 md:p-4 border-2 border-gray-300 dark:border-gray-600 shadow-lg dark:shadow-dark-modern-lg transition-all duration-300 hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600"
           >
             {/* Number */}
             <div className="text-center">
@@ -113,10 +116,8 @@ const CountdownTimer = memo(({ nextGameDate, className = '', onCountdownComplete
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-gradient-to-r from-primary-400 to-primary-500 dark:from-accent-dark-500 dark:to-accent-dark-600 rounded-full"></div>
           </div>
         ))}
+        </div>
       </div>
-
-
-
     </div>
   );
 });

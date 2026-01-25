@@ -307,8 +307,8 @@ const PlayerPointsProgressionWidget = memo(({
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-4 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
           <div className="flex items-center">
             <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
               <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -321,14 +321,16 @@ const PlayerPointsProgressionWidget = memo(({
             </div>
           </div>
         </div>
-        <div className="animate-pulse space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gray-200 dark:bg-[rgb(40,40,40)] rounded-full"></div>
-              <div className="h-6 bg-gray-200 dark:bg-[rgb(40,40,40)] rounded flex-1"></div>
-              <div className="w-12 h-6 bg-gray-200 dark:bg-[rgb(40,40,40)] rounded"></div>
-            </div>
-          ))}
+        <div className="p-4">
+          <div className="animate-pulse space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center space-x-4">
+                <div className="w-8 h-8 bg-gray-200 dark:bg-[rgb(50,50,50)] rounded-full"></div>
+                <div className="h-6 bg-gray-200 dark:bg-[rgb(50,50,50)] rounded flex-1"></div>
+                <div className="w-12 h-6 bg-gray-200 dark:bg-[rgb(50,50,50)] rounded"></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -336,8 +338,21 @@ const PlayerPointsProgressionWidget = memo(({
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="text-center py-8">
+      <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-4 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+          <div className="flex items-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
+              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Progression des Points par Journée</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur une journée pour afficher le classement intermédiaire</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 text-center py-8">
           <div className="text-red-500 text-4xl mb-3">⚠️</div>
           <p className="text-red-500 mb-2">{error}</p>
           <button 
@@ -353,8 +368,8 @@ const PlayerPointsProgressionWidget = memo(({
 
   if (playerData.length === 0) {
     return (
-      <div className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-4 w-full" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-4 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
           <div className="flex items-center">
             <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
               <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,7 +382,7 @@ const PlayerPointsProgressionWidget = memo(({
             </div>
           </div>
         </div>
-        <div className="text-center py-8">
+        <div className="p-4 text-center py-8">
           <div className="text-gray-400 dark:text-gray-500 text-4xl mb-3">📊</div>
           <p className="text-gray-500 dark:text-gray-400">Aucun point attribué pour l'instant.</p>
         </div>
@@ -377,7 +392,7 @@ const PlayerPointsProgressionWidget = memo(({
 
   return (
     <div 
-      className="bg-white dark:bg-[rgb(38,38,38)] border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-4 mb-8 w-full relative"
+      className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-8 w-full relative overflow-hidden"
       onClick={(e) => {
         // Reset if clicking anywhere except on slices
         const target = e.target as HTMLElement;
@@ -389,9 +404,9 @@ const PlayerPointsProgressionWidget = memo(({
         }
       }}
     >
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center mb-6">
+      {/* Header Section */}
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+        <div className="flex items-center">
           <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
             <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -417,7 +432,7 @@ const PlayerPointsProgressionWidget = memo(({
       </div>
 
       {/* Main Content */}
-      <div>
+      <div className="p-4">
           {/* Player Bars */}
           <div className="space-y-2" ref={containerRef}>
         {(selectedDay ? 
@@ -460,7 +475,7 @@ const PlayerPointsProgressionWidget = memo(({
               <img
                 src={player.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player.userName.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
                 alt={player.userName}
-                className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 dark:bg-white dark:p-0.5"
+                className="w-9 h-9 rounded-full object-cover border border-gray-200 dark:border-transparent"
               />
               <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex-1">
                 {player.userName}
@@ -574,6 +589,13 @@ const PlayerPointsProgressionWidget = memo(({
           </div>
         ))}
       </div>
+      </div>
+
+      {/* Footer Section */}
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-4 pt-3 pb-4">
+        <div className="text-center text-xs text-gray-600 dark:text-gray-300">
+          <p className="text-gray-500 dark:text-gray-400">Cliquez sur les segments colorés pour voir le classement d'une journée spécifique</p>
+        </div>
       </div>
     </div>
   );

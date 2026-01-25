@@ -33,14 +33,20 @@ type CompetitionsPageProps = {
 };
 
 const SectionCard = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
-  <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-    <div className="flex items-center mb-6">
-      <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-        {icon}
+  <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+    {/* Header Section */}
+    <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+      <div className="flex items-center">
+        <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+          {icon}
+        </div>
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">{title}</h2>
       </div>
-      <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{title}</h2>
     </div>
-    {children}
+    {/* Content Section */}
+    <div className="p-6">
+      {children}
+    </div>
   </div>
 );
 
@@ -52,13 +58,14 @@ const CompetitionCard = ({ competition, actionLabel, actionIcon, disabled = fals
 }) => (
   <Link
     href={`/competitions/${competition.id}`}
-    className={`bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-2xl shadow-modern p-5 flex flex-col justify-between hover:shadow-modern-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
+    className={`bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-2xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600 transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
     tabIndex={disabled ? -1 : 0}
     aria-disabled={disabled}
     style={{ textDecoration: 'none', color: 'inherit' }}
   >
-    <div>
-      <div className="flex items-center space-x-3 mb-2">
+    {/* Header Section */}
+    <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+      <div className="flex items-center space-x-3">
         {competition.logo ? (
           <img 
             src={competition.logo} 
@@ -72,16 +79,19 @@ const CompetitionCard = ({ competition, actionLabel, actionIcon, disabled = fals
             </span>
           </div>
         )}
-        <h3 className="text-lg font-bold text-neutral-900 dark:text-gray-100 flex-1">{competition.name}</h3>
+        <h3 className="text-xs md:text-sm font-semibold text-gray-800 dark:text-gray-200 flex-1 truncate">{competition.name}</h3>
       </div>
+    </div>
+    {/* Content Section */}
+    <div className="p-4 flex flex-col justify-between flex-1">
       <div className="text-xs text-neutral-500 dark:text-gray-400 mb-3">
         <p><span className="font-medium">Start:</span> {formatDate(competition.startDate)}</p>
         <p><span className="font-medium">End:</span> {formatDate(competition.endDate)}</p>
       </div>
-    </div>
-    <div className="mt-2 flex items-center justify-center px-3 py-1.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-modern bg-primary-600 dark:bg-accent-dark-600 text-white">
-      {actionIcon}
-      <span className="ml-2">{actionLabel}</span>
+      <div className="mt-2 flex items-center justify-center px-3 py-1.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-modern bg-primary-600 dark:bg-transparent border-2 border-transparent dark:border-accent-dark-500 text-white hover:bg-primary-700 dark:hover:bg-accent-dark-500/10">
+        {actionIcon}
+        <span className="ml-2">{actionLabel}</span>
+      </div>
     </div>
   </Link>
 );

@@ -36,13 +36,14 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
     <div className="relative">
       <Link
         href={`/competitions/${competition.id}`}
-        className={`bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-2xl shadow-modern dark:shadow-dark-modern pt-1 px-5 pb-5 flex flex-col justify-between hover:shadow-modern-lg dark:hover:shadow-dark-modern-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
+        className={`bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-2xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600 transition-all duration-200 hover:scale-[1.02] cursor-pointer ${disabled ? 'pointer-events-none opacity-60' : ''}`}
         tabIndex={disabled ? -1 : 0}
         aria-disabled={disabled}
         style={{ textDecoration: 'none', color: 'inherit' }}
       >
-        <div>
-          <div className="flex items-center space-x-3 mb-0">
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+          <div className="flex items-center space-x-3">
             {competition.logo ? (
               <img 
                 src={competition.logo} 
@@ -56,9 +57,12 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
                 </span>
               </div>
             )}
-            <h3 className="text-lg font-bold text-neutral-900 dark:text-gray-100 flex-1">{competition.name}</h3>
+            <h3 className="text-xs md:text-sm font-semibold text-gray-800 dark:text-gray-200 flex-1 truncate">{competition.name}</h3>
           </div>
-          <div className="text-sm text-neutral-500 dark:text-gray-400 mb-0 mt-3">
+        </div>
+        {/* Content Section */}
+        <div className="p-4 flex flex-col justify-between flex-1">
+          <div className="text-sm text-neutral-500 dark:text-gray-400 mb-3">
             <div className="flex items-center justify-between">
               <div>
                 <p><span className="font-medium">Start:</span> {formatDate(competition.startDate)}</p>
@@ -71,10 +75,9 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
               )}
             </div>
           </div>
-        </div>
-        {/* Progress Bar */}
-        {competition.totalGames !== undefined && competition.gamesPlayed !== undefined && competition.progressPercentage !== undefined ? (
-          <div className="mt-2 md:mt-0">
+          {/* Progress Bar */}
+          {competition.totalGames !== undefined && competition.gamesPlayed !== undefined && competition.progressPercentage !== undefined ? (
+            <div className="mt-2">
             <div className="flex items-center justify-center mb-0.5">
               <span className="text-xs md:text-sm font-bold text-neutral-800 dark:text-gray-200">
                 {competition.gamesPlayed}/{competition.totalGames} matchs
@@ -82,11 +85,15 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
             </div>
             <div className="relative w-full bg-neutral-200 dark:bg-[rgb(40,40,40)] rounded-full h-8">
               <div 
-                className="bg-gradient-to-r from-primary-500 to-primary-600 dark:from-accent-dark-500 dark:to-accent-dark-600 h-8 rounded-full transition-all duration-300 ease-out flex items-center justify-center"
-                style={{ width: `${competition.progressPercentage}%`, minWidth: competition.progressPercentage === 0 ? '0%' : 'auto' }}
+                className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-accent-dark-500 transition-all duration-300 ease-out flex items-center justify-center"
+                style={{ 
+                  width: `${competition.progressPercentage}%`,
+                  height: '100%',
+                  minWidth: competition.progressPercentage === 0 ? '0%' : 'auto'
+                }}
               >
                 {competition.progressPercentage > 0 && (
-                  <span className="text-xs font-bold text-white drop-shadow-sm">
+                  <span className="text-xs font-bold text-white dark:text-gray-200">
                     {competition.progressPercentage}%
                   </span>
                 )}
@@ -99,12 +106,13 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
               )}
             </div>
           </div>
-        ) : (
-          <div className="mt-2 flex items-center justify-center px-3 py-1.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-modern bg-primary-600 text-white">
-            {actionIcon}
-            <span className="ml-2">{actionLabel}</span>
-          </div>
-        )}
+          ) : (
+            <div className="mt-2 flex items-center justify-center px-3 py-1.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-modern bg-primary-600 dark:bg-transparent border-2 border-transparent dark:border-accent-dark-500 text-white hover:bg-primary-700 dark:hover:bg-accent-dark-500/10">
+              {actionIcon}
+              <span className="ml-2">{actionLabel}</span>
+            </div>
+          )}
+        </div>
       </Link>
     </div>
   );

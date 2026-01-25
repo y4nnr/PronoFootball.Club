@@ -91,33 +91,37 @@ export default function News() {
 
   return (
     <section
-      className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-700 p-5"
+      className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-600 overflow-hidden"
       style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
     >
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-            <MegaphoneIcon className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">News</h2>
+      {/* Header Section */}
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <MegaphoneIcon className="h-6 w-6 text-white" />
+            </div>
+            News
+          </h2>
+          {!showSkeleton && !error && items && items.length > 0 && (
+            <Link
+              href="/news"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-primary-600 dark:bg-transparent border-2 border-transparent dark:border-accent-dark-500 hover:bg-primary-700 dark:hover:bg-accent-dark-500/10 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              Voir plus
+              <ArrowRightIcon className="h-4 w-4" />
+            </Link>
+          )}
         </div>
-        {!showSkeleton && !error && items && items.length > 0 && (
-          <Link
-            href="/news"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-primary-600 dark:bg-accent-dark-600 hover:bg-primary-700 dark:hover:bg-accent-dark-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
-          >
-            Voir plus
-            <ArrowRightIcon className="h-4 w-4" />
-          </Link>
-        )}
       </div>
-
+      {/* Content Section */}
+      <div className="p-6">
       {showSkeleton && (
         <div className="space-y-3">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => (
             <div
               key={idx}
-              className="relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-lg overflow-hidden animate-pulse"
+              className="relative bg-white dark:bg-[rgb(58,58,58)] rounded-xl border-2 border-gray-300 dark:border-gray-600 shadow-lg overflow-hidden animate-pulse"
             >
               {/* Header skeleton */}
               <div className="flex items-center gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500">
@@ -152,7 +156,7 @@ export default function News() {
           {items.map((item, index) => (
             <div
               key={`${item.date}-${index}`}
-              className="relative bg-white dark:bg-[rgb(38,38,38)] rounded-xl border-2 border-gray-300 dark:border-gray-700 shadow-lg dark:shadow-dark-modern-lg overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600"
+              className="relative bg-white dark:bg-[rgb(58,58,58)] rounded-xl border-2 border-gray-300 dark:border-gray-600 shadow-lg dark:shadow-dark-modern-lg overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600"
             >
               {/* Header Section - Date & Competition (similar to GameCard) */}
               <div className="flex items-center gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500">
@@ -189,6 +193,7 @@ export default function News() {
           ))}
         </div>
       )}
+      </div>
     </section>
   );
 }

@@ -311,7 +311,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
 
         {/* Remarque Banner - much more visible */}
         {!loading && leaderboardData && (
-          <div className="bg-accent-100 dark:bg-[rgb(38,38,38)] border border-accent-400 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-lg p-4 mb-8 shadow">
+          <div className="bg-accent-100 dark:bg-[rgb(58,58,58)] border border-accent-400 dark:border-gray-600 text-gray-800 dark:text-gray-200 rounded-lg p-4 mb-8 shadow">
             <p className="text-base">
               <strong>{t('note')}:</strong> {t('stats.streakNotice')}
             </p>
@@ -319,14 +319,16 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
         )}
 
         {/* Statistiques Personnelles */}
-        <section className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <span className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-                <UserIcon className="h-6 w-6 text-white" />
-              </span>
-              <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{t('stats.personalStats')}</h2>
-            </div>
+        <section className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          {/* Header Section */}
+          <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+                <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+                  <UserIcon className="h-6 w-6 text-white" />
+                </div>
+                {t('stats.personalStats')}
+              </h2>
             {/* Sport Filter - Dropdown for mobile, buttons for desktop */}
             <div className="md:hidden">
               <select
@@ -340,7 +342,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               </select>
             </div>
             {/* Sport Filter Tabs - Desktop only */}
-            <div className="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-[rgb(38,38,38)] rounded-lg p-1">
+            <div className="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-[rgb(58,58,58)] rounded-lg p-1">
               <button
                 onClick={() => setSelectedSportPersonal('ALL')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -372,8 +374,11 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 {t('stats.rugby') || 'Rugby'}
               </button>
             </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          {/* Content Section */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {/* All-time Ranking with Total Points */}
             <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
               {personalStatsLoading || !currentUserStats ? (
@@ -435,18 +440,20 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               )}
             </div>
           </div>
-
+          </div>
         </section>
 
         {/* Statistiques Globales */}
-        <section className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl p-6 mb-8 border border-gray-200 dark:border-gray-700" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <span className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-                <UserGroupIcon className="h-6 w-6 text-white" />
-              </span>
-              <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">Statistiques Globales</h2>
-            </div>
+        <section className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          {/* Header Section */}
+          <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+                <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+                  <UserGroupIcon className="h-6 w-6 text-white" />
+                </div>
+                Statistiques Globales
+              </h2>
             {/* Sport Filter - Dropdown for mobile, buttons for desktop */}
             <div className="md:hidden">
               <select
@@ -460,7 +467,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               </select>
             </div>
             {/* Sport Filter Tabs - Desktop only */}
-            <div className="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-[rgb(38,38,38)] rounded-lg p-1">
+            <div className="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-[rgb(58,58,58)] rounded-lg p-1">
               <button
                 onClick={() => setSelectedSportGlobal('ALL')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -492,17 +499,25 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 {t('stats.rugby') || 'Rugby'}
               </button>
             </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* Content Section */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* Meilleurs Marqueurs */}
-            <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-xl p-6 shadow-xl flex flex-col justify-between">
-              <h3 className="text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                {t('stats.topPlayersAllTime')}
-              </h3>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Données depuis UEFA Euro 2016
+            <div className="bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between">
+              {/* Header Section */}
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+                <h3 className="text-gray-900 dark:text-gray-100 text-base font-bold">
+                  {t('stats.topPlayersAllTime')}
+                </h3>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Données depuis UEFA Euro 2016
+                </div>
               </div>
-              <div className="space-y-3">
+              {/* Content Section */}
+              <div className="p-4">
+                <div className="space-y-3">
                 {loading ? (
                   <div className="text-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
@@ -514,7 +529,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                       <div
                         className={"flex items-center justify-between p-3 rounded-xl border border-primary-300/60 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" + 
                           (expandedUserId === player.id ? " ring-2 ring-primary-400 dark:ring-accent-dark-500 bg-blue-100 dark:bg-[rgb(40,40,40)]" : "") +
-                          (player.id === currentUser.id ? " bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : " bg-white dark:bg-[rgb(38,38,38)]")}
+                          (player.id === currentUser.id ? " bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : " bg-white dark:bg-[rgb(58,58,58)]")}
                         onClick={() => handleUserClick(player)}
                         title="Voir le détail par compétition"
                       >
@@ -575,18 +590,24 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 ) : (
                   <div className="text-center py-4 text-neutral-500 dark:text-gray-400">{t('stats.noDataAvailable')}</div>
                 )}
+                </div>
               </div>
             </div>
 
             {/* Meilleure Moyenne */}
-            <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-xl p-6 shadow-xl flex flex-col justify-between">
-              <h3 className="text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                {t('stats.bestAverage')}
-              </h3>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Données depuis UEFA Euro 2016
+            <div className="bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between">
+              {/* Header Section */}
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+                <h3 className="text-gray-900 dark:text-gray-100 text-base font-bold">
+                  {t('stats.bestAverage')}
+                </h3>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Données depuis UEFA Euro 2016
+                </div>
               </div>
-              <div className="space-y-3">
+              {/* Content Section */}
+              <div className="p-4">
+                <div className="space-y-3">
                 {loading ? (
                   <div className="text-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
@@ -595,7 +616,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 ) : leaderboardData?.topPlayersByAverage ? (
                   leaderboardData.topPlayersByAverage.slice(0, 10).map((player, index) => (
                     <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-primary-300/60 dark:border-gray-600 ${
-                      player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(38,38,38)]"
+                      player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(58,58,58)]"
                     }`}>
                       <div className="flex items-center space-x-3">
                         <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500 dark:text-yellow-400' : index === 1 ? 'text-gray-400 dark:text-gray-500' : index === 2 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'}`}>{index + 1}.</span>
@@ -615,18 +636,24 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 ) : (
                   <div className="text-center py-4 text-neutral-500 dark:text-gray-400">{t('stats.noDataAvailable')}</div>
                 )}
+                </div>
               </div>
             </div>
 
             {/* Total 1-N-2 Corrects */}
-            <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-xl p-6 shadow-xl flex flex-col justify-between">
-              <h3 className="text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                Total 1-N-2 Corrects
-              </h3>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Données depuis Champions League 25/26
+            <div className="bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between">
+              {/* Header Section */}
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+                <h3 className="text-gray-900 dark:text-gray-100 text-base font-bold">
+                  Total 1-N-2 Corrects
+                </h3>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Données depuis Champions League 25/26
+                </div>
               </div>
-              <div className="space-y-3">
+              {/* Content Section */}
+              <div className="p-4">
+                <div className="space-y-3">
                 {loading ? (
                   <div className="text-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
@@ -638,7 +665,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     .slice(0, 10)
                     .map((player, index) => (
                       <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 dark:border-gray-600 ${
-                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(38,38,38)]"
+                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(58,58,58)]"
                       }`}>
                         <div className="flex items-center space-x-3">
                           <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500 dark:text-yellow-400' : index === 1 ? 'text-gray-400 dark:text-gray-500' : index === 2 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'}`}>{index + 1}.</span>
@@ -658,18 +685,24 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 ) : (
                   <div className="text-center py-4 text-neutral-500 dark:text-gray-400">{t('stats.noDataAvailable')}</div>
                 )}
+                </div>
               </div>
             </div>
 
             {/* Most Exact Scores */}
-            <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-xl p-6 shadow-xl flex flex-col justify-between">
-              <h3 className="text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                {t('stats.mostExactScores')}
-              </h3>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Données depuis Champions League 25/26
+            <div className="bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between">
+              {/* Header Section */}
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+                <h3 className="text-gray-900 dark:text-gray-100 text-base font-bold">
+                  {t('stats.mostExactScores')}
+                </h3>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Données depuis Champions League 25/26
+                </div>
               </div>
-              <div className="space-y-3">
+              {/* Content Section */}
+              <div className="p-4">
+                <div className="space-y-3">
                 {loading ? (
                   <div className="text-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
@@ -681,7 +714,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     .slice(0, 10)
                     .map((player, index) => (
                       <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 dark:border-gray-600 ${
-                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(38,38,38)]"
+                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(58,58,58)]"
                       }`}>
                         <div className="flex items-center space-x-3">
                           <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500 dark:text-yellow-400' : index === 1 ? 'text-gray-400 dark:text-gray-500' : index === 2 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'}`}>{index + 1}.</span>
@@ -701,18 +734,24 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 ) : (
                   <div className="text-center py-4 text-neutral-500 dark:text-gray-400">{t('stats.noDataAvailable')}</div>
                 )}
+                </div>
               </div>
             </div>
 
             {/* No-Show (Shooters) */}
-            <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-xl p-6 shadow-xl flex flex-col justify-between">
-              <h3 className="text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                No-Show (Shooters)
-              </h3>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Données depuis Champions League 25/26
+            <div className="bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between">
+              {/* Header Section */}
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+                <h3 className="text-gray-900 dark:text-gray-100 text-base font-bold">
+                  No-Show (Shooters)
+                </h3>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Données depuis Champions League 25/26
+                </div>
               </div>
-              <div className="space-y-3">
+              {/* Content Section */}
+              <div className="p-4">
+                <div className="space-y-3">
                 {loading ? (
                   <div className="text-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
@@ -724,7 +763,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     .slice(0, 10)
                     .map((player, index) => (
                       <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-neutral-200/50 dark:border-gray-600 ${
-                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(38,38,38)]"
+                        player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(58,58,58)]"
                       }`}>
                         <div className="flex items-center space-x-3">
                           <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-red-500 dark:text-red-400' : index === 1 ? 'text-orange-500 dark:text-orange-400' : index === 2 ? 'text-yellow-500 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-300'}`}>{index + 1}.</span>
@@ -744,14 +783,20 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 ) : (
                   <div className="text-center py-4 text-neutral-500 dark:text-gray-400">{t('stats.noDataAvailable')}</div>
                 )}
+                </div>
               </div>
             </div>
 
             {/* Most Competitions Won */}
-            <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(38,38,38)] dark:to-[rgb(40,40,40)] border border-primary-300/60 dark:border-gray-600 rounded-xl p-6 shadow-xl flex flex-col justify-between lg:col-span-3">
-              <h3 className="text-gray-900 dark:text-gray-100 mb-4 flex items-center text-lg">
-                {t('stats.mostCompetitionsWon')}
-              </h3>
+            <div className="bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between lg:col-span-3">
+              {/* Header Section */}
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+                <h3 className="text-gray-900 dark:text-gray-100 text-lg font-bold">
+                  {t('stats.mostCompetitionsWon')}
+                </h3>
+              </div>
+              {/* Content Section */}
+              <div className="p-4">
               {loading ? (
                 <div className="text-center py-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
@@ -773,28 +818,32 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                       .map(Number)
                       .sort((a, b) => b - a);
                     return sortedWinCounts.map((winCount, groupIndex) => (
-                      <div key={winCount} className={`pl-4 py-3 rounded-xl mb-2 flex flex-col border-l-8 ${
-                        groupIndex === 0 ? 'border-yellow-400 dark:border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' :
-                        groupIndex === 1 ? 'border-gray-400 dark:border-gray-500 bg-gray-50 dark:bg-[rgb(38,38,38)]' :
-                        groupIndex === 2 ? 'border-orange-400 dark:border-orange-500 bg-orange-50 dark:bg-orange-900/20' :
-                        'border-blue-400 dark:border-accent-dark-500 bg-blue-50 dark:bg-accent-dark-900/20'
+                      <div key={winCount} className={`pl-4 py-3 rounded-xl mb-2 flex flex-col border-l-8 border bg-gray-50 dark:bg-[rgb(40,40,40)] border-gray-200 dark:border-gray-600 ${
+                        groupIndex === 0 ? 'border-l-yellow-400 dark:border-l-yellow-500' :
+                        groupIndex === 1 ? 'border-l-gray-400 dark:border-l-gray-500' :
+                        groupIndex === 2 ? 'border-l-orange-400 dark:border-l-orange-500' :
+                        'border-l-blue-400 dark:border-l-accent-dark-500'
                       }`}>
                         <div className="flex items-center mb-3">
                           <span className={`text-lg font-medium mr-2 ${groupIndex === 0 ? 'text-yellow-500 dark:text-yellow-400' : groupIndex === 1 ? 'text-gray-400 dark:text-gray-500' : groupIndex === 2 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'}`}>{winCount}</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {groupedByWins[winCount].map((player) => (
-                            <div key={player.name} className="flex items-start space-x-3 bg-white dark:bg-[rgb(38,38,38)] rounded-lg p-4 shadow border border-gray-200 dark:border-gray-700 min-w-0 flex-1">
-                              <img 
-                                src={getUserAvatar(player.name)} 
-                                alt={player.name}
-                                className="w-10 h-10 rounded-full border-2 border-yellow-400 dark:border-yellow-500 flex-shrink-0 dark:bg-white dark:p-0.5"
-                              />
-                              <div className="min-w-0 flex-1">
-                                <div className="font-bold text-gray-900 dark:text-gray-100 text-sm mb-2">{player.name}</div>
+                            <div key={player.name} className="bg-white dark:bg-[rgb(58,58,58)] rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-lg dark:shadow-dark-modern-lg overflow-hidden min-w-0 flex-1 flex flex-col">
+                              {/* Header Section */}
+                              <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-3 py-2 flex items-center space-x-2">
+                                <img 
+                                  src={getUserAvatar(player.name)} 
+                                  alt={player.name}
+                                  className="w-8 h-8 rounded-full border-2 border-yellow-400 dark:border-yellow-500 flex-shrink-0 dark:bg-white dark:p-0.5"
+                                />
+                                <div className="font-bold text-gray-900 dark:text-gray-100 text-sm">{player.name}</div>
+                              </div>
+                              {/* Content Section */}
+                              <div className="p-3">
                                 <div className="space-y-1">
                                   {player.wonCompetitions.split(', ').map((competition, index) => (
-                                    <div key={index} className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[rgb(40,40,40)] px-2 py-1 rounded border dark:border-gray-600">
+                                    <div key={index} className="text-xs text-gray-500 dark:text-gray-200 bg-gray-50 dark:bg-[rgb(40,40,40)] px-2 py-1 rounded border dark:border-gray-600">
                                       {competition.trim()}
                                     </div>
                                   ))}
@@ -810,20 +859,27 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               ) : (
                 <div className="text-center py-4 text-neutral-500">{t('stats.noCompetitionWinners')}</div>
               )}
+              </div>
             </div>
+          </div>
           </div>
         </section>
 
 
         {/* Palmarès Section */}
-        <section className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <div className="flex items-center mb-6">
-            <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-              <TrophyIcon className="h-6 w-6 text-white" />
-            </div>
-            <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">Historique des Compétitions</h2>
+        <section className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          {/* Header Section */}
+          <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+              <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+                <TrophyIcon className="h-6 w-6 text-white" />
+              </div>
+              Historique des Compétitions
+            </h2>
           </div>
-          <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-md border border-neutral-200 dark:border-gray-700 overflow-hidden">
+          {/* Content Section */}
+          <div className="p-6">
+            <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-md border border-neutral-200 dark:border-gray-600 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-neutral-200 dark:divide-gray-700">
                 <thead className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(38,38,38)]">
@@ -848,7 +904,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-[rgb(38,38,38)] divide-y divide-neutral-200 dark:divide-gray-700">
+                <tbody className="bg-white dark:bg-[rgb(58,58,58)] divide-y divide-neutral-200 dark:divide-gray-600">
                   {loading ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center">
@@ -994,6 +1050,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                 </div>
               </div>
             )}
+          </div>
           </div>
         </section>
       </div>

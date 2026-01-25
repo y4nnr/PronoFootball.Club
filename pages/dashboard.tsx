@@ -261,33 +261,39 @@ const ActiveCompetitionsSection = memo(({ competitions, t }: { competitions: Com
   );
 
   return (
-    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-5" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-            <TrophyIcon className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{t('competitions.active')}</h2>
+    <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-600 overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      {/* Header Section */}
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <TrophyIcon className="h-6 w-6 text-white" />
+            </div>
+            {t('competitions.active')}
+          </h2>
         </div>
       </div>
-      {activeCompetitions.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
-          {activeCompetitions.slice(0, 4).map((competition) => (
-            <CompetitionCard
-              key={competition.id}
-              competition={competition}
-              actionLabel={t('competitions.view') || 'View'}
-              actionIcon={<ArrowRightIcon className="h-5 w-5" />}
-              userRanking={competition.userRanking}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <TrophyIcon className="h-12 w-12 text-neutral-300 dark:text-gray-600 mx-auto mb-3" />
-          <p className="text-neutral-500 dark:text-gray-400">{t('competitions.noActive')}</p>
-        </div>
-      )}
+      {/* Content Section */}
+      <div className="p-6">
+        {activeCompetitions.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4">
+            {activeCompetitions.slice(0, 4).map((competition) => (
+              <CompetitionCard
+                key={competition.id}
+                competition={competition}
+                actionLabel={t('competitions.view') || 'View'}
+                actionIcon={<ArrowRightIcon className="h-5 w-5" />}
+                userRanking={competition.userRanking}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <TrophyIcon className="h-12 w-12 text-neutral-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-neutral-500 dark:text-gray-300">{t('competitions.noActive')}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 });
@@ -348,16 +354,20 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
   console.log('🎯 BettingGamesSection - Received games:', games?.length || 0, 'games');
   console.log('🎯 BettingGamesSection - Games data:', games);
   return (
-    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-5 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-            <PlayIcon className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{t('bettingGames.title')}</h2>
+    <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      {/* Header Section */}
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <PlayIcon className="h-6 w-6 text-white" />
+            </div>
+            {t('bettingGames.title')}
+          </h2>
         </div>
       </div>
-
+      {/* Content Section */}
+      <div className="p-6">
       {games && games.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 items-start">
           {games.map((game) => {
@@ -416,6 +426,7 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
           <p className="text-neutral-500 dark:text-gray-400">{t('bettingGames.placedBets')}</p>
         </div>
       )}
+      </div>
     </div>
   );
 });
@@ -428,17 +439,21 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
   const currentUserId = session?.user?.id;
   
   return (
-    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-            <CalendarIcon className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-gray-100">{t('gamesOfDay.title')}</h2>
+    <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl dark:shadow-dark-xl border border-neutral-200/50 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+      {/* Header Section */}
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <CalendarIcon className="h-6 w-6 text-white" />
+            </div>
+            {t('gamesOfDay.title')}
+          </h2>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 items-start">
+      {/* Content Section */}
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 items-start">
         {games.map((game) => {
           const bets = game.allUserBets.map((bet: UserBet) => {
             if (currentUserId && bet.userId === currentUserId && game.userBet) {
@@ -488,6 +503,7 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );

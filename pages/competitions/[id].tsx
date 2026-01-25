@@ -585,7 +585,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
         {/* Competition Info Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           {/* Period */}
-          <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-2 md:space-x-3 mb-2">
               <div className="p-2 md:p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                 <CalendarIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
@@ -602,7 +602,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
 
           {/* Participants */}
-          <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-2 md:space-x-3 mb-2">
               <div className="p-2 md:p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                 <UsersIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
@@ -613,7 +613,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
 
           {/* Games */}
-          <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-2 md:space-x-3 mb-2">
               <div className="p-2 md:p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                 <ChartBarIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
@@ -624,7 +624,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
 
           {/* Status */}
-          <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 p-4 md:p-5 flex flex-col justify-between" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="flex items-center space-x-2 md:space-x-3 mb-2">
               <div className="p-2 md:p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg flex items-center justify-center h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                 <span className="text-white text-base md:text-lg font-bold">
@@ -641,7 +641,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
         </div>
 
         {/* Competition Progress Bar */}
-        <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -710,8 +710,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
 
         {/* Current Ranking Section - Always visible for better UX */}
-        <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          {/* Header Section */}
+          <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
             <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
                 <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
                   <TrophyIcon className="h-6 w-6 text-white" />
@@ -722,7 +723,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
           <div className="overflow-x-auto">
             {competitionStats && competitionStats.length > 0 ? (
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
-                <thead className="bg-gray-100 dark:bg-[rgb(38,38,38)] border-b-2 border-gray-300 dark:border-gray-600">
+                <thead className="bg-gray-100 dark:bg-[rgb(58,58,58)] border-b-2 border-gray-300 dark:border-gray-600">
                   <tr>
                     <th 
                       className="w-8 md:w-16 px-1 md:px-4 py-1.5 md:py-2.5 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
@@ -956,7 +957,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-[rgb(20,20,20)] divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-white dark:bg-[rgb(20,20,20)] divide-y divide-gray-200 dark:divide-gray-600">
                   {sortedStats.slice(0, 10).map((player, index) => {
                     // Determine row highlighting based on original position
                     const isFirst = player.position === 1;
@@ -996,12 +997,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     
                     return (
                     <tr key={player.userId} className={rowBgClass}>
-                      <td className={`px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700 ${borderClass}`}>
+                      <td className={`px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600 ${borderClass}`}>
                         <div className={`inline-flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded-full border-2 font-bold text-[10px] md:text-sm ${getPositionColor(player.position)}`}>
                           {getPositionIcon(player.position)}
                         </div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap border-r border-gray-200 dark:border-gray-700">
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                         {/* Mobile: Name below profile pic */}
                         <div className="flex md:hidden flex-col items-center min-w-0">
                           <img 
@@ -1029,21 +1030,21 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           </div>
                         </div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-sm md:text-lg font-bold text-gray-900 dark:text-gray-100">{player.totalPoints}</div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.totalPredictions}</div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">
                           {player.totalPredictions > 0 ? (player.totalPoints / player.totalPredictions).toFixed(2) : '0.00'}
                         </div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.exactScores || 0}</div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-700">
+                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.correctWinners || 0}</div>
                       </td>
                       <td className="px-2 md:px-4 py-2 md:py-4 whitespace-nowrap text-center">
@@ -1061,7 +1062,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
             )}
           </div>
           {competitionStats.length > 10 && (
-            <div className="px-6 py-3 bg-gray-50 dark:bg-[rgb(38,38,38)] border-t border-gray-200 dark:border-gray-700 text-center">
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3 text-center">
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 {t('competition.showingTop')} 10 {t('competition.of')} {competitionStats.length} {t('competition.participants')}
               </span>
@@ -1108,8 +1109,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
         )}
 
         {/* Games Section */}
-        <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl border border-gray-300 dark:border-gray-700 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)', overflow: 'hidden' }}>
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl border border-gray-300 dark:border-gray-600 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)', overflow: 'hidden' }}>
+          {/* Header Section */}
+          <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
                 <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
@@ -1243,7 +1245,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                         
                         {/* Expanded Bets Section for Finished Games */}
                         {isFinished && isExpanded && (
-                          <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[rgb(38,38,38)] rounded-b-xl md:rounded-b-2xl border-x border-b border-gray-300 dark:border-gray-700 px-4 md:px-6 pb-4 md:pb-6">
+                          <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(58,58,58)] rounded-b-xl md:rounded-b-2xl border-x border-b border-gray-300 dark:border-gray-600 px-4 md:px-6 pb-4 md:pb-6">
                             <div className="flex items-center justify-between mb-2 md:mb-3">
                               <h4 className="text-xs md:text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 Paris détaillés - {game.homeTeam?.name || ''} vs {game.awayTeam?.name || ''}
@@ -1328,7 +1330,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
         </div>
 
         {/* Rules Widget */}
-        <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-700 p-6" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 p-6" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
             <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
               <BookOpenIcon className="h-5 w-5 text-white" />
