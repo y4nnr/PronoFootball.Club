@@ -79,75 +79,87 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Invalid status. Must be one of: UPCOMING, LIVE, FINISHED, CANCELLED' });
       }
       
-      // Use provided status or auto-calculate if not provided
-      let gameStatus: GameStatus;
+      // Get current game to preserve status if not explicitly provided
+      // Status transitions should be handled by game-status-worker.js, not by editing games
+      const currentGame = await prisma.game.findUnique({
+        where: { id: gameId },
+        select: { status: true }
+      });
+      
+      if (!currentGame) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+      
+      // Use provided status if given, otherwise keep current status
+      // This prevents accidental status changes when editing other fields (date, teams, scores)
+      const gameStatus: GameStatus = status ? (status as GameStatus) : currentGame.status;
+      
+      // Prepare update data
+      const updateData: any = {
+        homeTeamId,
+        awayTeamId,
+        date: gameDate,
+        homeScore: normalizedHomeScore,
+        awayScore: normalizedAwayScore,
+      };
+      
+      // Only update status if explicitly provided
       if (status) {
-        gameStatus = status as GameStatus;
-      } else {
-        // Auto-calculate status based on scores and date
-        // IMPORTANT: Add safety checks to prevent marking future games as LIVE
-        // Only mark as LIVE if date is at least 2 minutes in the past
-        const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
-        const isPast = gameDate < now; // Explicitly check date is in the past
-        const isPastBy2Minutes = gameDate <= twoMinutesAgo;
+        updateData.status = gameStatus;
         
-        if (
-          normalizedHomeScore !== undefined && normalizedHomeScore !== null &&
-          normalizedAwayScore !== undefined && normalizedAwayScore !== null &&
-          isPast
-        ) {
-          gameStatus = GameStatus.FINISHED;
-        } else if (isPastBy2Minutes && isPast) {
-          // Only mark as LIVE if date is at least 2 minutes in the past AND actually in the past
-          gameStatus = GameStatus.LIVE;
-        } else {
-          gameStatus = GameStatus.UPCOMING;
+        // Clear live scores if status is not LIVE/FINISHED
+        if (gameStatus !== 'LIVE' && gameStatus !== 'FINISHED') {
+          updateData.liveHomeScore = null;
+          updateData.liveAwayScore = null;
+        }
+        
+        // Clear elapsedMinute if status is not LIVE
+        if (gameStatus !== 'LIVE') {
+          updateData.elapsedMinute = null;
+        }
+        
+        // Clear externalId if status is UPCOMING (game hasn't started yet)
+        if (gameStatus === 'UPCOMING') {
+          updateData.externalId = null;
+          updateData.externalStatus = null;
         }
       }
+      // If status is not provided, don't change it - let game-status-worker.js handle status transitions
+      
       const updatedGame = await prisma.game.update({
         where: { id: gameId },
-        data: {
-          homeTeamId,
-          awayTeamId,
-          date: gameDate,
-          homeScore: normalizedHomeScore,
-          awayScore: normalizedAwayScore,
-          // Clear live scores if final scores are cleared or status is not LIVE/FINISHED
-          liveHomeScore: (normalizedHomeScore === null && normalizedAwayScore === null) || gameStatus !== 'LIVE' ? null : undefined,
-          liveAwayScore: (normalizedHomeScore === null && normalizedAwayScore === null) || gameStatus !== 'LIVE' ? null : undefined,
-          // Clear elapsedMinute if status is not LIVE
-          elapsedMinute: gameStatus !== 'LIVE' ? null : undefined,
-          // Clear externalId if status is UPCOMING (game hasn't started yet)
-          externalId: gameStatus === 'UPCOMING' ? null : undefined,
-          externalStatus: gameStatus === 'UPCOMING' ? null : undefined,
-          status: gameStatus,
-        },
+        data: updateData,
       });
 
-      // If the game is now finished and scores are set, recalculate all bets
-      if (gameStatus === GameStatus.FINISHED && normalizedHomeScore !== undefined && normalizedHomeScore !== null && normalizedAwayScore !== undefined && normalizedAwayScore !== null) {
-        // Get competition to determine sport type and scoring system
-        const competition = await prisma.competition.findUnique({
-          where: { id: updatedGame.competitionId },
-          select: { sportType: true }
-        });
-        
-        const { calculateBetPoints, getScoringSystemForSport } = await import('../../../../lib/scoring-systems');
-        const scoringSystem = getScoringSystemForSport(competition?.sportType || 'FOOTBALL');
-        
-        const bets = await prisma.bet.findMany({ where: { gameId } });
-        for (const bet of bets) {
-          const points = calculateBetPoints(
-            { score1: bet.score1, score2: bet.score2 },
-            { home: normalizedHomeScore, away: normalizedAwayScore },
-            scoringSystem
-          );
-          await prisma.bet.update({ where: { id: bet.id }, data: { points } });
+      // Only recalculate bet points if status was explicitly changed
+      // If status was not provided, preserve existing bet points
+      if (status) {
+        // Status was explicitly provided, so handle bet point recalculation
+        if (gameStatus === GameStatus.FINISHED && normalizedHomeScore !== undefined && normalizedHomeScore !== null && normalizedAwayScore !== undefined && normalizedAwayScore !== null) {
+          // Game is now finished with scores, recalculate all bets
+          const competition = await prisma.competition.findUnique({
+            where: { id: updatedGame.competitionId },
+            select: { sportType: true }
+          });
+          
+          const { calculateBetPoints, getScoringSystemForSport } = await import('../../../../lib/scoring-systems');
+          const scoringSystem = getScoringSystemForSport(competition?.sportType || 'FOOTBALL');
+          
+          const bets = await prisma.bet.findMany({ where: { gameId } });
+          for (const bet of bets) {
+            const points = calculateBetPoints(
+              { score1: bet.score1, score2: bet.score2 },
+              { home: normalizedHomeScore, away: normalizedAwayScore },
+              scoringSystem
+            );
+            await prisma.bet.update({ where: { id: bet.id }, data: { points } });
+          }
+        } else if (gameStatus !== GameStatus.FINISHED) {
+          // Game is not finished, reset all bet points to 0
+          await prisma.bet.updateMany({ where: { gameId }, data: { points: 0 } });
         }
-      } else if (status !== GameStatus.FINISHED) {
-        // If the game is not finished, reset all bet points to 0
-        await prisma.bet.updateMany({ where: { gameId }, data: { points: 0 } });
       }
+      // If status was not provided, don't change bet points - preserve them
 
       // Update shooters count for all users in this competition
       await updateShootersForCompetition(updatedGame.competitionId);
