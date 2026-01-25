@@ -656,15 +656,25 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
           <div className="w-full bg-gray-200 dark:bg-[rgb(40,40,40)] rounded-full h-8 relative">
             <div 
-              className="bg-gradient-to-r from-primary-500 to-primary-600 dark:from-accent-dark-500 dark:to-accent-dark-600 h-8 rounded-full transition-all duration-500 ease-out flex items-center justify-center relative"
+              className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-accent-dark-500 transition-all duration-500 ease-out flex items-center justify-center"
               style={{ 
-                width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 : 0}%` 
+                width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 : 0}%`,
+                height: '100%',
+                minWidth: competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 === 0 ? '0%' : 'auto'
               }}
             >
-              <span className="text-white font-bold text-sm drop-shadow-sm">
-                {competition._count.games > 0 ? Math.round((games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100) : 0}%
-              </span>
+              {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 > 0 && (
+                <span className="text-xs font-bold text-white dark:text-gray-200">
+                  {Math.round((games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100)}%
+                </span>
+              )}
             </div>
+            {/* Show percentage text outside the bar when it's 0% or too small to fit text */}
+            {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 === 0 && (
+              <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-bold text-neutral-800 dark:text-white">
+                0%
+              </span>
+            )}
           </div>
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
             <span className="font-bold">0%</span>

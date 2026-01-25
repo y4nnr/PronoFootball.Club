@@ -8,17 +8,21 @@ export default function Document() {
   return (
     <Html lang="fr">
       <Head>
-        {/* Blocking script to prevent flash of white background in dark mode */}
+        {/* Blocking script to prevent flash - defaults to dark mode */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
                   var theme = localStorage.getItem('theme');
-                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  // Default to dark mode, only use light if explicitly set
+                  if (theme !== 'light') {
                     document.documentElement.classList.add('dark');
                   }
-                } catch (e) {}
+                } catch (e) {
+                  // If localStorage fails, default to dark
+                  document.documentElement.classList.add('dark');
+                }
               })();
             `,
           }}
