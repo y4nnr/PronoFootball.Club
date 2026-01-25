@@ -656,7 +656,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
           <div className="w-full bg-gray-200 dark:bg-[rgb(40,40,40)] rounded-full h-8 relative">
             <div 
-              className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-accent-dark-500 transition-all duration-500 ease-out flex items-center justify-center"
+              className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-white transition-all duration-500 ease-out flex items-center justify-center"
               style={{ 
                 width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 : 0}%`,
                 height: '100%',

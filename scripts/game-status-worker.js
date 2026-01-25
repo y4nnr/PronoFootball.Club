@@ -36,43 +36,63 @@ async function releaseLeader() {
 async function flipDueGames() {
   // CRITICAL: Add logging to diagnose why future games are being marked as LIVE
   // Check what games would be updated BEFORE updating
+  // Use UTC time consistently to avoid timezone issues
   const gamesToCheck = await prisma.$queryRaw`
-    SELECT id, date, "homeTeamId", "awayTeamId", status
+    SELECT id, date, "homeTeamId", "awayTeamId", status,
+           EXTRACT(EPOCH FROM (NOW() - date)) / 60 AS minutes_diff
     FROM "Game"
     WHERE "status" = 'UPCOMING'
       AND "date" <= (NOW() - INTERVAL '2 minutes')
+      AND "date" < NOW()  -- CRITICAL: Only games in the past
     ORDER BY date DESC
-    LIMIT 10
+    LIMIT 20
   `;
   
   if (gamesToCheck && Array.isArray(gamesToCheck) && gamesToCheck.length > 0) {
-    console.log(`🔍 Found ${gamesToCheck.length} UPCOMING games where date <= (NOW() - 2 minutes) (checking if this is correct)...`);
+    console.log(`🔍 Found ${gamesToCheck.length} UPCOMING games where date <= (NOW() - 2 minutes)...`);
     const now = new Date();
     const nowUTC = now.toISOString();
+    let futureGamesFound = false;
+    
     for (const game of gamesToCheck) {
       const gameDate = new Date(game.date);
       const gameDateUTC = gameDate.toISOString();
       const diffMs = now.getTime() - gameDate.getTime();
       const diffMinutes = Math.round(diffMs / (1000 * 60));
-      console.log(`   ⚠️ Game ${game.id}:`);
+      const dbDiffMinutes = game.minutes_diff ? Math.round(parseFloat(game.minutes_diff)) : null;
+      
+      console.log(`   Game ${game.id}:`);
       console.log(`      Game date (UTC): ${gameDateUTC}`);
       console.log(`      Current time (UTC): ${nowUTC}`);
       console.log(`      Difference: ${diffMinutes} minutes (${diffMinutes < 0 ? 'FUTURE' : 'PAST'})`);
-      if (diffMinutes < -2) {
-        console.log(`      ❌ ERROR: This game is more than 2 minutes in the FUTURE but was selected! This is a bug!`);
+      console.log(`      DB calculated diff: ${dbDiffMinutes} minutes`);
+      
+      if (diffMinutes < -2 || (dbDiffMinutes !== null && dbDiffMinutes < -2)) {
+        console.log(`      ❌ ERROR: This game is more than 2 minutes in the FUTURE but was selected!`);
+        console.log(`      ❌ SKIPPING this game to prevent incorrect status update!`);
+        futureGamesFound = true;
       }
+    }
+    
+    if (futureGamesFound) {
+      console.log(`⚠️ WARNING: Found future games in the query results. This indicates a timezone or date storage issue.`);
+      console.log(`⚠️ Aborting status update to prevent incorrect changes.`);
+      return 0;
     }
   }
   
   // CRITICAL FIX: Add explicit check to prevent future games from being marked as LIVE
-  // This is a safety check in case dates are stored incorrectly
+  // Use UTC time consistently and add extra safety checks
+  // Only update games that are clearly in the past (at least 2 minutes ago)
   const updated = await prisma.$executeRaw`
     UPDATE "Game"
     SET "status" = 'LIVE'
     WHERE "status" = 'UPCOMING'
       AND "date" <= (NOW() - INTERVAL '2 minutes')
       AND "date" < NOW()  -- Extra safety: explicitly check date is in the past
+      AND EXTRACT(EPOCH FROM (NOW() - date)) / 60 >= 2  -- Triple check: at least 2 minutes in the past
   `;
+  
   if (updated > 0) {
     console.log(`✅ Flipped ${updated} game(s) to LIVE at ${new Date().toISOString()}`);
   } else {

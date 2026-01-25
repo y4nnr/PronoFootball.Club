@@ -64,13 +64,30 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
   useEffect(() => {
     if (typeof window !== 'undefined' && !originalReferrer.current) {
       // Get the referrer from document.referrer or router query
-      const referrer = document.referrer || router.query.referrer as string || '/dashboard';
-      // Only store if it's not a betting page
-      if (!referrer.includes('/betting/')) {
-        originalReferrer.current = referrer;
-      } else {
-        // If referrer is a betting page, default to dashboard
+      let referrer = document.referrer || router.query.referrer as string || '/dashboard';
+      
+      // Extract just the pathname from the full URL if it's a full URL
+      try {
+        if (referrer.startsWith('http')) {
+          const url = new URL(referrer);
+          referrer = url.pathname + (url.search || '');
+        }
+      } catch (e) {
+        // If URL parsing fails, use as is
+      }
+      
+      // Validate referrer - don't allow:
+      // 1. Betting pages (to avoid loops)
+      // 2. Admin pages (to avoid permission errors)
+      // 3. API routes
+      // 4. External domains
+      if (referrer.includes('/betting/') || 
+          referrer.includes('/admin/') || 
+          referrer.includes('/api/') ||
+          !referrer.startsWith('/')) {
         originalReferrer.current = '/dashboard';
+      } else {
+        originalReferrer.current = referrer;
       }
     }
   }, [router.query]);
@@ -970,7 +987,14 @@ export default function BettingPage({ game, allGames, currentGameIndex }: Bettin
                     type="button"
                     onClick={() => {
                       // Go back to the original page (before entering betting UI)
-                      const targetUrl = originalReferrer.current || '/dashboard';
+                      // Ensure we never navigate to admin pages or invalid URLs
+                      let targetUrl = originalReferrer.current || '/dashboard';
+                      
+                      // Final safety check - ensure we're not going to admin or betting pages
+                      if (targetUrl.includes('/admin/') || targetUrl.includes('/betting/') || targetUrl.includes('/api/')) {
+                        targetUrl = '/dashboard';
+                      }
+                      
                       router.push(targetUrl);
                     }}
                     className="px-6 sm:px-8 py-3 sm:py-3.5 md:py-4 text-base sm:text-lg font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 dark:hover:bg-[rgb(50,50,50)] hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition-all duration-200 shadow-lg dark:shadow-dark-modern-lg hover:shadow-xl dark:hover:shadow-dark-xl transform hover:scale-105"

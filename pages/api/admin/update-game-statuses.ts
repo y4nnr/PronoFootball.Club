@@ -27,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const now = new Date();
     console.log(`[GAME STATUS UPDATE] Starting at ${now.toISOString()}`);
+    console.log(`[GAME STATUS UPDATE] WARNING: This is a manual admin endpoint. Automatic updates should be handled by game-status-worker.js`);
 
     // Find games that should be LIVE (UPCOMING games where start time has passed)
     // IMPORTANT: Add a 2-minute buffer to prevent marking games as LIVE too early.
@@ -49,6 +50,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     console.log(`[GAME STATUS UPDATE] Found ${gamesToUpdate.length} games to update to LIVE`);
+    
+    // Log each game that will be updated with time difference
+    gamesToUpdate.forEach(game => {
+      const gameDate = new Date(game.date);
+      const diffMs = now.getTime() - gameDate.getTime();
+      const diffMinutes = Math.round(diffMs / (1000 * 60));
+      console.log(`[GAME STATUS UPDATE] Will update: ${game.homeTeam.name} vs ${game.awayTeam.name} - ${diffMinutes} minutes past start time (${gameDate.toISOString()})`);
+      
+      if (diffMinutes < 0) {
+        console.log(`[GAME STATUS UPDATE] ⚠️ WARNING: Game is in the FUTURE! This should not happen!`);
+      }
+    });
 
     if (gamesToUpdate.length === 0) {
       return res.status(200).json({
