@@ -154,14 +154,14 @@ const RankingEvolutionWidget = memo(({
   if (loading) {
     return (
       <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-8 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Évolution du Classement</h2>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">Évolution du Classement</h2>
           </div>
         </div>
         <div className="p-4 flex items-center justify-center py-8">
@@ -174,14 +174,14 @@ const RankingEvolutionWidget = memo(({
   if (error) {
     return (
       <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-8 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Évolution du Classement</h2>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">Évolution du Classement</h2>
           </div>
         </div>
         <div className="p-4 text-center py-8">
@@ -201,14 +201,14 @@ const RankingEvolutionWidget = memo(({
   if (rankingData.length === 0) {
     return (
       <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-8 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Évolution du Classement</h2>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">Évolution du Classement</h2>
           </div>
         </div>
         <div className="p-4 text-center py-8">
@@ -240,18 +240,15 @@ const RankingEvolutionWidget = memo(({
   return (
     <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-8 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       {/* Header Section */}
-      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Évolution du Classement</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur un joueur pour mettre en évidence sa progression</p>
-            </div>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">Évolution du Classement</h2>
           </div>
         </div>
       </div>
@@ -273,8 +270,8 @@ const RankingEvolutionWidget = memo(({
             {/* Gradient definition */}
             <defs>
               <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor={isDarkMode ? "#1F2937" : "#FFFFFF"} />
-                <stop offset="100%" stopColor={isDarkMode ? "#111827" : "#F9FAFB"} />
+                <stop offset="0%" stopColor={isDarkMode ? "rgb(58,58,58)" : "#FFFFFF"} />
+                <stop offset="100%" stopColor={isDarkMode ? "rgb(50,50,50)" : "#F9FAFB"} />
               </linearGradient>
             </defs>
 
@@ -499,7 +496,7 @@ const RankingEvolutionWidget = memo(({
                     cy={y}
                     r={isSelected ? 5 : 3}
                     fill={color}
-                    stroke={isDarkMode ? "#1F2937" : "white"}
+                    stroke={isDarkMode ? "rgb(58,58,58)" : "white"}
                     strokeWidth={isSelected ? 2 : 1}
                     opacity={selectedUserId ? (isSelected ? 1 : 0.3) : 1}
                     style={{
@@ -534,7 +531,7 @@ const RankingEvolutionWidget = memo(({
                     cx={x}
                     cy={y}
                     r={isSelected ? 16 : 14}
-                    fill={isDarkMode ? "#1F2937" : "white"}
+                    fill={isDarkMode ? "rgb(58,58,58)" : "white"}
                     stroke={color}
                     strokeWidth={isSelected ? 3 : 2}
                     opacity={selectedUserId ? (isSelected ? 1 : 0.3) : 1}
@@ -581,7 +578,7 @@ const RankingEvolutionWidget = memo(({
 
       {/* Footer Section - Legend */}
       <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-4 pt-3 pb-4">
-        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-sm mb-3">
           {allPlayers.map((player, index) => {
             const color = playerColorMap.get(player.userId) || '#6B7280';
             const isSelected = selectedUserId === player.userId;
@@ -591,7 +588,7 @@ const RankingEvolutionWidget = memo(({
                 key={player.userId}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
                   isSelected 
-                    ? 'bg-blue-100 dark:bg-accent-dark-900/40 ring-2 ring-blue-400 dark:ring-accent-dark-500 shadow-md transform scale-105' 
+                    ? 'bg-gray-100 dark:bg-[rgb(50,50,50)] ring-2 ring-primary-400 dark:ring-accent-dark-500 shadow-md transform scale-105' 
                     : 'hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm'
                 }`}
                 onClick={() => setSelectedUserId(isSelected ? null : player.userId)}
@@ -602,7 +599,7 @@ const RankingEvolutionWidget = memo(({
                   }`}
                   style={{ 
                     backgroundColor: color,
-                    borderColor: isDarkMode ? '#1F2937' : 'white'
+                    borderColor: isDarkMode ? 'rgb(58,58,58)' : 'white'
                   }}
                 />
                 <img
@@ -614,7 +611,7 @@ const RankingEvolutionWidget = memo(({
                 />
                 <span className={`font-medium transition-all ${
                   isSelected 
-                    ? 'text-blue-800 dark:text-accent-dark-400 font-bold' 
+                    ? 'text-primary-800 dark:text-accent-dark-400 font-bold' 
                     : 'text-gray-700 dark:text-gray-300'
                 }`}>
                   {player.userName}
@@ -622,6 +619,9 @@ const RankingEvolutionWidget = memo(({
               </div>
             );
           })}
+        </div>
+        <div className="text-center text-xs text-gray-600 dark:text-gray-400 mt-2">
+          <p>Cliquez sur un joueur pour mettre en évidence sa progression</p>
         </div>
       </div>
     </div>

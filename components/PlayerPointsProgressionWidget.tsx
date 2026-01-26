@@ -308,17 +308,14 @@ const PlayerPointsProgressionWidget = memo(({
   if (loading) {
     return (
       <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-4 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Progression des Points par Journée</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur une journée pour afficher le classement intermédiaire</p>
-            </div>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">Progression des Points par Journée</h2>
           </div>
         </div>
         <div className="p-4">
@@ -339,17 +336,14 @@ const PlayerPointsProgressionWidget = memo(({
   if (error) {
     return (
       <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-4 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Progression des Points par Journée</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur une journée pour afficher le classement intermédiaire</p>
-            </div>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">Progression des Points par Journée</h2>
           </div>
         </div>
         <div className="p-4 text-center py-8">
@@ -369,17 +363,14 @@ const PlayerPointsProgressionWidget = memo(({
   if (playerData.length === 0) {
     return (
       <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl mb-4 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
           <div className="flex items-center">
-            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Progression des Points par Journée</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur une journée pour afficher le classement intermédiaire</p>
-            </div>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">Progression des Points par Journée</h2>
           </div>
         </div>
         <div className="p-4 text-center py-8">
@@ -405,29 +396,26 @@ const PlayerPointsProgressionWidget = memo(({
       }}
     >
       {/* Header Section */}
-      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 pt-4 pb-3">
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
         <div className="flex items-center">
-          <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow mr-3 flex items-center justify-center">
-            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-              Progression des Points par Journée{selectedDay ? (
-                <span 
-                  className="ml-2 px-2 py-1 rounded text-gray-800 dark:text-gray-200 text-lg font-semibold"
-                  style={{ 
-                    backgroundColor: getGameDayColor(selectedDay.date).bg,
-                    borderColor: getGameDayColor(selectedDay.date).border
-                  }}
-                >
-                  {formatDate(selectedDay.date)}
-                </span>
-              ) : ''}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Cliquez sur une journée pour afficher le classement intermédiaire</p>
-          </div>
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">
+            Progression des Points par Journée{selectedDay ? (
+              <span 
+                className="ml-2 px-2 py-1 rounded text-gray-800 dark:text-gray-200 text-lg font-semibold"
+                style={{ 
+                  backgroundColor: getGameDayColor(selectedDay.date).bg,
+                  borderColor: getGameDayColor(selectedDay.date).border
+                }}
+              >
+                {formatDate(selectedDay.date)}
+              </span>
+            ) : ''}
+          </h2>
         </div>
       </div>
 
@@ -593,8 +581,8 @@ const PlayerPointsProgressionWidget = memo(({
 
       {/* Footer Section */}
       <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-4 pt-3 pb-4">
-        <div className="text-center text-xs text-gray-600 dark:text-gray-300">
-          <p className="text-gray-500 dark:text-gray-400">Cliquez sur les segments colorés pour voir le classement d'une journée spécifique</p>
+        <div className="text-center text-xs text-gray-600 dark:text-gray-400">
+          <p>Cliquez sur une journée pour afficher le classement intermédiaire</p>
         </div>
       </div>
     </div>
