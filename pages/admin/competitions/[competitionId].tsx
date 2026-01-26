@@ -748,6 +748,7 @@ export default function CompetitionDetail() {
                     <option value="LIVE">En Direct</option>
                     <option value="FINISHED">Terminé</option>
                     <option value="CANCELLED">Annulé</option>
+                    <option value="RESCHEDULED">Reporté</option>
                   </select>
                 </div>
               </div>
@@ -849,12 +850,14 @@ export default function CompetitionDetail() {
                             game.status === 'FINISHED' ? 'bg-green-100 text-green-800' :
                             game.status === 'LIVE' ? 'bg-red-100 text-red-800' :
                             game.status === 'CANCELLED' ? 'bg-gray-100 text-gray-800' :
+                            game.status === 'RESCHEDULED' ? 'bg-orange-100 text-orange-800' :
                             'bg-yellow-100 text-yellow-800'
                           }`}>
                             {game.status === 'UPCOMING' ? 'À Venir' :
                              game.status === 'LIVE' ? 'En Direct' :
                              game.status === 'FINISHED' ? 'Terminé' :
                              game.status === 'CANCELLED' ? 'Annulé' :
+                             game.status === 'RESCHEDULED' ? 'Reporté' :
                              game.status}
                           </span>
                         </td>
@@ -1089,6 +1092,7 @@ export default function CompetitionDetail() {
                 <option value="LIVE">En Direct</option>
                 <option value="FINISHED">Terminé</option>
                 <option value="CANCELLED">Annulé</option>
+                <option value="RESCHEDULED">Reporté</option>
               </select>
             </div>
             <div className="mb-4 flex gap-4">

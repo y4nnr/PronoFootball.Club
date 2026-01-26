@@ -455,6 +455,21 @@ export default function CompetitionDetails({ competition, competitionStats, game
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
   };
 
+  // Helper function to abbreviate header names for mobile
+  const getMobileHeaderAbbr = (key: string) => {
+    const abbreviations: { [key: string]: string } = {
+      'position': 'Pos',
+      'player': 'Joueurs',
+      'points': 'Pts',
+      'games': 'M',
+      'average': 'Moy',
+      'exactScores': 'SE',
+      'correctWinners': 'RC',
+      'shooters': 'S'
+    };
+    return abbreviations[key] || key;
+  };
+
   // Translate competition status to French
   const translateCompetitionStatus = (status: string) => {
     const statusMap: { [key: string]: string } = {
@@ -736,7 +751,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 <thead className="bg-gray-100 dark:bg-[rgb(58,58,58)] border-b-2 border-gray-300 dark:border-gray-600">
                   <tr>
                     <th 
-                      className="w-8 md:w-16 px-1 md:px-4 py-1.5 md:py-2.5 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-10 md:w-16 px-1 md:px-4 py-1.5 md:py-2.5 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('position')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -751,21 +766,14 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          {t('competition.position').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
-                              {word}
-                            </span>
-                          ))}
-                          {sortColumn === 'position' && (
-                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
-                              {sortDirection === 'asc' ? '↑' : '↓'}
-                            </span>
-                          )}
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
+                            {getMobileHeaderAbbr('position')}
+                          </span>
                         </div>
                       </div>
                     </th>
                     <th 
-                      className="w-16 md:w-48 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-24 md:w-48 px-1 md:px-4 py-2 md:py-3 text-left md:text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('player')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -780,13 +788,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          {t('competition.player').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
-                              {word}
-                            </span>
-                          ))}
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
+                            {getMobileHeaderAbbr('player')}
+                          </span>
                           {sortColumn === 'player' && (
-                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
+                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -794,7 +800,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-10 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('points')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -809,13 +815,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          {t('competition.points').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
-                              {word}
-                            </span>
-                          ))}
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
+                            {getMobileHeaderAbbr('points')}
+                          </span>
                           {sortColumn === 'points' && (
-                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
+                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -823,7 +827,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-10 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('games')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -838,13 +842,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          {t('competition.games').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
-                              {word}
-                            </span>
-                          ))}
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
+                            {getMobileHeaderAbbr('games')}
+                          </span>
                           {sortColumn === 'games' && (
-                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
+                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -852,7 +854,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-10 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('average')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -867,13 +869,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          {t('competition.average').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
-                              {word}
-                            </span>
-                          ))}
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
+                            {getMobileHeaderAbbr('average')}
+                          </span>
                           {sortColumn === 'average' && (
-                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
+                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -881,7 +881,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-10 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('exactScores')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -896,13 +896,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          {t('competition.exactScores').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
-                              {word}
-                            </span>
-                          ))}
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
+                            {getMobileHeaderAbbr('exactScores')}
+                          </span>
                           {sortColumn === 'exactScores' && (
-                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
+                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -910,7 +908,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-28 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-10 md:w-28 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('correctWinners')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -925,13 +923,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          {t('competition.correctWinners').split(' ').map((word, idx) => (
-                            <span key={idx} className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
-                              {word}
-                            </span>
-                          ))}
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
+                            {getMobileHeaderAbbr('correctWinners')}
+                          </span>
                           {sortColumn === 'correctWinners' && (
-                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
+                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -939,7 +935,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-8 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-10 md:w-20 px-1 md:px-4 py-2 md:py-3 text-center md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('shooters')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -954,11 +950,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          <span className="text-[7px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
-                            Shots
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
+                            {getMobileHeaderAbbr('shooters')}
                           </span>
                           {sortColumn === 'shooters' && (
-                            <span className="hidden md:inline text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
+                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
                               {sortDirection === 'asc' ? '↑' : '↓'}
                             </span>
                           )}
@@ -1013,30 +1009,17 @@ export default function CompetitionDetails({ competition, competitionStats, game
                         </div>
                       </td>
                       <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
-                        {/* Mobile: Name below profile pic */}
-                        <div className="flex md:hidden flex-col items-center min-w-0">
+                        {/* Mobile & Desktop: Name next to profile pic */}
+                        <div className="flex items-center min-w-0">
                           <img 
                             src={getUserAvatar(player.userName, player.profilePictureUrl)} 
                             alt={player.userName}
-                            className="w-8 h-8 rounded-full mb-1 object-cover border-2 border-gray-200 dark:border-gray-600 flex-shrink-0"
-                          />
-                          <div className="min-w-0 w-full text-center">
-                            <div className="text-[10px] font-medium text-gray-900 dark:text-gray-100 truncate">{player.userName}</div>
-                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-[9px] text-yellow-600 dark:text-yellow-400 font-medium">{t('competition.champion')}</div>}
-                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === competitionStats.length && <div className="text-[9px] text-red-600 dark:text-red-400 font-medium">{t('competition.dinnerHost')}</div>}
-                          </div>
-                        </div>
-                        {/* Desktop: Name next to profile pic */}
-                        <div className="hidden md:flex items-center min-w-0">
-                          <img 
-                            src={getUserAvatar(player.userName, player.profilePictureUrl)} 
-                            alt={player.userName}
-                            className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-gray-200 dark:border-gray-600 flex-shrink-0"
+                            className="w-7 h-7 md:w-10 md:h-10 rounded-full mr-1.5 md:mr-3 object-cover border-2 border-gray-200 dark:border-gray-600 flex-shrink-0"
                           />
                           <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{player.userName}</div>
-                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">{t('competition.champion')}</div>}
-                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === competitionStats.length && <div className="text-xs text-red-600 dark:text-red-400 font-medium">{t('competition.dinnerHost')}</div>}
+                            <div className="text-[10px] md:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{player.userName}</div>
+                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-[9px] md:text-xs text-yellow-600 dark:text-yellow-400 font-medium">{t('competition.champion')}</div>}
+                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === competitionStats.length && <div className="text-[9px] md:text-xs text-red-600 dark:text-red-400 font-medium">{t('competition.dinnerHost')}</div>}
                           </div>
                         </div>
                       </td>
@@ -1070,6 +1053,54 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 <p>{t('competition.noParticipantsYet')}</p>
               </div>
             )}
+          </div>
+          {/* Footer with header abbreviations explanation - Mobile only */}
+          <div className="md:hidden bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+            <div className="text-[10px] text-gray-700 dark:text-gray-300">
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">Pos</span>
+                  <span className="text-gray-600 dark:text-gray-400">=</span>
+                  <span className="text-gray-600 dark:text-gray-400">Position</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">Pts</span>
+                  <span className="text-gray-600 dark:text-gray-400">=</span>
+                  <span className="text-gray-600 dark:text-gray-400">Points</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">M</span>
+                  <span className="text-gray-600 dark:text-gray-400">=</span>
+                  <span className="text-gray-600 dark:text-gray-400">Matchs</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">Moy</span>
+                  <span className="text-gray-600 dark:text-gray-400">=</span>
+                  <span className="text-gray-600 dark:text-gray-400">Moyenne</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">SE</span>
+                  <span className="text-gray-600 dark:text-gray-400">=</span>
+                  <span className="text-gray-600 dark:text-gray-400">Scores Exactes</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">RC</span>
+                  <span className="text-gray-600 dark:text-gray-400">=</span>
+                  <span className="text-gray-600 dark:text-gray-400">Résultat Correct</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">S</span>
+                  <span className="text-gray-600 dark:text-gray-400">=</span>
+                  <span className="text-gray-600 dark:text-gray-400">Shots</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Footer with click to sort explanation - Desktop only */}
+          <div className="hidden md:block bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3">
+            <div className="text-xs text-gray-600 dark:text-gray-400 text-center">
+              <span className="italic">Cliquez sur les en-têtes de colonnes pour réorganiser le classement</span>
+            </div>
           </div>
           {competitionStats.length > 10 && (
             <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3 text-center">

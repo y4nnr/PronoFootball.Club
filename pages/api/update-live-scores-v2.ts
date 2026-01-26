@@ -89,6 +89,10 @@ export default async function handler(
         status: 'LIVE',
         competition: {
           sportType: 'FOOTBALL'
+        },
+        // Exclude RESCHEDULED games - they should not be automatically updated
+        NOT: {
+          status: 'RESCHEDULED'
         }
       },
       select: {
@@ -334,6 +338,10 @@ export default async function handler(
         },
         competition: {
           sportType: 'FOOTBALL'
+        },
+        // Exclude RESCHEDULED games
+        NOT: {
+          status: 'RESCHEDULED'
         }
       },
       select: {
@@ -382,6 +390,10 @@ export default async function handler(
         externalId: { not: null },
         competition: {
           sportType: 'FOOTBALL'
+        },
+        // Exclude RESCHEDULED games
+        NOT: {
+          status: 'RESCHEDULED'
         },
         // Only check games from the last 7 days to avoid checking old games
         date: {

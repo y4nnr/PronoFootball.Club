@@ -76,6 +76,10 @@ export default async function handler(
         status: 'LIVE',
         competition: {
           sportType: 'RUGBY'
+        },
+        // Exclude RESCHEDULED games - they should not be automatically updated
+        NOT: {
+          status: 'RESCHEDULED'
         }
       },
       include: {
@@ -449,6 +453,10 @@ export default async function handler(
         },
         competition: {
           sportType: 'RUGBY'
+        },
+        // Exclude RESCHEDULED games
+        NOT: {
+          status: 'RESCHEDULED'
         }
       },
       include: {
@@ -483,6 +491,10 @@ export default async function handler(
       where: {
         status: 'FINISHED',
         externalId: { not: null },
+        // Exclude RESCHEDULED games
+        NOT: {
+          status: 'RESCHEDULED'
+        },
         competition: {
           sportType: 'RUGBY'
         },

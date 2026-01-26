@@ -42,6 +42,7 @@ async function flipDueGames() {
            EXTRACT(EPOCH FROM (NOW() - date)) / 60 AS minutes_diff
     FROM "Game"
     WHERE "status" = 'UPCOMING'
+      AND "status" != 'RESCHEDULED'  -- Exclude rescheduled games
       AND "date" <= (NOW() - INTERVAL '2 minutes')
       AND "date" < NOW()  -- CRITICAL: Only games in the past
     ORDER BY date DESC
@@ -88,6 +89,7 @@ async function flipDueGames() {
     UPDATE "Game"
     SET "status" = 'LIVE'
     WHERE "status" = 'UPCOMING'
+      AND "status" != 'RESCHEDULED'  -- Exclude rescheduled games
       AND "date" <= (NOW() - INTERVAL '2 minutes')
       AND "date" < NOW()  -- Extra safety: explicitly check date is in the past
       AND EXTRACT(EPOCH FROM (NOW() - date)) / 60 >= 2  -- Triple check: at least 2 minutes in the past
@@ -151,6 +153,7 @@ async function getNextKickoff() {
     SELECT MIN("date") AS next_date
     FROM "Game"
     WHERE "status" = 'UPCOMING'
+      AND "status" != 'RESCHEDULED'  -- Exclude rescheduled games
       AND "date" > NOW()
   `;
   const next = rows?.[0]?.next_date;

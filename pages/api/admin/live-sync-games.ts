@@ -97,7 +97,7 @@ export default async function handler(
       };
     }
 
-    if (status === 'UPCOMING' || status === 'LIVE' || status === 'FINISHED' || status === 'CANCELLED') {
+    if (status === 'UPCOMING' || status === 'LIVE' || status === 'FINISHED' || status === 'CANCELLED' || status === 'RESCHEDULED') {
       where.status = status;
     }
 

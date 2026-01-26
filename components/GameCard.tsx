@@ -116,8 +116,8 @@ function abbreviateCompetitionName(competitionName: string): string {
 
 export default function GameCard({ game, currentUserId, href, context = 'home', isHighlighted = false, highlightType = 'score' }: GameCardProps) {
   const { t } = useTranslation();
-  const isOpen = game.status === 'UPCOMING';
-  const isClickable = game.status === 'UPCOMING'; // Only UPCOMING games are clickable
+  const isOpen = game.status === 'UPCOMING' || game.status === 'RESCHEDULED';
+  const isClickable = game.status === 'UPCOMING' || game.status === 'RESCHEDULED'; // UPCOMING and RESCHEDULED games are clickable
   
   // Check if user has placed a bet on this game
   const userHasBet = currentUserId ? game.bets.some(bet => bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) : false;
@@ -357,13 +357,15 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
                 game.status === 'FINISHED' ? 'bg-gray-100 dark:bg-[rgb(40,40,40)] border-2 border-black dark:border-white text-gray-700 dark:text-gray-300' :
                 game.status === 'UPCOMING' ? 'bg-gray-100 dark:bg-[rgb(40,40,40)] border-2 border-blue-500 dark:border-blue-600 text-gray-700 dark:text-gray-300' :
+                game.status === 'RESCHEDULED' ? 'bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-500 dark:border-orange-600 text-orange-700 dark:text-orange-300' :
                 'bg-gray-500 dark:bg-gray-600 text-white'
               } ${
                 isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
               }`}>
                 {game.status === 'UPCOMING' && t('upcoming')}
                 {game.status === 'FINISHED' && t('finished')}
-                {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status}
+                {game.status === 'RESCHEDULED' && 'Reporté'}
+                {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status !== 'RESCHEDULED' && game.status}
               </span>
             </div>
           )}
@@ -415,13 +417,15 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full transition-all duration-300 whitespace-nowrap font-bold shadow-md ${
                 game.status === 'FINISHED' ? 'bg-gray-100 dark:bg-[rgb(40,40,40)] border-2 border-black dark:border-white text-gray-700 dark:text-gray-300' :
                 game.status === 'UPCOMING' ? 'bg-gray-100 dark:bg-[rgb(40,40,40)] border-2 border-blue-500 dark:border-blue-600 text-gray-700 dark:text-gray-300' :
+                game.status === 'RESCHEDULED' ? 'bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-500 dark:border-orange-600 text-orange-700 dark:text-orange-300' :
                 'bg-gray-500 dark:bg-gray-600 text-white'
               } ${
                 isHighlighted && (highlightType === 'status' || highlightType === 'both') ? 'animate-bounce scale-110' : ''
               }`}>
                 {game.status === 'UPCOMING' && t('upcoming')}
                 {game.status === 'FINISHED' && t('finished')}
-                {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status}
+                {game.status === 'RESCHEDULED' && 'Reporté'}
+                {game.status !== 'UPCOMING' && game.status !== 'FINISHED' && game.status !== 'LIVE' && game.status !== 'RESCHEDULED' && game.status}
               </span>
             </div>
           )}

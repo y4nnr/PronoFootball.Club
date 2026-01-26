@@ -39,6 +39,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         date: {
           lte: twoMinutesAgo, // Game time has passed by at least 2 minutes
           lt: now // Extra safety: explicitly check date is in the past (not future)
+        },
+        // Exclude RESCHEDULED games - they should not be automatically updated
+        NOT: {
+          status: 'RESCHEDULED'
         }
       },
       select: {

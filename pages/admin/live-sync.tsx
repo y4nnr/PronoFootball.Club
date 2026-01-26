@@ -301,6 +301,7 @@ export default function AdminLiveSync() {
                       | "LIVE"
                       | "FINISHED"
                       | "CANCELLED"
+                      | "RESCHEDULED"
                   )
                 }
               >

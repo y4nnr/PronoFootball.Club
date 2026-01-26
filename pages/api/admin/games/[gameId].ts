@@ -74,9 +74,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const normalizedAwayScore = awayScore === '' ? null : awayScore;
       
       // Validate status if provided
-      const validStatuses = ['UPCOMING', 'LIVE', 'FINISHED', 'CANCELLED'];
+      const validStatuses = ['UPCOMING', 'LIVE', 'FINISHED', 'CANCELLED', 'RESCHEDULED'];
       if (status && !validStatuses.includes(status)) {
-        return res.status(400).json({ error: 'Invalid status. Must be one of: UPCOMING, LIVE, FINISHED, CANCELLED' });
+        return res.status(400).json({ error: 'Invalid status. Must be one of: UPCOMING, LIVE, FINISHED, CANCELLED, RESCHEDULED' });
       }
       
       // Get current game to preserve status if not explicitly provided
@@ -107,21 +107,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (status) {
         updateData.status = gameStatus;
         
-        // Clear live scores if status is not LIVE/FINISHED
-        if (gameStatus !== 'LIVE' && gameStatus !== 'FINISHED') {
-          updateData.liveHomeScore = null;
-          updateData.liveAwayScore = null;
-        }
-        
-        // Clear elapsedMinute if status is not LIVE
-        if (gameStatus !== 'LIVE') {
-          updateData.elapsedMinute = null;
-        }
-        
-        // Clear externalId if status is UPCOMING (game hasn't started yet)
-        if (gameStatus === 'UPCOMING') {
+        // When setting to RESCHEDULED, clear external API fields to force fresh lookup after reschedule
+        if (gameStatus === 'RESCHEDULED') {
           updateData.externalId = null;
           updateData.externalStatus = null;
+          updateData.liveHomeScore = null;
+          updateData.liveAwayScore = null;
+          updateData.elapsedMinute = null;
+        } else {
+          // Clear live scores if status is not LIVE/FINISHED
+          if (gameStatus !== 'LIVE' && gameStatus !== 'FINISHED') {
+            updateData.liveHomeScore = null;
+            updateData.liveAwayScore = null;
+          }
+          
+          // Clear elapsedMinute if status is not LIVE
+          if (gameStatus !== 'LIVE') {
+            updateData.elapsedMinute = null;
+          }
+          
+          // Clear externalId if status is UPCOMING (game hasn't started yet)
+          if (gameStatus === 'UPCOMING') {
+            updateData.externalId = null;
+            updateData.externalStatus = null;
+          }
         }
       }
       // If status is not provided, don't change it - let game-status-worker.js handle status transitions

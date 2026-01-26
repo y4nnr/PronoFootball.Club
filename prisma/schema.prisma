@@ -166,6 +166,7 @@ enum GameStatus {
   LIVE
   FINISHED
   CANCELLED
+  RESCHEDULED
 }
 
 enum BetStatus {
