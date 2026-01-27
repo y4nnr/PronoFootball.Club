@@ -510,63 +510,102 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
       </div>
       {/* Bets List - Section 4: Matching main section style (bottom) */}
       {hasDisplayableBets === true ? (
-          <div className="w-full pt-3 md:pt-4 px-3 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-[rgb(58,58,58)]">
+          <div className="w-full pt-3 md:pt-4 pl-1 pr-2 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-[rgb(58,58,58)]">
             <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-2.5 md:mb-3 uppercase tracking-wide">{t('placedBets')}</div>
-            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {displayableBets.map((bet) => (
-              <li key={bet.id} className="flex items-center py-2 first:pt-0 last:pb-0">
-                <img
-                  src={bet.user.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(bet.user.name.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
-                  alt={bet.user.name}
-                  className="w-6 h-6 md:w-7 md:h-7 rounded-full border-2 border-gray-300 dark:border-gray-600 object-cover mr-2 md:mr-3 shadow-sm"
-                  title={bet.user.name}
-                />
-                <span className="text-xs text-gray-700 dark:text-gray-300 font-medium mr-2 md:mr-3 truncate max-w-[70px] md:max-w-[80px]">{bet.user.name}</span>
-                {((game.status === 'LIVE' || game.status === 'FINISHED') && bet.score1 !== null && bet.score2 !== null) || 
-                  (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
-                  (() => {
-                    const highlight = getBetHighlight(bet);
-                    // For LIVE games: colored text with border and light background
-                    // NOTE: These colors are kept the same in dark mode to preserve production color coding
-                    // Gold = exact score, Green = correct result, Red = no match
-                    if (game.status === 'LIVE' && highlight) {
-                      // Use same style as UPCOMING but with colored borders
-                      const borderClass = highlight === 'gold' ? 'border-2 border-yellow-500 dark:border-yellow-600' :
-                                         highlight === 'green' ? 'border-2 border-green-500 dark:border-green-600' :
-                                         highlight === 'red' ? 'border-2 border-red-500 dark:border-red-600' :
-                                         'border border-gray-300 dark:border-gray-600';
-                      return (
-                        <span className={`text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[rgb(40,40,40)] ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}>
-                          <span className="md:hidden">{bet.score1}-{bet.score2}</span>
-                          <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
-                        </span>
-                      );
-                    } else if (game.status === 'FINISHED' && highlight) {
-                      // Use same style as UPCOMING but with colored borders
-                      const borderClass = highlight === 'gold' ? 'border-2 border-yellow-500 dark:border-yellow-600' :
-                                         highlight === 'green' ? 'border-2 border-green-500 dark:border-green-600' :
-                                         highlight === 'red' ? 'border-2 border-red-500 dark:border-red-600' :
-                                         'border border-gray-300 dark:border-gray-600';
-                      return (
-                        <span className={`text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[rgb(40,40,40)] ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}>
-                          <span className="md:hidden">{bet.score1}-{bet.score2}</span>
-                          <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
-                        </span>
-                      );
-                    } else {
-                      // For upcoming games: default styling with light background and border
-                      return (
-                        <span className="text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm">
-                          <span className="md:hidden">{bet.score1}-{bet.score2}</span>
-                          <span className="hidden md:inline">{bet.score1} - {bet.score2}</span>
-                        </span>
-                      );
-                    }
-                  })()
-                ) : null}
+            {/* Mobile: 2-column compact cards with central separator.
+                Desktop: revert to single column with standard dividers and no extra card styling. */}
+            <div className="relative border-t border-gray-200 dark:border-gray-700">
+              {/* Vertical separator between the 2 columns (mobile only) */}
+              <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-gray-300 dark:bg-gray-600 pointer-events-none md:hidden" />
+              <ul className="grid grid-cols-2 gap-x-1.5 gap-y-0 md:grid-cols-1 md:gap-y-0 md:grid-cols-none md:flex md:flex-col md:divide-y md:divide-gray-200 md:dark:divide-gray-700">
+                {displayableBets.map((bet, index) => (
+                <li
+                  key={bet.id}
+                  className={`py-0.5 md:py-1 md:first:pt-0 md:last:pb-0 ${
+                    index % 2 === 0 ? 'pr-1 md:pr-0' : 'pl-1 md:pl-0'
+                  }`}
+                >
+                  <div className="flex items-center w-full rounded-lg bg-white dark:bg-[rgb(50,50,50)] border border-gray-200 dark:border-gray-600 pl-2 pr-1.5 py-1 md:px-2.5 md:py-1.5 shadow-sm md:bg-transparent md:border-0 md:shadow-none">
+                    <img
+                      src={bet.user.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(bet.user.name.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
+                      alt={bet.user.name}
+                      className="w-6 h-6 md:w-7 md:h-7 rounded-full border-2 border-gray-300 dark:border-gray-600 object-cover mr-2 md:mr-3 shadow-sm"
+                      title={bet.user.name}
+                    />
+                    <span className="flex-1 min-w-0 text-[11px] text-gray-700 dark:text-gray-300 font-medium mr-1 md:text-xs md:mr-3 truncate">
+                      {bet.user.name}
+                    </span>
+                    {((game.status === 'LIVE' || game.status === 'FINISHED') && bet.score1 !== null && bet.score2 !== null) ||
+                    (bet.userId === currentUserId && bet.score1 !== null && bet.score2 !== null) ? (
+                      (() => {
+                        const highlight = getBetHighlight(bet);
+                        // For LIVE games: colored text with border and light background
+                        // NOTE: These colors are kept the same in dark mode to preserve production color coding
+                        // Gold = exact score, Green = correct result, Red = no match
+                        if (game.status === 'LIVE' && highlight) {
+                          // Use same style as UPCOMING but with colored borders
+                          const borderClass =
+                            highlight === 'gold'
+                              ? 'border-2 border-yellow-500 dark:border-yellow-600'
+                              : highlight === 'green'
+                              ? 'border-2 border-green-500 dark:border-green-600'
+                              : highlight === 'red'
+                              ? 'border-2 border-red-500 dark:border-red-600'
+                              : 'border border-gray-300 dark:border-gray-600';
+                          return (
+                            <span
+                              className={`inline-flex items-center justify-center text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[rgb(40,40,40)] ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}
+                            >
+                              <span className="md:hidden">
+                                {bet.score1}-{bet.score2}
+                              </span>
+                              <span className="hidden md:inline">
+                                {bet.score1} - {bet.score2}
+                              </span>
+                            </span>
+                          );
+                        } else if (game.status === 'FINISHED' && highlight) {
+                          // Use same style as UPCOMING but with colored borders
+                          const borderClass =
+                            highlight === 'gold'
+                              ? 'border-2 border-yellow-500 dark:border-yellow-600'
+                              : highlight === 'green'
+                              ? 'border-2 border-green-500 dark:border-green-600'
+                              : highlight === 'red'
+                              ? 'border-2 border-red-500 dark:border-red-600'
+                              : 'border border-gray-300 dark:border-gray-600';
+                          return (
+                            <span
+                              className={`inline-flex items-center justify-center text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[rgb(40,40,40)] ${borderClass} rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm`}
+                            >
+                              <span className="md:hidden">
+                                {bet.score1}-{bet.score2}
+                              </span>
+                              <span className="hidden md:inline">
+                                {bet.score1} - {bet.score2}
+                              </span>
+                            </span>
+                          );
+                        } else {
+                          // For upcoming games: default styling with light background and border
+                          return (
+                            <span className="inline-flex items-center justify-center text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[rgb(40,40,40)] border border-gray-300 dark:border-gray-600 rounded-lg px-2 md:px-2.5 py-1 ml-auto font-bold shadow-sm">
+                              <span className="md:hidden">
+                                {bet.score1}-{bet.score2}
+                              </span>
+                              <span className="hidden md:inline">
+                                {bet.score1} - {bet.score2}
+                              </span>
+                            </span>
+                          );
+                        }
+                      })()
+                    ) : null}
+                  </div>
               </li>
               ))}
-            </ul>
+              </ul>
+            </div>
           </div>
         ) : null}
     </div>

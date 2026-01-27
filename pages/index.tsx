@@ -291,6 +291,7 @@ export default function Home() {
                       name="username"
                       type="text"
                       required
+                      maxLength={9}
                       className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition text-sm"
                       placeholder="Nom d'utilisateur *"
                       value={username}

@@ -737,6 +737,7 @@ export default function AdminUsers() {
                     placeholder={t('admin.users.namePlaceholder')}
                     value={name}
                     onChange={e => setName(e.target.value)}
+                    maxLength={9}
                     disabled={formLoading}
                   />
                 </div>
