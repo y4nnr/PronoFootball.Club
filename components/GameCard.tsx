@@ -143,7 +143,20 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
     // For UPCOMING games: show all users' names, but only current user's score
     // For LIVE/FINISHED games: show all users with their scores
     // The rendering logic will handle showing/hiding scores based on game status and user
-    return game.bets.filter(bet => bet !== null && bet !== undefined);
+    const filteredBets = game.bets.filter(bet => bet !== null && bet !== undefined);
+    
+    // Sort bets so current user's bet always appears first
+    if (currentUserId) {
+      return filteredBets.sort((a, b) => {
+        const aIsCurrentUser = a.userId === currentUserId;
+        const bIsCurrentUser = b.userId === currentUserId;
+        if (aIsCurrentUser && !bIsCurrentUser) return -1;
+        if (!aIsCurrentUser && bIsCurrentUser) return 1;
+        return 0; // Keep original order for non-current-user bets
+      });
+    }
+    
+    return filteredBets;
   })();
   
   // Check if there are any bets to display (regardless of whether they have scores)
@@ -517,7 +530,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
             <div className="relative border-t border-gray-200 dark:border-gray-700">
               {/* Vertical separator between the 2 columns (mobile only) */}
               <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-gray-300 dark:bg-gray-600 pointer-events-none md:hidden" />
-              <ul className="grid grid-cols-2 gap-x-1.5 gap-y-0 md:grid-cols-1 md:gap-y-0 md:grid-cols-none md:flex md:flex-col md:divide-y md:divide-gray-200 md:dark:divide-gray-700">
+              <ul className="grid grid-cols-2 gap-x-1.5 gap-y-0 md:flex md:flex-col md:divide-y md:divide-gray-200 md:dark:divide-gray-700">
                 {displayableBets.map((bet, index) => (
                 <li
                   key={bet.id}
