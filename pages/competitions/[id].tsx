@@ -243,6 +243,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const [userIsMember, setUserIsMember] = useState(isUserMember);
   const [joiningCompetition, setJoiningCompetition] = useState(false);
 
+  // Placeholder team name used when the actual qualified team is not yet known.
+  // Games involving this placeholder should be hidden from user-facing lists
+  // ("Matchs Disponibles pour Parier" and "Tous les Matchs de la Compétition"),
+  // but they are still part of the competition schedule for progression bars.
+  const PLACEHOLDER_TEAM_NAME = 'xxxx';
+
   // Abbreviate team names for mobile display - 3 letters only
   const abbreviateTeamName = (team: { shortName?: string | null; name: string }): string => {
     // Use shortName from database if available, take first 3 letters
@@ -1184,8 +1190,13 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 return <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('competition.noActiveGamesFound')}</div>;
               }
               const filteredGames = showAllGames ? games : games.filter(g => g.status === 'UPCOMING' || g.status === 'LIVE');
+              // Hide placeholder games (with TBD team names) from both views
+              const displayableGames = filteredGames.filter(g => 
+                g.homeTeam?.name !== PLACEHOLDER_TEAM_NAME &&
+                g.awayTeam?.name !== PLACEHOLDER_TEAM_NAME
+              );
               // Sort finished games first (most recent first), then upcoming/live games chronologically
-              const sortedGames = [...filteredGames].sort((a, b) => {
+              const sortedGames = [...displayableGames].sort((a, b) => {
                 if (showAllGames) {
                   // For all games: finished games first (most recent first), then upcoming/live (chronological)
                   const aIsFinished = a.status === 'FINISHED';

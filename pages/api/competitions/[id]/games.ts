@@ -3,6 +3,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]';
 import { prisma } from '../../../../lib/prisma';
 
+// Placeholder team name used when the actual qualified team is not yet known.
+// Games involving this placeholder should be hidden from "Matchs Disponibles pour Parier".
+const PLACEHOLDER_TEAM_NAME = 'xxxx';
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
 
@@ -26,7 +30,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const games = await prisma.game.findMany({
       where: {
         competitionId: competitionId,
-        status: 'UPCOMING' // Only upcoming games - bets close when game starts (becomes LIVE)
+        status: 'UPCOMING', // Only upcoming games - bets close when game starts (becomes LIVE)
+        AND: [
+          {
+            homeTeam: {
+              name: { not: PLACEHOLDER_TEAM_NAME }
+            }
+          },
+          {
+            awayTeam: {
+              name: { not: PLACEHOLDER_TEAM_NAME }
+            }
+          }
+        ]
       },
       include: {
         homeTeam: {

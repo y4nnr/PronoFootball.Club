@@ -51,6 +51,10 @@ interface BettingGame {
   }[];
 }
 
+// Placeholder team name used when the actual qualified team is not yet known.
+// Games involving this placeholder should be hidden from user-facing "Matchs du jour".
+const PLACEHOLDER_TEAM_NAME = 'xxxx';
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse<BettingGame[] | { error: string }>) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -101,7 +105,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           },
           status: {
             in: ['UPCOMING', 'LIVE', 'FINISHED']
-          }
+          },
+          AND: [
+            {
+              homeTeam: {
+                name: { not: PLACEHOLDER_TEAM_NAME }
+              }
+            },
+            {
+              awayTeam: {
+                name: { not: PLACEHOLDER_TEAM_NAME }
+              }
+            }
+          ]
         },
         select: {
           id: true,

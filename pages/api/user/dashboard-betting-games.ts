@@ -50,6 +50,11 @@ interface BettingGame {
   betCount: number;
 }
 
+// Placeholder team name used when the actual qualified team is not yet known.
+// Games involving this placeholder should be hidden from user-facing lists,
+// but they are still part of the competition schedule for progression bars.
+const PLACEHOLDER_TEAM_NAME = 'xxxx';
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<{ games: BettingGame[], hasMore: boolean, total: number } | { error: string }>
@@ -65,6 +70,10 @@ export default async function handler(
   const limitNum = Math.min(isNaN(limitNumRaw) ? 12 : limitNumRaw, 24); // hard cap at 24
   const offset = (pageNum - 1) * limitNum;
   const shouldIncludeToday = includeToday === 'true'; // Betting UI passes this, dashboard doesn't
+  const isDashboardRequest =
+    !shouldIncludeToday &&
+    (req.query.page === undefined || req.query.page === '1') &&
+    req.query.limit === undefined;
 
   const session = await getServerSession(req, res, authOptions);
 
@@ -120,66 +129,185 @@ export default async function handler(
     // Use startOfDay for betting UI (includes today), endOfDay for dashboard (excludes today)
     const dateFilter = shouldIncludeToday ? startOfDay : endOfDay;
     
-    // First, get total count for pagination
-    const totalCount = await prisma.game.count({
-      where: {
-        competitionId: {
-          in: activeCompetitions.map(comp => comp.id)
+    let totalCount = 0;
+    let games;
+
+    if (isDashboardRequest) {
+      // Special-case for dashboard "Matchs à venir":
+      // - We want a limit of 12 *unless* the next game day itself has > 12 games.
+      // - In that case, we show all games of that next game day.
+      //
+      // This should NOT affect the betting UI carousel (includeToday=true + pagination).
+
+      // Fetch all upcoming games (no pagination) for the user's active competitions
+      const allUpcomingGames = await prisma.game.findMany({
+        where: {
+          competitionId: {
+            in: activeCompetitions.map(comp => comp.id)
+          },
+          status: 'UPCOMING',
+          date: {
+            gte: dateFilter
+          },
+          // Exclude placeholder teams (used as TBD when qualifiers are unknown)
+          AND: [
+            {
+              homeTeam: {
+                name: { not: PLACEHOLDER_TEAM_NAME }
+              }
+            },
+            {
+              awayTeam: {
+                name: { not: PLACEHOLDER_TEAM_NAME }
+              }
+            }
+          ]
         },
-        status: 'UPCOMING',
-        date: {
-          gte: dateFilter
+        select: {
+          id: true,
+          date: true,
+          status: true,
+          externalStatus: true, // V2: External API status
+          homeScore: true,
+          awayScore: true,
+          liveHomeScore: true,
+          liveAwayScore: true,
+          elapsedMinute: true, // V2: Chronometer
+          homeTeam: { select: { id: true, name: true, logo: true, shortName: true } },
+          awayTeam: { select: { id: true, name: true, logo: true, shortName: true } },
+          competition: { 
+            select: { 
+              id: true, 
+              name: true, 
+              logo: true, 
+              sportType: true 
+            } 
+          },
+          bets: { 
+            select: { 
+              id: true, 
+              userId: true,
+              score1: true,
+              score2: true,
+              user: { select: { id: true, name: true, profilePictureUrl: true } }
+            } 
+          },
+        },
+        orderBy: {
+          date: 'asc'
+        }
+      });
+
+      totalCount = allUpcomingGames.length;
+
+      if (allUpcomingGames.length === 0) {
+        games = [];
+      } else {
+        // Determine the "next game day" (the calendar day of the first upcoming game)
+        const firstDate = allUpcomingGames[0].date as Date;
+        const nextDayStart = new Date(firstDate.getFullYear(), firstDate.getMonth(), firstDate.getDate());
+        const nextDayEnd = new Date(firstDate.getFullYear(), firstDate.getMonth(), firstDate.getDate() + 1);
+
+        const gamesOnNextDay = allUpcomingGames.filter(game => {
+          const d = game.date as Date;
+          return d >= nextDayStart && d < nextDayEnd;
+        });
+
+        if (gamesOnNextDay.length > 12) {
+          // More than 12 games on the next game day: return ALL of them
+          games = gamesOnNextDay;
+        } else {
+          // 12 or fewer on the next game day: keep current behavior (first page, 12 max)
+          games = allUpcomingGames.slice(0, limitNum);
         }
       }
-    });
-
-    // Get paginated games
-    const games = await prisma.game.findMany({
-      where: {
-        competitionId: {
-          in: activeCompetitions.map(comp => comp.id)
-        },
-        status: 'UPCOMING', // Only games available for betting
-        date: {
-          gte: dateFilter
+    } else {
+      // Original paginated behavior (used by betting UI carousel and any explicit pagination)
+      // First, get total count for pagination
+      totalCount = await prisma.game.count({
+        where: {
+          competitionId: {
+            in: activeCompetitions.map(comp => comp.id)
+          },
+          status: 'UPCOMING',
+          date: {
+            gte: dateFilter
+          },
+          AND: [
+            {
+              homeTeam: {
+                name: { not: PLACEHOLDER_TEAM_NAME }
+              }
+            },
+            {
+              awayTeam: {
+                name: { not: PLACEHOLDER_TEAM_NAME }
+              }
+            }
+          ]
         }
-      },
-      select: {
-        id: true,
-        date: true,
-        status: true,
-        externalStatus: true, // V2: External API status
-        homeScore: true,
-        awayScore: true,
-        liveHomeScore: true,
-        liveAwayScore: true,
-        elapsedMinute: true, // V2: Chronometer
-        homeTeam: { select: { id: true, name: true, logo: true, shortName: true } },
-        awayTeam: { select: { id: true, name: true, logo: true, shortName: true } },
-        competition: { 
-          select: { 
-            id: true, 
-            name: true, 
-            logo: true, 
-            sportType: true 
-          } 
+      });
+
+      // Get paginated games
+      games = await prisma.game.findMany({
+        where: {
+          competitionId: {
+            in: activeCompetitions.map(comp => comp.id)
+          },
+          status: 'UPCOMING', // Only games available for betting
+          date: {
+            gte: dateFilter
+          },
+          AND: [
+            {
+              homeTeam: {
+                name: { not: PLACEHOLDER_TEAM_NAME }
+              }
+            },
+            {
+              awayTeam: {
+                name: { not: PLACEHOLDER_TEAM_NAME }
+              }
+            }
+          ]
         },
-        bets: { 
-          select: { 
-            id: true, 
-            userId: true,
-            score1: true,
-            score2: true,
-            user: { select: { id: true, name: true, profilePictureUrl: true } }
-          } 
+        select: {
+          id: true,
+          date: true,
+          status: true,
+          externalStatus: true, // V2: External API status
+          homeScore: true,
+          awayScore: true,
+          liveHomeScore: true,
+          liveAwayScore: true,
+          elapsedMinute: true, // V2: Chronometer
+          homeTeam: { select: { id: true, name: true, logo: true, shortName: true } },
+          awayTeam: { select: { id: true, name: true, logo: true, shortName: true } },
+          competition: { 
+            select: { 
+              id: true, 
+              name: true, 
+              logo: true, 
+              sportType: true 
+            } 
+          },
+          bets: { 
+            select: { 
+              id: true, 
+              userId: true,
+              score1: true,
+              score2: true,
+              user: { select: { id: true, name: true, profilePictureUrl: true } }
+            } 
+          },
         },
-      },
-      orderBy: {
-        date: 'asc'
-      },
-      skip: offset,
-      take: limitNum
-    });
+        orderBy: {
+          date: 'asc'
+        },
+        skip: offset,
+        take: limitNum
+      });
+    }
 
     // Format the response
     const bettingGames: BettingGame[] = games.map(game => {
@@ -238,7 +366,9 @@ export default async function handler(
     });
 
     // Calculate if there are more games
-    const hasMore = offset + games.length < totalCount;
+    const hasMore = isDashboardRequest
+      ? games.length < totalCount // dashboard: more games exist beyond what we returned
+      : offset + games.length < totalCount; // paginated behavior
     
     // Add caching headers - shorter cache for betting games (can change status)
     res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30');
@@ -250,7 +380,11 @@ export default async function handler(
     console.log('📊 Active competitions (user participating):', activeCompetitions.length);
     console.log('📊 Include today:', shouldIncludeToday);
     console.log('📊 Date filter: >=', dateFilter.toISOString());
-    console.log('📊', shouldIncludeToday ? 'Showing all upcoming games from today onwards (betting carousel)' : 'Showing future games only (tomorrow onwards, dashboard)');
+    if (isDashboardRequest) {
+      console.log('📊 Mode: Dashboard first page (Matchs à venir) with next-game-day override when > 12 games on that day');
+    } else {
+      console.log('📊 Mode:', shouldIncludeToday ? 'Betting carousel (includes today, paginated)' : 'Standard paginated upcoming games');
+    }
     
     if (games.length === 0) {
       console.log('⚠️ No betting games found - this might cause empty "Matchs à venir" section');
