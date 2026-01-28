@@ -438,16 +438,131 @@ export default async function handler(
         }
       }
     });
+
+    // Also get LIVE games without externalId - these need to be matched by OpenAI
+    // These are games that are LIVE but don't have an externalId yet (e.g., PSG vs Newcastle)
+    const liveGamesWithoutExternalId = await prisma.game.findMany({
+      where: {
+        status: 'LIVE',
+        externalId: null,
+        competition: {
+          sportType: 'FOOTBALL'
+        },
+        // Exclude RESCHEDULED games
+        NOT: {
+          status: 'RESCHEDULED'
+        },
+        // Only check games from the last 24 hours (games that just went LIVE)
+        date: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+        }
+      },
+      select: {
+        id: true,
+        status: true,
+        externalId: true,
+        externalStatus: true,
+        homeScore: true,
+        awayScore: true,
+        liveHomeScore: true,
+        liveAwayScore: true,
+        elapsedMinute: true,
+        date: true,
+        lastSyncAt: true,
+        competitionId: true,
+        homeTeam: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            sportType: true
+          }
+        },
+        awayTeam: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            sportType: true
+          }
+        },
+        competition: {
+          select: {
+            id: true,
+            name: true,
+            sportType: true
+          }
+        }
+      }
+    });
+
+    // Also get UPCOMING games without externalId - these need to be matched by OpenAI
+    // Only include games scheduled for today or in the near future (next 3 days)
+    const upcomingGamesWithoutExternalId = await prisma.game.findMany({
+      where: {
+        status: 'UPCOMING',
+        externalId: null,
+        competition: {
+          sportType: 'FOOTBALL'
+        },
+        // Exclude RESCHEDULED games
+        NOT: {
+          status: 'RESCHEDULED'
+        },
+        // Only check games from today to 3 days in the future
+        date: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // From yesterday (to catch games that just started)
+          lte: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // Up to 3 days ahead
+        }
+      },
+      select: {
+        id: true,
+        status: true,
+        externalId: true,
+        externalStatus: true,
+        homeScore: true,
+        awayScore: true,
+        liveHomeScore: true,
+        liveAwayScore: true,
+        elapsedMinute: true,
+        date: true,
+        lastSyncAt: true,
+        competitionId: true,
+        homeTeam: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            sportType: true
+          }
+        },
+        awayTeam: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            sportType: true
+          }
+        },
+        competition: {
+          select: {
+            id: true,
+            name: true,
+            sportType: true
+          }
+        }
+      }
+    });
     
-    console.log(`📊 Found ${ourLiveGames.length} LIVE games, ${recentlyFinishedGames.length} potentially finished games, and ${finishedGamesWithExternalId.length} FINISHED games with externalId`);
+    console.log(`📊 Found ${ourLiveGames.length} LIVE games, ${recentlyFinishedGames.length} potentially finished games, ${finishedGamesWithExternalId.length} FINISHED games with externalId, ${liveGamesWithoutExternalId.length} LIVE games without externalId, and ${upcomingGamesWithoutExternalId.length} UPCOMING games without externalId`);
     
-    // Combine LIVE games, recently finished games, and FINISHED games with externalId for validation
+    // Combine LIVE games, recently finished games, FINISHED games with externalId, LIVE games without externalId, and UPCOMING games without externalId
     // Deduplicate by game ID
-    const allGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames, ...finishedGamesWithExternalId];
+    const allGamesToCheck = [...ourLiveGames, ...recentlyFinishedGames, ...finishedGamesWithExternalId, ...liveGamesWithoutExternalId, ...upcomingGamesWithoutExternalId];
     const uniqueGamesToCheck = allGamesToCheck.filter((game, index, self) => 
       index === self.findIndex(g => g.id === game.id)
     );
-    console.log(`📊 Total games to check for updates: ${uniqueGamesToCheck.length} (${ourLiveGames.length} LIVE + ${recentlyFinishedGames.length} potentially finished + ${finishedGamesWithExternalId.length} FINISHED with externalId)`);
+    console.log(`📊 Total games to check for updates: ${uniqueGamesToCheck.length} (${ourLiveGames.length} LIVE + ${recentlyFinishedGames.length} potentially finished + ${finishedGamesWithExternalId.length} FINISHED with externalId + ${liveGamesWithoutExternalId.length} LIVE without externalId + ${upcomingGamesWithoutExternalId.length} UPCOMING without externalId)`);
     
     // Verify that all teams are football teams
     const nonFootballTeams = uniqueGamesToCheck.filter(game => 
@@ -582,6 +697,19 @@ export default async function handler(
             const matchesReversed = homeMatchesAway && awayMatchesHome;
             const teamsMatchCorrectly = matchesNormal || matchesReversed;
             
+            // Safety check: Only clear externalId if BOTH teams have LOW confidence or no match
+            // This prevents clearing correct externalIds due to minor name variations
+            const homeMatchConfidence = homeMatch?.score ?? 0;
+            const awayMatchConfidence = awayMatch?.score ?? 0;
+            const MIN_TEAM_MATCH_CONFIDENCE = 0.85; // Require 85%+ confidence to trust a team match
+            const bothTeamsLowConfidence = homeMatchConfidence < MIN_TEAM_MATCH_CONFIDENCE && awayMatchConfidence < MIN_TEAM_MATCH_CONFIDENCE;
+            
+            // CRITICAL: Don't clear externalId if game is LIVE and has been syncing successfully
+            // This prevents clearing correct externalIds during temporary API inconsistencies (e.g., halftime)
+            const isLiveAndSyncing = externalIdMatch.status === 'LIVE' && 
+                                     externalIdMatch.lastSyncAt && 
+                                     (Date.now() - externalIdMatch.lastSyncAt.getTime()) < 10 * 60 * 1000; // Synced within last 10 minutes
+            
             if (!teamsMatchCorrectly) {
               console.log(`   ⚠️ ExternalId match found but team names don't match in correct positions - rejecting`);
               console.log(`      DB: ${externalIdMatch.homeTeam.name} vs ${externalIdMatch.awayTeam.name}`);
@@ -589,6 +717,20 @@ export default async function handler(
               console.log(`      Home match: ${homeMatch ? `${homeMatch.team.name} (score: ${(homeMatch.score * 100).toFixed(1)}%, method: ${homeMatch.method}, matches DB home: ${homeMatchesHome}, matches DB away: ${homeMatchesAway})` : 'NOT FOUND'}`);
               console.log(`      Away match: ${awayMatch ? `${awayMatch.team.name} (score: ${(awayMatch.score * 100).toFixed(1)}%, method: ${awayMatch.method}, matches DB home: ${awayMatchesHome}, matches DB away: ${awayMatchesAway})` : 'NOT FOUND'}`);
               console.log(`      Normal match: ${matchesNormal}, Reversed match: ${matchesReversed}`);
+              
+              // SAFETY: Never clear externalId if game is LIVE and has been syncing successfully
+              // This prevents clearing correct externalIds during temporary API inconsistencies
+              if (isLiveAndSyncing) {
+                console.log(`   ⚠️ SKIPPING externalId clear: Game is LIVE and has been syncing successfully (lastSync: ${externalIdMatch.lastSyncAt?.toISOString()}) - might be temporary API inconsistency, not wrong match`);
+                continue; // Skip clearing and continue to next match
+              }
+              
+              // SAFETY: Only clear externalId if BOTH teams have low confidence
+              // If one team matches well, it might be a name variation issue, not a wrong match
+              if (!bothTeamsLowConfidence) {
+                console.log(`   ⚠️ SKIPPING externalId clear: One or both teams have high confidence matches (home: ${(homeMatchConfidence * 100).toFixed(1)}%, away: ${(awayMatchConfidence * 100).toFixed(1)}%) - might be name variation, not wrong match`);
+                continue; // Skip clearing and continue to next match
+              }
               
               // CRITICAL: Clear the wrong externalId and reset status/scores if game was incorrectly marked as FINISHED
               const gameIdToClear = externalIdMatch.id;
@@ -1417,9 +1559,343 @@ export default async function handler(
       }
     }
 
-    // OpenAI Fallback: Initialize counters (even if not used)
+    // OpenAI Fallback for FOOTBALL (V2):
+    // We currently collect failedMatches but didn't use OpenAI yet.
+    // Here we use OpenAI to at least attach the correct externalId to hard-to-match games,
+    // so that subsequent syncs can use the more reliable ID-based matching path.
     let openAIMatchedCount = 0;
     let openAIExternalIdSetCount = 0;
+    let openAIDebugInfo: any = {
+      skippedNoResult: 0,
+      skippedNoGameId: 0,
+      skippedNoConfidence: 0,
+      skippedLowConfidence: 0,
+      skippedGameNotFound: 0,
+      upcomingGamesCount: 0,
+      sampleFailedMatches: [],
+      sampleUpcomingGames: []
+    };
+    if (failedMatches.length > 0) {
+      console.log(`\n🤖 FOOTBALL V2: Attempting OpenAI fallback for ${failedMatches.length} failed matches...`);
+      const openAIApiKey = process.env.OPENAI_API_KEY || null;
+      console.log(`🔑 OpenAI API key present: ${openAIApiKey ? 'YES' : 'NO'}`);
+
+      if (openAIApiKey) {
+        try {
+          // Log sample of failed matches to see what we're trying to match
+          console.log(`🤖 FOOTBALL V2: Sample failed matches (first 5):`);
+          openAIDebugInfo.sampleFailedMatches = failedMatches.slice(0, 5).map(fm => ({
+            home: fm.externalMatch.homeTeam.name,
+            away: fm.externalMatch.awayTeam.name,
+            competition: fm.externalMatch.competition?.name || 'Unknown',
+            date: fm.externalMatch.utcDate || 'Unknown'
+          }));
+          failedMatches.slice(0, 5).forEach((fm, idx) => {
+            console.log(`   ${idx + 1}. ${fm.externalMatch.homeTeam.name} vs ${fm.externalMatch.awayTeam.name} (Competition: ${fm.externalMatch.competition?.name || 'Unknown'}, Date: ${fm.externalMatch.utcDate || 'Unknown'})`);
+          });
+          
+          // Log sample of games in uniqueGamesToCheck to see if UPCOMING/LIVE games without externalId are included
+          const upcomingGames = uniqueGamesToCheck.filter(g => g.status === 'UPCOMING');
+          const liveGamesNoExternalId = uniqueGamesToCheck.filter(g => g.status === 'LIVE' && !g.externalId);
+          openAIDebugInfo.upcomingGamesCount = upcomingGames.length + liveGamesNoExternalId.length;
+          console.log(`🤖 FOOTBALL V2: Found ${upcomingGames.length} UPCOMING games and ${liveGamesNoExternalId.length} LIVE games without externalId in uniqueGamesToCheck (total: ${uniqueGamesToCheck.length})`);
+          if (liveGamesNoExternalId.length > 0) {
+            console.log(`🤖 FOOTBALL V2: Sample LIVE games without externalId (first 5):`);
+            liveGamesNoExternalId.slice(0, 5).forEach((game, idx) => {
+              console.log(`   ${idx + 1}. ${game.homeTeam.name} vs ${game.awayTeam.name} (ID: ${game.id}, Date: ${game.date?.toISOString() || 'Unknown'})`);
+            });
+          }
+          if (upcomingGames.length > 0) {
+            openAIDebugInfo.sampleUpcomingGames = [...liveGamesNoExternalId.slice(0, 3), ...upcomingGames.slice(0, 2)].map(game => ({
+              id: game.id,
+              home: game.homeTeam.name,
+              away: game.awayTeam.name,
+              date: game.date?.toISOString() || 'Unknown',
+              status: game.status
+            }));
+            console.log(`🤖 FOOTBALL V2: Sample UPCOMING games (first 5):`);
+            upcomingGames.slice(0, 5).forEach((game, idx) => {
+              console.log(`   ${idx + 1}. ${game.homeTeam.name} vs ${game.awayTeam.name} (ID: ${game.id}, Date: ${game.date?.toISOString() || 'Unknown'})`);
+            });
+          }
+
+          // Filter failed matches to prioritize important competitions (Champions League, Ligue 1, etc.)
+          // This reduces the number of OpenAI calls and focuses on games we actually care about
+          // Use more specific patterns to avoid false matches (e.g., "Premier League" matching "Jamaican Premier League")
+          const importantCompetitionPatterns = [
+            /UEFA Champions League/i,
+            /Champions League/i,
+            /Ligue 1/i,
+            /English Premier League/i,
+            /Premier League$/i, // Only match if it ends with "Premier League" (not "Jamaican Premier League")
+            /La Liga/i,
+            /Serie A/i,
+            /Bundesliga/i,
+            /UEFA Europa League/i,
+            /Europa League/i
+          ];
+          
+          // Also get team names from LIVE games without externalId to prioritize those matches
+          const liveGameTeamNames = new Set<string>();
+          liveGamesNoExternalId.forEach(game => {
+            liveGameTeamNames.add(game.homeTeam.name.toLowerCase());
+            liveGameTeamNames.add(game.awayTeam.name.toLowerCase());
+            if (game.homeTeam.shortName) liveGameTeamNames.add(game.homeTeam.shortName.toLowerCase());
+            if (game.awayTeam.shortName) liveGameTeamNames.add(game.awayTeam.shortName.toLowerCase());
+          });
+          
+          const prioritizedFailedMatches = failedMatches.filter(fm => {
+            const compName = fm.externalMatch.competition?.name || '';
+            
+            // Check if competition matches important patterns
+            const matchesImportantComp = importantCompetitionPatterns.some(pattern => pattern.test(compName));
+            
+            // Check if teams match our LIVE games without externalId
+            const homeTeamLower = fm.externalMatch.homeTeam.name.toLowerCase();
+            const awayTeamLower = fm.externalMatch.awayTeam.name.toLowerCase();
+            const matchesLiveGame = liveGameTeamNames.has(homeTeamLower) || liveGameTeamNames.has(awayTeamLower);
+            
+            return matchesImportantComp || matchesLiveGame;
+          });
+          
+          // If we have prioritized matches, use those; otherwise use all (but limit to 50 to avoid rate limits)
+          const matchesToProcess = prioritizedFailedMatches.length > 0 
+            ? prioritizedFailedMatches.slice(0, 50) // Limit to 50 to avoid rate limits
+            : failedMatches.slice(0, 50); // Limit to 50 to avoid rate limits
+          
+          console.log(`🤖 FOOTBALL V2: Filtered ${failedMatches.length} failed matches to ${matchesToProcess.length} prioritized matches`);
+          console.log(`🤖 FOOTBALL V2: Sample prioritized matches (first 5):`);
+          matchesToProcess.slice(0, 5).forEach((fm, idx) => {
+            console.log(`   ${idx + 1}. ${fm.externalMatch.homeTeam.name} vs ${fm.externalMatch.awayTeam.name} (${fm.externalMatch.competition?.name || 'Unknown'})`);
+          });
+          
+          // Prepare OpenAI requests for prioritized matches only
+          const prioritizedOpenAIRequests = matchesToProcess.map(fm => ({
+            externalHome: fm.externalMatch.homeTeam.name,
+            externalAway: fm.externalMatch.awayTeam.name,
+            externalDate: fm.externalMatch.utcDate || null,
+            externalCompetition: fm.externalMatch.competition?.name || null,
+            dbGames: uniqueGamesToCheck.map(game => ({
+              id: game.id,
+              homeTeam: {
+                id: game.homeTeam.id,
+                name: game.homeTeam.name,
+                shortName: (game.homeTeam as any).shortName || null
+              },
+              awayTeam: {
+                id: game.awayTeam.id,
+                name: game.awayTeam.name,
+                shortName: (game.awayTeam as any).shortName || null
+              },
+              date: game.date ? game.date.toISOString() : null,
+              competition: {
+                name: game.competition.name
+              }
+            })),
+            dbTeams: uniqueTeams,
+          }));
+
+          console.log(`🤖 FOOTBALL V2: Calling OpenAI with ${prioritizedOpenAIRequests.length} requests (batched)...`);
+          const openAIResults = await matchTeamsWithOpenAI(prioritizedOpenAIRequests, openAIApiKey);
+          console.log(`🤖 FOOTBALL V2: OpenAI returned ${openAIResults.size} results`);
+          
+          // Log sample of what OpenAI returned
+          if (openAIResults.size > 0) {
+            console.log(`🤖 FOOTBALL V2: Sample OpenAI results (first 5):`);
+            let sampleCount = 0;
+            for (const [key, result] of openAIResults.entries()) {
+              if (sampleCount >= 5) break;
+              console.log(`   ${sampleCount + 1}. "${key}": gameId=${result.gameId || 'null'}, overallConfidence=${result.overallConfidence ? (result.overallConfidence * 100).toFixed(1) + '%' : 'null'}`);
+              sampleCount++;
+            }
+          }
+
+          let skippedNoResult = 0;
+          let skippedNoGameId = 0;
+          let skippedNoConfidence = 0;
+          let skippedLowConfidence = 0;
+          let skippedGameNotFound = 0;
+          
+          // Initialize debug counters
+          openAIDebugInfo.skippedNoResult = 0;
+          openAIDebugInfo.skippedNoGameId = 0;
+          openAIDebugInfo.skippedNoConfidence = 0;
+          openAIDebugInfo.skippedLowConfidence = 0;
+          openAIDebugInfo.skippedGameNotFound = 0;
+
+          // Check for specific games we're debugging (PSG, Union SG, Pafos)
+          const debugGames = ['PSG', 'Paris Saint', 'Newcastle', 'Union Saint', 'Atalanta', 'Pafos', 'Slavia'];
+          const debugMatches = matchesToProcess.filter(fm => 
+            debugGames.some(debug => 
+              fm.externalMatch.homeTeam.name.includes(debug) || 
+              fm.externalMatch.awayTeam.name.includes(debug)
+            )
+          );
+          if (debugMatches.length > 0) {
+            console.log(`\n🔍 DEBUG: Found ${debugMatches.length} debug games in prioritized matches:`);
+            debugMatches.forEach(fm => {
+              console.log(`   - ${fm.externalMatch.homeTeam.name} vs ${fm.externalMatch.awayTeam.name}`);
+            });
+          }
+
+          for (const failedMatch of matchesToProcess) {
+            const resultKey = `${failedMatch.externalMatch.homeTeam.name}|${failedMatch.externalMatch.awayTeam.name}`;
+            const aiResult = openAIResults.get(resultKey);
+            
+            // Log debug games specifically
+            const isDebugGame = debugGames.some(debug => 
+              failedMatch.externalMatch.homeTeam.name.includes(debug) || 
+              failedMatch.externalMatch.awayTeam.name.includes(debug)
+            );
+            
+            if (!aiResult) {
+              skippedNoResult++;
+              openAIDebugInfo.skippedNoResult++;
+              if (isDebugGame) {
+                console.log(`   🔍 DEBUG: No OpenAI result for "${resultKey}"`);
+              }
+              continue;
+            }
+            if (!aiResult.gameId) {
+              skippedNoGameId++;
+              openAIDebugInfo.skippedNoGameId++;
+              if (isDebugGame) {
+                console.log(`   🔍 DEBUG: OpenAI result for "${resultKey}" has no gameId (overallConfidence: ${aiResult.overallConfidence}, homeMatch: ${aiResult.homeMatch ? 'yes' : 'no'}, awayMatch: ${aiResult.awayMatch ? 'yes' : 'no'})`);
+              } else {
+                console.log(`   ⚠️ OpenAI result for "${resultKey}" has no gameId`);
+              }
+              continue;
+            }
+
+            // Derive an effective confidence:
+            // - Prefer overallConfidence if present
+            // - Otherwise average home/away confidences when available
+            const homeConf = (aiResult as any).homeMatch?.confidence ?? null;
+            const awayConf = (aiResult as any).awayMatch?.confidence ?? null;
+            let effectiveConfidence: number | null = aiResult.overallConfidence ?? null;
+            if (effectiveConfidence === null && homeConf !== null && awayConf !== null) {
+              effectiveConfidence = (homeConf + awayConf) / 2;
+            }
+
+            // If we still don't have a numeric confidence, skip
+            if (effectiveConfidence === null) {
+              skippedNoConfidence++;
+              openAIDebugInfo.skippedNoConfidence++;
+              if (isDebugGame) {
+                console.log(`   🔍 DEBUG: OpenAI result for "${resultKey}" has no confidence score (homeConf: ${homeConf}, awayConf: ${awayConf}, overallConf: ${aiResult.overallConfidence})`);
+              } else {
+                console.log(`   ⚠️ OpenAI result for "${resultKey}" has no confidence score (homeConf: ${homeConf}, awayConf: ${awayConf}, overallConf: ${aiResult.overallConfidence})`);
+              }
+              continue;
+            }
+
+            // Trust OpenAI when confidence is reasonably high.
+            // For testing, relax threshold to 0.6 so we can see if PSG / Union SG / Pafos are being matched.
+            // We can tighten this again once we've verified behaviour.
+            const MIN_OPENAI_CONFIDENCE = 0.6;
+            if (effectiveConfidence < MIN_OPENAI_CONFIDENCE) {
+              skippedLowConfidence++;
+              openAIDebugInfo.skippedLowConfidence++;
+              if (isDebugGame) {
+                console.log(`   🔍 DEBUG: OpenAI result for "${resultKey}" has low confidence: ${(effectiveConfidence * 100).toFixed(1)}% (threshold: ${(MIN_OPENAI_CONFIDENCE * 100).toFixed(1)}%, gameId: ${aiResult.gameId})`);
+              } else {
+                console.log(`   ⚠️ OpenAI result for "${resultKey}" has low confidence: ${(effectiveConfidence * 100).toFixed(1)}% (threshold: ${(MIN_OPENAI_CONFIDENCE * 100).toFixed(1)}%)`);
+              }
+              continue;
+            }
+
+            // Find the matching DB game identified by OpenAI
+            const aiMatchingGame = uniqueGamesToCheck.find(
+              game => game.id === aiResult.gameId && game.competition.sportType === 'FOOTBALL'
+            );
+
+            if (!aiMatchingGame) {
+              skippedGameNotFound++;
+              openAIDebugInfo.skippedGameNotFound++;
+              if (isDebugGame) {
+                console.log(`   🔍 DEBUG: OpenAI matched "${resultKey}" to gameId ${aiResult.gameId}, but game not found in uniqueGamesToCheck`);
+                console.log(`      Available game IDs: ${uniqueGamesToCheck.slice(0, 10).map(g => g.id).join(', ')}${uniqueGamesToCheck.length > 10 ? '...' : ''}`);
+              } else {
+                console.log(`   ⚠️ OpenAI matched "${resultKey}" to gameId ${aiResult.gameId}, but game not found in uniqueGamesToCheck (${uniqueGamesToCheck.length} games)`);
+              }
+              continue;
+            }
+            
+            if (isDebugGame) {
+              console.log(`   ✅ DEBUG: Successfully processing OpenAI match for "${resultKey}" -> gameId ${aiResult.gameId}, confidence ${(effectiveConfidence * 100).toFixed(1)}%`);
+            }
+
+            console.log(`🤖 FOOTBALL V2: OpenAI matched "${failedMatch.externalMatch.homeTeam.name} vs ${failedMatch.externalMatch.awayTeam.name}"`);
+            console.log(`   → Game ID: ${aiResult.gameId}, overallConfidence: ${(aiResult.overallConfidence * 100).toFixed(1)}%`);
+
+            // Attach externalId if missing or different, so next sync can use ID-based matching.
+            // CRITICAL SAFETY: Don't overwrite an existing externalId unless confidence is very high (0.95+)
+            // This prevents incorrect matches from overwriting correct externalIds
+            const externalIdStr = failedMatch.externalMatch.id ? failedMatch.externalMatch.id.toString() : null;
+            const hasExistingExternalId = aiMatchingGame.externalId !== null && aiMatchingGame.externalId !== undefined;
+            const isHighConfidence = effectiveConfidence >= 0.95;
+            
+            // CRITICAL: Never overwrite externalId if game is LIVE and has been syncing successfully
+            // This prevents overwriting correct externalIds during temporary API inconsistencies
+            const isLiveAndSyncing = aiMatchingGame.status === 'LIVE' && 
+                                     aiMatchingGame.lastSyncAt && 
+                                     (Date.now() - aiMatchingGame.lastSyncAt.getTime()) < 10 * 60 * 1000; // Synced within last 10 minutes
+            
+            if (externalIdStr && aiMatchingGame.externalId !== externalIdStr) {
+              // Never overwrite externalId if game is LIVE and syncing successfully
+              if (isLiveAndSyncing) {
+                console.log(`   ⚠️ SKIPPING externalId overwrite: Game is LIVE and has been syncing successfully (lastSync: ${aiMatchingGame.lastSyncAt?.toISOString()}, existing externalId: ${aiMatchingGame.externalId}) - might be temporary API inconsistency`);
+                // Still count as matched, but don't update externalId
+                openAIMatchedCount++;
+                continue;
+              }
+              
+              // Only overwrite existing externalId if confidence is very high (0.95+)
+              // For games without externalId, use the lower threshold (0.6)
+              if (hasExistingExternalId && !isHighConfidence) {
+                console.log(`   ⚠️ Skipping externalId update for game ${aiMatchingGame.id}: existing externalId=${aiMatchingGame.externalId}, new=${externalIdStr}, confidence=${(effectiveConfidence * 100).toFixed(1)}% (requires 95%+ to overwrite)`);
+                // Still count as matched, but don't update externalId
+                openAIMatchedCount++;
+                continue;
+              }
+              
+              try {
+                await prisma.game.update({
+                  where: { id: aiMatchingGame.id },
+                  data: {
+                    externalId: externalIdStr,
+                    externalStatus: failedMatch.externalMatch.externalStatus || aiMatchingGame.externalStatus || null,
+                  },
+                });
+                openAIExternalIdSetCount++;
+                if (hasExistingExternalId) {
+                  console.log(`   ⚠️ OVERWROTE externalId: ${aiMatchingGame.externalId} -> ${externalIdStr} on game ${aiMatchingGame.id} (confidence: ${(effectiveConfidence * 100).toFixed(1)}%)`);
+                } else {
+                  console.log(`   ✅ Set externalId=${externalIdStr} on game ${aiMatchingGame.id}`);
+                }
+              } catch (err) {
+                console.error(`   ❌ Error setting externalId via OpenAI fallback:`, err);
+              }
+            }
+
+            openAIMatchedCount++;
+          }
+
+          // Log summary of why matches were skipped
+          console.log(`\n🤖 FOOTBALL V2: OpenAI fallback summary:`);
+          console.log(`   ✅ Matched: ${openAIMatchedCount}`);
+          console.log(`   ⚠️ Skipped - No result: ${skippedNoResult}`);
+          console.log(`   ⚠️ Skipped - No gameId: ${skippedNoGameId}`);
+          console.log(`   ⚠️ Skipped - No confidence: ${skippedNoConfidence}`);
+          console.log(`   ⚠️ Skipped - Low confidence (< 60%): ${skippedLowConfidence}`);
+          console.log(`   ⚠️ Skipped - Game not found: ${skippedGameNotFound}`);
+        } catch (openAIError) {
+          console.error('❌ FOOTBALL V2: Error during OpenAI fallback:', openAIError);
+        }
+      } else {
+        console.log('🤖 FOOTBALL V2: OpenAI API key not present, skipping AI fallback.');
+      }
+    }
 
     // Final summary log
     console.log(`\n${'='.repeat(80)}`);
@@ -1481,7 +1957,8 @@ export default async function handler(
         openAIAttempted: failedMatches.length > 0,
         openAIKeyPresent: !!process.env.OPENAI_API_KEY,
         openAIMatchedCount,
-        openAIExternalIdSetCount
+        openAIExternalIdSetCount,
+        openAIDebugInfo
       }
     });
 

@@ -338,13 +338,11 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         {/* Status on the right */}
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
           {game.status === 'LIVE' ? (
-            <div className="flex flex-col items-end gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 dark:bg-red-600 text-white font-bold shadow-md">
-                  {t('live')}
-                </span>
-              </div>
+            <div className="flex items-center gap-1.5 justify-end flex-wrap">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 dark:bg-red-600 text-white font-bold shadow-md">
+                {t('live')}
+              </span>
               {game.externalStatus === 'HT' ? (
                 <span className="inline-flex items-center px-2.5 py-1 bg-orange-500 dark:bg-orange-600 text-white rounded-full text-[10px] font-bold animate-pulse border-2 border-orange-300 dark:border-orange-500 shadow-md">
                   MT

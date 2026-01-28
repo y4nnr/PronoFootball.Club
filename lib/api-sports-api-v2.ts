@@ -702,7 +702,7 @@ export class ApiSportsV2 {
    * Normalize team name for matching (enhanced version matching V1)
    */
   normalizeTeamName(name: string): string {
-    return name
+    let normalized = name
       .toLowerCase()
       .replace(/\s+/g, ' ')
       // Remove common football club suffixes
@@ -734,9 +734,34 @@ export class ApiSportsV2 {
       .replace(/[ø]/g, 'o')
       .replace(/[æ]/g, 'ae')
       .replace(/[ß]/g, 'ss')
+      // Handle hyphens (e.g., "Paris Saint-Germain" vs "Paris Saint Germain")
+      .replace(/\s*-\s*/g, ' ')
+      // Remove punctuation (e.g., "St." -> "st", "Bodo/Glimt" -> "bodoglimt")
+      // Keep letters/numbers/underscore + spaces so word boundaries still work
+      .replace(/[^\w\s]/g, '')
       // Clean up extra spaces
       .replace(/\s+/g, ' ')
       .trim();
+
+    // Handle specific team name variations that normalize differently
+    // These are cases where the same team has different spellings in different languages
+    // or where accent removal creates different normalized forms
+    const variations: { [key: string]: string } = {
+      'munchen': 'munich',      // München (German) vs Munich (English)
+      'muenchen': 'munich',     // Alternative spelling
+      'praha': 'prague',        // Praha (Czech) vs Prague (English)
+    };
+    
+    // Replace variations with canonical form (whole word only to avoid false matches)
+    for (const [variant, canonical] of Object.entries(variations)) {
+      normalized = normalized.replace(new RegExp(`\\b${variant}\\b`, 'g'), canonical);
+    }
+
+    // Handle common abbreviations
+    // Example: "Union St Gilloise" (API) vs "Union Saint-Gilloise" (DB)
+    normalized = normalized.replace(/\bst\b/g, 'saint');
+
+    return normalized;
   }
 
   /**

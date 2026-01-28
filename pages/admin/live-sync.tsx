@@ -74,6 +74,70 @@ function formatDateTime(dateString: string | null) {
   return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
+// Normalize team names for comparison - removes common suffixes and handles variations
+function normalizeTeamNameForComparison(name: string): string {
+  if (!name) return "";
+  
+  // Convert to lowercase and trim
+  let normalized = name.toLowerCase().trim();
+  
+  // Remove accents/diacritics (e.g., "Qarabağ" -> "qarabag")
+  normalized = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
+  // Remove common suffixes/prefixes that don't affect matching
+  const suffixesToRemove = [
+    /\s+fc\s*$/i,
+    /\s+cf\s*$/i,
+    /\s+kv\s*$/i,
+    /\s+ac\s*$/i,
+    /\s+sc\s*$/i,
+    /\s+cfr\s*$/i,
+    /^fc\s+/i,
+    /^cf\s+/i,
+  ];
+  
+  for (const suffix of suffixesToRemove) {
+    normalized = normalized.replace(suffix, "");
+  }
+  
+  // Remove extra spaces
+  normalized = normalized.replace(/\s+/g, " ").trim();
+  
+  // Handle common variations
+  normalized = normalized.replace(/fc\s+/gi, "");
+  normalized = normalized.replace(/\s+fc$/gi, "");
+  
+  return normalized;
+}
+
+// Check if team names are significantly different (not just minor variations)
+function areTeamNamesSignificantlyDifferent(name1: string, name2: string): boolean {
+  const normalized1 = normalizeTeamNameForComparison(name1);
+  const normalized2 = normalizeTeamNameForComparison(name2);
+  
+  // If normalized names match, they're not significantly different
+  if (normalized1 === normalized2) {
+    return false;
+  }
+  
+  // Check if one contains the other (e.g., "Club Brugge" vs "Club Brugge KV")
+  if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
+    return false; // Minor variation, not significant
+  }
+  
+  // Check Levenshtein-like similarity (simple check)
+  const longer = normalized1.length > normalized2.length ? normalized1 : normalized2;
+  const shorter = normalized1.length > normalized2.length ? normalized2 : normalized1;
+  
+  // If shorter name is at least 80% of longer name and is contained, it's likely a variation
+  if (longer.includes(shorter) && shorter.length >= longer.length * 0.8) {
+    return false;
+  }
+  
+  // Otherwise, consider it significantly different
+  return true;
+}
+
 export default function AdminLiveSync() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -157,20 +221,34 @@ export default function AdminLiveSync() {
       
       const res = await fetch(`/api/admin/live-sync-external-match?${params.toString()}`);
       if (!res.ok) {
-        throw new Error('Failed to fetch external match');
+        const errorText = await res.text();
+        let errorMessage = 'Failed to fetch external match';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
       
       const data = await res.json();
       
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response format from API');
+      }
+      
       setGames(prevGames => 
         prevGames.map(g => 
           g.id === game.id 
-            ? { ...g, externalMatch: data.externalMatch }
+            ? { ...g, externalMatch: data.externalMatch || null }
             : g
         )
       );
     } catch (err) {
-      console.error('[ADMIN LIVE SYNC] Error fetching external match:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('[ADMIN LIVE SYNC] Error fetching external match:', errorMessage, err);
       setGames(prevGames => 
         prevGames.map(g => 
           g.id === game.id 
@@ -178,6 +256,8 @@ export default function AdminLiveSync() {
             : g
         )
       );
+      // Show error to user
+      setError(`Failed to fetch external match for ${game.homeTeam.name} vs ${game.awayTeam.name}: ${errorMessage}`);
     } finally {
       setLoadingExternal(prev => {
         const next = new Set(prev);
@@ -553,8 +633,8 @@ export default function AdminLiveSync() {
                                     </div>
                                   ) : null}
                                   {g.externalMatch.homeTeam.name && g.externalMatch.awayTeam.name && 
-                                   (g.externalMatch.homeTeam.name.toLowerCase() !== g.homeTeam.name.toLowerCase() ||
-                                    g.externalMatch.awayTeam.name.toLowerCase() !== g.awayTeam.name.toLowerCase()) ? (
+                                   (areTeamNamesSignificantlyDifferent(g.externalMatch.homeTeam.name, g.homeTeam.name) ||
+                                    areTeamNamesSignificantlyDifferent(g.externalMatch.awayTeam.name, g.awayTeam.name)) ? (
                                     <div className="text-orange-400 bg-orange-900/20 border border-orange-700 rounded p-2 mt-2">
                                       ⚠️ <strong>Team name mismatch detected!</strong>
                                       <div className="mt-1 text-xs">

@@ -165,6 +165,8 @@ export default async function handler(
         }
       } catch (error) {
         console.error('[ADMIN LIVE SYNC] Error fetching external match by ID:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return res.status(500).json({ externalMatch: null, error: `Failed to fetch external match: ${errorMessage}` });
       }
     }
 
@@ -268,6 +270,8 @@ export default async function handler(
         }
       } catch (error) {
         console.error('[ADMIN LIVE SYNC] Error searching external match:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return res.status(500).json({ externalMatch: null, error: `Failed to search external match: ${errorMessage}` });
       }
     }
 

@@ -146,13 +146,13 @@ For each external API match, return a JSON array with this exact format:
 
 Rules:
 - Match confidence should be 0.0-1.0 (1.0 = perfect match, 0.0 = no match)
-- Only return matches with overallConfidence >= 0.85 (85%) - we need HIGH confidence to guarantee 100% match
+- Only return matches with overallConfidence >= 0.6 (60%) - lowered threshold for testing
 - Consider ALL factors together: team names, date/time (within same day is good, same hour is better), and competition name
 - If teams match but date is very different (>7 days), reject the match (likely different season/game)
 - If teams match but competition is clearly different, reject the match
 - Use exact database team names (case-sensitive) from the game you matched
 - Consider abbreviations, nicknames, and common variations in team names
-- If no good match with overallConfidence >= 0.85, set gameId to null and matches to null
+- If no good match with overallConfidence >= 0.6, set gameId to null and matches to null
 - Be very confident in your matches - this is critical for a betting platform
 - Return ONLY valid JSON, no other text
 
@@ -256,9 +256,10 @@ Return the JSON array now:`;
       console.log(`      Away: ${aiResult.awayMatch ? `${aiResult.awayMatch.name} (${(aiResult.awayMatch.confidence * 100).toFixed(1)}%)` : 'null'}`);
       console.log(`      Reasoning: ${aiResult.reasoning || 'N/A'}`);
       
-      // Trust OpenAI more - accept matches with overallConfidence >= 0.85 (85%)
+      // Trust OpenAI more - accept matches with overallConfidence >= 0.6 (60%)
       // OpenAI is used as a fallback when rule-based matching has low confidence, so we trust its judgment
-      const MIN_OPENAI_CONFIDENCE = 0.85; // 85% - high confidence threshold for OpenAI
+      // Lowered to 0.6 for testing - can be raised back to 0.85 once verified
+      const MIN_OPENAI_CONFIDENCE = 0.6; // 60% - lowered threshold for testing
       
       // If OpenAI found a gameId and has high overall confidence, use that game's teams
       let homeMatch: Team | null = null;
