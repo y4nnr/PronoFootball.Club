@@ -448,17 +448,21 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
       <div className="flex items-center w-full justify-between py-4 md:py-6 px-3 md:px-4 bg-gray-50 dark:bg-[rgb(58,58,58)] border-b border-gray-200 dark:border-gray-600">
           {/* Home Team */}
         <div className="flex flex-col items-center min-w-0 w-2/5 justify-end pr-1 md:pr-2 gap-1">
-          {/* Mobile: Logo on top, name below */}
+          {/* Mobile: Logo on top, full team name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.homeTeam.logo ? (
-              <div className={`w-10 h-10 dark:w-12 dark:h-12 mb-2 flex-shrink-0 flex items-center justify-center`}>
+              <div className="w-10 h-10 dark:w-12 dark:h-12 mb-2 flex-shrink-0 flex items-center justify-center">
                 <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-full h-full object-contain" />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">
+                {game.homeTeam.name.substring(0, 2).toUpperCase()}
+              </div>
             )}
             <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-              <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.homeTeam)}</span>
+              <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs text-center leading-tight line-clamp-2">
+                {game.homeTeam.name}
+              </span>
             </div>
           </div>
           {/* Desktop: Logo on top, name below */}
@@ -495,17 +499,21 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
         </div>
         {/* Away Team */}
         <div className="flex flex-col items-center min-w-0 w-2/5 justify-start pl-1 md:pl-2 gap-1">
-          {/* Mobile: Logo on top, name below */}
+          {/* Mobile: Logo on top, full team name below */}
           <div className="md:hidden flex flex-col items-center w-full">
             {game.awayTeam.logo ? (
-              <div className={`w-10 h-10 dark:w-12 dark:h-12 mb-2 flex-shrink-0 flex items-center justify-center`}>
+              <div className="w-10 h-10 dark:w-12 dark:h-12 mb-2 flex-shrink-0 flex items-center justify-center">
                 <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-full h-full object-contain" />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">
+                {game.awayTeam.name.substring(0, 2).toUpperCase()}
+              </div>
             )}
             <div className="min-h-[32px] flex items-center justify-center w-full px-1">
-              <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs text-center leading-tight line-clamp-2">{abbreviateTeamName(game.awayTeam)}</span>
+              <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs text-center leading-tight line-clamp-2">
+                {game.awayTeam.name}
+              </span>
             </div>
           </div>
           {/* Desktop: Logo on top, name below */}

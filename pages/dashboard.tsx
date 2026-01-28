@@ -423,7 +423,7 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
       ) : (
         <div className="text-center py-8">
           <PlayIcon className="h-12 w-12 text-neutral-300 dark:text-gray-600 mx-auto mb-3" />
-          <p className="text-neutral-500 dark:text-gray-400">{t('bettingGames.placedBets')}</p>
+          <p className="text-neutral-500 dark:text-gray-400">{t('bettingGames.noGames')}</p>
         </div>
       )}
       </div>
