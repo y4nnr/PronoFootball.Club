@@ -44,7 +44,7 @@ const SectionCard = ({ icon, title, children }: { icon: React.ReactNode; title: 
       </div>
     </div>
     {/* Content Section */}
-    <div className="p-6">
+    <div className="px-2 md:px-6 py-6">
       {children}
     </div>
   </div>
@@ -112,7 +112,7 @@ export default function CompetitionsPage({
           icon={<CheckCircleIcon className="h-6 w-6 text-white" />} 
           title={t('competitions.joined')}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
             {joinedCompetitions.length > 0 ? (
               joinedCompetitions.map((competition) => (
                 <CompetitionCard
@@ -133,7 +133,7 @@ export default function CompetitionsPage({
           icon={<PlusCircleIcon className="h-6 w-6 text-white" />} 
           title={t('competitions.available')}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
             {availableCompetitions.length > 0 ? (
               availableCompetitions.map((competition) => (
                 <CompetitionCard
@@ -154,7 +154,7 @@ export default function CompetitionsPage({
           icon={<ArchiveBoxIcon className="h-6 w-6 text-white" />} 
           title={t('competitions.archived')}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
             {archivedCompetitions.length > 0 ? (
               archivedCompetitions.map((competition) => (
                 <CompetitionCard

@@ -529,7 +529,7 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
       </div>
       {/* Bets List - Section 4: Matching main section style (bottom) */}
       {hasDisplayableBets === true ? (
-          <div className="w-full pt-3 md:pt-4 pl-1 pr-2 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-[rgb(58,58,58)]">
+          <div className="w-full pt-3 md:pt-4 px-1 md:px-4 pb-3 md:pb-4 bg-gray-50 dark:bg-[rgb(58,58,58)]">
             <div className="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-2.5 md:mb-3 uppercase tracking-wide">{t('placedBets')}</div>
             {/* Mobile: 2-column compact cards with central separator.
                 Desktop: revert to single column with standard dividers and no extra card styling. */}

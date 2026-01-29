@@ -1184,7 +1184,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
               </div>
             </div>
           </div>
-          <div className="p-6">
+          <div className="px-2 md:px-6 py-6">
             {(() => {
               if (!games || !Array.isArray(games)) {
                 return <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('competition.noActiveGamesFound')}</div>;
@@ -1215,7 +1215,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 }
               });
               return sortedGames && sortedGames.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6">
                   {sortedGames.map((game) => {
                     try {
                     // Prepare game data for GameCard component

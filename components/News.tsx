@@ -115,9 +115,9 @@ export default function News() {
         </div>
       </div>
       {/* Content Section */}
-      <div className="p-6">
+      <div className="px-2 md:px-6 py-6">
       {showSkeleton && (
-        <div className="space-y-3">
+        <div className="space-y-2 md:space-y-3">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => (
             <div
               key={idx}
@@ -152,7 +152,7 @@ export default function News() {
       )}
 
       {!showSkeleton && !error && items && items.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-2 md:space-y-3">
           {items.map((item, index) => (
             <div
               key={`${item.date}-${index}`}

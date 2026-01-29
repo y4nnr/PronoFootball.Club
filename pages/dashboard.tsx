@@ -274,9 +274,9 @@ const ActiveCompetitionsSection = memo(({ competitions, t }: { competitions: Com
         </div>
       </div>
       {/* Content Section */}
-      <div className="p-6">
+      <div className="px-2 md:px-6 py-6">
         {activeCompetitions.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-2 md:gap-4">
             {activeCompetitions.slice(0, 4).map((competition) => (
               <CompetitionCard
                 key={competition.id}
@@ -303,7 +303,7 @@ ActiveCompetitionsSection.displayName = 'ActiveCompetitionsSection';
 // Available Competitions Section
 const AvailableCompetitionsSection = memo(({ competitions, t }: { competitions: Competition[]; t: (key: string) => string }) => {
   return (
-    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-modern border border-neutral-200/50 dark:border-gray-700 p-6">
+    <div className="bg-white dark:bg-[rgb(38,38,38)] rounded-2xl shadow-modern border border-neutral-200/50 dark:border-gray-700 px-2 md:px-6 py-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
@@ -314,7 +314,7 @@ const AvailableCompetitionsSection = memo(({ competitions, t }: { competitions: 
       </div>
 
       {competitions && competitions.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-2 md:gap-4">
           {competitions.slice(0, 3).map((competition) => (
             <CompetitionCard
               key={competition.id}
@@ -367,9 +367,9 @@ const BettingGamesSection = memo(({ games, t, highlightedGames }: { games: Betti
         </div>
       </div>
       {/* Content Section */}
-      <div className="p-6">
+      <div className="px-2 md:px-6 py-6">
       {games && games.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6 items-start">
           {games.map((game) => {
             const bets = game.allUserBets.map((bet: UserBet) => {
               if (currentUserId && bet.userId === currentUserId && game.userBet) {
@@ -452,8 +452,8 @@ const GamesOfDaySection = memo(({ games, t, highlightedGames }: { games: Betting
         </div>
       </div>
       {/* Content Section */}
-      <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 items-start">
+      <div className="px-2 md:px-6 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6 items-start">
         {games.map((game) => {
           const bets = game.allUserBets.map((bet: UserBet) => {
             if (currentUserId && bet.userId === currentUserId && game.userBet) {
