@@ -206,11 +206,6 @@ export default function FinalWinnerPredictionWidget({
         <p className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">
           Prédisez le vainqueur final et gagnez <span className="text-primary-600 dark:text-accent-dark-400">5 points</span> bonus
         </p>
-        {nextGame && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1.5">
-            Délai: jusqu'au début du prochain match ({nextGame.homeTeam} vs {nextGame.awayTeam})
-          </p>
-        )}
       </div>
     </div>
   );
