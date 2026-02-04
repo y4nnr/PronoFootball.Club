@@ -78,11 +78,6 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
           {/* Progress Bar */}
           {competition.totalGames !== undefined && competition.gamesPlayed !== undefined && competition.progressPercentage !== undefined ? (
             <div className="mt-2">
-            <div className="flex items-center justify-center mb-0.5">
-              <span className="text-xs md:text-sm font-bold text-neutral-800 dark:text-gray-200">
-                {competition.gamesPlayed}/{competition.totalGames} matchs
-              </span>
-            </div>
             <div className="relative w-full bg-neutral-200 dark:bg-[rgb(40,40,40)] rounded-full h-8">
               <div 
                 className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-white transition-all duration-300 ease-out flex items-center justify-center"

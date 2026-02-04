@@ -10,6 +10,7 @@ import PlayersPerformanceWidget from '../../components/PlayersPerformanceWidget'
 import RankingEvolutionWidget from '../../components/RankingEvolutionWidget';
 import PlayerPointsProgressionWidget from '../../components/PlayerPointsProgressionWidget';
 import GameCard from '../../components/GameCard';
+import FinalWinnerPredictionWidget from '../../components/FinalWinnerPredictionWidget';
 
 interface CompetitionUser {
   id: string;
@@ -661,46 +662,64 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
         </div>
 
-        {/* Competition Progress Bar */}
-        <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 p-6 mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-              <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-                <ChartBarIcon className="h-5 w-5 text-white" />
+        {/* Competition Progress Bar and Final Winner Prediction - Side by side on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Competition Progress Bar */}
+          <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 overflow-hidden self-start" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+            {/* Header Section */}
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+              <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+                <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+                  <ChartBarIcon className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                </div>
+                <span className="md:hidden">Progression</span>
+                <span className="hidden md:inline">Progression de la compétition</span>
+              </h3>
+            </div>
+            {/* Content Section */}
+            <div className="px-6 py-4">
+              <div className="w-full bg-gray-200 dark:bg-[rgb(40,40,40)] rounded-full h-8 relative">
+                <div 
+                  className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-white transition-all duration-500 ease-out flex items-center justify-center"
+                  style={{ 
+                    width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 : 0}%`,
+                    height: '100%',
+                    minWidth: competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 === 0 ? '0%' : 'auto'
+                  }}
+                >
+                  {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 > 0 && (
+                    <span className="text-xs font-bold text-white dark:text-gray-200">
+                      {Math.round((games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100)}%
+                    </span>
+                  )}
+                </div>
+                {/* Show percentage text outside the bar when it's 0% or too small to fit text */}
+                {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 === 0 && (
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-bold text-neutral-800 dark:text-white">
+                    0%
+                  </span>
+                )}
               </div>
-              <span className="md:hidden">Progression</span>
-              <span className="hidden md:inline">Progression de la compétition</span>
-            </h3>
-            <div className="text-sm md:text-base text-gray-600 dark:text-gray-300 font-bold">
-              {games.filter(g => g.status === 'FINISHED').length} / {competition._count.games} matchs joués
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <span className="font-bold">0%</span>
+                <span className="font-bold">100%</span>
+              </div>
+            </div>
+            {/* Footer Section */}
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3">
+              <p className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">
+                <span className="md:hidden">{games.filter(g => g.status === 'FINISHED').length} / {competition._count.games} matchs</span>
+                <span className="hidden md:inline">{games.filter(g => g.status === 'FINISHED').length} / {competition._count.games} matchs joués</span>
+              </p>
             </div>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-[rgb(40,40,40)] rounded-full h-8 relative">
-            <div 
-              className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-white transition-all duration-500 ease-out flex items-center justify-center"
-              style={{ 
-                width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 : 0}%`,
-                height: '100%',
-                minWidth: competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 === 0 ? '0%' : 'auto'
-              }}
-            >
-              {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 > 0 && (
-                <span className="text-xs font-bold text-white dark:text-gray-200">
-                  {Math.round((games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100)}%
-                </span>
-              )}
-            </div>
-            {/* Show percentage text outside the bar when it's 0% or too small to fit text */}
-            {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 === 0 && (
-              <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-bold text-neutral-800 dark:text-white">
-                0%
-              </span>
-            )}
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
-            <span className="font-bold">0%</span>
-            <span className="font-bold">100%</span>
-          </div>
+
+          {/* Final Winner Prediction Widget - Only for Champions League */}
+          <FinalWinnerPredictionWidget
+            competitionId={competition.id}
+            competitionName={competition.name}
+            currentUserId={currentUserId}
+          />
         </div>
 
         {/* Winner & Last Place - Only for completed competitions */}

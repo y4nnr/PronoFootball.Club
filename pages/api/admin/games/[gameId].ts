@@ -173,6 +173,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Update shooters count for all users in this competition
       await updateShootersForCompetition(updatedGame.competitionId);
 
+      // Award final winner points if this is the Champions League final
+      if (gameStatus === GameStatus.FINISHED && normalizedHomeScore !== undefined && normalizedHomeScore !== null && normalizedAwayScore !== undefined && normalizedAwayScore !== null) {
+        const { awardFinalWinnerPoints } = await import('../../../../lib/award-final-winner-points');
+        await awardFinalWinnerPoints(
+          gameId,
+          updatedGame.competitionId,
+          normalizedHomeScore,
+          normalizedAwayScore
+        );
+      }
+
       return res.status(200).json(updatedGame);
     } catch (error) {
       console.error('Error updating game:', error);

@@ -1422,6 +1422,15 @@ export default async function handler(
           
           await updateShootersForCompetition(updatedGame.competitionId);
           console.log(`💰 Calculated points for ${bets.length} bets in game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} (${scoringSystem})`);
+          
+          // Award final winner points if this is the Champions League final
+          const { awardFinalWinnerPoints } = await import('../../lib/award-final-winner-points');
+          await awardFinalWinnerPoints(
+            matchingGame.id,
+            matchingGame.competitionId,
+            externalHomeScore,
+            externalAwayScore
+          );
         }
 
         updatedGameIds.add(matchingGame.id);

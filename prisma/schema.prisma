@@ -64,30 +64,33 @@ model Competition {
 }
 
 model CompetitionUser {
-  id            String      @id @default(cuid())
-  userId        String
-  competitionId String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  shooters      Int         @default(0)
-  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String      @id @default(cuid())
+  userId            String
+  competitionId     String
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  shooters          Int         @default(0)
+  finalWinnerTeamId String?     // User's prediction for the final winner (Champions League only)
+  competition       Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  finalWinnerTeam   Team?       @relation("FinalWinnerPrediction", fields: [finalWinnerTeamId], references: [id], onDelete: SetNull)
 
   @@unique([competitionId, userId])
 }
 
 model Team {
-  id        String       @id @default(cuid())
-  name      String
-  shortName String?
-  logo      String?
-  country   String?      // Country code or name (e.g., "France", "England")
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  category  TeamCategory @default(NATIONAL)
-  sportType SportType?   // Optional: Can be null if team plays multiple sports or sport is unknown
-  awayGames Game[]       @relation("AwayTeam")
-  homeGames Game[]       @relation("HomeTeam")
+  id                    String            @id @default(cuid())
+  name                  String
+  shortName             String?
+  logo                  String?
+  country               String?           // Country code or name (e.g., "France", "England")
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  category              TeamCategory      @default(NATIONAL)
+  sportType             SportType?        // Optional: Can be null if team plays multiple sports or sport is unknown
+  awayGames              Game[]            @relation("AwayTeam")
+  homeGames              Game[]            @relation("HomeTeam")
+  finalWinnerPredictions CompetitionUser[] @relation("FinalWinnerPrediction")
 
   @@unique([name, sportType]) // Allow same name for different sports
 }
