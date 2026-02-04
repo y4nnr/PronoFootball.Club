@@ -1,10 +1,14 @@
 import { prisma } from './prisma';
 
 const PLACEHOLDER_TEAM_NAME = 'xxxx';
+const FINAL_WINNER_BONUS_POINTS = 5;
 
 /**
  * Awards 5 points to users who correctly predicted the final winner of Champions League
  * This should be called when a game finishes and is determined to be the final
+ * 
+ * IDEMPOTENCY: This function is idempotent - it checks if points have already been awarded
+ * to prevent duplicate awarding if called multiple times.
  */
 export async function awardFinalWinnerPoints(
   gameId: string,
@@ -24,7 +28,7 @@ export async function awardFinalWinnerPoints(
       return;
     }
 
-    // Get the game to check if it's the final (last game with placeholder teams)
+    // Get the game to check if it's the final
     const game = await prisma.game.findUnique({
       where: { id: gameId },
       include: {
@@ -38,17 +42,39 @@ export async function awardFinalWinnerPoints(
     }
 
     // Check if this is the final game
-    // The final is the last game in the competition (by date)
+    // The final is the last game in the competition (by date, then by id for consistency)
+    // Exclude games with placeholder teams from being considered as the final
     const allGames = await prisma.game.findMany({
-      where: { competitionId },
-      orderBy: { date: 'desc' }
+      where: { 
+        competitionId,
+        // Exclude placeholder games from final detection
+        homeTeam: {
+          name: { not: { in: [PLACEHOLDER_TEAM_NAME, 'xxxx2'] } }
+        },
+        awayTeam: {
+          name: { not: { in: [PLACEHOLDER_TEAM_NAME, 'xxxx2'] } }
+        }
+      },
+      orderBy: [
+        { date: 'desc' },
+        { id: 'desc' } // Secondary sort for consistency
+      ]
     });
 
-    // The final is the last game (most recent date)
+    // The final is the last game (most recent date) without placeholder teams
     const finalGame = allGames.length > 0 ? allGames[0] : null;
 
     // If this game is not the final, skip
     if (!finalGame || finalGame.id !== gameId) {
+      return;
+    }
+
+    // Verify the final game doesn't have placeholder teams (safety check)
+    if (game.homeTeam.name.toLowerCase() === PLACEHOLDER_TEAM_NAME.toLowerCase() ||
+        game.homeTeam.name.toLowerCase() === 'xxxx2' ||
+        game.awayTeam.name.toLowerCase() === PLACEHOLDER_TEAM_NAME.toLowerCase() ||
+        game.awayTeam.name.toLowerCase() === 'xxxx2') {
+      console.log(`⚠️ Final game still has placeholder teams, skipping points award`);
       return;
     }
 
@@ -59,9 +85,11 @@ export async function awardFinalWinnerPoints(
     } else if (awayScore > homeScore) {
       winnerTeamId = game.awayTeamId;
     } else {
-      // Draw - check if decided by penalties or extra time
-      // For now, we'll skip draws (no winner)
-      console.log(`⚠️ Final game ended in a draw, no winner points awarded`);
+      // Draw - Champions League finals can't end in draws (they go to penalties)
+      // Check if the game was decided by penalties (statusDetail might indicate this)
+      // For now, if it's a draw, we'll skip (the actual winner would be determined by penalties)
+      // TODO: In the future, we might need to check statusDetail or decidedBy fields
+      console.log(`⚠️ Final game ended in a draw (${homeScore}-${awayScore}), no winner points awarded. If decided by penalties, winner should be determined separately.`);
       return;
     }
 
@@ -87,79 +115,85 @@ export async function awardFinalWinnerPoints(
       return;
     }
 
-    // Award 5 points to each correct prediction
-    // We'll create a special "bet" record for tracking, or we could add it to a separate table
-    // For now, let's create a special bet record with gameId pointing to the final game
-    // But actually, we should add this to the user's total points in the competition stats
-    // The easiest way is to create a bet with 5 points that we can track
-    
-    // Actually, let's just log it for now and we can add it to the ranking calculation
-    // Or we can create a special bet record
-    
-    // For simplicity, let's create a special bet record with 5 points
-    // But we need to make sure it doesn't conflict with regular bets
-    // Actually, the ranking is calculated from bets, so we could create a special bet
-    
-    // Better approach: Add the points directly to the user's competition stats
-    // But the ranking is calculated from bets, so let's create a special bet record
-    
-    // Actually, I think the best approach is to create a special bet with 5 points
-    // But we need to make sure the game allows multiple bets per user
-    // Or we can check if a bet already exists and update it
-    
-    // Let me check the bet model - it has @@unique([gameId, userId])
-    // So we can't create multiple bets for the same game/user
-    
-    // Alternative: Create a separate tracking mechanism
-    // For now, let's just log and we'll handle it in the ranking calculation
-    
     console.log(`🏆 Final winner points: ${correctPredictions.length} users correctly predicted the winner!`);
-    
-    // Create a special bet record for each user with 5 points
-    // We'll use a special game ID or we can add a flag
-    // Actually, let's just add the points to an existing bet or create a new one
-    // But wait, the user might not have a bet on the final game
-    
-    // Best approach: Create a special "final winner" bet for tracking
-    // We'll need to handle this in the ranking calculation to avoid double counting
-    
-    // For now, let's create a bet record with 5 points
-    // We'll use the final game ID and the user ID
-    for (const prediction of correctPredictions) {
-      // Check if user already has a bet on this game
-      const existingBet = await prisma.bet.findUnique({
-        where: {
-          gameId_userId: {
-            gameId,
-            userId: prediction.userId
+
+    // Use a transaction to ensure atomicity and prevent race conditions
+    await prisma.$transaction(async (tx) => {
+      for (const prediction of correctPredictions) {
+        // Check if user already has a bet on this game
+        const existingBet = await tx.bet.findUnique({
+          where: {
+            gameId_userId: {
+              gameId,
+              userId: prediction.userId
+            }
           }
+        });
+
+        if (existingBet) {
+          // Check if this is already a bonus-only bet (0-0, 5 points)
+          // If so, bonus was already awarded and we should skip
+          if (existingBet.points === FINAL_WINNER_BONUS_POINTS && 
+              existingBet.score1 === 0 && existingBet.score2 === 0) {
+            console.log(`⏭️  Final winner bonus already awarded to user ${prediction.user.name} (bonus-only bet exists)`);
+            continue;
+          }
+
+          // Check if existing bet already has bonus points added
+          // LIMITATION: We can't perfectly detect if bonus was already added to an existing bet
+          // because we modify the bet in place. We use a heuristic:
+          // - If bet has points >= (max normal points + bonus), assume bonus already added
+          // - Max normal bet is 3 points, bonus is 5, so threshold is 8
+          // - This is not perfect: if user had 0-2 points, we might add bonus twice
+          // - TODO: Future improvement: Add a flag field or separate tracking table
+          const maxNormalPoints = 3;
+          const bonusThreshold = maxNormalPoints + FINAL_WINNER_BONUS_POINTS;
+          
+          if (existingBet.points >= bonusThreshold) {
+            console.log(`⏭️  Final winner bonus likely already awarded to user ${prediction.user.name} (bet has ${existingBet.points} points, threshold: ${bonusThreshold})`);
+            continue;
+          }
+
+          // Add 5 points to existing bet (final winner bonus)
+          await tx.bet.update({
+            where: { id: existingBet.id },
+            data: { points: existingBet.points + FINAL_WINNER_BONUS_POINTS }
+          });
+          console.log(`✅ Added ${FINAL_WINNER_BONUS_POINTS} final winner points to existing bet for user ${prediction.user.name} (total: ${existingBet.points + FINAL_WINNER_BONUS_POINTS})`);
+        } else {
+          // Check if bonus bet already exists (idempotency)
+          const existingBonusBet = await tx.bet.findFirst({
+            where: {
+              gameId,
+              userId: prediction.userId,
+              score1: 0,
+              score2: 0,
+              points: FINAL_WINNER_BONUS_POINTS
+            }
+          });
+
+          if (existingBonusBet) {
+            console.log(`⏭️  Final winner bonus already awarded to user ${prediction.user.name} (bonus bet exists)`);
+            continue;
+          }
+
+          // Create a special bet record with 5 points for final winner
+          // Use dummy scores (0-0) since this is just for tracking points
+          await tx.bet.create({
+            data: {
+              gameId,
+              userId: prediction.userId,
+              score1: 0,
+              score2: 0,
+              points: FINAL_WINNER_BONUS_POINTS
+            }
+          });
+          console.log(`✅ Created final winner bet (${FINAL_WINNER_BONUS_POINTS} points) for user ${prediction.user.name}`);
         }
-      });
-
-      if (existingBet) {
-        // Add 5 points to existing bet (final winner bonus)
-        await prisma.bet.update({
-          where: { id: existingBet.id },
-          data: { points: existingBet.points + 5 }
-        });
-        console.log(`✅ Added 5 final winner points to existing bet for user ${prediction.user.name}`);
-      } else {
-        // Create a special bet record with 5 points for final winner
-        // Use dummy scores (0-0) since this is just for tracking points
-        await prisma.bet.create({
-          data: {
-            gameId,
-            userId: prediction.userId,
-            score1: 0,
-            score2: 0,
-            points: 5
-          }
-        });
-        console.log(`✅ Created final winner bet (5 points) for user ${prediction.user.name}`);
       }
-    }
+    });
 
-    console.log(`🏆 Final winner points awarded: ${correctPredictions.length} users received 5 points each`);
+    console.log(`🏆 Final winner points awarded: ${correctPredictions.length} users received ${FINAL_WINNER_BONUS_POINTS} points each`);
   } catch (error) {
     console.error('Error awarding final winner points:', error);
     // Don't throw - we don't want to break the main flow

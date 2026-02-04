@@ -166,6 +166,15 @@ export default async function handler(
         return res.status(400).json({ error: 'Team is not available for selection (eliminated or invalid)' });
       }
 
+      // Verify team exists in database
+      const team = await prisma.team.findUnique({
+        where: { id: teamId }
+      });
+
+      if (!team) {
+        return res.status(400).json({ error: 'Team not found' });
+      }
+
       // Ensure user is part of the competition
       const competitionUser = await prisma.competitionUser.upsert({
         where: {
