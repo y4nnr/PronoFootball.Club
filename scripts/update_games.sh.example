@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Script to update live scores and trigger frontend refresh
+# This script should be called by PM2 scheduler every 10 seconds
+# Usage: ./scripts/update_games.sh
+
+set -e  # Exit on error
+
+BASE_URL="${BASE_URL:-http://localhost:3000}"
+
+echo "🔄 [$(date +'%Y-%m-%d %H:%M:%S')] Starting live score update..."
+
+# 1. Update Football scores
+echo "📡 Calling POST ${BASE_URL}/api/update-live-scores..."
+FOOTBALL_RESPONSE=$(curl -s -X POST "${BASE_URL}/api/update-live-scores" \
+  -H "Content-Type: application/json" \
+  -w "\nHTTP_STATUS:%{http_code}")
+
+FOOTBALL_HTTP_STATUS=$(echo "$FOOTBALL_RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
+FOOTBALL_BODY=$(echo "$FOOTBALL_RESPONSE" | sed '/HTTP_STATUS:/d')
+
+if [ "$FOOTBALL_HTTP_STATUS" = "200" ]; then
+  FOOTBALL_UPDATES=$(echo "$FOOTBALL_BODY" | jq -r '.updatedGames | length // 0' 2>/dev/null || echo "0")
+  echo "✅ Football: HTTP $FOOTBALL_HTTP_STATUS, $FOOTBALL_UPDATES game(s) updated"
+else
+  echo "⚠️ Football: HTTP $FOOTBALL_HTTP_STATUS (may be normal if no live games)"
+fi
+
+# 2. Update Rugby scores
+echo "📡 Calling POST ${BASE_URL}/api/update-live-scores-rugby..."
+RUGBY_RESPONSE=$(curl -s -X POST "${BASE_URL}/api/update-live-scores-rugby" \
+  -H "Content-Type: application/json" \
+  -w "\nHTTP_STATUS:%{http_code}")
+
+RUGBY_HTTP_STATUS=$(echo "$RUGBY_RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
+RUGBY_BODY=$(echo "$RUGBY_RESPONSE" | sed '/HTTP_STATUS:/d')
+
+if [ "$RUGBY_HTTP_STATUS" = "200" ]; then
+  RUGBY_UPDATES=$(echo "$RUGBY_BODY" | jq -r '.updatedGames | length // 0' 2>/dev/null || echo "0")
+  echo "✅ Rugby: HTTP $RUGBY_HTTP_STATUS, $RUGBY_UPDATES game(s) updated"
+else
+  echo "⚠️ Rugby: HTTP $RUGBY_HTTP_STATUS (may be normal if no live games)"
+fi
+
+# 3. Trigger frontend refresh (CRITICAL: This ensures users see the updates)
+echo "📡 Calling POST ${BASE_URL}/api/trigger-frontend-refresh..."
+REFRESH_RESPONSE=$(curl -s -X POST "${BASE_URL}/api/trigger-frontend-refresh" \
+  -H "Content-Type: application/json" \
+  -w "\nHTTP_STATUS:%{http_code}")
+
+REFRESH_HTTP_STATUS=$(echo "$REFRESH_RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
+REFRESH_BODY=$(echo "$REFRESH_RESPONSE" | sed '/HTTP_STATUS:/d')
+
+if [ "$REFRESH_HTTP_STATUS" = "200" ]; then
+  REFRESH_CLIENTS=$(echo "$REFRESH_BODY" | jq -r '.connectedClients // 0' 2>/dev/null || echo "0")
+  echo "✅ Frontend refresh: HTTP $REFRESH_HTTP_STATUS, $REFRESH_CLIENTS client(s) notified"
+else
+  echo "⚠️ Frontend refresh: HTTP $REFRESH_HTTP_STATUS"
+fi
+
+# Calculate total updates
+TOTAL_UPDATES=$((FOOTBALL_UPDATES + RUGBY_UPDATES))
+
+if [ "$TOTAL_UPDATES" -gt 0 ]; then
+  echo "✅ [$(date +'%Y-%m-%d %H:%M:%S')] Update complete: $TOTAL_UPDATES game(s) updated, $REFRESH_CLIENTS client(s) notified"
+else
+  echo "ℹ️ [$(date +'%Y-%m-%d %H:%M:%S')] No updates needed (no live games)"
+fi
