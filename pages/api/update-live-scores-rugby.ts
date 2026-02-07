@@ -136,151 +136,118 @@ export default async function handler(
       });
     }
     
-    // Only call API if we have LIVE games
-    console.log('🔄 Calling Rugby API to fetch live matches...');
-    
-    let liveMatches: any[] = [];
-    try {
-      liveMatches = await rugbyAPI.getLiveMatches();
-      console.log(`📊 API returned ${liveMatches.length} live rugby matches`);
-    } catch (error) {
-      console.log('⚠️ Could not fetch live rugby matches:', error);
-    }
-    
-    // Also get finished matches from today/yesterday/tomorrow for games that are LIVE but might have finished
-    // (games with externalStatus FT/AET/PEN but still marked as LIVE in our DB)
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const yesterdayStr = new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const tomorrowStr = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    
-    let finishedMatches: any[] = [];
-    // Only fetch finished matches if we have LIVE games (to catch games that finished but are still marked LIVE)
-    try {
-      // Get matches from yesterday, today, and tomorrow to catch all recent finished games
-      const allRecentMatches = await rugbyAPI.getMatchesByDateRange(yesterdayStr, tomorrowStr);
-      // Filter for finished matches only - check externalStatus (FT, AET, PEN) which map to FINISHED
-      finishedMatches = allRecentMatches.filter(match => 
-        match.externalStatus === 'FT' || 
-        match.externalStatus === 'AET' || 
-        match.externalStatus === 'PEN'
-      );
-      console.log(`📊 Found ${finishedMatches.length} finished rugby matches from yesterday/today/tomorrow (to update LIVE games that finished)`);
-    } catch (error) {
-      console.log('⚠️ Could not fetch finished rugby matches:', error);
-    }
-    
-    // Also get finished matches from competitions of LIVE games using getFixturesByCompetition
-    // This is more reliable as it gets ALL games from the competition, including finished ones
-    // BUT only if we have LIVE games
-    if (hasLiveGames) {
-      try {
-        const activeCompetitions = await prisma.competition.findMany({
-          where: {
-            sportType: 'RUGBY',
-            games: {
-              some: {
-                status: 'LIVE'
-              }
-            }
-          },
-          select: {
-            id: true,
-            name: true,
-            externalSeason: true
-          },
-          distinct: ['id']
-        });
-        
-        console.log(`📊 Found ${activeCompetitions.length} active rugby competitions with LIVE games`);
-        
-        for (const competition of activeCompetitions) {
-          // Try to determine competition external ID from name
-          // Top 14 = 16, Pro D2 = ? (need to check)
-          let competitionExternalId: number | null = null;
-          if (competition.name.includes('Top 14')) {
-            competitionExternalId = 16;
-          }
-          // Add more competitions as needed
-          
-          if (competitionExternalId && competition.externalSeason) {
-            try {
-              console.log(`   Fetching all fixtures for ${competition.name} (ID: ${competitionExternalId}, Season: ${competition.externalSeason})...`);
-              const fixtures = await rugbyAPI.getFixturesByCompetition(competitionExternalId, competition.externalSeason);
-              
-              // Convert RugbyFixture[] to RugbyMatch[] using mapFixturesToMatches (private method)
-              const matches = (rugbyAPI as any).mapFixturesToMatches(fixtures);
-              
-              // Filter for finished matches only
-              const finishedFromCompetition = matches.filter((match: any) => 
-                match.externalStatus === 'FT' || 
-                match.externalStatus === 'AET' || 
-                match.externalStatus === 'PEN'
-              );
-              
-              console.log(`   Found ${finishedFromCompetition.length} finished matches in ${competition.name}`);
-              
-              // Add to finishedMatches (avoid duplicates by ID)
-              const existingIds = new Set(finishedMatches.map(m => m.id));
-              const newFinished = finishedFromCompetition.filter((m: any) => !existingIds.has(m.id));
-              finishedMatches = [...finishedMatches, ...newFinished];
-              console.log(`   Added ${newFinished.length} new finished matches from ${competition.name}`);
-            } catch (error) {
-              console.log(`   ⚠️ Could not fetch fixtures for ${competition.name}:`, error);
-            }
-          }
-        }
-        
-        console.log(`📊 Total finished matches after competition lookup: ${finishedMatches.length}`);
-      } catch (error) {
-        console.log('⚠️ Could not fetch finished matches from competitions:', error);
-      }
-    } else {
-      console.log('⏭️ Skipping getFixturesByCompetition() - no LIVE games in database');
-    }
-    
-    // Combine live and finished matches
-    let allExternalMatches = [...liveMatches, ...finishedMatches];
-    console.log(`📊 Total external rugby matches: ${allExternalMatches.length} (${liveMatches.length} live + ${finishedMatches.length} finished)`);
-    
-    // Always try fetching by ID if we have externalId (more reliable than date queries)
-    // Also check for games with externalStatus FT but still LIVE (need to be updated to FINISHED)
+    // OPTIMIZATION: Check if all games have externalId - if so, use getMatchById() only (much more efficient)
     const gamesWithExternalId = ourLiveGames.filter(game => game.externalId);
     const gamesWithoutExternalId = ourLiveGames.filter(game => !game.externalId);
+    const allGamesHaveExternalId = gamesWithoutExternalId.length === 0;
     
-    // gamesNeedingUpdate was already defined above, reuse it
-    if (gamesWithExternalId.length > 0 || gamesNeedingUpdate.length > 0) {
-      console.log(`🔍 Found ${gamesWithExternalId.length} rugby games with externalId, ${gamesNeedingUpdate.length} needing update (FT/AET/PEN but still LIVE)`);
+    let allExternalMatches: any[] = [];
+    
+    // Define finishedMatches for later use (needed for gamesNeedingFinish logic)
+    let finishedMatches: any[] = [];
+    
+    if (allGamesHaveExternalId && gamesWithExternalId.length > 0) {
+      // OPTIMIZATION: If all games have externalId, use getMatchById() only (saves 2-3 API calls per sync)
+      console.log('✅ All LIVE games have externalId - using getMatchById() only (optimized)');
       const matchesById: any[] = [];
       const gamesToFetch = new Set([...gamesWithExternalId, ...gamesNeedingUpdate]);
       
       for (const game of gamesToFetch) {
-        if (!game.externalId) {
-          console.log(`⚠️ Game ${game.homeTeam.name} vs ${game.awayTeam.name} needs update but has no externalId`);
-          continue;
-        }
+        if (!game.externalId) continue;
         
         try {
           const externalId = parseInt(game.externalId!);
           if (!isNaN(externalId)) {
-            console.log(`🔍 Fetching rugby match ID ${externalId} for ${game.homeTeam.name} vs ${game.awayTeam.name} (current status: ${game.status}, external: ${game.externalStatus})...`);
+            console.log(`🔍 Fetching rugby match ID ${externalId} for ${game.homeTeam.name} vs ${game.awayTeam.name}...`);
             const matchById = await rugbyAPI.getMatchById(externalId);
             if (matchById) {
               matchesById.push(matchById);
-              console.log(`✅ Found rugby match by ID: ${matchById.homeTeam.name} vs ${matchById.awayTeam.name} (status: ${matchById.externalStatus}, score: ${matchById.score?.home}-${matchById.score?.away})`);
-            } else {
-              console.log(`⚠️ Rugby match ID ${externalId} not found in API`);
+              console.log(`✅ Found rugby match by ID: ${matchById.homeTeam.name} vs ${matchById.awayTeam.name} (status: ${matchById.externalStatus})`);
+              // If match is finished, also add to finishedMatches for consistency
+              if (matchById.externalStatus === 'FT' || matchById.externalStatus === 'AET' || matchById.externalStatus === 'PEN') {
+                finishedMatches.push(matchById);
+              }
             }
           }
         } catch (error) {
           console.log(`⚠️ Could not fetch rugby match ${game.externalId}:`, error);
         }
       }
-      // Merge with existing matches (avoid duplicates)
-      const existingIds = new Set(allExternalMatches.map(m => m.id));
-      const newMatches = matchesById.filter(m => !existingIds.has(m.id));
-      allExternalMatches = [...allExternalMatches, ...newMatches];
-      console.log(`📊 Total external rugby matches after ID lookup: ${allExternalMatches.length} (${newMatches.length} new from ID lookup)`);
+      
+      allExternalMatches = matchesById;
+      console.log(`📊 Total external rugby matches from ID lookup: ${allExternalMatches.length}`);
+    } else {
+      // Fallback: Use original logic if some games don't have externalId
+      console.log('🔄 Calling Rugby API to fetch live matches...');
+      
+      let liveMatches: any[] = [];
+      try {
+        liveMatches = await rugbyAPI.getLiveMatches();
+        console.log(`📊 API returned ${liveMatches.length} live rugby matches`);
+      } catch (error) {
+        console.log('⚠️ Could not fetch live rugby matches:', error);
+      }
+      
+      // Only fetch finished matches if we have games needing update (FT/AET/PEN but still LIVE)
+      let finishedMatches: any[] = [];
+      if (gamesNeedingUpdate.length > 0) {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const yesterdayStr = new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const tomorrowStr = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        try {
+          const allRecentMatches = await rugbyAPI.getMatchesByDateRange(yesterdayStr, tomorrowStr);
+          finishedMatches = allRecentMatches.filter(match => 
+            match.externalStatus === 'FT' || 
+            match.externalStatus === 'AET' || 
+            match.externalStatus === 'PEN'
+          );
+          console.log(`📊 Found ${finishedMatches.length} finished rugby matches from yesterday/today/tomorrow`);
+        } catch (error) {
+          console.log('⚠️ Could not fetch finished rugby matches:', error);
+        }
+      } else {
+        console.log('⏭️ Skipping finished matches fetch - no games needing update');
+      }
+      
+      // Skip getFixturesByCompetition() - it's expensive and not needed if we have externalId
+      // Only use it as last resort if games don't have externalId
+      
+      // Combine live and finished matches
+      allExternalMatches = [...liveMatches, ...finishedMatches];
+      console.log(`📊 Total external rugby matches: ${allExternalMatches.length} (${liveMatches.length} live + ${finishedMatches.length} finished)`);
+      
+      // Also fetch by ID for games that have externalId (more reliable)
+      if (gamesWithExternalId.length > 0 || gamesNeedingUpdate.length > 0) {
+        console.log(`🔍 Found ${gamesWithExternalId.length} rugby games with externalId, ${gamesNeedingUpdate.length} needing update`);
+        const matchesById: any[] = [];
+        const gamesToFetch = new Set([...gamesWithExternalId, ...gamesNeedingUpdate]);
+        
+        for (const game of gamesToFetch) {
+          if (!game.externalId) continue;
+          
+          try {
+            const externalId = parseInt(game.externalId!);
+            if (!isNaN(externalId)) {
+              console.log(`🔍 Fetching rugby match ID ${externalId} for ${game.homeTeam.name} vs ${game.awayTeam.name}...`);
+              const matchById = await rugbyAPI.getMatchById(externalId);
+              if (matchById) {
+                matchesById.push(matchById);
+                console.log(`✅ Found rugby match by ID: ${matchById.homeTeam.name} vs ${matchById.awayTeam.name} (status: ${matchById.externalStatus})`);
+              }
+            }
+          } catch (error) {
+            console.log(`⚠️ Could not fetch rugby match ${game.externalId}:`, error);
+          }
+        }
+        
+        // Merge with existing matches (avoid duplicates)
+        const existingIds = new Set(allExternalMatches.map(m => m.id));
+        const newMatches = matchesById.filter(m => !existingIds.has(m.id));
+        allExternalMatches = [...allExternalMatches, ...newMatches];
+        console.log(`📊 Total external rugby matches after ID lookup: ${allExternalMatches.length} (${newMatches.length} new from ID lookup)`);
+      }
     }
     
     // CRITICAL FIX: For games WITHOUT externalId, also search by date and team names
