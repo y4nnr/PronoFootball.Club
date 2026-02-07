@@ -63,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'PUT') {
-    const { homeTeamId, awayTeamId, date, homeScore, awayScore, status } = req.body;
+    const { homeTeamId, awayTeamId, date, homeScore, awayScore, status, externalId } = req.body;
     if (!homeTeamId || !awayTeamId || !date) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -102,6 +102,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         homeScore: normalizedHomeScore,
         awayScore: normalizedAwayScore,
       };
+      
+      // Allow setting externalId explicitly (for fixing mismatched games)
+      if (externalId !== undefined) {
+        if (externalId === null || externalId === '') {
+          updateData.externalId = null;
+          updateData.externalStatus = null;
+        } else {
+          updateData.externalId = externalId.toString();
+        }
+      }
       
       // Only update status if explicitly provided
       if (status) {

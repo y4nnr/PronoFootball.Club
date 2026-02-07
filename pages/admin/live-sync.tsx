@@ -307,6 +307,47 @@ export default function AdminLiveSync() {
     }
   };
 
+  const handleSetExternalId = async (gameId: string, externalId: string) => {
+    if (!confirm(`Set external ID ${externalId} for this game? This will link the game to the external API match.`)) {
+      return;
+    }
+    
+    setResettingGame(gameId);
+    try {
+      const game = games.find(g => g.id === gameId);
+      if (!game) {
+        throw new Error('Game not found');
+      }
+      
+      const response = await fetch(`/api/admin/games/${gameId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          homeTeamId: game.homeTeam.id,
+          awayTeamId: game.awayTeam.id,
+          date: game.date,
+          homeScore: game.homeScore,
+          awayScore: game.awayScore,
+          status: game.status,
+          externalId: externalId,
+        }),
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to set external ID');
+      }
+      
+      // Refresh games list
+      fetchGames();
+    } catch (err) {
+      console.error('[ADMIN LIVE SYNC] Error setting external ID:', err);
+      alert(err instanceof Error ? err.message : 'Failed to set external ID');
+    } finally {
+      setResettingGame(null);
+    }
+  };
+
   const toggleExpand = (gameId: string, game: LiveSyncGame) => {
     if (expandedGames.has(gameId)) {
       setExpandedGames(prev => {
@@ -629,7 +670,16 @@ export default function AdminLiveSync() {
                                     </div>
                                   ) : g.externalMatch.id && !g.externalId ? (
                                     <div className="text-blue-400 bg-blue-900/20 border border-blue-700 rounded p-2">
-                                      ℹ️ External ID found in API ({g.externalMatch.id}) but not stored in our DB
+                                      <div className="flex items-center justify-between">
+                                        <span>ℹ️ External ID found in API ({g.externalMatch.id}) but not stored in our DB</span>
+                                        <button
+                                          onClick={() => handleSetExternalId(g.id, g.externalMatch.id.toString())}
+                                          disabled={resettingGame === g.id}
+                                          className="ml-2 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                          {resettingGame === g.id ? 'Setting...' : 'Set External ID'}
+                                        </button>
+                                      </div>
                                     </div>
                                   ) : null}
                                   {g.externalMatch.homeTeam.name && g.externalMatch.awayTeam.name && 

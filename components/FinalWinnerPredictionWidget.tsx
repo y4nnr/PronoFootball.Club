@@ -99,7 +99,9 @@ export default function FinalWinnerPredictionWidget({
       <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
         <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
           <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
-            <TrophyIcon className="h-5 w-5 md:h-6 md:w-6 text-primary-600 dark:text-accent-dark-400 mr-2" />
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <TrophyIcon className="h-6 w-6 text-white" />
+            </div>
             <span className="md:hidden">Vainqueur Final</span>
             <span className="hidden md:inline">Prédiction du Vainqueur Final</span>
           </h3>
@@ -116,7 +118,9 @@ export default function FinalWinnerPredictionWidget({
       {/* Header */}
       <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
         <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
-          <TrophyIcon className="h-5 w-5 md:h-6 md:w-6 text-primary-600 dark:text-accent-dark-400 mr-2" />
+          <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+            <TrophyIcon className="h-6 w-6 text-white" />
+          </div>
           <span className="md:hidden">Vainqueur Final</span>
           <span className="hidden md:inline">Prédiction du Vainqueur Final</span>
         </h3>
