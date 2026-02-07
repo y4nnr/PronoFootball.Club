@@ -1245,6 +1245,19 @@ export default async function handler(
         let newStatus = externalMatch.status; // Already mapped by RugbyAPI
         const newExternalStatus = externalMatch.externalStatus; // Original external status (HT, 1H, 2H, etc.)
         
+        // Log status transition for debugging
+        const currentExternalStatus = matchingGame.externalStatus;
+        if (currentExternalStatus && currentExternalStatus !== newExternalStatus) {
+          console.log(`   🔄 ExternalStatus transition: ${currentExternalStatus} → ${newExternalStatus}`);
+          // Warn if this looks like a regression (e.g., 2H → HT)
+          if ((currentExternalStatus === '2H' && newExternalStatus === 'HT') || 
+              (currentExternalStatus === '2H' && newExternalStatus === '1H') ||
+              (currentExternalStatus === 'HT' && newExternalStatus === '1H')) {
+            console.log(`   ⚠️ WARNING: Potential status regression detected! External API returned ${newExternalStatus} but game was at ${currentExternalStatus}`);
+            console.log(`      This might be a temporary API issue. Will update to ${newExternalStatus} as API is source of truth.`);
+          }
+        }
+        
         // IMPORTANT: Ensure that HT, 1H, 2H are always treated as LIVE, not FINISHED
         // This prevents matches in half-time from being incorrectly marked as finished
         if ((newExternalStatus === 'HT' || newExternalStatus === '1H' || newExternalStatus === '2H') && newStatus === 'FINISHED') {
@@ -1279,9 +1292,11 @@ export default async function handler(
         const shouldUpdate = scoresChanged || elapsedChanged || statusChanged || matchingGame.status === 'LIVE';
 
         // Prepare update data
+        // IMPORTANT: Always use externalStatus from API - it's the source of truth
+        // Even if it seems like a regression, the external API is authoritative
         const updateData: any = {
           externalId: externalMatch.id.toString(), // Store external ID for future direct lookups
-          externalStatus: newExternalStatus,
+          externalStatus: newExternalStatus, // Always use what external API says
           status: newStatus,
           lastSyncAt: new Date()
         };
@@ -1293,6 +1308,7 @@ export default async function handler(
         console.log(`   📊 Setting scores: ${externalHomeScore}-${externalAwayScore} (externalStatus: ${newExternalStatus})`);
 
         // Add elapsedMinute if available
+        // IMPORTANT: Always use what external API provides - it's the source of truth
         if (externalMatch.elapsedMinute !== null && externalMatch.elapsedMinute !== undefined) {
           const previousElapsed = (matchingGame as any).elapsedMinute;
           updateData.elapsedMinute = externalMatch.elapsedMinute;
@@ -1305,8 +1321,11 @@ export default async function handler(
           // For HT (half-time), elapsedMinute is expected to be null
           if (newExternalStatus === 'HT') {
             console.log(`   ⏱️ Half-time (HT) - elapsedMinute is null (expected). Badge "MT" should be displayed.`);
+            updateData.elapsedMinute = null;
           } else {
             console.log(`   ⚠️ No elapsedMinute in external match (status: ${newExternalStatus}, value: ${externalMatch.elapsedMinute}). This might be an API issue.`);
+            // If API doesn't provide elapsedMinute, clear it (API is source of truth)
+            updateData.elapsedMinute = null;
           }
         }
 
