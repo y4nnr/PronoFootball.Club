@@ -178,19 +178,29 @@ export default async function handler(
       console.log(`📊 Total external rugby matches from ID lookup: ${allExternalMatches.length}`);
     } else {
       // Fallback: Use original logic if some games don't have externalId
-      console.log('🔄 Calling Rugby API to fetch live matches...');
-      
+      // OPTIMIZATION: Skip getLiveMatches() if all games have externalId (even in fallback)
+      // We'll fetch them by ID which is more efficient
       let liveMatches: any[] = [];
-      try {
-        liveMatches = await rugbyAPI.getLiveMatches();
-        console.log(`📊 API returned ${liveMatches.length} live rugby matches`);
-      } catch (error) {
-        console.log('⚠️ Could not fetch live rugby matches:', error);
+      if (gamesWithoutExternalId.length > 0) {
+        // Only fetch live matches if we have games without externalId
+        console.log('🔄 Calling Rugby API to fetch live matches (some games don\'t have externalId)...');
+        try {
+          liveMatches = await rugbyAPI.getLiveMatches();
+          console.log(`📊 API returned ${liveMatches.length} live rugby matches`);
+        } catch (error) {
+          console.log('⚠️ Could not fetch live rugby matches:', error);
+        }
+      } else {
+        console.log('⏭️ Skipping getLiveMatches() - all games have externalId (will fetch by ID)');
       }
       
-      // Only fetch finished matches if we have games needing update (FT/AET/PEN but still LIVE)
+      // OPTIMIZATION: Only fetch finished matches if we have games needing update AND they don't have externalId
+      // If games needing update have externalId, we'll fetch them by ID (more efficient)
       let finishedMatches: any[] = [];
-      if (gamesNeedingUpdate.length > 0) {
+      const gamesNeedingUpdateWithoutExternalId = gamesNeedingUpdate.filter(game => !game.externalId);
+      
+      if (gamesNeedingUpdateWithoutExternalId.length > 0) {
+        // Only fetch finished matches if we have games needing update that don't have externalId
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
         const yesterdayStr = new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -208,7 +218,7 @@ export default async function handler(
           console.log('⚠️ Could not fetch finished rugby matches:', error);
         }
       } else {
-        console.log('⏭️ Skipping finished matches fetch - no games needing update');
+        console.log('⏭️ Skipping finished matches fetch - all games needing update have externalId (will fetch by ID)');
       }
       
       // Skip getFixturesByCompetition() - it's expensive and not needed if we have externalId

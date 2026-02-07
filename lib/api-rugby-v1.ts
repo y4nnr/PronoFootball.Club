@@ -195,17 +195,19 @@ export class RugbyAPI {
    */
   async getMatchesByDateRange(startDate: string, endDate: string): Promise<RugbyMatch[]> {
     try {
-      // Try /games first, fallback to /fixtures
-      // For date ranges, try multiple formats: single date, date range with 'to', and date range with 'date' twice
+      // OPTIMIZATION: For single date, try /games first (most common), then /fixtures only if needed
+      // For date ranges, try the most efficient format first
       let data: any = null;
       let allGames: any[] = [];
       
-      // If startDate and endDate are the same, just use single date
+      // If startDate and endDate are the same, just use single date (most common case)
       if (startDate === endDate) {
         try {
           data = await this.makeRequest(`/games?date=${startDate}`);
-          if (data.response && Array.isArray(data.response)) {
+          if (data.response && Array.isArray(data.response) && data.response.length > 0) {
             allGames = [...allGames, ...data.response];
+            // Success - return early to avoid unnecessary /fixtures call
+            return this.parseRugbyMatches(allGames);
           }
         } catch (error) {
           console.warn(`[RUGBY API] /games?date=${startDate} failed, trying /fixtures...`);
@@ -219,14 +221,14 @@ export class RugbyAPI {
           }
         }
       } else {
-        // Date range - try multiple formats
+        // Date range - try most efficient format first, stop early if successful
         const datesToTry = [
-          `/games?date=${startDate}&to=${endDate}`,
-          `/games?date=${startDate}`,
-          `/games?date=${endDate}`,
-          `/fixtures?date=${startDate}&to=${endDate}`,
-          `/fixtures?date=${startDate}`,
-          `/fixtures?date=${endDate}`
+          `/games?date=${startDate}&to=${endDate}`, // Most specific format
+          `/games?date=${startDate}`, // Fallback to start date
+          `/games?date=${endDate}`, // Fallback to end date
+          `/fixtures?date=${startDate}&to=${endDate}`, // Only if /games failed
+          `/fixtures?date=${startDate}`, // Only if above failed
+          `/fixtures?date=${endDate}` // Only if above failed
         ];
         
         for (const endpoint of datesToTry) {
@@ -240,10 +242,11 @@ export class RugbyAPI {
                 const dateStr = new Date(gameDate).toISOString().split('T')[0];
                 return dateStr >= startDate && dateStr <= endDate;
               });
-              allGames = [...allGames, ...filteredGames];
               if (filteredGames.length > 0) {
+                allGames = [...allGames, ...filteredGames];
                 console.log(`[RUGBY API] Found ${filteredGames.length} games using ${endpoint}`);
-                break; // Stop trying other endpoints if we found games
+                // OPTIMIZATION: Stop early if we found games (don't try remaining endpoints)
+                break;
               }
             }
           } catch (error) {
