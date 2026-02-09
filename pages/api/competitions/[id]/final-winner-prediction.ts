@@ -5,6 +5,35 @@ import { prisma } from '../../../../lib/prisma';
 
 const PLACEHOLDER_TEAM_NAME = 'xxxx';
 
+// Hardcoded list of teams eligible for Champions League final winner prediction
+// These are the exact team names as they appear in the database
+const ELIGIBLE_CHAMPIONS_LEAGUE_TEAMS = [
+  'Arsenal',
+  'Bayern Munich',
+  'Liverpool',
+  'Tottenham', // Note: DB has "Tottenham" not "Tottenham Hotspur"
+  'Barcelona',
+  'Chelsea',
+  'Sporting CP',
+  'Manchester City',
+  'Real Madrid',
+  'Inter Milan',
+  'Paris Saint-Germain',
+  'Newcastle United',
+  'Juventus',
+  'Atlético Madrid',
+  'Atalanta',
+  'Bayer Leverkusen',
+  'Borussia Dortmund',
+  'Olympiacos',
+  'Club Brugge',
+  'Galatasaray',
+  'Monaco',
+  'Qarabağ',
+  'Bodø/Glimt',
+  'Benfica'
+];
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -83,11 +112,14 @@ export default async function handler(
         }
       }
 
-      // Get all upcoming games (including placeholder games) to find available teams
-      const upcomingGames = await prisma.game.findMany({
+      // Get the next game (deadline) - earliest upcoming/live/rescheduled game
+      // Note: This doesn't need to be the final game. The deadline is when the next game starts,
+      // and users can select from the hardcoded eligible teams list until then.
+      // The final game can be defined later and will be automatically detected when it finishes.
+      const nextGame = await prisma.game.findFirst({
         where: {
           competitionId,
-          status: { in: ['UPCOMING', 'LIVE'] }
+          status: { in: ['UPCOMING', 'LIVE', 'RESCHEDULED'] }
         },
         include: {
           homeTeam: {
@@ -110,51 +142,26 @@ export default async function handler(
         orderBy: { date: 'asc' }
       });
 
-      console.log(`[Final Winner Prediction] Found ${upcomingGames.length} upcoming/live games for competition ${competitionId}`);
-
-      // Find the next game (deadline) - earliest upcoming/live game
-      const nextGame = upcomingGames.length > 0 ? upcomingGames[0] : null;
       const deadline = nextGame ? new Date(nextGame.date) : null;
       const deadlinePassed = deadline ? new Date() >= deadline : true;
 
-      // Extract available teams (excluding placeholders)
-      const availableTeamsMap = new Map<string, {
-        id: string;
-        name: string;
-        logo: string | null;
-        shortName: string | null;
-      }>();
-
-      upcomingGames.forEach(game => {
-        const homeTeamNameLower = game.homeTeam.name.toLowerCase();
-        const awayTeamNameLower = game.awayTeam.name.toLowerCase();
-        const placeholderLower = PLACEHOLDER_TEAM_NAME.toLowerCase();
-        
-        if (homeTeamNameLower !== placeholderLower && homeTeamNameLower !== 'xxxx2') {
-          availableTeamsMap.set(game.homeTeam.id, game.homeTeam);
-          console.log(`[Final Winner Prediction] Added team: ${game.homeTeam.name}`);
-        } else {
-          console.log(`[Final Winner Prediction] Skipped placeholder home team: ${game.homeTeam.name}`);
-        }
-        
-        if (awayTeamNameLower !== placeholderLower && awayTeamNameLower !== 'xxxx2') {
-          availableTeamsMap.set(game.awayTeam.id, game.awayTeam);
-          console.log(`[Final Winner Prediction] Added team: ${game.awayTeam.name}`);
-        } else {
-          console.log(`[Final Winner Prediction] Skipped placeholder away team: ${game.awayTeam.name}`);
-        }
+      // Get available teams from hardcoded list (exact DB names)
+      // Look up teams by name to get their full data
+      const availableTeams = await prisma.team.findMany({
+        where: {
+          name: { in: ELIGIBLE_CHAMPIONS_LEAGUE_TEAMS },
+          sportType: 'FOOTBALL'
+        },
+        select: {
+          id: true,
+          name: true,
+          logo: true,
+          shortName: true
+        },
+        orderBy: { name: 'asc' }
       });
 
-      const availableTeams = Array.from(availableTeamsMap.values());
-      console.log(`[Final Winner Prediction] Total available teams: ${availableTeams.length}`);
-
-      // If no upcoming games, check if competition has any games at all
-      if (upcomingGames.length === 0) {
-        const totalGames = await prisma.game.count({
-          where: { competitionId }
-        });
-        console.log(`[Final Winner Prediction] No upcoming games found. Total games in competition: ${totalGames}`);
-      }
+      console.log(`[Final Winner Prediction] Found ${availableTeams.length} eligible teams from hardcoded list`);
 
       return res.status(200).json({
         prediction: userPrediction,
@@ -192,34 +199,21 @@ export default async function handler(
         return res.status(400).json({ error: 'Deadline has passed. Prediction cannot be changed.' });
       }
 
-      // Verify team exists and is available (in upcoming games)
-      const allUpcomingGames = await prisma.game.findMany({
-        where: {
-          competitionId,
-          status: { in: ['UPCOMING', 'LIVE'] }
-        },
-        include: {
-          homeTeam: true,
-          awayTeam: true
-        }
-      });
-
-      const isTeamAvailable = allUpcomingGames.some(game =>
-        (game.homeTeamId === teamId && game.homeTeam.name.toLowerCase() !== PLACEHOLDER_TEAM_NAME.toLowerCase() && game.homeTeam.name.toLowerCase() !== 'xxxx2') ||
-        (game.awayTeamId === teamId && game.awayTeam.name.toLowerCase() !== PLACEHOLDER_TEAM_NAME.toLowerCase() && game.awayTeam.name.toLowerCase() !== 'xxxx2')
-      );
-
-      if (!isTeamAvailable) {
-        return res.status(400).json({ error: 'Team is not available for selection (eliminated or invalid)' });
-      }
-
-      // Verify team exists in database
+      // Verify team exists and is in the eligible list
       const team = await prisma.team.findUnique({
-        where: { id: teamId }
+        where: { id: teamId },
+        select: { id: true, name: true, sportType: true }
       });
 
       if (!team) {
         return res.status(400).json({ error: 'Team not found' });
+      }
+
+      // Check if team is in the eligible list
+      const isTeamEligible = ELIGIBLE_CHAMPIONS_LEAGUE_TEAMS.includes(team.name) && team.sportType === 'FOOTBALL';
+      
+      if (!isTeamEligible) {
+        return res.status(400).json({ error: 'Team is not eligible for final winner prediction' });
       }
 
       // Ensure user is part of the competition

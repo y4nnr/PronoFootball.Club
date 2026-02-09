@@ -42,30 +42,67 @@ export async function awardFinalWinnerPoints(
     }
 
     // Check if this is the final game
-    // The final is the last game in the competition (by date, then by id for consistency)
-    // Exclude games with placeholder teams from being considered as the final
-    const allGames = await prisma.game.findMany({
-      where: { 
-        competitionId,
-        // Exclude placeholder games from final detection
-        homeTeam: {
-          name: { not: { in: [PLACEHOLDER_TEAM_NAME, 'xxxx2'] } }
+    // 
+    // HOW TO MARK THE FINAL GAME:
+    // Option 1 (Recommended): Set matchday to a high number (e.g., 99) when creating/editing the final game
+    //   - Why 99? It's clearly not a real matchday number (Champions League typically uses 1-16)
+    //   - It's easy to remember and clearly indicates "this is the final"
+    //   - Any number >= 13 will work, but 99 is a safe convention that won't conflict
+    //
+    // Option 2: Use the actual Champions League matchday number if known
+    //   - Group stage: matchdays 1-6
+    //   - Round of 16: matchdays 7-10
+    //   - Quarter-finals: matchdays 11-12
+    //   - Semi-finals: matchdays 13-14
+    //   - Final: typically matchday 15 or 16
+    //   - So matchday 15 or 16 would also work, but 99 is clearer as a marker
+    //
+    // Option 3: Don't set matchday - system will detect final as the last game by date
+    //   - Less reliable if games are rescheduled or created out of order
+    //
+    // Priority 1: Explicit matchday marking (matchday >= 13, recommended: matchday = 99 for clarity)
+    // Priority 2: Date-based detection (last game by date, excluding placeholders)
+    
+    let isFinal = false;
+    
+    // First, check if this specific game is explicitly marked as final by matchday
+    // Any matchday >= 13 will work, but 99 is recommended as a clear marker
+    if (game.matchday !== null && game.matchday >= 13) {
+      isFinal = true;
+      console.log(`🏆 Game identified as final by explicit matchday: ${game.matchday}`);
+    } else {
+      // Fallback: Check if this is the last game by date (excluding placeholders)
+      // This works even if the final game is created later and has an earlier date
+      const allGames = await prisma.game.findMany({
+        where: { 
+          competitionId,
+          // Exclude placeholder games from final detection
+          homeTeam: {
+            name: { not: { in: [PLACEHOLDER_TEAM_NAME, 'xxxx2'] } }
+          },
+          awayTeam: {
+            name: { not: { in: [PLACEHOLDER_TEAM_NAME, 'xxxx2'] } }
+          }
         },
-        awayTeam: {
-          name: { not: { in: [PLACEHOLDER_TEAM_NAME, 'xxxx2'] } }
-        }
-      },
-      orderBy: [
-        { date: 'desc' },
-        { id: 'desc' } // Secondary sort for consistency
-      ]
-    });
+        orderBy: [
+          { date: 'desc' },
+          { id: 'desc' } // Secondary sort for consistency
+        ]
+      });
 
-    // The final is the last game (most recent date) without placeholder teams
-    const finalGame = allGames.length > 0 ? allGames[0] : null;
+      // The final is the last game (most recent date) without placeholder teams
+      const finalGame = allGames.length > 0 ? allGames[0] : null;
+      isFinal = finalGame?.id === gameId;
+      
+      if (isFinal) {
+        console.log(`🏆 Game identified as final by date (last game in competition)`);
+        console.log(`💡 Tip: Set matchday = 99 on this game to explicitly mark it as final`);
+      }
+    }
 
     // If this game is not the final, skip
-    if (!finalGame || finalGame.id !== gameId) {
+    if (!isFinal) {
+      console.log(`⏭️  Game ${gameId} is not the final, skipping final winner points`);
       return;
     }
 
