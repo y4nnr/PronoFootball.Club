@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '../../../lib/prisma';
 
+const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+
 // Helper function to calculate streaks
 function calculateStreaks(bets: any[]) {
   if (bets.length === 0) {
@@ -176,6 +178,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           
           // Calculate forgotten bets - games user should have bet on but didn't
           // Only count competitions starting August 2025 onwards (exclude old competitions)
+          // Exclude placeholder-team games (xxxx, xxx2, xxxx2) so they don't inflate no-shows
           const userCompetitions = await prisma.competitionUser.findMany({
             where: { 
               userId: user.id,
@@ -190,7 +193,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 include: {
                   games: {
                     where: {
-                      status: { in: ['FINISHED', 'LIVE'] } // Only count finished/live games
+                      status: { in: ['FINISHED', 'LIVE'] },
+                      AND: [
+                        { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+                        { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+                      ]
                     }
                   }
                 }
@@ -198,7 +205,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           });
           
-          // Filter to only include competitions starting August 2025 onwards
           const recentCompetitions = userCompetitions.filter((userComp: any) => 
             new Date(userComp.competition.startDate) >= new Date('2025-08-01')
           );
@@ -270,6 +276,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           
           // Calculate forgotten bets - games user should have bet on but didn't
           // Only count competitions starting August 2025 onwards (exclude old competitions)
+          // Exclude placeholder-team games (xxxx, xxx2, xxxx2) so they don't inflate no-shows
           const userCompetitions = await prisma.competitionUser.findMany({
             where: { 
               userId: user.id,
@@ -284,7 +291,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 include: {
                   games: {
                     where: {
-                      status: { in: ['FINISHED', 'LIVE'] } // Only count finished/live games
+                      status: { in: ['FINISHED', 'LIVE'] },
+                      AND: [
+                        { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+                        { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+                      ]
                     }
                   }
                 }
@@ -292,7 +303,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           });
           
-          // Filter to only include competitions starting August 2025 onwards
           const recentCompetitions = userCompetitions.filter((userComp: any) => 
             new Date(userComp.competition.startDate) >= new Date('2025-08-01')
           );
