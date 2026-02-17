@@ -369,11 +369,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     );
 
-    // Sort by total points for leaderboard
+    // Include users with at least one bet OR at least one no-show (joined competition but never bet),
+    // so No-Show (Shooters) matches Classement en cours. Return full pool (no slice) so the stats page
+    // can show top 10 by points, top 10 by no-shows, etc. from the same list.
     const topPlayersByPoints = usersWithCalculatedStats
-      .filter(user => user.stats.totalPredictions > 0)
-      .sort((a, b) => b.stats.totalPoints - a.stats.totalPoints)
-      .slice(0, 10);
+      .filter(user => user.stats.totalPredictions > 0 || (user.stats.forgottenBets ?? 0) > 0)
+      .sort((a, b) => b.stats.totalPoints - a.stats.totalPoints);
 
     // Sort by average points (minimum 50 games)
     const topPlayersByAverage = usersWithCalculatedStats
