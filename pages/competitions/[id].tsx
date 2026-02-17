@@ -1562,20 +1562,27 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       (game as any).bets = gamesMap.get(game.id) || [];
     });
 
-    // OPTIMIZED: Single query to get all user bets for this competition
-    // Only count bets from finished games for the leaderboard
-    const allUserBets = await prisma.bet.findMany({
+    // Classement: only count games without placeholder teams (xxxx, xxx2, xxxx2)
+    const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+    const finishedNonPlaceholderGameIds = await prisma.game.findMany({
       where: {
-        game: {
-          competitionId: competition.id,
-          status: 'FINISHED' // Only count bets from finished games
-        }
+        competitionId: competition.id,
+        status: 'FINISHED',
+        AND: [
+          { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+          { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+        ]
       },
-      select: {
-        userId: true,
-        points: true
-      }
+      select: { id: true }
     });
+    const finishedGameIds = finishedNonPlaceholderGameIds.map(g => g.id);
+
+    const allUserBets = finishedGameIds.length === 0
+      ? []
+      : await prisma.bet.findMany({
+          where: { gameId: { in: finishedGameIds } },
+          select: { userId: true, points: true }
+        });
 
     // OPTIMIZED: Process stats in memory instead of N+1 queries
     const userBetMap = new Map<string, { 

@@ -2,38 +2,44 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../lib/prisma';
 import { API_CONFIG } from '../../lib/api-config';
 
+const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+
 // Feature flag routing: Use V2 if enabled, otherwise use V1
 // V2 will be imported dynamically when USE_API_V2=true
 let updateLiveScoresV2: ((req: NextApiRequest, res: NextApiResponse) => Promise<void>) | null = null;
 
-// Helper function to update shooters for all users in a competition
+// Helper function to update shooters for all users in a competition (excludes placeholder-team games)
 async function updateShootersForCompetition(competitionId: string) {
   try {
-    // Get all users in this competition
     const competitionUsers = await prisma.competitionUser.findMany({
       where: { competitionId },
       include: { user: true }
     });
 
-    // Get all finished/live games in this competition
     const finishedGames = await prisma.game.findMany({
       where: {
         competitionId,
-        status: { in: ['FINISHED', 'LIVE'] }
+        status: { in: ['FINISHED', 'LIVE'] },
+        AND: [
+          { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+          { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+        ]
       }
     });
 
     const totalGames = finishedGames.length;
 
-    // Update shooters for each user
     for (const competitionUser of competitionUsers) {
-      // Count how many games this user bet on in this competition
       const userBets = await prisma.bet.count({
         where: {
           userId: competitionUser.userId,
           game: {
             competitionId,
-            status: { in: ['FINISHED', 'LIVE'] }
+            status: { in: ['FINISHED', 'LIVE'] },
+            AND: [
+              { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+              { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+            ]
           }
         }
       });
