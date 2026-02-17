@@ -5,6 +5,9 @@ import { prisma } from '../../../../lib/prisma';
 
 const PLACEHOLDER_TEAM_NAME = 'xxxx';
 
+// Selection is locked from this date (games of Feb 17 started) – users can no longer change their pick
+const SELECTION_LOCK_AT = new Date('2026-02-17T00:00:00.000Z');
+
 // Hardcoded list of teams eligible for Champions League final winner prediction
 // These are the exact team names as they appear in the database
 const ELIGIBLE_CHAMPIONS_LEAGUE_TEAMS = [
@@ -144,6 +147,7 @@ export default async function handler(
 
       const deadline = nextGame ? new Date(nextGame.date) : null;
       const deadlinePassed = deadline ? new Date() >= deadline : true;
+      const selectionLocked = new Date() >= SELECTION_LOCK_AT;
 
       // Get available teams from hardcoded list (exact DB names)
       // Look up teams by name to get their full data
@@ -167,6 +171,7 @@ export default async function handler(
         prediction: userPrediction,
         deadline: deadline?.toISOString() || null,
         deadlinePassed,
+        selectionLocked,
         availableTeams,
         nextGame: nextGame ? {
           id: nextGame.id,
@@ -182,6 +187,11 @@ export default async function handler(
 
       if (!teamId || typeof teamId !== 'string') {
         return res.status(400).json({ error: 'Team ID is required' });
+      }
+
+      // Reject changes when selection is locked (from Feb 17 onward)
+      if (new Date() >= SELECTION_LOCK_AT) {
+        return res.status(400).json({ error: 'La sélection est verrouillée. Vous ne pouvez plus la modifier.' });
       }
 
       // Check if deadline has passed

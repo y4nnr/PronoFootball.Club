@@ -25,6 +25,7 @@ export default function FinalWinnerPredictionWidget({
   const [availableTeams, setAvailableTeams] = useState<Team[]>([]);
   const [deadline, setDeadline] = useState<Date | null>(null);
   const [deadlinePassed, setDeadlinePassed] = useState(false);
+  const [selectionLocked, setSelectionLocked] = useState(false);
   const [nextGame, setNextGame] = useState<{ id: string; date: string; homeTeam: string; awayTeam: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -49,6 +50,7 @@ export default function FinalWinnerPredictionWidget({
         setAvailableTeams(data.availableTeams || []);
         setDeadline(data.deadline ? new Date(data.deadline) : null);
         setDeadlinePassed(data.deadlinePassed);
+        setSelectionLocked(!!data.selectionLocked);
         setNextGame(data.nextGame);
         if (data.prediction) {
           setSelectedTeamId(data.prediction.id);
@@ -66,7 +68,7 @@ export default function FinalWinnerPredictionWidget({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTeamId || deadlinePassed) return;
+    if (!selectedTeamId || deadlinePassed || selectionLocked) return;
 
     try {
       setSubmitting(true);
@@ -150,58 +152,55 @@ export default function FinalWinnerPredictionWidget({
           </div>
         )}
 
-        {/* Form or Status */}
-        {!deadlinePassed ? (
-          availableTeams.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Bientôt disponible</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <select
-                  id="team-select"
-                  value={selectedTeamId}
-                  onChange={(e) => setSelectedTeamId(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 transition-all"
-                  required
-                  disabled={submitting}
-                >
-                  <option value="">-- Choisir une équipe --</option>
-                  {availableTeams.map((team) => (
-                    <option key={team.id} value={team.id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <button
-                type="submit"
-                disabled={!selectedTeamId || submitting || deadlinePassed}
-                className="w-full px-4 py-3 bg-primary-600 dark:bg-accent-dark-600 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-accent-dark-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-md hover:shadow-lg"
-              >
-                {submitting ? (
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Enregistrement...
-                  </span>
-                ) : (
-                  'Confirmer'
-                )}
-              </button>
-            </form>
-          )
-        ) : (
+        {/* Form or read-only when locked */}
+        {selectionLocked || deadlinePassed ? (
           <div className="p-4 bg-gray-50 dark:bg-[rgb(40,40,40)] border border-gray-200 dark:border-gray-600 rounded-lg">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {prediction ? (
-                <>Le délai est dépassé. Votre prédiction <span className="font-semibold text-primary-600 dark:text-accent-dark-400">{prediction.name}</span> est verrouillée.</>
+                <>La sélection est verrouillée. Votre prédiction <span className="font-semibold text-primary-600 dark:text-accent-dark-400">{prediction.name}</span> ne peut plus être modifiée.</>
               ) : (
-                'Le délai est dépassé. Vous ne pouvez plus faire de prédiction.'
+                'La sélection est verrouillée. Vous ne pouvez plus faire de prédiction.'
               )}
             </p>
           </div>
+        ) : availableTeams.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Bientôt disponible</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <select
+                id="team-select"
+                value={selectedTeamId}
+                onChange={(e) => setSelectedTeamId(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[rgb(40,40,40)] text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-accent-dark-500 focus:border-primary-500 dark:focus:border-accent-dark-500 transition-all"
+                required
+                disabled={submitting}
+              >
+                <option value="">-- Choisir une équipe --</option>
+                {availableTeams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              disabled={!selectedTeamId || submitting}
+              className="w-full px-4 py-3 bg-primary-600 dark:bg-accent-dark-600 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-accent-dark-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all font-semibold text-sm shadow-md hover:shadow-lg"
+            >
+              {submitting ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  Enregistrement...
+                </span>
+              ) : (
+                'Confirmer'
+              )}
+            </button>
+          </form>
         )}
       </div>
 

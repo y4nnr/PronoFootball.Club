@@ -1109,6 +1109,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       select: { id: true }
     });
 
+    // Placeholder team names – games with these teams are hidden from the betting carousel
+    const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+
     // Include all games from today onwards for the betting carousel
     // This ensures all of today's games (Ligue 1, Top 14, etc.) appear in the carousel
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -1125,7 +1128,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         status: 'UPCOMING', // Only UPCOMING games
         date: {
           gte: startOfDay // Today onwards (include all of today's games)
-        }
+        },
+        AND: [
+          { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+          { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+        ]
       },
       include: {
         homeTeam: {

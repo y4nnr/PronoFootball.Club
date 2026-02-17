@@ -50,10 +50,8 @@ interface BettingGame {
   betCount: number;
 }
 
-// Placeholder team name used when the actual qualified team is not yet known.
-// Games involving this placeholder should be hidden from user-facing lists,
-// but they are still part of the competition schedule for progression bars.
-const PLACEHOLDER_TEAM_NAME = 'xxxx';
+// Placeholder team names – games involving these are hidden from betting/dashboard lists.
+const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
 
 export default async function handler(
   req: NextApiRequest,
@@ -151,16 +149,8 @@ export default async function handler(
           },
           // Exclude placeholder teams (used as TBD when qualifiers are unknown)
           AND: [
-            {
-              homeTeam: {
-                name: { not: PLACEHOLDER_TEAM_NAME }
-              }
-            },
-            {
-              awayTeam: {
-                name: { not: PLACEHOLDER_TEAM_NAME }
-              }
-            }
+            { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+            { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
           ]
         },
         select: {
@@ -234,16 +224,8 @@ export default async function handler(
             gte: dateFilter
           },
           AND: [
-            {
-              homeTeam: {
-                name: { not: PLACEHOLDER_TEAM_NAME }
-              }
-            },
-            {
-              awayTeam: {
-                name: { not: PLACEHOLDER_TEAM_NAME }
-              }
-            }
+            { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+            { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
           ]
         }
       });
@@ -255,20 +237,12 @@ export default async function handler(
             in: activeCompetitions.map(comp => comp.id)
           },
           status: 'UPCOMING', // Only games available for betting
-          date: {
+date: {
             gte: dateFilter
           },
           AND: [
-            {
-              homeTeam: {
-                name: { not: PLACEHOLDER_TEAM_NAME }
-              }
-            },
-            {
-              awayTeam: {
-                name: { not: PLACEHOLDER_TEAM_NAME }
-              }
-            }
+            { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+            { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
           ]
         },
         select: {
@@ -283,15 +257,15 @@ export default async function handler(
           elapsedMinute: true, // V2: Chronometer
           homeTeam: { select: { id: true, name: true, logo: true, shortName: true } },
           awayTeam: { select: { id: true, name: true, logo: true, shortName: true } },
-          competition: { 
-            select: { 
-              id: true, 
-              name: true, 
-              logo: true, 
-              sportType: true 
-            } 
+          competition: {
+            select: {
+              id: true,
+              name: true,
+              logo: true,
+              sportType: true
+            }
           },
-          bets: { 
+          bets: {
             select: { 
               id: true, 
               userId: true,

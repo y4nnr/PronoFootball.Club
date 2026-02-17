@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]';
 import { prisma } from '../../../../lib/prisma';
 
+// Placeholder team names – games with these teams are hidden from "Performance des 10 Derniers Matchs".
+const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+
 interface PlayerLastGamePerformance {
   gameId: string;
   date: string;
@@ -71,11 +74,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const userIds = competitionUsers.map(cu => cu.user.id);
 
-    // Get the last 10 finished games from this competition
+    // Get the last 10 finished games from this competition (exclude placeholder teams)
     const finishedGames = await prisma.game.findMany({
       where: {
         competitionId,
-        status: 'FINISHED'
+        status: 'FINISHED',
+        AND: [
+          { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+          { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+        ]
       },
       include: {
         homeTeam: true,
