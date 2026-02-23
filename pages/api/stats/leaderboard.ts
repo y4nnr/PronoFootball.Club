@@ -73,6 +73,10 @@ interface Competition {
 interface UserStats {
   totalPredictions: number;
   totalPoints: number;
+  /** Bets and points since 2025-08-01 (Champions League 25/26) for moyenne par pari */
+  totalPredictionsRecent?: number;
+  totalPointsRecent?: number;
+  totalFinishedGames?: number; // all-time finished games in user's competitions (for moyenne par match)
   exactScores: number;
   correctOutcomes: number;
   noShows: number;
@@ -217,6 +221,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             );
             forgottenBets += competitionGames.length - userBetsInCompetition.length;
           }
+          const totalFinishedGames = userCompetitions.reduce((sum: number, uc: any) => sum + uc.competition.games.length, 0);
+          const recentBetsForPari = filteredFinishedBets.filter((bet: any) => 
+            new Date(bet.game.competition.startDate) >= new Date('2025-08-01')
+          );
+          const totalPredictionsRecent = recentBetsForPari.length;
+          const totalPointsRecent = recentBetsForPari.reduce((s: number, b: any) => s + b.points, 0);
           
           // Calculate actual competition wins (not games with points) - only completed competitions
           const competitionWins = competitions.filter((comp: any) => comp.winner?.id === user.id && comp.status === 'COMPLETED').length;
@@ -235,6 +245,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           stats = {
             totalPredictions: totalBets,
             totalPoints,
+            totalPredictionsRecent,
+            totalPointsRecent,
+            totalFinishedGames,
             exactScores,
             correctOutcomes,
             noShows,
@@ -315,6 +328,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             );
             forgottenBets += competitionGames.length - userBetsInCompetition.length;
           }
+          // All-time finished games for Moyenne par Match
+          const totalFinishedGames = userCompetitions.reduce((sum: number, uc: any) => sum + uc.competition.games.length, 0);
+          const recentBetsForPari = filteredFinishedBets.filter((bet: any) => 
+            new Date(bet.game.competition.startDate) >= new Date('2025-08-01')
+          );
+          const totalPredictionsRecent = recentBetsForPari.length;
+          const totalPointsRecent = recentBetsForPari.reduce((s: number, b: any) => s + b.points, 0);
           
           // Calculate streaks only from competitions starting August 2025 onwards
           const recentBets = filteredFinishedBets.filter((bet: any) => 
@@ -337,6 +357,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             ...stats,
             totalPredictions: totalBets,
             totalPoints,
+            totalPredictionsRecent,
+            totalPointsRecent,
+            totalFinishedGames,
             exactScores,
             correctOutcomes,
             noShows,
@@ -376,16 +399,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .filter(user => user.stats.totalPredictions > 0 || (user.stats.forgottenBets ?? 0) > 0)
       .sort((a, b) => b.stats.totalPoints - a.stats.totalPoints);
 
-    // Sort by average points (minimum 50 games)
+    // Sort by average points per bet since CL 25/26 (min 50 paris) — Moyenne par pari
     const topPlayersByAverage = usersWithCalculatedStats
-      .filter(user => user.stats.totalPredictions >= 50)
+      .filter(user => (user.stats.totalPredictionsRecent ?? user.stats.totalPredictions) >= 50)
+      .map(user => {
+        const recent = user.stats.totalPredictionsRecent ?? 0;
+        return {
+          ...user,
+          averagePoints: recent > 0 && (user.stats.totalPointsRecent ?? user.stats.totalPoints) !== undefined
+            ? parseFloat(((user.stats.totalPointsRecent ?? user.stats.totalPoints) / recent).toFixed(3))
+            : 0
+        };
+      })
+      .sort((a, b) => b.averagePoints - a.averagePoints)
+      .slice(0, 10);
+
+    // Sort by average points per finished game, all-time (min 50 matchs) — Moyenne par match
+    const topPlayersByAveragePerGame = usersWithCalculatedStats
+      .filter(user => (user.stats.totalFinishedGames ?? 0) >= 50)
       .map(user => ({
         ...user,
-        averagePoints: user.stats.totalPredictions > 0 
-          ? parseFloat((user.stats.totalPoints / user.stats.totalPredictions).toFixed(3))
+        averagePerGame: (user.stats.totalFinishedGames ?? 0) > 0
+          ? parseFloat((user.stats.totalPoints / (user.stats.totalFinishedGames ?? 0)).toFixed(3))
           : 0
       }))
-      .sort((a, b) => b.averagePoints - a.averagePoints)
+      .sort((a, b) => b.averagePerGame - a.averagePerGame)
       .slice(0, 10);
 
     // Get total user count (excluding admins)
@@ -448,6 +486,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       topPlayersByPoints,
       topPlayersByAverage,
+      topPlayersByAveragePerGame,
       totalUsers,
       competitions: sortedCompetitions
     });

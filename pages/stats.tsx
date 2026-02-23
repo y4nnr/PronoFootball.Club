@@ -47,6 +47,7 @@ interface LeaderboardUser {
 interface LeaderboardData {
   topPlayersByPoints: LeaderboardUser[];
   topPlayersByAverage: LeaderboardUser[];
+  topPlayersByAveragePerGame?: (LeaderboardUser & { averagePerGame?: number })[];
   totalUsers: number;
   competitions: Array<{
     id: string;
@@ -512,7 +513,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   {t('stats.topPlayersAllTime')}
                 </h3>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Données depuis UEFA Euro 2016
+                  Depuis UEFA Euro 2016
                 </div>
               </div>
               {/* Content Section */}
@@ -594,15 +595,15 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               </div>
             </div>
 
-            {/* Meilleure Moyenne */}
+            {/* Meilleure Moyenne par Pari */}
             <div className="bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between">
               {/* Header Section */}
               <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
                 <h3 className="text-gray-900 dark:text-gray-100 text-base font-bold">
-                  {t('stats.bestAverage')}
+                  Meilleure Moyenne par Pari
                 </h3>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Données depuis UEFA Euro 2016
+                  Depuis Champions League 25/26 · Min. 50 paris placés
                 </div>
               </div>
               {/* Content Section */}
@@ -627,10 +628,56 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                         />
                         <div>
                           <span className="font-medium text-neutral-900 dark:text-gray-100">{player.name}</span>
-                          <p className="text-xs text-neutral-500 dark:text-gray-400">{player.stats.totalPredictions} {t('stats.games')}</p>
+                          <p className="text-xs text-neutral-500 dark:text-gray-400">{(player.stats as any)?.totalPredictionsRecent ?? player.stats.totalPredictions} {t('stats.games')}</p>
                         </div>
                       </div>
                       <span className="font-semibold text-neutral-900 dark:text-gray-100">{truncateTo3Decimals(player.averagePoints ?? 0)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-neutral-500 dark:text-gray-400">{t('stats.noDataAvailable')}</div>
+                )}
+                </div>
+              </div>
+            </div>
+
+            {/* Meilleure Moyenne par Match */}
+            <div className="bg-white dark:bg-[rgb(58,58,58)] border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg dark:shadow-dark-modern-lg overflow-hidden flex flex-col justify-between">
+              {/* Header Section */}
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3">
+                <h3 className="text-gray-900 dark:text-gray-100 text-base font-bold">
+                  Meilleure Moyenne par Match
+                </h3>
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Depuis UEFA Euro 2016 · Min. 50 matchs terminés
+                </div>
+              </div>
+              {/* Content Section */}
+              <div className="p-4">
+                <div className="space-y-3">
+                {loading ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="text-sm text-neutral-500 dark:text-gray-400 mt-2">{t('loading')}...</p>
+                  </div>
+                ) : leaderboardData?.topPlayersByAveragePerGame && leaderboardData.topPlayersByAveragePerGame.length > 0 ? (
+                  leaderboardData.topPlayersByAveragePerGame.slice(0, 10).map((player: LeaderboardUser & { averagePerGame?: number; stats?: { totalFinishedGames?: number } }, index: number) => (
+                    <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-primary-300/60 dark:border-gray-600 ${
+                      player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(58,58,58)]"
+                    }`}>
+                      <div className="flex items-center space-x-3">
+                        <span className={`text-lg font-medium mr-2 ${index === 0 ? 'text-yellow-500 dark:text-yellow-400' : index === 1 ? 'text-gray-400 dark:text-gray-500' : index === 2 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300'}`}>{index + 1}.</span>
+                        <img 
+                          src={getUserAvatar(player.name)} 
+                          alt={player.name}
+                          className="w-8 h-8 rounded-full object-cover border border-neutral-200 dark:border-gray-600 dark:bg-white dark:p-0.5"
+                        />
+                        <div>
+                          <span className="font-medium text-neutral-900 dark:text-gray-100">{player.name}</span>
+                          <p className="text-xs text-neutral-500 dark:text-gray-400">{(player.stats as any)?.totalFinishedGames ?? 0} {t('stats.games')}</p>
+                        </div>
+                      </div>
+                      <span className="font-semibold text-neutral-900 dark:text-gray-100">{truncateTo3Decimals((player as any).averagePerGame ?? 0)}</span>
                     </div>
                   ))
                 ) : (
@@ -648,7 +695,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   Total 1-N-2 Corrects
                 </h3>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Données depuis Champions League 25/26
+                  Depuis Champions League 25/26
                 </div>
               </div>
               {/* Content Section */}
@@ -697,7 +744,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   {t('stats.mostExactScores')}
                 </h3>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Données depuis Champions League 25/26
+                  Depuis Champions League 25/26
                 </div>
               </div>
               {/* Content Section */}
@@ -746,7 +793,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                   No-Show (Shooters)
                 </h3>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Données depuis Champions League 25/26
+                  Depuis Champions League 25/26
                 </div>
               </div>
               {/* Content Section */}

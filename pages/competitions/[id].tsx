@@ -127,6 +127,8 @@ interface CompetitionDetailsProps {
   games: Game[];
   currentUserId: string;
   isUserMember: boolean;
+  /** Number of finished games in the competition (excluding placeholder teams), for Moy. par match */
+  finishedGamesCount: number;
 }
 
 // Deterministic date formatting to avoid hydration errors
@@ -140,7 +142,7 @@ function formatDateTime(dateString: string) {
   return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
-export default function CompetitionDetails({ competition, competitionStats, games, currentUserId, isUserMember }: CompetitionDetailsProps) {
+export default function CompetitionDetails({ competition, competitionStats, games, currentUserId, isUserMember, finishedGamesCount = 0 }: CompetitionDetailsProps) {
   const { t } = useTranslation('common');
   const [showAllGames, setShowAllGames] = useState(false);
   const [gamesWithBets, setGamesWithBets] = useState<Map<string, any[]>>(new Map());
@@ -353,6 +355,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
         aValue = a.totalPredictions > 0 ? a.totalPoints / a.totalPredictions : 0;
         bValue = b.totalPredictions > 0 ? b.totalPoints / b.totalPredictions : 0;
         break;
+      case 'averagePerGame':
+        aValue = finishedGamesCount > 0 ? a.totalPoints / finishedGamesCount : 0;
+        bValue = finishedGamesCount > 0 ? b.totalPoints / finishedGamesCount : 0;
+        break;
       case 'exactScores':
         aValue = a.exactScores || 0;
         bValue = b.exactScores || 0;
@@ -469,7 +475,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
       'player': 'Joueurs',
       'points': 'Pts',
       'games': 'M',
-      'average': 'Moy',
+      'average': 'Moy/pari',
+      'averagePerGame': 'Moy/match',
       'exactScores': 'SE',
       'correctWinners': 'RC',
       'shooters': 'S'
@@ -883,24 +890,37 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       onClick={() => window.innerWidth >= 768 && handleSort('average')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
-                        <div className="hidden md:flex items-center justify-center space-x-0.5">
-                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            {t('competition.average')}
-                          </span>
+                        <div className="hidden md:flex flex-col items-center justify-center space-y-0.5">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">MOYENNE</span>
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">/ PARI</span>
                           {sortColumn === 'average' && (
-                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">
-                              {sortDirection === 'asc' ? '↑' : '↓'}
-                            </span>
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                           )}
                         </div>
                         <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
-                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider leading-none">
-                            {getMobileHeaderAbbr('average')}
-                          </span>
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase leading-none">{getMobileHeaderAbbr('average')}</span>
                           {sortColumn === 'average' && (
-                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">
-                              {sortDirection === 'asc' ? '↑' : '↓'}
-                            </span>
+                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                          )}
+                        </div>
+                      </div>
+                    </th>
+                    <th 
+                      className="w-10 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      onClick={() => window.innerWidth >= 768 && handleSort('averagePerGame')}
+                    >
+                      <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
+                        <div className="hidden md:flex flex-col items-center justify-center space-y-0.5">
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">MOYENNE</span>
+                          <span className="text-[9px] md:text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">/ MATCH</span>
+                          {sortColumn === 'averagePerGame' && (
+                            <span className="text-gray-700 dark:text-gray-200 text-[9px] md:text-[10px] lg:text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                          )}
+                        </div>
+                        <div className="flex flex-col md:hidden items-center justify-center space-y-0.5">
+                          <span className="text-[9px] font-bold text-gray-500 dark:text-gray-300 uppercase leading-none">{getMobileHeaderAbbr('averagePerGame')}</span>
+                          {sortColumn === 'averagePerGame' && (
+                            <span className="text-gray-700 dark:text-gray-200 text-[7px] mt-0.5">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                           )}
                         </div>
                       </div>
@@ -1054,9 +1074,14 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.totalPredictions}</div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
-                        <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">
-                          {player.totalPredictions > 0 ? (player.totalPoints / player.totalPredictions).toFixed(2) : '0.00'}
+                      <td className="px-1 md:px-2 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
+                        <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100" title="Points par pari placé">
+                          {player.totalPredictions > 0 ? (player.totalPoints / player.totalPredictions).toFixed(2) : '–'}
+                        </div>
+                      </td>
+                      <td className="px-1 md:px-2 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
+                        <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100" title="Points par match terminé">
+                          {finishedGamesCount > 0 ? (player.totalPoints / finishedGamesCount).toFixed(2) : '–'}
                         </div>
                       </td>
                       <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
@@ -1099,9 +1124,14 @@ export default function CompetitionDetails({ competition, competitionStats, game
                   <span className="text-gray-600 dark:text-gray-400">Matchs</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="font-bold text-gray-800 dark:text-gray-200">Moy</span>
+                  <span className="font-bold text-gray-800 dark:text-gray-200">Moy/pari</span>
                   <span className="text-gray-600 dark:text-gray-400">=</span>
-                  <span className="text-gray-600 dark:text-gray-400">Moyenne</span>
+                  <span className="text-gray-600 dark:text-gray-400">Moyenne par pari placé</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-gray-800 dark:text-gray-200">Moy/match</span>
+                  <span className="text-gray-600 dark:text-gray-400">=</span>
+                  <span className="text-gray-600 dark:text-gray-400">Moyenne par match terminé</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="font-bold text-gray-800 dark:text-gray-200">SE</span>
@@ -1662,6 +1692,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         games: JSON.parse(JSON.stringify(games)),
         currentUserId: session.user.id,
         isUserMember,
+        finishedGamesCount: finishedGameIds.length,
       },
     };
   } catch (error) {
