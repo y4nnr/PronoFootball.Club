@@ -475,8 +475,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
       'player': 'Joueurs',
       'points': 'Pts',
       'games': 'M',
-      'average': 'Moy/pari',
-      'averagePerGame': 'Moy/match',
+      'average': 'M/P',
+      'averagePerGame': 'M/G',
       'exactScores': 'SE',
       'correctWinners': 'RC',
       'shooters': 'S'
@@ -1124,12 +1124,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
                   <span className="text-gray-600 dark:text-gray-400">Matchs</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="font-bold text-gray-800 dark:text-gray-200">Moy/pari</span>
+                  <span className="font-bold text-gray-800 dark:text-gray-200">M/P</span>
                   <span className="text-gray-600 dark:text-gray-400">=</span>
                   <span className="text-gray-600 dark:text-gray-400">Moyenne par pari placé</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="font-bold text-gray-800 dark:text-gray-200">Moy/match</span>
+                  <span className="font-bold text-gray-800 dark:text-gray-200">M/G</span>
                   <span className="text-gray-600 dark:text-gray-400">=</span>
                   <span className="text-gray-600 dark:text-gray-400">Moyenne par match terminé</span>
                 </div>
