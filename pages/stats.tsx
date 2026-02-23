@@ -543,7 +543,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                           />
                           <div>
                             <span className="font-medium text-neutral-900 dark:text-gray-100">{player.name}</span>
-                            <p className="text-xs text-neutral-500 dark:text-gray-400">{player.stats.totalPredictions} {t('stats.games')}</p>
+                            <p className="text-xs text-neutral-500 dark:text-gray-400">{player.stats.totalPredictions} {t('stats.paris')}</p>
                           </div>
                         </div>
                         <span className="font-semibold text-neutral-900 dark:text-gray-100">{player.stats.totalPoints} <span className="hidden md:inline">{t('stats.points').toLowerCase()}</span></span>
@@ -628,7 +628,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                         />
                         <div>
                           <span className="font-medium text-neutral-900 dark:text-gray-100">{player.name}</span>
-                          <p className="text-xs text-neutral-500 dark:text-gray-400">{(player.stats as any)?.totalPredictionsRecent ?? player.stats.totalPredictions} {t('stats.games')}</p>
+                          <p className="text-xs text-neutral-500 dark:text-gray-400">{(player.stats as any)?.totalPredictionsRecent ?? player.stats.totalPredictions} {t('stats.paris')}</p>
                         </div>
                       </div>
                       <span className="font-semibold text-neutral-900 dark:text-gray-100">{truncateTo3Decimals(player.averagePoints ?? 0)}</span>
@@ -723,7 +723,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                           />
                           <div>
                             <span className="font-medium text-neutral-900 dark:text-gray-100">{player.name}</span>
-                            <p className="text-xs text-neutral-500 dark:text-gray-400">{player.stats.totalPredictions} {t('stats.games')}</p>
+                            <p className="text-xs text-neutral-500 dark:text-gray-400">{(player.stats as any)?.totalPredictionsRecent ?? player.stats.totalPredictions} {t('stats.paris')}</p>
                           </div>
                         </div>
                         <span className="font-semibold text-neutral-900 dark:text-gray-100">{player.stats.correctOutcomes || 0}</span>
@@ -772,7 +772,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                           />
                           <div>
                             <span className="font-medium text-neutral-900 dark:text-gray-100">{player.name}</span>
-                            <p className="text-xs text-neutral-500 dark:text-gray-400">{player.stats.totalPredictions} {t('stats.games')}</p>
+                            <p className="text-xs text-neutral-500 dark:text-gray-400">{(player.stats as any)?.totalPredictionsRecent ?? player.stats.totalPredictions} {t('stats.paris')}</p>
                           </div>
                         </div>
                         <span className="font-semibold text-neutral-900 dark:text-gray-100">{player.stats.exactScores || 0}</span>
@@ -821,7 +821,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                           />
                           <div>
                             <span className="font-medium text-neutral-900 dark:text-gray-100">{player.name}</span>
-                            <p className="text-xs text-neutral-500 dark:text-gray-400">{player.stats.totalPredictions} {t('stats.games')}</p>
+                            <p className="text-xs text-neutral-500 dark:text-gray-400">{(player.stats as any)?.totalPredictionsRecent ?? player.stats.totalPredictions} {t('stats.paris')}</p>
                           </div>
                         </div>
                         <span className="font-semibold text-neutral-900 dark:text-gray-100">{player.stats.forgottenBets || 0}</span>
