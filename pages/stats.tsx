@@ -614,7 +614,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
                     <p className="text-sm text-neutral-500 dark:text-gray-400 mt-2">{t('loading')}...</p>
                   </div>
-                ) : leaderboardData?.topPlayersByAverage ? (
+                ) : leaderboardData?.topPlayersByAverage?.length ? (
                   leaderboardData.topPlayersByAverage.slice(0, 10).map((player, index) => (
                     <div key={player.id} className={`flex items-center justify-between p-3 rounded-xl border border-primary-300/60 dark:border-gray-600 ${
                       player.id === currentUser.id ? "bg-blue-50 dark:!bg-[rgb(40,40,40)] ring-2 ring-blue-300 dark:ring-accent-dark-500 border-blue-300 dark:border-accent-dark-500" : "bg-white dark:bg-[rgb(58,58,58)]"
