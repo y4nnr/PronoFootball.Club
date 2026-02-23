@@ -11,32 +11,49 @@ import { RugbyAPI } from '../../lib/api-rugby-v1';
 import { API_CONFIG } from '../../lib/api-config';
 import { matchTeamsWithOpenAI } from '../../lib/openai-team-matcher';
 
-// Helper function to update shooters for all users in a competition
+const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+
+// Helper function to update shooters for all users in a competition (same as football: no-shows = forgotten bets)
 async function updateShootersForCompetition(competitionId: string) {
   try {
-    // Get all users in this competition
     const competitionUsers = await prisma.competitionUser.findMany({
       where: { competitionId },
       include: { user: true }
     });
 
-    for (const compUser of competitionUsers) {
-      // Count exact score predictions (3 points) for this user in this competition
-      const exactScores = await prisma.bet.count({
+    const finishedGames = await prisma.game.findMany({
+      where: {
+        competitionId,
+        status: { in: ['FINISHED', 'LIVE'] },
+        AND: [
+          { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+          { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+        ]
+      }
+    });
+
+    const totalGames = finishedGames.length;
+
+    for (const competitionUser of competitionUsers) {
+      const userBets = await prisma.bet.count({
         where: {
-          userId: compUser.userId,
+          userId: competitionUser.userId,
           game: {
             competitionId,
-            status: 'FINISHED'
-          },
-          points: 3
+            status: { in: ['FINISHED', 'LIVE'] },
+            AND: [
+              { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+              { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+            ]
+          }
         }
       });
 
-      // Update shooters count
+      const shooters = totalGames - userBets;
+
       await prisma.competitionUser.update({
-        where: { id: compUser.id },
-        data: { shooters: exactScores }
+        where: { id: competitionUser.id },
+        data: { shooters }
       });
     }
   } catch (error) {
