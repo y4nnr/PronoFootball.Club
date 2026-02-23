@@ -1076,12 +1076,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </td>
                       <td className="px-1 md:px-2 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100" title="Points par pari placé">
-                          {player.totalPredictions > 0 ? (player.totalPoints / player.totalPredictions).toFixed(2) : '–'}
+                          {player.totalPredictions > 0 ? (player.totalPoints / player.totalPredictions).toFixed(3) : '–'}
                         </div>
                       </td>
                       <td className="px-1 md:px-2 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100" title="Points par match terminé">
-                          {finishedGamesCount > 0 ? (player.totalPoints / finishedGamesCount).toFixed(2) : '–'}
+                          {finishedGamesCount > 0 ? (player.totalPoints / finishedGamesCount).toFixed(3) : '–'}
                         </div>
                       </td>
                       <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
