@@ -246,10 +246,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const [userIsMember, setUserIsMember] = useState(isUserMember);
   const [joiningCompetition, setJoiningCompetition] = useState(false);
 
-  // Placeholder team name used when the actual qualified team is not yet known.
-  // Games involving this placeholder should be hidden from user-facing lists
-  // ("Matchs Disponibles pour Parier" and "Tous les Matchs de la Compétition"),
-  // but they are still part of the competition schedule for progression bars.
+  // Placeholder team names – games with these are part of total count but must not count as "played" in the progress bar.
+  const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+  const isPlaceholderGame = (g: Game) => PLACEHOLDER_TEAM_NAMES.includes(g.homeTeam?.name ?? '') || PLACEHOLDER_TEAM_NAMES.includes(g.awayTeam?.name ?? '');
+  // Legacy: single placeholder name for lists that only check 'xxxx'
   const PLACEHOLDER_TEAM_NAME = 'xxxx';
 
   // Abbreviate team names for mobile display - 3 letters only
@@ -689,19 +689,19 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 <div 
                   className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-white transition-all duration-500 ease-out flex items-center justify-center"
                   style={{ 
-                    width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 : 0}%`,
+                    width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100 : 0}%`,
                     height: '100%',
-                    minWidth: competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 === 0 ? '0%' : 'auto'
+                    minWidth: competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100 === 0 ? '0%' : 'auto'
                   }}
                 >
-                  {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 > 0 && (
+                  {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100 > 0 && (
                     <span className="text-xs font-bold text-white dark:text-gray-200">
-                      {Math.round((games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100)}%
+                      {Math.round((games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100)}%
                     </span>
                   )}
                 </div>
                 {/* Show percentage text outside the bar when it's 0% or too small to fit text */}
-                {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED').length / competition._count.games) * 100 === 0 && (
+                {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100 === 0 && (
                   <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-bold text-neutral-800 dark:text-white">
                     0%
                   </span>
@@ -715,8 +715,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
             {/* Footer Section */}
             <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3">
               <p className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">
-                <span className="md:hidden">{games.filter(g => g.status === 'FINISHED').length} / {competition._count.games} matchs</span>
-                <span className="hidden md:inline">{games.filter(g => g.status === 'FINISHED').length} / {competition._count.games} matchs joués</span>
+                <span className="md:hidden">{games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length} / {competition._count.games} matchs</span>
+                <span className="hidden md:inline">{games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length} / {competition._count.games} matchs joués</span>
               </p>
             </div>
           </div>
@@ -783,7 +783,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 <thead className="bg-gray-100 dark:bg-[rgb(58,58,58)] border-b-2 border-gray-300 dark:border-gray-600">
                   <tr>
                     <th 
-                      className="w-10 md:w-16 px-1 md:px-4 py-1.5 md:py-2.5 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-10 md:w-16 px-1 md:px-4 py-1.5 md:py-2.5 text-center border-r border-gray-300 dark:border-gray-600 dark:bg-[rgb(58,58,58)] md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('position')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -805,7 +805,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-24 md:w-48 px-1 md:px-4 py-2 md:py-3 text-left md:text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-24 md:w-48 px-1 md:px-4 py-2 md:py-3 text-left md:text-center border-t-2 border-l-2 border-r-2 border-b-2 border-t-primary-400 border-l-primary-400 border-r-primary-400 border-b-primary-400 border-gray-300 dark:border-gray-600 dark:bg-[rgb(58,58,58)] md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('player')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -832,7 +832,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       </div>
                     </th>
                     <th 
-                      className="w-10 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-r border-gray-300 dark:border-gray-600 md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
+                      className="w-10 md:w-24 px-1 md:px-4 py-2 md:py-3 text-center border-t-2 border-l-2 border-r-2 border-b-2 border-t-primary-400 border-l-primary-400 border-r-primary-400 border-b-primary-400 border-gray-300 dark:border-gray-600 dark:bg-[rgb(58,58,58)] md:cursor-pointer md:hover:bg-gray-100 dark:md:hover:bg-gray-700 transition-colors select-none"
                       onClick={() => window.innerWidth >= 768 && handleSort('points')}
                     >
                       <div className="flex flex-col md:flex-row items-center justify-center space-y-0 md:space-x-1 h-full">
@@ -1010,6 +1010,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 </thead>
                 <tbody className="bg-white dark:bg-[rgb(20,20,20)] divide-y divide-gray-200 dark:divide-gray-600">
                   {sortedStats.slice(0, 10).map((player, index) => {
+                    const displayedRows = sortedStats.slice(0, 10);
+                    const isLastRow = index === displayedRows.length - 1;
                     // Determine row highlighting based on original position
                     const isFirst = player.position === 1;
                     const isSecond = player.position === 2;
@@ -1020,23 +1022,23 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     let rowBgClass = '';
                     let borderClass = '';
                     
-                    // Determine background colors for special positions
+                    // Determine background colors for special positions (light mode: no position colors; dark: keep; current user always highlighted)
                     if (isFirst) {
                       rowBgClass = isCurrentUser 
                         ? 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45' 
-                        : 'bg-amber-50/50 dark:bg-[rgb(20,20,20)]';
+                        : 'dark:bg-[rgb(20,20,20)]';
                     } else if (isSecond) {
                       rowBgClass = isCurrentUser 
                         ? 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45' 
-                        : 'bg-slate-50/50 dark:bg-[rgb(20,20,20)]';
+                        : 'dark:bg-[rgb(20,20,20)]';
                     } else if (isThird) {
                       rowBgClass = isCurrentUser 
                         ? 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45' 
-                        : 'bg-orange-50/50 dark:bg-[rgb(20,20,20)]';
+                        : 'dark:bg-[rgb(20,20,20)]';
                     } else if (isLast) {
                       rowBgClass = isCurrentUser 
                         ? 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45' 
-                        : 'bg-red-50/50 dark:bg-[rgb(20,20,20)]';
+                        : 'dark:bg-[rgb(20,20,20)]';
                     } else if (isCurrentUser) {
                       rowBgClass = 'bg-blue-50 dark:!bg-gray-800/95 md:dark:ring-1 md:dark:ring-accent-dark-500/45';
                     }
@@ -1048,12 +1050,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     
                     return (
                     <tr key={player.userId} className={rowBgClass}>
-                      <td className={`px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600 ${borderClass}`}>
+                      <td className={`px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600 dark:bg-[rgb(58,58,58)] ${borderClass}`}>
                         <div className={`inline-flex items-center justify-center w-6 h-6 md:w-8 md:h-8 rounded-full border-2 font-bold text-[10px] md:text-sm ${getPositionColor(player.position)}`}>
                           {getPositionIcon(player.position)}
                         </div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
+                      <td className={`px-2 md:px-4 py-1 md:py-3 whitespace-nowrap border-l-2 border-r-2 border-l-primary-400 border-r-primary-400 dark:border-l-gray-600 dark:border-r-gray-600 dark:bg-[rgb(58,58,58)] border-gray-200 dark:border-gray-600 ${isLastRow ? 'border-b-2 border-b-primary-400 dark:border-b-gray-600' : ''}`}>
                         {/* Mobile & Desktop: Name next to profile pic */}
                         <div className="flex items-center min-w-0">
                           <img 
@@ -1068,8 +1070,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           </div>
                         </div>
                       </td>
-                      <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
-                        <div className="text-sm md:text-lg font-bold text-gray-900 dark:text-gray-100">{player.totalPoints}</div>
+                      <td className={`px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-l-2 border-r-2 border-l-primary-400 border-r-primary-400 dark:border-l-gray-600 dark:border-r-gray-600 dark:bg-[rgb(58,58,58)] border-gray-200 dark:border-gray-600 ${isLastRow ? 'border-b-2 border-b-primary-400 dark:border-b-gray-600' : ''}`}>
+                        <div className="text-[10px] md:text-sm font-bold text-gray-900 dark:text-gray-100">{player.totalPoints}</div>
                       </td>
                       <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.totalPredictions}</div>

@@ -342,6 +342,8 @@ export default async function handler(
             : undefined;
 
           // Get total games and remaining games for this competition
+          // totalGames: all games (including placeholders xxxx/xxx2/xxxx2) for progress denominator
+          // finishedGames: only real games (exclude placeholders) that are FINISHED/LIVE – placeholders must not count as "played"
           const [totalGames, remainingGames, finishedGames] = await Promise.all([
             prisma.game.count({
               where: { competitionId: competition.id }
@@ -352,7 +354,11 @@ export default async function handler(
             prisma.game.count({
               where: { 
                 competitionId: competition.id, 
-                status: { in: ['FINISHED', 'LIVE'] }
+                status: { in: ['FINISHED', 'LIVE'] },
+                AND: [
+                  { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+                  { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
+                ]
               }
             })
           ]);
