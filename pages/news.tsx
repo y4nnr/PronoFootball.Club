@@ -11,6 +11,41 @@ type NewsItem = {
   matchDayDate: string;
 };
 
+// Abbreviate competition names for display (same logic as dashboard News widget)
+function abbreviateCompetitionName(competitionName: string): string {
+  const name = competitionName.trim();
+  const lowerName = name.toLowerCase();
+  
+  // Remove year patterns (e.g., "2025/26", "2025-26", "2025", "25/26")
+  const nameWithoutYear = name
+    .replace(/\s*\d{4}(?:\/\d{2}|-\d{2})?\s*/g, '')
+    .replace(/\s*\d{2}\/\d{2}\s*/g, '')
+    .trim();
+  
+  // Champions League variations
+  if (lowerName.includes('champions league')) {
+    return 'Champions League';
+  }
+  
+  // Ligue 1
+  if (lowerName.includes('ligue 1')) {
+    return 'Ligue 1';
+  }
+  
+  // Top 14
+  if (lowerName.includes('top 14')) {
+    return 'Top 14';
+  }
+  
+  // 6 Nations
+  if (lowerName.includes('6 nations') || lowerName.includes('six nations')) {
+    return '6 Nations';
+  }
+  
+  // For other competitions, return name without year
+  return nameWithoutYear || name;
+}
+
 export default function NewsPage() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -142,21 +177,34 @@ export default function NewsPage() {
                   {groupedNews[dateKey].map((item, index) => (
                     <div
                       key={`${item.date}-${item.competition}-${index}`}
-                      className="relative bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl p-4 md:p-5 border border-primary-300/60 shadow-modern hover:shadow-modern-lg transition-all duration-300 flex items-start space-x-3"
+                      className="relative bg-white dark:bg-[rgb(58,58,58)] rounded-xl border-2 border-gray-300 dark:border-gray-600 shadow-lg dark:shadow-dark-modern-lg overflow-hidden transition-all duration-300 hover:shadow-xl dark:hover:shadow-dark-xl hover:border-gray-400 dark:hover:border-gray-600"
                     >
-                      <div className="flex-shrink-0">
-                        {/* Competition logo */}
-                        <img
-                          src={item.logo}
-                          alt={item.competition}
-                          className="w-8 h-8 rounded-md object-contain bg-white border border-white/60 shadow-sm"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs md:text-sm text-neutral-600 mb-1 font-medium">
-                          {item.competition}
+                      {/* Header Section - Date & Competition (reuse dashboard News template) */}
+                      <div className="flex items-center gap-2 px-3 md:px-4 pt-3 md:pt-4 pb-2.5 md:pb-3 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500">
+                        {/* Date pill */}
+                        <div className="flex items-center gap-2 flex-shrink-0 bg-white dark:bg-[rgb(38,38,38)] px-2.5 py-1 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm">
+                          <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm text-gray-900 dark:text-gray-100 font-bold">
+                            {item.date}
+                          </span>
                         </div>
-                        <div className="text-sm md:text-base text-neutral-900 leading-relaxed">
+                        {/* Competition */}
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <img
+                            src={item.logo}
+                            alt={item.competition}
+                            className="w-6 h-6 md:w-7 md:h-7 dark:w-7 dark:h-7 dark:md:w-8 dark:md:h-8 rounded object-cover border border-gray-300 dark:border-gray-600 flex-shrink-0 shadow-sm dark:bg-white dark:p-0.5"
+                          />
+                          <span className="text-xs md:text-sm text-gray-800 dark:text-gray-200 font-semibold truncate">
+                            {abbreviateCompetitionName(item.competition)}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Content Section */}
+                      <div className="px-3 md:px-4 py-3 md:py-4">
+                        <div className="text-sm md:text-[15px] text-neutral-900 dark:text-gray-200 leading-snug">
                           {item.summary}
                         </div>
                       </div>
