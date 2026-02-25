@@ -537,7 +537,7 @@ const PlayerPointsProgressionWidget = memo(({
                             </div>
                           )}
             <div className={`text-xs font-bold relative z-10 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-              +{gameDay.points}
+              {gameDay.points}
             </div>
                         </div>
                       </div>
