@@ -348,15 +348,22 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                   MT
                 </span>
               ) : game.elapsedMinute !== null && game.elapsedMinute !== undefined ? (
+                game.sportType !== 'RUGBY' && game.elapsedMinute >= 91 && game.elapsedMinute < 120 ? (
+                  <>
+                    <span className="inline-flex items-center px-2.5 py-1 bg-orange-500 dark:bg-orange-600 text-white rounded-full text-[10px] font-bold animate-pulse border-2 border-orange-300 dark:border-orange-500 shadow-md">
+                      PL
+                    </span>
+                    <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
+                      {game.elapsedMinute}'
+                    </span>
+                  </>
+                ) : (
                 <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
-                  {game.elapsedMinute}'
-                  {game.sportType === 'RUGBY' && game.elapsedMinute >= 80 && (
-                    <span className="ml-0.5 text-[9px] opacity-75">/80</span>
-                  )}
-                  {game.sportType !== 'RUGBY' && game.elapsedMinute >= 90 && (
-                    <span className="ml-0.5 text-[9px] opacity-75">/90</span>
-                  )}
+                  {game.sportType === 'RUGBY'
+                    ? (game.elapsedMinute >= 80 ? '80+' : `${game.elapsedMinute}'`)
+                    : (game.elapsedMinute >= 120 ? '120+' : game.elapsedMinute === 90 ? '90+' : `${game.elapsedMinute}'`)}
                 </span>
+                )
               ) : (game.externalStatus === '1H' || game.externalStatus === '2H') ? (
                 <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
                   {game.externalStatus === '1H' ? '1/2' : '2/2'}
@@ -408,15 +415,22 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
                   MT
                 </span>
               ) : game.elapsedMinute !== null && game.elapsedMinute !== undefined ? (
+                game.sportType !== 'RUGBY' && game.elapsedMinute >= 91 && game.elapsedMinute < 120 ? (
+                  <>
+                    <span className="inline-flex items-center px-2.5 py-1 bg-orange-500 dark:bg-orange-600 text-white rounded-full text-[10px] font-bold animate-pulse border-2 border-orange-300 dark:border-orange-500 shadow-md">
+                      PL
+                    </span>
+                    <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
+                      {game.elapsedMinute}'
+                    </span>
+                  </>
+                ) : (
                 <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
-                  {game.elapsedMinute}'
-                  {game.sportType === 'RUGBY' && game.elapsedMinute >= 80 && (
-                    <span className="ml-0.5 text-[9px] opacity-75">/80</span>
-                  )}
-                  {game.sportType !== 'RUGBY' && game.elapsedMinute >= 90 && (
-                    <span className="ml-0.5 text-[9px] opacity-75">/90</span>
-                  )}
+                  {game.sportType === 'RUGBY'
+                    ? (game.elapsedMinute >= 80 ? '80+' : `${game.elapsedMinute}'`)
+                    : (game.elapsedMinute >= 120 ? '120+' : game.elapsedMinute === 90 ? '90+' : `${game.elapsedMinute}'`)}
                 </span>
+                )
               ) : (game.externalStatus === '1H' || game.externalStatus === '2H') ? (
                 <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
                   {game.externalStatus === '1H' ? '1/2' : '2/2'}
