@@ -186,8 +186,8 @@ const PlayerPointsProgressionWidget = memo(({
   const balancedMaxPoints = allPoints[percentile90Index] || maxPointsPerDay;
 
   // Calculate available width for bars (leave space for score badges)
-  const availableBarWidth = 85; // Percentage of container width available for bars
-  const badgeSpace = 15; // Percentage reserved for badges
+  const availableBarWidth = 90; // Percentage of container width available for bars
+  const badgeSpace = 10; // Percentage reserved for badges
 
   // Ensure minimum segment width for readability (prevents segments from becoming too small)
   const minSegmentWidth = 2; // Minimum 2% width for any segment
@@ -498,7 +498,7 @@ const PlayerPointsProgressionWidget = memo(({
                     return (
                       <div
                         key={gameDay.date}
-                        className={`relative h-full cursor-pointer transition-all duration-200 ${
+                        className={`relative h-full cursor-pointer transition-all duration-200 overflow-hidden ${
                           selectedDay && selectedDay.date === gameDay.date
                             ? 'ring-2 ring-lime-500 ring-opacity-70 shadow-lg transform scale-105'
                             : ''
@@ -521,7 +521,7 @@ const PlayerPointsProgressionWidget = memo(({
                           }
                         }}
                       >
-                        <div className="h-full flex items-center justify-center px-2 py-1 relative">
+                        <div className={`h-full flex items-center justify-center py-1 relative ${width < 15 ? 'px-0.5' : 'px-2'}`}>
                           {/* Vertical lines to represent points - purely visual, no layout impact */}
                           {gameDay.points > 1 && (
                             <div className="absolute inset-0 pointer-events-none">
