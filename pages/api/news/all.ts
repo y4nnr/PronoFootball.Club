@@ -9,6 +9,7 @@ type NewsItem = {
   logo: string;
   summary: string;
   matchDayDate: string; // ISO date string for sorting
+  sportType: string; // FOOTBALL | RUGBY - for filtering by sport
 };
 
 // Helper to format a Date in a short, human readable form (e.g. 17/12/2025)
@@ -98,6 +99,7 @@ export default async function handler(
           competition: {
             select: {
               name: true,
+              sportType: true,
             },
           },
         },
@@ -118,6 +120,7 @@ export default async function handler(
       logo: news.logo || '/images/competitions/champions-league.png',
       summary: news.summary,
       matchDayDate: news.matchDayDate.toISOString(), // For client-side sorting if needed
+      sportType: news.competition.sportType || 'FOOTBALL',
     }));
 
     return res.status(200).json(newsItems);

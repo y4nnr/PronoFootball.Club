@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { MegaphoneIcon } from '@heroicons/react/24/outline';
+import { MegaphoneIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
 type NewsItem = {
   date: string;
@@ -9,6 +9,7 @@ type NewsItem = {
   logo: string;
   summary: string;
   matchDayDate: string;
+  sportType: string; // FOOTBALL | RUGBY
 };
 
 // Abbreviate competition names for display (same logic as dashboard News widget)
@@ -52,6 +53,7 @@ export default function NewsPage() {
   const [items, setItems] = useState<NewsItem[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [sportFilter, setSportFilter] = useState<'ALL' | 'FOOTBALL' | 'RUGBY'>('ALL');
 
   useEffect(() => {
     let isMounted = true;
@@ -93,9 +95,13 @@ export default function NewsPage() {
     };
   }, []);
 
-  // Group news by date for better organization
-  const groupedNews = items
-    ? items.reduce((acc, item) => {
+  // Filter by sport then group news by date
+  const filteredItems = items && sportFilter !== 'ALL'
+    ? items.filter(item => item.sportType === sportFilter)
+    : items;
+
+  const groupedNews = filteredItems
+    ? filteredItems.reduce((acc, item) => {
         const dateKey = item.date;
         if (!acc[dateKey]) {
           acc[dateKey] = [];
@@ -119,11 +125,32 @@ export default function NewsPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center">
-            <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
-              <MegaphoneIcon className="h-6 w-6 text-white" />
+          <div className="flex flex-wrap items-center gap-4 justify-between">
+            <div className="flex items-center">
+              <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+                <MegaphoneIcon className="h-6 w-6 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-neutral-900 dark:text-gray-100">Toutes les News</h1>
             </div>
-            <h1 className="text-3xl font-bold text-neutral-900 dark:text-gray-100">Toutes les News</h1>
+            {/* Sport filter dropdown - only show when we have items */}
+            {!loading && items && items.length > 0 && (
+              <div className="relative">
+                <label htmlFor="sport-filter" className="sr-only">
+                  Filtrer par sport
+                </label>
+                <select
+                  id="sport-filter"
+                  value={sportFilter}
+                  onChange={(e) => setSportFilter(e.target.value as 'ALL' | 'FOOTBALL' | 'RUGBY')}
+                  className="appearance-none bg-white dark:bg-[rgb(58,58,58)] border border-gray-300 dark:border-gray-600 rounded-lg pl-4 pr-10 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-accent-dark-500 dark:focus:border-accent-dark-500"
+                >
+                  <option value="ALL">Tous les sports</option>
+                  <option value="FOOTBALL">Football</option>
+                  <option value="RUGBY">Rugby</option>
+                </select>
+                <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400 pointer-events-none" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -165,8 +192,18 @@ export default function NewsPage() {
           </div>
         )}
 
+        {/* Empty state when sport filter has no results */}
+        {!loading && !error && items && items.length > 0 && filteredItems && filteredItems.length === 0 && (
+          <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-600 p-8 text-center">
+            <MegaphoneIcon className="h-12 w-12 text-neutral-400 dark:text-gray-500 mx-auto mb-4" />
+            <p className="text-neutral-500 dark:text-gray-400">
+              Aucune news pour ce sport.
+            </p>
+          </div>
+        )}
+
         {/* News Items */}
-        {!loading && !error && items && items.length > 0 && (
+        {!loading && !error && items && items.length > 0 && filteredItems && filteredItems.length > 0 && (
           <div className="space-y-8">
             {sortedDates.map((dateKey) => (
               <div key={dateKey}>
