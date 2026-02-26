@@ -115,15 +115,15 @@ export default function NewsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-[rgb(20,20,20)] dark:to-[rgb(24,24,24)] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center">
-            <div className="p-3 bg-primary-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
+            <div className="p-3 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-3 flex items-center justify-center">
               <MegaphoneIcon className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-neutral-900">Toutes les News</h1>
+            <h1 className="text-3xl font-bold text-neutral-900 dark:text-gray-100">Toutes les News</h1>
           </div>
         </div>
 
@@ -133,14 +133,14 @@ export default function NewsPage() {
             {[0, 1, 2, 3].map((idx) => (
               <div
                 key={idx}
-                className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-5 animate-pulse"
+                className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-600 p-5 animate-pulse"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="w-7 h-7 rounded-md bg-neutral-200" />
+                  <div className="w-7 h-7 rounded-md bg-neutral-200 dark:bg-gray-600" />
                   <div className="flex-1 space-y-2">
-                    <div className="w-24 h-3 bg-neutral-200 rounded" />
-                    <div className="w-full h-3 bg-neutral-200 rounded" />
-                    <div className="w-3/4 h-3 bg-neutral-200 rounded" />
+                    <div className="w-24 h-3 bg-neutral-200 dark:bg-gray-600 rounded" />
+                    <div className="w-full h-3 bg-neutral-200 dark:bg-gray-600 rounded" />
+                    <div className="w-3/4 h-3 bg-neutral-200 dark:bg-gray-600 rounded" />
                   </div>
                 </div>
               </div>
@@ -150,16 +150,16 @@ export default function NewsPage() {
 
         {/* Error State */}
         {!loading && error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
         {/* Empty State */}
         {!loading && !error && items && items.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-2xl border border-neutral-200/50 p-8 text-center">
-            <MegaphoneIcon className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
-            <p className="text-neutral-500">
+          <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-600 p-8 text-center">
+            <MegaphoneIcon className="h-12 w-12 text-neutral-400 dark:text-gray-500 mx-auto mb-4" />
+            <p className="text-neutral-500 dark:text-gray-400">
               Pas encore de news disponibles.
             </p>
           </div>
@@ -170,7 +170,7 @@ export default function NewsPage() {
           <div className="space-y-8">
             {sortedDates.map((dateKey) => (
               <div key={dateKey}>
-                <h2 className="text-xl font-semibold text-neutral-700 mb-4 pb-2 border-b border-neutral-200">
+                <h2 className="text-xl font-semibold text-neutral-700 dark:text-gray-300 mb-4 pb-2 border-b border-neutral-200 dark:border-gray-600">
                   {dateKey}
                 </h2>
                 <div className="space-y-3">
