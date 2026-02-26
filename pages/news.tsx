@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { MegaphoneIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { MegaphoneIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 type NewsItem = {
   date: string;
@@ -47,6 +47,8 @@ function abbreviateCompetitionName(competitionName: string): string {
   return nameWithoutYear || name;
 }
 
+const PAGE_SIZE = 6;
+
 export default function NewsPage() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -54,6 +56,12 @@ export default function NewsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sportFilter, setSportFilter] = useState<'ALL' | 'FOOTBALL' | 'RUGBY'>('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 when sport filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sportFilter]);
 
   useEffect(() => {
     let isMounted = true;
@@ -95,13 +103,22 @@ export default function NewsPage() {
     };
   }, []);
 
-  // Filter by sport then group news by date
+  // Filter by sport
   const filteredItems = items && sportFilter !== 'ALL'
     ? items.filter(item => item.sportType === sportFilter)
     : items;
 
-  const groupedNews = filteredItems
-    ? filteredItems.reduce((acc, item) => {
+  // Paginate: take only items for current page
+  const totalFiltered = filteredItems?.length ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const paginatedItems = filteredItems
+    ? filteredItems.slice(startIndex, startIndex + PAGE_SIZE)
+    : [];
+
+  // Group paginated news by date
+  const groupedNews = paginatedItems.length > 0
+    ? paginatedItems.reduce((acc, item) => {
         const dateKey = item.date;
         if (!acc[dateKey]) {
           acc[dateKey] = [];
@@ -250,6 +267,33 @@ export default function NewsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination - show when more than one page */}
+        {!loading && !error && items && items.length > 0 && filteredItems && filteredItems.length > 0 && totalPages > 1 && (
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(58,58,58)] text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm hover:bg-gray-50 dark:hover:bg-[rgb(48,48,48)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[rgb(58,58,58)]"
+            >
+              <ChevronLeftIcon className="h-5 w-5" />
+              Précédent
+            </button>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Page {currentPage} sur {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[rgb(58,58,58)] text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm hover:bg-gray-50 dark:hover:bg-[rgb(48,48,48)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[rgb(58,58,58)]"
+            >
+              Suivant
+              <ChevronRightIcon className="h-5 w-5" />
+            </button>
           </div>
         )}
       </div>
