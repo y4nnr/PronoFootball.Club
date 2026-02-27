@@ -323,16 +323,30 @@ async function generateSummaryForMatchDay(params: {
 
     const prompt = `
 Tu es un journaliste pour une ligue privée de pronostics de football appelée PronoFootball.Club.
+Ta mission : résumer une journée de compétition en UNE SEULE PHRASE courte, dynamique, en français, à afficher sur un tableau de bord.
 
-Ta mission est de résumer une journée de compétition en UNE SEULE PHRASE courte, dynamique, en français, à afficher sur un tableau de bord.
+Contraintes de sortie :
+- UNE seule phrase (pas de retour à la ligne, pas de deuxième phrase).
+- 15 à 25 mots maximum.
+- Ton léger, fun, “news entre amis”, mais factuel.
+- Va droit au fait (pas d’intro type “Aujourd’hui…”).
+- Ne pas inventer de contexte ou de résultats : uniquement basé sur les données fournies.
 
-Le résumé doit :
-- Mettre en valeur les changements importants dans le classement général.
-- Mentionner les joueurs ayant marqué beaucoup de points, réalisé des scores exacts, ou manqué des paris (shooters).
-- Signaler les progressions, les chutes, les égalités ou les surprises marquantes.
-- Ne parler des résultats des matchs (équipe de foot) que si cela a eu un **impact sur les pronostics**.
-- Être factuel, précis et fun à lire. Le ton est léger, comme une news entre amis.
-- Ne pas inventer de contexte ou de résultats. Basé uniquement sur les données fournies.
+Qualité du français :
+- Écris les nombres en lettres (un, deux, trois…).
+- Positions : “à la Xᵉ place” / “en Xᵉ position” (jamais “au Xᵉ place”).
+- Préfère “un point de plus / X points” plutôt que “X points ajoutés”.
+
+Contenu attendu :
+- Mettre en valeur les changements importants dans le classement général (leader, top 3, grosses progressions/chutes, égalités, surprises).
+- Mentionner les joueurs ayant marqué beaucoup de points, réalisé des scores exacts, ou connu une journée compliquée.
+- Ne parler des résultats des matchs (équipes) QUE si cela explique clairement un impact sur les pronostics (ex : “peu l’avaient vu”, “carnage dans les pronos”). Sinon, ne pas citer les équipes.
+- S’il n’y a pas de gros changement, mentionne quand même un fait saillant (meilleur score du jour, remontée notable, journée calme, etc.).
+
+Important (shooters = pénalité) :
+- Un “shooter” est une sanction (un verre à boire), pas une réussite.
+- Quand tu mentionnes des shooters, formule-le comme une bourde / un prono manqué / une addition salée (“il/elle s’offre un shooter de plus”, “addition de shooters”), jamais comme quelque chose de positif.
+- Tu peux faire un clin d’œil “soirée/boire” léger, mais sans moraliser.
 
 Tu reçois pour cela :
 - Le classement AVANT et APRÈS la journée (joueurs, points, position)
@@ -341,9 +355,9 @@ Tu reçois pour cela :
 - (optionnel) séries, moyenne de points, autres stats
 
 Exemples de bonnes phrases :
-- "Nono prend la tête grâce à deux scores exacts, pendant que Yann chute à la 4e place après un oubli décisif."
-- "Steph confirme sa forme avec 6 points, mais la journée sourit aussi à Keke qui remonte dans le top 3."
-- "Peu de joueurs avaient vu la victoire de Galatasaray : un carnage dans les pronos, sauf pour Fifi qui engrange 3 points et grimpe au classement."
+- "Nono prend la tête grâce à deux scores exacts, pendant que Yann chute à la quatrième place et s’offre deux shooters de plus."
+- "Steph confirme sa forme avec six points, mais la journée sourit aussi à Keke qui remonte dans le top trois."
+- "Peu avaient vu la victoire de Galatasaray : carnage dans les pronos, sauf Fifi qui engrange trois points et grimpe."
 
 Données (format JSON compact) :
 ${JSON.stringify(contextForAI, null, 2)}
