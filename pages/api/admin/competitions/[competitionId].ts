@@ -5,66 +5,67 @@ import { prisma } from "../../../../lib/prisma";
 
 /**
  * Automatically set winner and last place for a competition.
- * Tie-breakers (same as classement): points desc → exact scores desc → shooters asc → total score difference asc (lower = closer to real results).
+ * All participants are considered (including those with 0 bets). Tie-breakers (same as classement):
+ * points desc → exact scores desc → shooters asc → total score difference asc (lower = closer to real results).
  */
 async function setCompetitionWinnerAndLastPlace(competitionId: string) {
   try {
-    const userPoints = await prisma.user.findMany({
-      include: {
-        bets: {
-          where: {
-            game: {
-              competitionId,
-              status: 'FINISHED',
-            },
-          },
-          select: {
-            points: true,
-            score1: true,
-            score2: true,
-            game: { select: { homeScore: true, awayScore: true } },
-          },
-        },
-      },
-    });
-
     const competitionUsers = await prisma.competitionUser.findMany({
       where: { competitionId },
-      select: { userId: true, shooters: true },
+      include: { user: { select: { id: true, name: true } } },
     });
-    const shootersByUserId = new Map(competitionUsers.map(cu => [cu.userId, cu.shooters ?? 0]));
 
-    const standings = userPoints
-      .map(user => {
-        const totalPoints = user.bets.reduce((sum: number, bet: any) => sum + (bet.points ?? 0), 0);
-        const exactScores = user.bets.filter((bet: any) => bet.points === 3).length;
-        const shooters = shootersByUserId.get(user.id) ?? 0;
-        const totalScoreDifference = user.bets.reduce((sum: number, bet: any) => {
-          const home = bet.game?.homeScore ?? 0;
-          const away = bet.game?.awayScore ?? 0;
-          return sum + Math.abs(bet.score1 - home) + Math.abs(bet.score2 - away);
-        }, 0);
-        return {
-          user,
-          totalPoints,
-          exactScores,
-          shooters,
-          totalScoreDifference,
-          betCount: user.bets.length,
-        };
-      })
-      .filter(standing => standing.betCount > 0)
-      .sort((a, b) => {
-        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-        if ((b.exactScores ?? 0) !== (a.exactScores ?? 0)) return (b.exactScores ?? 0) - (a.exactScores ?? 0);
-        if ((a.shooters ?? 0) !== (b.shooters ?? 0)) return (a.shooters ?? 0) - (b.shooters ?? 0);
-        return (a.totalScoreDifference ?? 0) - (b.totalScoreDifference ?? 0); // lower = better
-      });
-
-    if (standings.length === 0) {
-      console.log(`⚠️ No participants with bets found for competition ${competitionId}`);
+    if (competitionUsers.length === 0) {
+      console.log(`⚠️ No participants found for competition ${competitionId}`);
       return;
     }
+
+    const participantIds = competitionUsers.map(cu => cu.userId);
+    const finishedGameIds = await prisma.game.findMany({
+      where: { competitionId, status: 'FINISHED' },
+      select: { id: true },
+    }).then(games => games.map(g => g.id));
+
+    const userStats = new Map<string, { totalPoints: number; exactScores: number; totalScoreDifference: number }>();
+    participantIds.forEach(id => userStats.set(id, { totalPoints: 0, exactScores: 0, totalScoreDifference: 0 }));
+
+    if (finishedGameIds.length > 0) {
+      const bets = await prisma.bet.findMany({
+        where: { gameId: { in: finishedGameIds }, userId: { in: participantIds } },
+        select: {
+          userId: true,
+          points: true,
+          score1: true,
+          score2: true,
+          game: { select: { homeScore: true, awayScore: true } },
+        },
+      });
+      bets.forEach((bet: { userId: string; points: number; score1: number; score2: number; game: { homeScore: number | null; awayScore: number | null } }) => {
+        const stats = userStats.get(bet.userId);
+        if (!stats) return;
+        stats.totalPoints += bet.points ?? 0;
+        if (bet.points === 3) stats.exactScores += 1;
+        const home = bet.game?.homeScore ?? 0;
+        const away = bet.game?.awayScore ?? 0;
+        stats.totalScoreDifference += Math.abs(bet.score1 - home) + Math.abs(bet.score2 - away);
+      });
+    }
+
+    const standings = competitionUsers.map(cu => {
+      const stats = userStats.get(cu.userId) ?? { totalPoints: 0, exactScores: 0, totalScoreDifference: 0 };
+      return {
+        user: cu.user,
+        totalPoints: stats.totalPoints,
+        exactScores: stats.exactScores,
+        shooters: cu.shooters ?? 0,
+        totalScoreDifference: stats.totalScoreDifference,
+      };
+    }).sort((a, b) => {
+      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      if ((b.exactScores ?? 0) !== (a.exactScores ?? 0)) return (b.exactScores ?? 0) - (a.exactScores ?? 0);
+      if ((a.shooters ?? 0) !== (b.shooters ?? 0)) return (a.shooters ?? 0) - (b.shooters ?? 0);
+      return (a.totalScoreDifference ?? 0) - (b.totalScoreDifference ?? 0); // lower = better
+    });
 
     const winner = standings[0];
     const lastPlace = standings[standings.length - 1];
