@@ -377,6 +377,15 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    // Tie-breaker when sorting by points: average pts per game in competition, then exact scores
+    if (sortColumn === 'points') {
+      const avgA = finishedGamesCount > 0 ? a.totalPoints / finishedGamesCount : 0;
+      const avgB = finishedGamesCount > 0 ? b.totalPoints / finishedGamesCount : 0;
+      if (avgA !== avgB) return sortDirection === 'asc' ? (avgA < avgB ? -1 : 1) : (avgB < avgA ? -1 : 1);
+      return sortDirection === 'asc'
+        ? ((a.exactScores || 0) - (b.exactScores || 0))
+        : ((b.exactScores || 0) - (a.exactScores || 0));
+    }
     return 0;
   });
 
@@ -1149,12 +1158,14 @@ export default function CompetitionDetails({ competition, competitionStats, game
                   <span className="text-gray-600 dark:text-gray-400">Shots</span>
                 </div>
               </div>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">En cas d'égalité de points : priorité à la moyenne de points par match, puis au nombre de scores exacts.</p>
             </div>
           </div>
-          {/* Footer with click to sort explanation - Desktop only */}
+          {/* Footer with click to sort explanation and tie-breaker rule - Desktop only */}
           <div className="hidden md:block bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3">
-            <div className="text-xs text-gray-600 dark:text-gray-400 text-center">
-              <span className="italic">Cliquez sur les en-têtes de colonnes pour réorganiser le classement</span>
+            <div className="text-xs text-gray-600 dark:text-gray-400 text-center space-y-1">
+              <p className="italic">Cliquez sur les en-têtes de colonnes pour réorganiser le classement</p>
+              <p>En cas d'égalité de points : priorité à la moyenne de points par match, puis au nombre de scores exacts.</p>
             </div>
           </div>
           {competitionStats.length > 10 && (
@@ -1667,8 +1678,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     });
 
-    // Sort by points and assign positions
-    competitionStats.sort((a, b) => b.totalPoints - a.totalPoints);
+    // Sort by points, then by average pts per game in competition, then by exact scores
+    const finishedCount = finishedGameIds.length;
+    competitionStats.sort((a, b) => {
+      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      const avgA = finishedCount > 0 ? a.totalPoints / finishedCount : 0;
+      const avgB = finishedCount > 0 ? b.totalPoints / finishedCount : 0;
+      if (avgB !== avgA) return avgB - avgA;
+      return (b.exactScores || 0) - (a.exactScores || 0);
+    });
     competitionStats.forEach((player, index) => {
       player.position = index + 1;
     });
