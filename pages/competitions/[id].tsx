@@ -772,9 +772,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
         {/* Winner & Last Place - Only for completed competitions; tie-breaker widgets below each box when applicable */}
         {(competition.status === 'COMPLETED' || competition.status === 'completed') && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 md:items-start">
             {/* Champion column: box + optional 1st-place tie-breaker below */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 min-w-0">
               <div className={`bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 border border-yellow-200 dark:border-yellow-700 rounded-xl p-6 ${!competition.winner ? 'opacity-60' : ''}`}>
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0">
@@ -863,7 +863,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
               )}
             </div>
             {/* Hôte du Dîner column: box + optional last-place tie-breaker below */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 min-w-0">
               <div className={`bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border border-red-200 dark:border-red-700 rounded-xl p-6 ${!competition.lastPlace ? 'opacity-60' : ''}`}>
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0">
