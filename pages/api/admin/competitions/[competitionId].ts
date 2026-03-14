@@ -4,36 +4,62 @@ import { authOptions } from "../../auth/[...nextauth]";
 import { prisma } from "../../../../lib/prisma";
 
 /**
- * Automatically set winner and last place for a competition based on total points
+ * Automatically set winner and last place for a competition.
+ * Tie-breakers (same as classement): points desc → exact scores desc → shooters asc → total score difference asc (lower = closer to real results).
  */
 async function setCompetitionWinnerAndLastPlace(competitionId: string) {
   try {
-    // Get all users with their total points for this competition
     const userPoints = await prisma.user.findMany({
       include: {
         bets: {
           where: {
-            game: { 
+            game: {
               competitionId,
-              status: 'FINISHED' // Only count points from finished games
-            }
-          }
-        }
-      }
+              status: 'FINISHED',
+            },
+          },
+          select: {
+            points: true,
+            score1: true,
+            score2: true,
+            game: { select: { homeScore: true, awayScore: true } },
+          },
+        },
+      },
     });
 
-    // Calculate total points for each user
+    const competitionUsers = await prisma.competitionUser.findMany({
+      where: { competitionId },
+      select: { userId: true, shooters: true },
+    });
+    const shootersByUserId = new Map(competitionUsers.map(cu => [cu.userId, cu.shooters ?? 0]));
+
     const standings = userPoints
       .map(user => {
-        const totalPoints = user.bets.reduce((sum, bet) => sum + (bet.points || 0), 0);
+        const totalPoints = user.bets.reduce((sum: number, bet: any) => sum + (bet.points ?? 0), 0);
+        const exactScores = user.bets.filter((bet: any) => bet.points === 3).length;
+        const shooters = shootersByUserId.get(user.id) ?? 0;
+        const totalScoreDifference = user.bets.reduce((sum: number, bet: any) => {
+          const home = bet.game?.homeScore ?? 0;
+          const away = bet.game?.awayScore ?? 0;
+          return sum + Math.abs(bet.score1 - home) + Math.abs(bet.score2 - away);
+        }, 0);
         return {
           user,
           totalPoints,
-          betCount: user.bets.length
+          exactScores,
+          shooters,
+          totalScoreDifference,
+          betCount: user.bets.length,
         };
       })
-      .filter(standing => standing.betCount > 0) // Only users who have bets
-      .sort((a, b) => b.totalPoints - a.totalPoints); // Sort by points descending
+      .filter(standing => standing.betCount > 0)
+      .sort((a, b) => {
+        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+        if ((b.exactScores ?? 0) !== (a.exactScores ?? 0)) return (b.exactScores ?? 0) - (a.exactScores ?? 0);
+        if ((a.shooters ?? 0) !== (b.shooters ?? 0)) return (a.shooters ?? 0) - (b.shooters ?? 0);
+        return (a.totalScoreDifference ?? 0) - (b.totalScoreDifference ?? 0); // lower = better
+      });
 
     if (standings.length === 0) {
       console.log(`⚠️ No participants with bets found for competition ${competitionId}`);
@@ -43,19 +69,17 @@ async function setCompetitionWinnerAndLastPlace(competitionId: string) {
     const winner = standings[0];
     const lastPlace = standings[standings.length - 1];
 
-    // Update competition with winner and last place
     await prisma.competition.update({
       where: { id: competitionId },
       data: {
         winnerId: winner.user.id,
-        lastPlaceId: lastPlace.user.id
-      }
+        lastPlaceId: lastPlace.user.id,
+      },
     });
 
-    console.log(`✅ Auto-set winner: ${winner.user.name} (${winner.totalPoints} points) and last place: ${lastPlace.user.name} (${lastPlace.totalPoints} points) for competition ${competitionId}`);
+    console.log(`✅ Auto-set winner: ${winner.user.name} (${winner.totalPoints} pts, ${winner.exactScores} SE, ${winner.shooters} S) and last place: ${lastPlace.user.name} (${lastPlace.totalPoints} pts) for competition ${competitionId}`);
   } catch (error) {
     console.error(`❌ Error setting winner and last place for competition ${competitionId}:`, error);
-    // Don't throw - we don't want to fail the competition update if winner setting fails
   }
 }
 

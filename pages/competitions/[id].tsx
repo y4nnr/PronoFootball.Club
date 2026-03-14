@@ -3,7 +3,7 @@ import { getSession } from 'next-auth/react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { prisma } from '../../lib/prisma';
-import { TrophyIcon, CalendarIcon, UsersIcon, ChartBarIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, CalendarIcon, UsersIcon, ChartBarIcon, BookOpenIcon, ScaleIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import PlayersPerformanceWidget from '../../components/PlayersPerformanceWidget';
@@ -76,6 +76,8 @@ interface CompetitionStats {
   correctWinners: number;
   position: number;
   shooters?: number;
+  /** Sum of |predicted - actual| per game (lower = closer to real scores). Used as tie-breaker. */
+  totalScoreDifference?: number;
 }
 
 interface PlayerLastGamePerformance {
@@ -129,6 +131,18 @@ interface CompetitionDetailsProps {
   isUserMember: boolean;
   /** Number of finished games in the competition (excluding placeholder teams), for Moy. par match */
   finishedGamesCount: number;
+  /** Per-game ecart for tied 1st place (only when COMPLETED and multiple tied at top) */
+  tieBreakerFirstPlace?: {
+    users: { userId: string; userName: string }[];
+    games: { id: string; label: string }[];
+    ecartByUser: Record<string, Record<string, number>>;
+  };
+  /** Per-game ecart for tied last place (only when COMPLETED and multiple tied at bottom) */
+  tieBreakerLastPlace?: {
+    users: { userId: string; userName: string }[];
+    games: { id: string; label: string }[];
+    ecartByUser: Record<string, Record<string, number>>;
+  };
 }
 
 // Deterministic date formatting to avoid hydration errors
@@ -142,9 +156,11 @@ function formatDateTime(dateString: string) {
   return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
-export default function CompetitionDetails({ competition, competitionStats, games, currentUserId, isUserMember, finishedGamesCount = 0 }: CompetitionDetailsProps) {
+export default function CompetitionDetails({ competition, competitionStats, games, currentUserId, isUserMember, finishedGamesCount = 0, tieBreakerFirstPlace, tieBreakerLastPlace }: CompetitionDetailsProps) {
   const { t } = useTranslation('common');
   const [showAllGames, setShowAllGames] = useState(false);
+  const [expandFirstTieBreaker, setExpandFirstTieBreaker] = useState(false);
+  const [expandLastTieBreaker, setExpandLastTieBreaker] = useState(false);
   const [gamesWithBets, setGamesWithBets] = useState<Map<string, any[]>>(new Map());
 
   // Helper function to render rugby scoring examples with table-like styling
@@ -377,15 +393,33 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-    // Tie-breaker when sorting by points: exact scores (desc), then shooters (asc)
     if (sortColumn === 'points') {
       const diffExact = (b.exactScores || 0) - (a.exactScores || 0);
       if (diffExact !== 0) return sortDirection === 'asc' ? -diffExact : diffExact;
-      const diffShooters = (a.shooters || 0) - (b.shooters || 0); // fewer shooters = higher
-      return sortDirection === 'asc' ? -diffShooters : diffShooters;
+      const diffShooters = (a.shooters || 0) - (b.shooters || 0);
+      if (diffShooters !== 0) return sortDirection === 'asc' ? -diffShooters : diffShooters;
+      const isCompleted = competition.status === 'COMPLETED' || competition.status === 'completed';
+      if (isCompleted) {
+        const diffScore = (a.totalScoreDifference ?? 0) - (b.totalScoreDifference ?? 0); // lower = better
+        return sortDirection === 'asc' ? -diffScore : diffScore;
+      }
+      return 0; // during season: same position for same pts/exact/shooters
     }
     return 0;
   });
+
+  // Tie-breaker widgets: only when competition is COMPLETED; players tied on points/exactScores/shooters, separated by totalScoreDifference
+  const isCompetitionCompleted = competition.status === 'COMPLETED' || competition.status === 'completed';
+  const byPosition = competitionStats.length > 0 ? [...competitionStats].sort((a, b) => a.position - b.position) : [];
+  const firstPlace = byPosition[0];
+  const lastPlaceStanding = byPosition[byPosition.length - 1];
+  const tiedAtTop = isCompetitionCompleted && firstPlace ? byPosition
+    .filter(p => p.totalPoints === firstPlace.totalPoints && (p.exactScores ?? 0) === (firstPlace.exactScores ?? 0) && (p.shooters ?? 0) === (firstPlace.shooters ?? 0))
+    .sort((a, b) => (a.totalScoreDifference ?? 0) - (b.totalScoreDifference ?? 0)) : [];
+  const tiedAtBottom = isCompetitionCompleted && lastPlaceStanding ? byPosition
+    .filter(p => p.totalPoints === lastPlaceStanding.totalPoints && (p.exactScores ?? 0) === (lastPlaceStanding.exactScores ?? 0) && (p.shooters ?? 0) === (lastPlaceStanding.shooters ?? 0))
+    .sort((a, b) => (a.totalScoreDifference ?? 0) - (b.totalScoreDifference ?? 0)) : [];
+  const maxPosition = competitionStats.length > 0 ? Math.max(...competitionStats.map(s => s.position)) : 0;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -445,7 +479,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
 
   const getPositionColor = (position: number) => {
-    const isLast = position === competitionStats.length;
+    const isLast = position === maxPosition;
     switch (position) {
       case 1: return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-500/50';
       case 2: return 'bg-slate-200 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-slate-400 dark:border-slate-600/50'; // Silver/metallic gray for 2nd place
@@ -462,7 +496,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
     if (position === 1) return '🏆';
     if (position === 2) return '🥈';
     if (position === 3) return '🥉';
-    if (position === competitionStats.length) return '🍕'; // Pizza (dinner host)
+    if (position === maxPosition) return '🍕'; // Pizza (dinner host)
     return `#${position}`;
   };
 
@@ -736,42 +770,189 @@ export default function CompetitionDetails({ competition, competitionStats, game
           />
         </div>
 
-        {/* Winner & Last Place - Only for completed competitions */}
+        {/* Winner & Last Place - Only for completed competitions; tie-breaker widgets below each box when applicable */}
         {(competition.status === 'COMPLETED' || competition.status === 'completed') && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* Winner */}
-            <div className={`bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 border border-yellow-200 dark:border-yellow-700 rounded-xl p-6 ${!competition.winner ? 'opacity-60' : ''}`}>
-              <div className="flex items-center space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-yellow-500 dark:bg-yellow-600 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold">
-                    🏆
+            {/* Champion column: box + optional 1st-place tie-breaker below */}
+            <div className="flex flex-col gap-4">
+              <div className={`bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 border border-yellow-200 dark:border-yellow-700 rounded-xl p-6 ${!competition.winner ? 'opacity-60' : ''}`}>
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-yellow-500 dark:bg-yellow-600 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold">
+                      🏆
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-300">{t('competition.champion')}</h3>
+                    <p className="text-lg md:text-xl lg:text-2xl font-bold text-yellow-900 dark:text-yellow-200">{competition.winner ? competition.winner.name : '—'}</p>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-400">{competition.winner ? t('competition.competitionWinner') : t('competition.noWinnerSet')}</p>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-300">{t('competition.champion')}</h3>
-                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-yellow-900 dark:text-yellow-200">{competition.winner ? competition.winner.name : '—'}</p>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-400">{competition.winner ? t('competition.competitionWinner') : t('competition.noWinnerSet')}</p>
-                </div>
               </div>
+              {tiedAtTop.length > 1 && (
+                <div className="rounded-xl border border-amber-200 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/25 dark:to-amber-900/10 shadow-sm overflow-hidden border-l-4 border-l-amber-500 dark:border-l-amber-400">
+                  <div className="p-4 md:p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500 dark:bg-amber-600 flex items-center justify-center shadow-inner">
+                        <ScaleIcon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-amber-900 dark:text-amber-100">Départage pour la 1ère place</h3>
+                        <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                          Égalité parfaite entre {tiedAtTop.length <= 1 ? tiedAtTop[0]?.userName : [tiedAtTop.slice(0, -1).map(p => p.userName).join(', '), tiedAtTop[tiedAtTop.length - 1].userName].join(' et ')} — Même nombre de points, scores exacts et shooters
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-amber-800/90 dark:text-amber-200/90 mb-4 pl-1 border-l-2 border-amber-300 dark:border-amber-600">
+                      Le départage se fait selon la somme des écarts entre chaque pronostic et le score réel — le total le plus faible l'emporte.
+                    </p>
+                    <ol className="space-y-2 mb-4">
+                      {tiedAtTop.map((p, i) => (
+                        <li key={p.userId} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-white/60 dark:bg-amber-900/30 border border-amber-200/60 dark:border-amber-700/50">
+                          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-amber-500 dark:bg-amber-600 text-white text-sm font-bold flex items-center justify-center">{i + 1}</span>
+                          <span className="flex-1 font-medium text-amber-900 dark:text-amber-100">{p.userName}</span>
+                          <span className="flex-shrink-0 text-xs text-amber-700 dark:text-amber-300">écart total</span>
+                          <span className="flex-shrink-0 min-w-[2rem] text-center font-mono font-semibold text-amber-800 dark:text-amber-200 bg-amber-200/70 dark:bg-amber-700/50 rounded-md px-2 py-0.5">{p.totalScoreDifference ?? 0}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    <button
+                      type="button"
+                      onClick={() => setExpandFirstTieBreaker(prev => !prev)}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-amber-200/60 dark:bg-amber-800/40 border border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200 text-sm font-medium hover:bg-amber-200/80 dark:hover:bg-amber-800/60 transition-colors"
+                    >
+                      {expandFirstTieBreaker ? 'Masquer le détail par match' : 'Voir le détail par match (réviser le calcul de l’écart)'}
+                      {expandFirstTieBreaker ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {expandFirstTieBreaker && tieBreakerFirstPlace && tieBreakerFirstPlace.games.length > 0 && (
+                    <div className="px-4 pb-4 md:px-5 md:pb-5 border-t border-amber-200/80 dark:border-amber-700/50">
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mb-3">Écart de chaque joueur sur chaque match (somme = total ci-dessus)</p>
+                      <div className="overflow-x-auto rounded-lg border border-amber-200 dark:border-amber-700">
+                        <table className="min-w-full text-sm">
+                          <thead>
+                            <tr className="bg-amber-200/50 dark:bg-amber-800/40">
+                              <th className="px-3 py-2 text-left font-semibold text-amber-900 dark:text-amber-100 whitespace-nowrap">Match</th>
+                              {tieBreakerFirstPlace.users.map(u => (
+                                <th key={u.userId} className="px-3 py-2 text-center font-semibold text-amber-900 dark:text-amber-100 whitespace-nowrap">{u.userName}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-amber-200 dark:divide-amber-700/50">
+                            {tieBreakerFirstPlace.games.map(g => (
+                              <tr key={g.id} className="bg-white/40 dark:bg-amber-900/20">
+                                <td className="px-3 py-1.5 text-amber-900 dark:text-amber-100 truncate max-w-[180px]" title={g.label}>{g.label}</td>
+                                {tieBreakerFirstPlace.users.map(u => (
+                                  <td key={u.userId} className="px-3 py-1.5 text-center font-mono text-amber-800 dark:text-amber-200">{tieBreakerFirstPlace.ecartByUser[u.userId]?.[g.id] ?? '–'}</td>
+                                ))}
+                              </tr>
+                            ))}
+                            <tr className="bg-amber-200/40 dark:bg-amber-800/50 font-semibold">
+                              <td className="px-3 py-2 text-amber-900 dark:text-amber-100">Total</td>
+                              {tieBreakerFirstPlace.users.map(u => {
+                                const total = competitionStats.find(s => s.userId === u.userId)?.totalScoreDifference ?? 0;
+                                return <td key={u.userId} className="px-3 py-2 text-center font-mono text-amber-900 dark:text-amber-100">{total}</td>;
+                              })}
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            {/* Last Place */}
-            <div className={`bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border border-red-200 dark:border-red-700 rounded-xl p-6 ${!competition.lastPlace ? 'opacity-60' : ''}`}>
-              <div className="flex items-center space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-red-500 dark:bg-red-600 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold">
-                    🍽️
+            {/* Hôte du Dîner column: box + optional last-place tie-breaker below */}
+            <div className="flex flex-col gap-4">
+              <div className={`bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border border-red-200 dark:border-red-700 rounded-xl p-6 ${!competition.lastPlace ? 'opacity-60' : ''}`}>
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-red-500 dark:bg-red-600 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold">
+                      🍽️
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-red-800 dark:text-red-300">{t('competition.dinnerHost')}</h3>
+                    <p className="text-lg md:text-xl lg:text-2xl font-bold text-red-900 dark:text-red-200">{competition.lastPlace ? competition.lastPlace.name : '—'}</p>
+                    <p className="text-sm text-red-700 dark:text-red-400">{competition.lastPlace ? t('competition.owesEveryoneDinner') : t('competition.noWinnerSet')}</p>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-red-800 dark:text-red-300">{t('competition.dinnerHost')}</h3>
-                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-red-900 dark:text-red-200">{competition.lastPlace ? competition.lastPlace.name : '—'}</p>
-                  <p className="text-sm text-red-700 dark:text-red-400">{competition.lastPlace ? t('competition.owesEveryoneDinner') : t('competition.noWinnerSet')}</p>
-                </div>
               </div>
+              {tiedAtBottom.length > 1 && (
+                <div className="rounded-xl border border-red-200 dark:border-red-700 bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-900/25 dark:to-red-900/10 shadow-sm overflow-hidden border-l-4 border-l-red-500 dark:border-l-red-400">
+                  <div className="p-4 md:p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-500 dark:bg-red-600 flex items-center justify-center shadow-inner">
+                        <ScaleIcon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-red-900 dark:text-red-100">Départage pour la dernière place</h3>
+                        <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
+                          Égalité parfaite entre {tiedAtBottom.length <= 1 ? tiedAtBottom[0]?.userName : [tiedAtBottom.slice(0, -1).map(p => p.userName).join(', '), tiedAtBottom[tiedAtBottom.length - 1].userName].join(' et ')} — Même nombre de points, scores exacts et shooters
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-red-800/90 dark:text-red-200/90 mb-4 pl-1 border-l-2 border-red-300 dark:border-red-600">
+                      Le départage se fait selon la somme des écarts entre chaque pronostic et le score réel — le total le plus faible l'emporte.
+                    </p>
+                    <ol className="space-y-2 mb-4">
+                      {tiedAtBottom.map((p, i) => (
+                        <li key={p.userId} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-white/60 dark:bg-red-900/30 border border-red-200/60 dark:border-red-700/50">
+                          <span className="flex-shrink-0 w-7 h-7 rounded-full bg-red-500 dark:bg-red-600 text-white text-sm font-bold flex items-center justify-center">{i + 1}</span>
+                          <span className="flex-1 font-medium text-red-900 dark:text-red-100">{p.userName}</span>
+                          <span className="flex-shrink-0 text-xs text-red-700 dark:text-red-300">écart total</span>
+                          <span className="flex-shrink-0 min-w-[2rem] text-center font-mono font-semibold text-red-800 dark:text-red-200 bg-red-200/70 dark:bg-red-700/50 rounded-md px-2 py-0.5">{p.totalScoreDifference ?? 0}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    <button
+                      type="button"
+                      onClick={() => setExpandLastTieBreaker(prev => !prev)}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-red-200/60 dark:bg-red-800/40 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 text-sm font-medium hover:bg-red-200/80 dark:hover:bg-red-800/60 transition-colors"
+                    >
+                      {expandLastTieBreaker ? 'Masquer le détail par match' : 'Voir le détail par match (réviser le calcul de l’écart)'}
+                      {expandLastTieBreaker ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {expandLastTieBreaker && tieBreakerLastPlace && tieBreakerLastPlace.games.length > 0 && (
+                    <div className="px-4 pb-4 md:px-5 md:pb-5 border-t border-red-200/80 dark:border-red-700/50">
+                      <p className="text-xs text-red-700 dark:text-red-300 mb-3">Écart de chaque joueur sur chaque match (somme = total ci-dessus)</p>
+                      <div className="overflow-x-auto rounded-lg border border-red-200 dark:border-red-700">
+                        <table className="min-w-full text-sm">
+                          <thead>
+                            <tr className="bg-red-200/50 dark:bg-red-800/40">
+                              <th className="px-3 py-2 text-left font-semibold text-red-900 dark:text-red-100 whitespace-nowrap">Match</th>
+                              {tieBreakerLastPlace.users.map(u => (
+                                <th key={u.userId} className="px-3 py-2 text-center font-semibold text-red-900 dark:text-red-100 whitespace-nowrap">{u.userName}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-red-200 dark:divide-red-700/50">
+                            {tieBreakerLastPlace.games.map(g => (
+                              <tr key={g.id} className="bg-white/40 dark:bg-red-900/20">
+                                <td className="px-3 py-1.5 text-red-900 dark:text-red-100 truncate max-w-[180px]" title={g.label}>{g.label}</td>
+                                {tieBreakerLastPlace.users.map(u => (
+                                  <td key={u.userId} className="px-3 py-1.5 text-center font-mono text-red-800 dark:text-red-200">{tieBreakerLastPlace.ecartByUser[u.userId]?.[g.id] ?? '–'}</td>
+                                ))}
+                              </tr>
+                            ))}
+                            <tr className="bg-red-200/40 dark:bg-red-800/50 font-semibold">
+                              <td className="px-3 py-2 text-red-900 dark:text-red-100">Total</td>
+                              {tieBreakerLastPlace.users.map(u => {
+                                const total = competitionStats.find(s => s.userId === u.userId)?.totalScoreDifference ?? 0;
+                                return <td key={u.userId} className="px-3 py-2 text-center font-mono text-red-900 dark:text-red-100">{total}</td>;
+                              })}
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
-
 
         {/* Current Ranking Section - Always visible for better UX */}
         <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
@@ -1021,7 +1202,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                     const isFirst = player.position === 1;
                     const isSecond = player.position === 2;
                     const isThird = player.position === 3;
-                    const isLast = player.position === competitionStats.length;
+                    const isLast = player.position === maxPosition;
                     const isCurrentUser = player.userId === currentUserId;
                     
                     let rowBgClass = '';
@@ -1071,7 +1252,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                           <div className="min-w-0 flex-1">
                             <div className="text-[10px] md:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{player.userName}</div>
                             {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-[9px] md:text-xs text-yellow-600 dark:text-yellow-400 font-medium">{t('competition.champion')}</div>}
-                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === competitionStats.length && <div className="text-[9px] md:text-xs text-red-600 dark:text-red-400 font-medium">{t('competition.dinnerHost')}</div>}
+                            {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === maxPosition && <div className="text-[9px] md:text-xs text-red-600 dark:text-red-400 font-medium">{t('competition.dinnerHost')}</div>}
                           </div>
                         </div>
                       </td>
@@ -1620,35 +1801,42 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       ? []
       : await prisma.bet.findMany({
           where: { gameId: { in: finishedGameIds } },
-          select: { userId: true, points: true }
+          select: {
+            userId: true,
+            gameId: true,
+            points: true,
+            score1: true,
+            score2: true,
+            game: { select: { homeScore: true, awayScore: true } }
+          }
         });
 
-    // OPTIMIZED: Process stats in memory instead of N+1 queries
-    const userBetMap = new Map<string, { 
-      totalPoints: number; 
-      totalPredictions: number; 
-      exactScores: number; 
-      correctWinners: number; 
+    const userBetMap = new Map<string, {
+      totalPoints: number;
+      totalPredictions: number;
+      exactScores: number;
+      correctWinners: number;
+      totalScoreDifference: number;
     }>();
-    
-    // Group bets by user
-    allUserBets.forEach(bet => {
+
+    allUserBets.forEach((bet: { userId: string; points: number; score1: number; score2: number; game: { homeScore: number | null; awayScore: number | null } }) => {
+      const home = bet.game?.homeScore ?? 0;
+      const away = bet.game?.awayScore ?? 0;
+      const diff = Math.abs(bet.score1 - home) + Math.abs(bet.score2 - away);
       const existing = userBetMap.get(bet.userId);
       if (existing) {
         existing.totalPoints += bet.points;
         existing.totalPredictions += 1;
-        if (bet.points === 3) {
-          existing.exactScores += 1;
-        }
-        if (bet.points === 1) {
-          existing.correctWinners += 1;
-        }
+        if (bet.points === 3) existing.exactScores += 1;
+        if (bet.points === 1) existing.correctWinners += 1;
+        existing.totalScoreDifference += diff;
       } else {
         userBetMap.set(bet.userId, {
           totalPoints: bet.points,
           totalPredictions: 1,
           exactScores: bet.points === 3 ? 1 : 0,
-          correctWinners: bet.points === 1 ? 1 : 0
+          correctWinners: bet.points === 1 ? 1 : 0,
+          totalScoreDifference: diff
         });
       }
     });
@@ -1656,13 +1844,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Build competition stats from the map
     const competitionStats = competition.users.map(competitionUser => {
       const user = competitionUser.user;
-      const userStats = userBetMap.get(user.id) || { 
-        totalPoints: 0, 
-        totalPredictions: 0, 
-        exactScores: 0, 
-        correctWinners: 0 
+      const userStats = userBetMap.get(user.id) || {
+        totalPoints: 0,
+        totalPredictions: 0,
+        exactScores: 0,
+        correctWinners: 0,
+        totalScoreDifference: 0
       };
-      
       return {
         userId: user.id,
         userName: user.name,
@@ -1672,19 +1860,87 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         exactScores: userStats.exactScores,
         correctWinners: userStats.correctWinners,
         shooters: competitionUser.shooters || 0,
-        position: 0 // Will be set after sorting
+        totalScoreDifference: userStats.totalScoreDifference,
+        position: 0
       };
     });
 
-    // Sort by points, then by exact scores, then by shooters (asc: fewer shooters = higher rank)
+    const isCompleted = competition.status === 'COMPLETED' || competition.status === 'completed';
     competitionStats.sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
       if ((b.exactScores || 0) !== (a.exactScores || 0)) return (b.exactScores || 0) - (a.exactScores || 0);
-      return (a.shooters || 0) - (b.shooters || 0); // fewer shooters first
+      if ((a.shooters || 0) !== (b.shooters || 0)) return (a.shooters || 0) - (b.shooters || 0);
+      if (isCompleted) return (a.totalScoreDifference ?? 0) - (b.totalScoreDifference ?? 0); // lower diff = better, only when season is over
+      return 0;
     });
-    competitionStats.forEach((player, index) => {
-      player.position = index + 1;
-    });
+    // Same position for identical tie-breaker results (during season: pts+exact+shooters; when completed: + totalScoreDifference)
+    let position = 1;
+    for (let i = 0; i < competitionStats.length; i++) {
+      if (i > 0) {
+        const prev = competitionStats[i - 1];
+        const curr = competitionStats[i];
+        const sameGroup =
+          prev.totalPoints === curr.totalPoints &&
+          (prev.exactScores ?? 0) === (curr.exactScores ?? 0) &&
+          (prev.shooters ?? 0) === (curr.shooters ?? 0) &&
+          (!isCompleted || (prev.totalScoreDifference ?? 0) === (curr.totalScoreDifference ?? 0));
+        if (!sameGroup) position++;
+      }
+      competitionStats[i].position = position;
+    }
+
+    // Tie-breaker detail for widgets: per-game ecart for users tied at 1st or last (same pts/exact/shooters as 1st or last)
+    const firstPlaceRow = competitionStats[0];
+    const lastPlaceRow = competitionStats[competitionStats.length - 1];
+    const firstPlaceUserIds = firstPlaceRow ? competitionStats.filter(s =>
+      s.totalPoints === firstPlaceRow.totalPoints &&
+      (s.exactScores ?? 0) === (firstPlaceRow.exactScores ?? 0) &&
+      (s.shooters ?? 0) === (firstPlaceRow.shooters ?? 0)
+    ).map(s => s.userId) : [];
+    const lastPlaceUserIds = lastPlaceRow ? competitionStats.filter(s =>
+      s.totalPoints === lastPlaceRow.totalPoints &&
+      (s.exactScores ?? 0) === (lastPlaceRow.exactScores ?? 0) &&
+      (s.shooters ?? 0) === (lastPlaceRow.shooters ?? 0)
+    ).map(s => s.userId) : [];
+
+    const finishedGamesForTieBreaker = games
+      .filter((g: { id: string }) => finishedGameIds.includes(g.id))
+      .sort((a: { date: Date | string }, b: { date: Date | string }) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map((g: { id: string; homeTeam: { name: string }; awayTeam: { name: string } }) => ({
+        id: g.id,
+        label: `${g.homeTeam.name} - ${g.awayTeam.name}`
+      }));
+
+    const buildEcartByUser = (userIds: string[]) => {
+      const ecartByUser: Record<string, Record<string, number>> = {};
+      userIds.forEach(uid => { ecartByUser[uid] = {}; });
+      allUserBets.forEach((bet: { userId: string; gameId: string; score1: number; score2: number; game: { homeScore: number | null; awayScore: number | null } }) => {
+        if (!userIds.includes(bet.userId)) return;
+        const home = bet.game?.homeScore ?? 0;
+        const away = bet.game?.awayScore ?? 0;
+        const ecart = Math.abs(bet.score1 - home) + Math.abs(bet.score2 - away);
+        ecartByUser[bet.userId][bet.gameId] = ecart;
+      });
+      return ecartByUser;
+    };
+
+    let tieBreakerFirstPlace: { users: { userId: string; userName: string }[]; games: { id: string; label: string }[]; ecartByUser: Record<string, Record<string, number>> } | undefined;
+    let tieBreakerLastPlace: { users: { userId: string; userName: string }[]; games: { id: string; label: string }[]; ecartByUser: Record<string, Record<string, number>> } | undefined;
+
+    if (isCompleted && firstPlaceUserIds.length > 1) {
+      tieBreakerFirstPlace = {
+        users: competitionStats.filter(s => firstPlaceUserIds.includes(s.userId)).map(s => ({ userId: s.userId, userName: s.userName })),
+        games: finishedGamesForTieBreaker,
+        ecartByUser: buildEcartByUser(firstPlaceUserIds)
+      };
+    }
+    if (isCompleted && lastPlaceUserIds.length > 1) {
+      tieBreakerLastPlace = {
+        users: competitionStats.filter(s => lastPlaceUserIds.includes(s.userId)).map(s => ({ userId: s.userId, userName: s.userName })),
+        games: finishedGamesForTieBreaker,
+        ecartByUser: buildEcartByUser(lastPlaceUserIds)
+      };
+    }
 
     // Check if user is a member of this competition
     const isUserMember = competition.users.some(
@@ -1706,6 +1962,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         currentUserId: session.user.id,
         isUserMember,
         finishedGamesCount: finishedGameIds.length,
+        ...(tieBreakerFirstPlace && { tieBreakerFirstPlace: JSON.parse(JSON.stringify(tieBreakerFirstPlace)) }),
+        ...(tieBreakerLastPlace && { tieBreakerLastPlace: JSON.parse(JSON.stringify(tieBreakerLastPlace)) }),
       },
     };
   } catch (error) {
