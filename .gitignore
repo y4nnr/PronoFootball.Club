@@ -97,3 +97,9 @@ backups/
 node_modules/
 .env.*
 ecosystem.config.js
+
+# Debug / dev output that must not be committed (added 2026-04-16)
+database-backup/
+cookies.txt
+headers.txt
+cl-status.txt
