@@ -303,12 +303,12 @@ export default function GameCard({ game, currentUserId, href, context = 'home', 
               ) : (
                 // Only show points dot for FINISHED games
                 game.status === 'FINISHED' && userPoints !== undefined && userPoints !== null ? (
-                  <div 
+                  <div
                     className={`w-3 h-3 rounded-full shadow-md ${
-                      userPoints === 3 ? 'bg-yellow-500' : 
-                      userPoints === 1 ? 'bg-green-500' : 
+                      userPoints >= 3 ? 'bg-yellow-500' :
+                      userPoints >= 1 ? 'bg-green-500' :
                       'bg-red-500'
-                    }`} 
+                    }`}
                     title={`Vous avez gagné ${userPoints} point${userPoints > 1 ? 's' : ''}`}
                   ></div>
                 ) : (

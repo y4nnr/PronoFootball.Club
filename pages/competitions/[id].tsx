@@ -1586,8 +1586,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
                                         </div>
                                         <div className="text-right">
                                           <div className={`text-xs md:text-sm font-bold ${
-                                            bet.points === 3 ? 'text-yellow-600 dark:text-yellow-400' :
-                                            bet.points === 1 ? 'text-green-600 dark:text-green-400' :
+                                            bet.points >= 3 ? 'text-yellow-600 dark:text-yellow-400' :
+                                            bet.points >= 1 ? 'text-green-600 dark:text-green-400' :
                                             'text-red-600 dark:text-red-400'
                                           }`}>
                                             {bet.points} pt{bet.points > 1 ? 's' : ''}

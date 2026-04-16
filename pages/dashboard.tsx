@@ -175,8 +175,8 @@ const PersonalStatsSection = memo(({ stats, lastGamesPerformance }: { stats: Use
                           key={game.gameId}
                           className={`h-18 rounded-xl flex flex-col items-center justify-center text-gray-700 dark:text-gray-200 font-bold text-sm shadow-modern dark:shadow-dark-modern p-2 bg-white dark:bg-[rgb(38,38,38)] ${
                             game.result === 'no_bet' ? 'border-2 border-black dark:border-white' :
-                            game.points === 3 ? 'border-2 border-yellow-400 dark:border-yellow-500' :
-                            game.points === 1 ? 'border-2 border-green-400 dark:border-green-500' :
+                            (game.points ?? 0) >= 3 ? 'border-2 border-yellow-400 dark:border-yellow-500' :
+                            (game.points ?? 0) >= 1 ? 'border-2 border-green-400 dark:border-green-500' :
                             'border-2 border-red-400 dark:border-red-500'
                           }`}
                           title={game.result === 'no_bet' ? 

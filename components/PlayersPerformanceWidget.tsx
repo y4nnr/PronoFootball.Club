@@ -58,12 +58,12 @@ const PlayerPerformanceRow = memo(({
     if (isDarkMode) {
       if (result === 'no_bet') {
         return { bg: 'rgba(31, 119, 180, 0.6)', border: '#1F77B4', text: 'text-gray-200' }; // blue
-      } else if (points === 3) {
-        return { bg: 'rgba(255, 127, 14, 0.6)', border: '#FF7F0E', text: 'text-gray-200' }; // orange (for exact/3 points)
-      } else if (points === 1) {
+      } else if (points !== null && points >= 3) {
+        return { bg: 'rgba(255, 127, 14, 0.6)', border: '#FF7F0E', text: 'text-gray-200' }; // orange (exact/3+ incl. CL bonus totals)
+      } else if (points !== null && points >= 1) {
         return { bg: 'rgba(44, 160, 44, 0.6)', border: '#2CA02C', text: 'text-gray-200' }; // green
       } else {
-        return { bg: 'rgba(214, 39, 40, 0.6)', border: '#D62728', text: 'text-gray-200' }; // red
+        return { bg: 'rgba(214, 39, 40, 0.6)', border: '#D62728', text: 'text-gray-200' }; // red (0 or missing)
       }
     }
     // Light mode - return null to use className
@@ -108,8 +108,8 @@ const PlayerPerformanceRow = memo(({
                   darkColor 
                     ? `${darkColor.text} border-transparent`
                     : game.result === 'no_bet' ? 'border-blue-300 bg-blue-100 text-gray-800' :
-                      game.points === 3 ? 'border-yellow-400 bg-yellow-100 text-gray-800' :
-                      game.points === 1 ? 'border-green-400 bg-green-100 text-gray-800' :
+                      (game.points ?? 0) >= 3 ? 'border-yellow-400 bg-yellow-100 text-gray-800' :
+                      (game.points ?? 0) >= 1 ? 'border-green-400 bg-green-100 text-gray-800' :
                       'border-red-400 bg-red-100 text-gray-800'
                 }`}
                 style={darkColor ? {
