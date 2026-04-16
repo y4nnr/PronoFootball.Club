@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]';
 import { prisma } from '../../../../lib/prisma';
 
+const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+
 interface RankingDataPoint {
   date: string;
   rankings: {
@@ -30,100 +32,92 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid competition ID' });
     }
 
-    // Allow anyone (authenticated users) to view ranking data to entice new players
-    // No need to check if user is part of the competition
-
-    // Get all finished games for this competition, ordered by date
+    // Get all finished/live games for this competition, ordered by date.
+    // Exclude placeholder-team games (consistent with classement, shooters, leaderboard).
     const finishedGames = await prisma.game.findMany({
       where: {
         competitionId,
         status: { in: ['FINISHED', 'LIVE'] },
+        AND: [
+          { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+          { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+        ],
       },
       orderBy: { date: 'asc' },
-      select: {
-        id: true,
-        date: true,
-        status: true,
-      },
+      select: { id: true, date: true },
     });
 
     if (finishedGames.length === 0) {
       return res.json({ rankingEvolution: [] });
     }
 
-    // Get all competition users (minimal data)
     const competitionUsers = await prisma.competitionUser.findMany({
       where: { competitionId },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            profilePictureUrl: true,
-          },
-        },
+        user: { select: { id: true, name: true, profilePictureUrl: true } },
       },
     });
 
-    // Create a map for quick user lookup to avoid repeated database queries
-    const userMap = new Map();
-    competitionUsers.forEach(cu => {
-      userMap.set(cu.userId, {
-        name: cu.user.name,
-        profilePictureUrl: cu.user.profilePictureUrl
-      });
+    const userMap = new Map(
+      competitionUsers.map(cu => [
+        cu.userId,
+        { name: cu.user.name, profilePictureUrl: cu.user.profilePictureUrl },
+      ])
+    );
+    const userIds = Array.from(userMap.keys());
+
+    // Single query for all relevant bets, then aggregate in memory.
+    const allBets = await prisma.bet.findMany({
+      where: {
+        userId: { in: userIds },
+        gameId: { in: finishedGames.map(g => g.id) },
+      },
+      select: { userId: true, gameId: true, points: true },
     });
 
-    const userIds = competitionUsers.map(cu => cu.userId);
+    // Group bets by gameId for quick lookup.
+    const betsByGame = new Map<string, { userId: string; points: number }[]>();
+    allBets.forEach(bet => {
+      const list = betsByGame.get(bet.gameId);
+      if (list) {
+        list.push({ userId: bet.userId, points: bet.points || 0 });
+      } else {
+        betsByGame.set(bet.gameId, [{ userId: bet.userId, points: bet.points || 0 }]);
+      }
+    });
 
-    // Group games by date (matchday) - only unique dates
+    // Group games by calendar date (the "matchday" unit the chart shows).
     const gamesByDate = new Map<string, typeof finishedGames>();
     finishedGames.forEach(game => {
-      const dateKey = game.date.toISOString().split('T')[0]; // YYYY-MM-DD format
-      if (!gamesByDate.has(dateKey)) {
-        gamesByDate.set(dateKey, []);
+      const dateKey = game.date.toISOString().split('T')[0];
+      const list = gamesByDate.get(dateKey);
+      if (list) {
+        list.push(game);
+      } else {
+        gamesByDate.set(dateKey, [game]);
       }
-      gamesByDate.get(dateKey)!.push(game);
     });
 
-    // Calculate rankings for each unique matchday (limit to last 20 matchdays for performance)
-    const rankingEvolution: RankingDataPoint[] = [];
+    // Walk dates in chronological order, accumulating points per user.
     const sortedDates = Array.from(gamesByDate.keys()).sort();
-    const limitedDates = sortedDates.slice(-20); // Only last 20 matchdays
+    const userPoints = new Map<string, number>();
+    userIds.forEach(userId => userPoints.set(userId, 0));
 
-    for (const dateKey of limitedDates) {
+    const rankingEvolution: RankingDataPoint[] = [];
+
+    for (const dateKey of sortedDates) {
       const gamesOnDate = gamesByDate.get(dateKey)!;
-      // Use the latest game on this date as the reference point
       const latestGameOnDate = gamesOnDate[gamesOnDate.length - 1];
-      
-      // Get all bets up to this date (inclusive) - optimized query
-      const betsUpToDate = await prisma.bet.findMany({
-        where: {
-          game: {
-            competitionId,
-            date: { lte: latestGameOnDate.date },
-            status: { in: ['FINISHED', 'LIVE'] },
-          },
-          userId: { in: userIds },
-        },
-        select: {
-          userId: true,
-          points: true,
-        },
-        // Add index hint for better performance
-        orderBy: { userId: 'asc' },
+
+      // Add points from every game on this date to the running total.
+      gamesOnDate.forEach(game => {
+        const bets = betsByGame.get(game.id);
+        if (!bets) return;
+        bets.forEach(bet => {
+          userPoints.set(bet.userId, (userPoints.get(bet.userId) || 0) + bet.points);
+        });
       });
 
-      // Calculate total points for each user up to this date
-      const userPoints = new Map<string, number>();
-      userIds.forEach(userId => userPoints.set(userId, 0));
-      
-      betsUpToDate.forEach(bet => {
-        const currentPoints = userPoints.get(bet.userId) || 0;
-        userPoints.set(bet.userId, currentPoints + (bet.points || 0));
-      });
-
-      // Create ranking data (optimized)
       const rankings = Array.from(userPoints.entries())
         .map(([userId, totalPoints]) => {
           const userData = userMap.get(userId);
@@ -134,11 +128,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             totalPoints,
           };
         })
-        .sort((a, b) => b.totalPoints - a.totalPoints) // Sort by points descending
-        .map((user, index) => ({
-          ...user,
-          position: index + 1,
-        }));
+        .sort((a, b) => b.totalPoints - a.totalPoints || a.userName.localeCompare(b.userName))
+        .map((user, index) => ({ ...user, position: index + 1 }));
 
       rankingEvolution.push({
         date: latestGameOnDate.date.toISOString(),
@@ -146,11 +137,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Add caching headers to reduce database load
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
-    
-    res.json({ rankingEvolution });
+    // Private: response is gated by session auth; must not be cached by shared proxies.
+    res.setHeader('Cache-Control', 'private, max-age=30, stale-while-revalidate=120');
 
+    res.json({ rankingEvolution });
   } catch (error) {
     console.error('Error fetching ranking evolution:', error);
     res.status(500).json({ error: 'Internal server error' });
