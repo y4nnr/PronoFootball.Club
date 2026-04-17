@@ -171,16 +171,41 @@ async function generateFinaleSummary(params: {
   const champions = finalStandings.filter(s => s.position === 1);
   const hosts = finalStandings.filter(s => s.position === lastPosition);
 
+  // Detect écart-tiebreaker scenarios: players with the SAME pts/exact/shooters
+  // as the champions (or hosts) but who ended up 2nd/penultimate on the écart
+  // criterion alone. These deserve a nod in the finale news.
+  const sameFirst3 = (a: FinalStandingForPrompt, b: FinalStandingForPrompt) =>
+    a.totalPoints === b.totalPoints &&
+    a.exactScores === b.exactScores &&
+    a.shooters === b.shooters;
+
+  const championshipAlmost: FinalStandingForPrompt[] = [];
+  for (let i = champions.length; i < finalStandings.length; i++) {
+    if (sameFirst3(finalStandings[i], champions[0])) championshipAlmost.push(finalStandings[i]);
+    else break;
+  }
+  const hostAlmost: FinalStandingForPrompt[] = [];
+  for (let i = finalStandings.length - hosts.length - 1; i >= 0; i--) {
+    if (sameFirst3(finalStandings[i], hosts[0])) hostAlmost.unshift(finalStandings[i]);
+    else break;
+  }
+
   const formatPlayers = (rows: FinalStandingForPrompt[]) =>
     rows
-      .map(r => `${r.user.name} (${r.totalPoints} pts, ${r.exactScores} scores exacts, ${r.shooters} shooters)`)
+      .map(r => `${r.user.name} (${r.totalPoints} pts, ${r.exactScores} scores exacts, ${r.shooters} shooters, écart ${r.totalScoreDifference})`)
       .join(' / ');
 
   // Hardcoded fallback if no OpenAI key or call fails. Always definitive.
   const buildFallback = () => {
     const champLabel = champions.length > 1 ? 'Co-champions' : 'Champion';
     const hostLabel = hosts.length > 1 ? 'Hôtes du dîner' : 'Hôte du dîner';
-    return `${competitionName} terminée. ${champLabel} : ${formatPlayers(champions)}. ${hostLabel} : ${formatPlayers(hosts)}.`;
+    const almostChamp = championshipAlmost.length > 0
+      ? ` Titre décroché d'un cheveu par l'écart aux scores réels sur : ${formatPlayers(championshipAlmost)}.`
+      : '';
+    const almostHost = hostAlmost.length > 0
+      ? ` Dîner évité de justesse par l'écart sur : ${formatPlayers(hostAlmost)}.`
+      : '';
+    return `${competitionName} terminée. ${champLabel} : ${formatPlayers(champions)}. ${hostLabel} : ${formatPlayers(hosts)}.${almostChamp}${almostHost}`;
   };
 
   if (!openAIApiKey) {
@@ -195,12 +220,31 @@ async function generateFinaleSummary(params: {
       points: c.totalPoints,
       scoresExacts: c.exactScores,
       shooters: c.shooters,
+      ecart: c.totalScoreDifference,
     })),
     hotesDuDiner: hosts.map(h => ({
       pseudo: h.user.name,
       points: h.totalPoints,
       scoresExacts: h.exactScores,
       shooters: h.shooters,
+      ecart: h.totalScoreDifference,
+    })),
+    // Players tied on points + exact + shooters with the champion(s) — decided
+    // by écart alone. If non-empty, acknowledge their near-miss.
+    presquChampionsParEcart: championshipAlmost.map(a => ({
+      pseudo: a.user.name,
+      points: a.totalPoints,
+      scoresExacts: a.exactScores,
+      shooters: a.shooters,
+      ecart: a.totalScoreDifference,
+    })),
+    // Players who escaped the last place only on écart — deserve a sympathetic nod.
+    presquHotesParEcart: hostAlmost.map(a => ({
+      pseudo: a.user.name,
+      points: a.totalPoints,
+      scoresExacts: a.exactScores,
+      shooters: a.shooters,
+      ecart: a.totalScoreDifference,
     })),
     classementComplet: finalStandings.map(s => ({
       position: s.position,
@@ -214,7 +258,7 @@ Tu es un journaliste pour une ligue privée de pronostics appelée PronoFootball
 La compétition "${competitionName}" vient de se terminer. Annonce le palmarès de la ligue (PAS les résultats sportifs réels).
 
 Contraintes de sortie :
-- Une à deux phrases, 30 à 45 mots maximum.
+- Deux à trois phrases, 40 à 60 mots maximum (un peu plus long si un départage par écart doit être mentionné).
 - En français, ton "news entre amis", à la fois célébratoire et taquin pour la fin de saison.
 - Ne JAMAIS mentionner les équipes ni les résultats des matchs réels — c'est une news sur les pronos, pas sur le football/rugby.
 - Ne pas inventer de contexte : utiliser uniquement les données fournies.
@@ -225,14 +269,21 @@ Contenu OBLIGATOIRE :
 - Si plusieurs co-champions ou co-hôtes : tous les nommer (ex : "X et Y co-champions").
 - Tu peux ajouter un détail factuel issu des données (écart de points, nombre de scores exacts du champion, etc.) si ça sert le récit.
 
+Départage par écart (à lire attentivement) :
+- Si "presquChampionsParEcart" est NON VIDE : ce ou ces joueurs ont fini à ÉGALITÉ PARFAITE avec le(s) champion(s) sur les points, scores exacts ET shooters ; ils ont perdu UNIQUEMENT sur l'écart aux scores réels (critère de départage le plus fin). Tu DOIS leur rendre hommage nommément, mentionner l'égalité, et souligner que la décision s'est jouée sur l'écart. C'est une perte cruelle, pas une défaite nette.
+- Si "presquHotesParEcart" est NON VIDE : ce ou ces joueurs ont évité le dîner UNIQUEMENT grâce à un meilleur écart aux scores réels (même points, scores exacts et shooters que l'hôte du dîner). Mentionne-les : ils ont frôlé le dîner, à un cheveu.
+- Si ces champs sont VIDES : ne parle pas du critère d'écart (ne pas inventer un départage qui n'a pas eu lieu).
+
 Important :
 - "Hôte du dîner" = celui qui paie/organise le dîner (le dernier au classement). À traiter comme une petite humiliation amicale.
 - Un "shooter" est une bourde / un prono manqué (sanction = un verre à boire). Jamais positif.
 - Écris les nombres en lettres si ≤ douze, en chiffres au-delà.
 
 Exemples de bonnes formulations :
-- "Yann remporte la Ligue des Champions 25/26 avec quatre-vingt-sept points et douze scores exacts ; Nono offrira le dîner avec ses quarante-et-un points."
-- "Steph et Keke co-champions du Top 14 à égalité parfaite ; le dîner est pour Fifi, dernier de la promotion."
+- Sans départage : "Yann remporte la Ligue des Champions 25/26 avec quatre-vingt-sept points et douze scores exacts ; Nono offrira le dîner avec ses quarante-et-un points."
+- Avec co-champions : "Steph et Keke co-champions du Top 14 à égalité parfaite ; le dîner est pour Fifi, dernier de la promotion."
+- Avec départage par écart au sommet : "Yann coiffe Benouz sur le fil : les deux finissent à dix points, zéro score exact et trois shooters, mais l'écart aux scores réels donne le titre à Yann (deux-cent-trente-cinq contre deux-cent-quatre-vingts). Respect à Benouz, battu d'un cheveu. Fifi offrira le dîner avec zéro point."
+- Avec départage par écart au dernier : "Yann sacré champion ; pour le dîner, X devance Y d'un seul écart et évite l'addition — Y paiera avec ses Z points."
 
 Données (format JSON) :
 ${JSON.stringify(contextForAI, null, 2)}
@@ -798,8 +849,15 @@ export default async function handler(
             } else {
               log(`⚠️ Competition ${competition.name}: Cannot regenerate - games not found or not all finished for ${latestDateKey}`);
             }
+          } else if (competition.status.toLowerCase() === 'completed') {
+            // Force mode on a COMPLETED competition with no existing news = no-op.
+            // Historical comps cleaned up intentionally should NOT be backfilled
+            // just because someone hits ?force=true. Only regenerate if a News
+            // row already exists (i.e., the user explicitly wants to refresh it).
+            log(`⚠️ Competition ${competition.name}: COMPLETED with no news — force mode will NOT backfill (use admin to insert a seed row first)`);
           } else {
-            // No news exists, find the latest date with finished games
+            // No news exists for an ACTIVE/UPCOMING competition — backfill its
+            // latest finished match day.
             const finishedGamesByDate = new Map<string, typeof allRecentGames>();
             for (const game of allRecentGames) {
               if (game.status === 'FINISHED') {
