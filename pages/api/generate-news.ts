@@ -481,21 +481,27 @@ Contenu attendu :
 - Ne parler des résultats des matchs (équipes) QUE si cela explique clairement un impact sur les pronostics (ex : “peu l’avaient vu”, “carnage dans les pronos”). Sinon, ne pas citer les équipes.
 - S’il n’y a pas de gros changement, mentionne quand même un fait saillant (meilleur score du jour, remontée notable, journée calme, etc.).
 
-Important (shooters = pénalité) :
-- Un “shooter” est une sanction (un verre à boire), pas une réussite.
-- Quand tu mentionnes des shooters, formule-le comme une bourde / un prono manqué / une addition salée (“il/elle s’offre un shooter de plus”, “addition de shooters”), jamais comme quelque chose de positif.
-- Tu peux faire un clin d’œil “soirée/boire” léger, mais sans moraliser.
+Règle CRITIQUE sur les shooters (à relire attentivement) :
+- Un "shooter" = un match où le joueur a OUBLIÉ DE PARIER. C'est factuel : la valeur est dans le champ "shooters" des données.
+- NE PAS confondre "shooter" avec "zéro point". Un joueur peut parier et mal prédire : il a 0 point mais 0 shooter. C'est un pronostic raté, pas un shooter.
+- Ne mentionner les shooters QUE si la valeur "shooters" > 0 dans les données du joueur pour ce jour. Si shooters = 0, INTERDIT d'utiliser les mots "shooter", "addition", "prono manqué", "bourde", ou toute référence à un verre / une note à régler.
+- Pour un joueur avec 0 point et 0 shooter ce jour-là : parler de pronostic raté, journée blanche, stagnation au classement, etc. — mais sans vocabulaire de sanction.
+- Quand on mentionne des shooters (valeur > 0), formuler comme une sanction : "s'offre un shooter de plus", "addition qui s'alourdit", sans moraliser.
 
 Tu reçois pour cela :
 - Le classement AVANT et APRÈS la journée (joueurs, points, position)
-- Les performances du jour : points marqués, scores exacts, shooters
+- Les performances du jour : pointsMarques, scoresExacts, shooters (nombre de matchs non pariés ce jour), changementPosition
 - Les matchs joués aujourd'hui avec leur score
-- (optionnel) séries, moyenne de points, autres stats
 
 Exemples de bonnes phrases :
-- "Nono prend la tête grâce à deux scores exacts, pendant que Yann chute à la quatrième place et s’offre deux shooters de plus."
+- "Nono prend la tête grâce à deux scores exacts, pendant que Yann chute à la quatrième place et s'offre deux shooters de plus." (OK si Yann a shooters > 0)
 - "Steph confirme sa forme avec six points, mais la journée sourit aussi à Keke qui remonte dans le top trois."
+- "Renato garde la première place avec un point, tandis que Yann et Steph font journée blanche sans marquer." (OK si shooters = 0)
 - "Peu avaient vu la victoire de Galatasaray : carnage dans les pronos, sauf Fifi qui engrange trois points et grimpe."
+
+Exemples à NE PAS faire :
+- ❌ "Yann reste muet et continue d'accumuler les shooters" — si shooters = 0 dans les données.
+- ❌ "Steph s'offre une addition salée" — si Steph n'a pas de shooters ce jour.
 
 Données (format JSON compact) :
 ${JSON.stringify(contextForAI, null, 2)}
