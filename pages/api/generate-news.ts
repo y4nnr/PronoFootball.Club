@@ -858,8 +858,12 @@ export default async function handler(
 
         // Also maintain the original logic: generate for the last 2 completed match days
         // (in case there are more than 2 days of completed games)
-        // Skip this in force mode as we only want to regenerate the latest news
-        if (!forceRegenerate) {
+        // Skip this in force mode as we only want to regenerate the latest news.
+        // Skip this for COMPLETED competitions to avoid backfilling history when
+        // the cron sees an old finished season for the first time. The today/yesterday
+        // check above is sufficient to catch a comp that has just auto-completed.
+        const isCompletedComp = competition.status.toLowerCase() === 'completed';
+        if (!forceRegenerate && !isCompletedComp) {
           const finishedGamesByDate = new Map<string, typeof allRecentGames>();
           for (const game of allRecentGames) {
             if (game.status === 'FINISHED') {
