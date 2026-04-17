@@ -823,14 +823,46 @@ export default async function handler(
     }
 
     // 5) Fetch stored news from database
-    // - If user is logged in: only their competitions
-    // - If no user (automation): all competitions (though this shouldn't happen in fetch mode)
-    // For each competition, get the 2 latest news items
+    // Widget rule: include ALL ACTIVE/UPCOMING competitions, plus AT MOST ONE
+    // COMPLETED competition (the one with the latest endDate). This prevents
+    // multiple finished seasons from monopolising the 8-item widget cap.
+    // Generation above is unchanged: still only targets ACTIVE/UPCOMING.
+    type CompForFetch = { id: string; status: string; endDate: Date };
+    let fetchCompetitions: CompForFetch[];
+    if (userId) {
+      const userCompetitionsForFetch = await prisma.competitionUser.findMany({
+        where: {
+          userId: userId,
+          competition: { status: { notIn: ['CANCELLED', 'cancelled'] } },
+        },
+        include: {
+          competition: { select: { id: true, status: true, endDate: true } },
+        },
+      });
+      fetchCompetitions = userCompetitionsForFetch.map(uc => uc.competition);
+    } else {
+      fetchCompetitions = await prisma.competition.findMany({
+        where: { status: { notIn: ['CANCELLED', 'cancelled'] } },
+        select: { id: true, status: true, endDate: true },
+      });
+    }
+
+    const isCompleted = (s: string) => s.toLowerCase() === 'completed';
+    const activeOrUpcoming = fetchCompetitions.filter(c => !isCompleted(c.status));
+    const mostRecentCompleted = fetchCompetitions
+      .filter(c => isCompleted(c.status))
+      .sort((a, b) => b.endDate.getTime() - a.endDate.getTime())
+      .slice(0, 1);
+    const fetchCompetitionIds = [
+      ...activeOrUpcoming.map(c => c.id),
+      ...mostRecentCompleted.map(c => c.id),
+    ];
+
     let allNewsItems: NewsItem[] = [];
-    
+
     try {
       // Fetch news for each competition separately to get top 2 per competition
-      for (const competitionId of competitionIds) {
+      for (const competitionId of fetchCompetitionIds) {
         const competitionNews = await prisma.news.findMany({
           where: {
             competitionId: competitionId,

@@ -50,7 +50,7 @@ export default async function handler(
           userId: userId,
           competition: {
             status: {
-              in: ['ACTIVE', 'active', 'UPCOMING', 'upcoming'],
+              notIn: ['CANCELLED', 'cancelled'],
             },
           },
         },
@@ -66,11 +66,11 @@ export default async function handler(
       });
       competitionsToProcess = userCompetitions.map(uc => uc.competition);
     } else {
-      // No user session - process all active competitions
+      // No user session - return all non-cancelled competitions
       const allActiveCompetitions = await prisma.competition.findMany({
         where: {
           status: {
-            in: ['ACTIVE', 'active', 'UPCOMING', 'upcoming'],
+            notIn: ['CANCELLED', 'cancelled'],
           },
         },
         select: {
