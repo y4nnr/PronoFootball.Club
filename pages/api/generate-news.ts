@@ -258,7 +258,7 @@ Tu es un journaliste pour une ligue privée de pronostics appelée PronoFootball
 La compétition "${competitionName}" vient de se terminer. Annonce le palmarès de la ligue (PAS les résultats sportifs réels).
 
 Contraintes de sortie :
-- Deux à trois phrases, 40 à 60 mots maximum (un peu plus long si un départage par écart doit être mentionné).
+- Une à deux phrases, 30 à 45 mots maximum.
 - En français, ton "news entre amis", à la fois célébratoire et taquin pour la fin de saison.
 - Ne JAMAIS mentionner les équipes ni les résultats des matchs réels — c'est une news sur les pronos, pas sur le football/rugby.
 - Ne pas inventer de contexte : utiliser uniquement les données fournies.
@@ -266,13 +266,12 @@ Contraintes de sortie :
 Contenu OBLIGATOIRE :
 - Mentionner explicitement le ou les champion(s) avec leurs points finaux.
 - Mentionner explicitement le ou les hôte(s) du dîner avec leurs points finaux.
-- Si plusieurs co-champions ou co-hôtes : tous les nommer (ex : "X et Y co-champions").
-- Tu peux ajouter un détail factuel issu des données (écart de points, nombre de scores exacts du champion, etc.) si ça sert le récit.
+- Si plusieurs co-champions ou co-hôtes : tous les nommer.
 
 Départage par écart (à lire attentivement) :
-- Si "presquChampionsParEcart" est NON VIDE : ce ou ces joueurs ont fini à ÉGALITÉ PARFAITE avec le(s) champion(s) sur les points, scores exacts ET shooters ; ils ont perdu UNIQUEMENT sur l'écart aux scores réels (critère de départage le plus fin). Tu DOIS leur rendre hommage nommément, mentionner l'égalité, et souligner que la décision s'est jouée sur l'écart. C'est une perte cruelle, pas une défaite nette.
-- Si "presquHotesParEcart" est NON VIDE : ce ou ces joueurs ont évité le dîner UNIQUEMENT grâce à un meilleur écart aux scores réels (même points, scores exacts et shooters que l'hôte du dîner). Mentionne-les : ils ont frôlé le dîner, à un cheveu.
-- Si ces champs sont VIDES : ne parle pas du critère d'écart (ne pas inventer un départage qui n'a pas eu lieu).
+- Si "presquChampionsParEcart" est NON VIDE : nomme le(s) joueur(s) en UNE incise courte qui dit qu'ils ont été départagés à l'écart près. PAS de phrase séparée d'éloge. Le simple fait de les nommer suffit comme reconnaissance.
+- Si "presquHotesParEcart" est NON VIDE : pareil pour eux côté dîner — une mention courte ("X évite le dîner d'un écart").
+- Si ces champs sont VIDES : ne parle PAS du critère d'écart.
 
 Important :
 - "Hôte du dîner" = celui qui paie/organise le dîner (le dernier au classement). À traiter comme une petite humiliation amicale.
@@ -282,8 +281,8 @@ Important :
 Exemples de bonnes formulations :
 - Sans départage : "Yann remporte la Ligue des Champions 25/26 avec quatre-vingt-sept points et douze scores exacts ; Nono offrira le dîner avec ses quarante-et-un points."
 - Avec co-champions : "Steph et Keke co-champions du Top 14 à égalité parfaite ; le dîner est pour Fifi, dernier de la promotion."
-- Avec départage par écart au sommet : "Yann coiffe Benouz sur le fil : les deux finissent à dix points, zéro score exact et trois shooters, mais l'écart aux scores réels donne le titre à Yann (deux-cent-trente-cinq contre deux-cent-quatre-vingts). Respect à Benouz, battu d'un cheveu. Fifi offrira le dîner avec zéro point."
-- Avec départage par écart au dernier : "Yann sacré champion ; pour le dîner, X devance Y d'un seul écart et évite l'addition — Y paiera avec ses Z points."
+- Avec départage par écart au sommet : "Yann sacré champion du Six Nations 2026 à dix points, devançant Benouz à l'écart près ; Fifi offrira le dîner avec zéro point."
+- Avec départage par écart au dernier : "Yann champion à quatre-vingts points ; Steph offre le dîner avec ses vingt points, Fifi évitant l'addition d'un écart."
 
 Données (format JSON) :
 ${JSON.stringify(contextForAI, null, 2)}
