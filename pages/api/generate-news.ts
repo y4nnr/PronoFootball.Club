@@ -269,20 +269,37 @@ Contenu OBLIGATOIRE :
 - Si plusieurs co-champions ou co-hôtes : tous les nommer.
 
 Départage par écart (à lire attentivement) :
-- Si "presquChampionsParEcart" est NON VIDE : nomme le(s) joueur(s) en UNE incise courte qui dit qu'ils ont été départagés à l'écart près. PAS de phrase séparée d'éloge. Le simple fait de les nommer suffit comme reconnaissance.
-- Si "presquHotesParEcart" est NON VIDE : pareil pour eux côté dîner — une mention courte ("X évite le dîner d'un écart").
+- L'"écart aux scores réels" est le 4e et dernier critère du classement : somme des |pronostic - score réel| sur tous les paris. Plus petit = mieux. Il ne sert que quand deux joueurs sont à EXACTE égalité sur les points, scores exacts ET shooters.
+- Si "presquChampionsParEcart" est NON VIDE : nomme le(s) joueur(s) concernés en UNE incise claire qui mentionne EXPLICITEMENT le critère "écart aux scores réels" ET les deux valeurs (celle du champion et celle du/des presque-champion(s)). Pas de phrase séparée d'éloge — l'incise suffit.
+- Si "presquHotesParEcart" est NON VIDE : même traitement côté dîner — incise claire avec les deux valeurs d'écart.
 - Si ces champs sont VIDES : ne parle PAS du critère d'écart.
+
+Formulations acceptées pour l'incise :
+- "devançant X sur l'écart aux scores réels (235 contre 280)"
+- "à égalité parfaite avec X, départagé par l'écart aux scores réels (235 vs 280)"
+- "X évite le dîner grâce à un écart aux scores réels plus faible (60 contre 90)"
+Formulations INTERDITES (trop vagues) :
+- "à l'écart près"
+- "sur le fil"
+- "d'un cheveu"
 
 Important :
 - "Hôte du dîner" = celui qui paie/organise le dîner (le dernier au classement). À traiter comme une petite humiliation amicale.
 - Un "shooter" est une bourde / un prono manqué (sanction = un verre à boire). Jamais positif.
-- Écris les nombres en lettres si ≤ douze, en chiffres au-delà.
+
+Qualité du français (relire AVANT de répondre) :
+- Écris les nombres en lettres si ≤ douze, en chiffres au-delà. Les valeurs numériques d'écart aux scores réels (souvent > 100) se mettent en chiffres.
+- "zéro" est INVARIABLE : écrire "zéro point", "zéro shooter", "zéro score exact" (JAMAIS "zéros points").
+- Nombres composés : traits d'union entre éléments ("quatre-vingt-sept", "cent-trente-cinq").
+- "cent" et "vingt" prennent un s pluriel SEULEMENT s'ils terminent le nombre ("deux cents", "quatre-vingts") et PAS s'ils sont suivis d'un autre nombre ("deux cent trente", "quatre-vingt-sept").
+- Accords : vérifier pluriels, genres, participes passés avant de répondre.
+- Pas de fautes : en cas de doute sur un mot, choisis une alternative certaine.
 
 Exemples de bonnes formulations :
 - Sans départage : "Yann remporte la Ligue des Champions 25/26 avec quatre-vingt-sept points et douze scores exacts ; Nono offrira le dîner avec ses quarante-et-un points."
 - Avec co-champions : "Steph et Keke co-champions du Top 14 à égalité parfaite ; le dîner est pour Fifi, dernier de la promotion."
-- Avec départage par écart au sommet : "Yann sacré champion du Six Nations 2026 à dix points, devançant Benouz à l'écart près ; Fifi offrira le dîner avec zéro point."
-- Avec départage par écart au dernier : "Yann champion à quatre-vingts points ; Steph offre le dîner avec ses vingt points, Fifi évitant l'addition d'un écart."
+- Avec départage par écart au sommet : "Yann sacré champion du Six Nations 2026 à dix points, devançant Benouz sur l'écart aux scores réels (235 contre 280) ; Fifi offrira le dîner avec zéro point."
+- Avec départage par écart au dernier : "Yann champion à quatre-vingts points ; Steph offrira le dîner avec ses vingt points, Fifi ayant évité l'addition grâce à un meilleur écart aux scores réels (60 contre 90)."
 
 Données (format JSON) :
 ${JSON.stringify(contextForAI, null, 2)}
@@ -520,10 +537,15 @@ Contraintes de sortie :
 - Va droit au fait (pas d’intro type “Aujourd’hui…”).
 - Ne pas inventer de contexte ou de résultats : uniquement basé sur les données fournies.
 
-Qualité du français :
-- Écris les nombres en lettres (un, deux, trois…).
-- Positions : “à la Xᵉ place” / “en Xᵉ position” (jamais “au Xᵉ place”).
-- Préfère “un point de plus / X points” plutôt que “X points ajoutés”.
+Qualité du français (relire AVANT de répondre) :
+- Écris les nombres en lettres si ≤ douze, en chiffres au-delà (ex : "trois points", "vingt-cinq points").
+- "zéro" est INVARIABLE : écrire "zéro point", "zéro shooter", "zéro score exact" (JAMAIS "zéros points").
+- Nombres composés : traits d'union entre les éléments ("quatre-vingt-sept", "cent-trente-cinq").
+- "cent" et "vingt" prennent un s au pluriel SEULEMENT s'ils terminent le nombre ("deux cents", "quatre-vingts") et PAS quand suivis d'un autre nombre ("deux cent trente", "quatre-vingt-sept").
+- Accords : vérifier pluriels, genres, participes passés avant de répondre.
+- Positions : "à la Xᵉ place" / "en Xᵉ position" (JAMAIS "au Xᵉ place").
+- Préfère "un point de plus / X points" plutôt que "X points ajoutés".
+- Pas de fautes d'orthographe : si tu doutes d'un mot, choisis une formulation alternative certaine.
 
 Contenu attendu :
 - Mettre en valeur les changements importants dans le classement général (leader, top 3, grosses progressions/chutes, égalités, surprises).
