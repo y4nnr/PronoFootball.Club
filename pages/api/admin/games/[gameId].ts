@@ -200,6 +200,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         );
       }
 
+      // Auto-complete the competition if every non-placeholder game is now FINISHED.
+      // MUST run after awardFinalWinnerPoints so winner/lastPlace use post-bonus points.
+      const { maybeAutoCompleteCompetition } = await import('../../../../lib/competition-completion');
+      await maybeAutoCompleteCompetition(updatedGame.competitionId);
+
       return res.status(200).json(updatedGame);
     } catch (error) {
       console.error('Error updating game:', error);

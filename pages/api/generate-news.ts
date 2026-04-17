@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from './auth/[...nextauth]';
 import { prisma } from '../../lib/prisma';
+import { computeFinalStandings } from '../../lib/competition-completion';
 
 type NewsItem = {
   date: string;
@@ -143,6 +144,132 @@ async function getRankingEvolution(competitionId: string) {
   return rankingEvolution;
 }
 
+type FinalStandingForPrompt = {
+  user: { id: string; name: string };
+  totalPoints: number;
+  exactScores: number;
+  shooters: number;
+  totalScoreDifference: number;
+  position: number;
+};
+
+/**
+ * Build a season-finale news summary. Names every co-champion and every co-host
+ * (the 4-criterion sort can leave ties even at the very end).
+ *
+ * Prompt is intentionally about pool standings only — NOT about the underlying
+ * match results (e.g. "Real Madrid won the final" is irrelevant to the pool).
+ */
+async function generateFinaleSummary(params: {
+  competitionName: string;
+  finalStandings: FinalStandingForPrompt[];
+  openAIApiKey: string | null;
+}): Promise<string> {
+  const { competitionName, finalStandings, openAIApiKey } = params;
+
+  const lastPosition = finalStandings[finalStandings.length - 1].position;
+  const champions = finalStandings.filter(s => s.position === 1);
+  const hosts = finalStandings.filter(s => s.position === lastPosition);
+
+  const formatPlayers = (rows: FinalStandingForPrompt[]) =>
+    rows
+      .map(r => `${r.user.name} (${r.totalPoints} pts, ${r.exactScores} scores exacts, ${r.shooters} shooters)`)
+      .join(' / ');
+
+  // Hardcoded fallback if no OpenAI key or call fails. Always definitive.
+  const buildFallback = () => {
+    const champLabel = champions.length > 1 ? 'Co-champions' : 'Champion';
+    const hostLabel = hosts.length > 1 ? 'Hôtes du dîner' : 'Hôte du dîner';
+    return `${competitionName} terminée. ${champLabel} : ${formatPlayers(champions)}. ${hostLabel} : ${formatPlayers(hosts)}.`;
+  };
+
+  if (!openAIApiKey) {
+    return buildFallback();
+  }
+
+  const contextForAI = {
+    competition: competitionName,
+    nbJoueurs: finalStandings.length,
+    champions: champions.map(c => ({
+      pseudo: c.user.name,
+      points: c.totalPoints,
+      scoresExacts: c.exactScores,
+      shooters: c.shooters,
+    })),
+    hotesDuDiner: hosts.map(h => ({
+      pseudo: h.user.name,
+      points: h.totalPoints,
+      scoresExacts: h.exactScores,
+      shooters: h.shooters,
+    })),
+    classementComplet: finalStandings.map(s => ({
+      position: s.position,
+      pseudo: s.user.name,
+      points: s.totalPoints,
+    })),
+  };
+
+  const prompt = `
+Tu es un journaliste pour une ligue privée de pronostics appelée PronoFootball.Club.
+La compétition "${competitionName}" vient de se terminer. Annonce le palmarès de la ligue (PAS les résultats sportifs réels).
+
+Contraintes de sortie :
+- Une à deux phrases, 30 à 45 mots maximum.
+- En français, ton "news entre amis", à la fois célébratoire et taquin pour la fin de saison.
+- Ne JAMAIS mentionner les équipes ni les résultats des matchs réels — c'est une news sur les pronos, pas sur le football/rugby.
+- Ne pas inventer de contexte : utiliser uniquement les données fournies.
+
+Contenu OBLIGATOIRE :
+- Mentionner explicitement le ou les champion(s) avec leurs points finaux.
+- Mentionner explicitement le ou les hôte(s) du dîner avec leurs points finaux.
+- Si plusieurs co-champions ou co-hôtes : tous les nommer (ex : "X et Y co-champions").
+- Tu peux ajouter un détail factuel issu des données (écart de points, nombre de scores exacts du champion, etc.) si ça sert le récit.
+
+Important :
+- "Hôte du dîner" = celui qui paie/organise le dîner (le dernier au classement). À traiter comme une petite humiliation amicale.
+- Un "shooter" est une bourde / un prono manqué (sanction = un verre à boire). Jamais positif.
+- Écris les nombres en lettres si ≤ douze, en chiffres au-delà.
+
+Exemples de bonnes formulations :
+- "Yann remporte la Ligue des Champions 25/26 avec quatre-vingt-sept points et douze scores exacts ; Nono offrira le dîner avec ses quarante-et-un points."
+- "Steph et Keke co-champions du Top 14 à égalité parfaite ; le dîner est pour Fifi, dernier de la promotion."
+
+Données (format JSON) :
+${JSON.stringify(contextForAI, null, 2)}
+
+Génère maintenant la news de fin de compétition pour "${competitionName}".
+`.trim();
+
+  try {
+    const completionRes = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${openAIApiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        temperature: 0.7,
+        max_tokens: 220,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!completionRes.ok) {
+      console.error('OpenAI API error (finale):', await completionRes.text());
+      return buildFallback();
+    }
+
+    const data = (await completionRes.json()) as { choices?: { message?: { content?: string | null } }[] };
+    const content = data.choices?.[0]?.message?.content?.trim();
+    if (!content) return buildFallback();
+    return content.replace(/\s+/g, ' ').replace(/\n/g, ' ');
+  } catch (error) {
+    console.error('Error generating finale summary with OpenAI:', error);
+    return buildFallback();
+  }
+}
+
 async function generateSummaryForMatchDay(params: {
   competitionName: string;
   competitionId: string;
@@ -171,8 +298,19 @@ async function generateSummaryForMatchDay(params: {
     }[];
   }>;
   openAIApiKey: string | null;
+  isFinale?: boolean;
+  finalStandings?: FinalStandingForPrompt[];
 }) {
-  const { competitionName, competitionId, matchDayDate, games, rankingEvolution, openAIApiKey } = params;
+  const { competitionName, competitionId, matchDayDate, games, rankingEvolution, openAIApiKey, isFinale, finalStandings } = params;
+
+  // Finale branch: dedicated prompt that names champion(s) + dinner host(s).
+  if (isFinale && finalStandings && finalStandings.length > 0) {
+    return await generateFinaleSummary({
+      competitionName,
+      finalStandings,
+      openAIApiKey,
+    });
+  }
 
   const totalGames = games.length;
   const allBets = games.flatMap((g) => g.bets);
@@ -462,6 +600,7 @@ export default async function handler(
       id: string;
       name: string;
       logo: string | null;
+      status: string;
     }> = [];
 
     if (userId) {
@@ -471,7 +610,7 @@ export default async function handler(
           userId: userId,
           competition: {
             status: {
-              in: ['ACTIVE', 'active', 'UPCOMING', 'upcoming'],
+              notIn: ['CANCELLED', 'cancelled'],
             },
           },
         },
@@ -481,23 +620,28 @@ export default async function handler(
               id: true,
               name: true,
               logo: true,
+              status: true,
             },
           },
         },
       });
       competitionsToProcess = userCompetitions.map(uc => uc.competition);
     } else {
-      // No user session (automation) - process all active competitions
+      // No user session (automation) - process every non-cancelled competition.
+      // For COMPLETED comps the loop is mostly a no-op (existing news + the
+      // existence guard short-circuit), but it allows the finale prompt to
+      // fire for a competition that has just auto-completed.
       const allActiveCompetitions = await prisma.competition.findMany({
         where: {
           status: {
-            in: ['ACTIVE', 'active', 'UPCOMING', 'upcoming'],
+            notIn: ['CANCELLED', 'cancelled'],
           },
         },
         select: {
           id: true,
           name: true,
           logo: true,
+          status: true,
         },
       });
       competitionsToProcess = allActiveCompetitions;
@@ -769,7 +913,22 @@ export default async function handler(
 
           const matchDayDate = gamesOnDate[0].date;
 
-          log(`📰 Competition ${competition.name}: Generating news for ${dateKey} (${formatDisplayDate(matchDayDate)})`);
+          // Finale detection: competition is COMPLETED (auto-completion has fired)
+          // AND this date is the latest match day with games in the competition.
+          // Both must be true to switch to the finale prompt.
+          const allDateKeys = Array.from(gamesByDate.keys()).sort();
+          const latestDateKey = allDateKeys[allDateKeys.length - 1];
+          const isFinale =
+            competition.status.toLowerCase() === 'completed' &&
+            dateKey === latestDateKey;
+
+          let finalStandings: FinalStandingForPrompt[] | undefined;
+          if (isFinale) {
+            log(`🏆 Competition ${competition.name}: Final match day detected — using finale prompt`);
+            finalStandings = await computeFinalStandings(competition.id);
+          }
+
+          log(`📰 Competition ${competition.name}: Generating news for ${dateKey} (${formatDisplayDate(matchDayDate)})${isFinale ? ' [FINALE]' : ''}`);
 
           const summary = await generateSummaryForMatchDay({
             competitionName: competition.name,
@@ -786,7 +945,7 @@ export default async function handler(
                 points: b.points,
                 score1: b.score1,
                 score2: b.score2,
-                user: { 
+                user: {
                   id: b.user.id,
                   name: b.user.name,
                 },
@@ -794,6 +953,8 @@ export default async function handler(
             })),
             rankingEvolution,
             openAIApiKey,
+            isFinale,
+            finalStandings,
           });
 
           // Store in database (upsert: update if exists, create if not)

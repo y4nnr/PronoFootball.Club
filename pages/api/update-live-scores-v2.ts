@@ -3,6 +3,7 @@ import { prisma } from '../../lib/prisma';
 import { ApiSportsV2 } from '../../lib/api-sports-api-v2';
 import { API_CONFIG } from '../../lib/api-config';
 import { matchTeamsWithOpenAI } from '../../lib/openai-team-matcher';
+import { maybeAutoCompleteCompetition } from '../../lib/competition-completion';
 
 const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
 
@@ -281,6 +282,7 @@ export default async function handler(
             }
             
             await updateShootersForCompetition(updatedGame.competitionId);
+            await maybeAutoCompleteCompetition(updatedGame.competitionId);
             console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
           }
 
@@ -1437,6 +1439,9 @@ export default async function handler(
             externalHomeScore,
             externalAwayScore
           );
+
+          // Auto-complete the competition (after the +5 bonus, so winner uses post-bonus points)
+          await maybeAutoCompleteCompetition(matchingGame.competitionId);
         }
 
         updatedGameIds.add(matchingGame.id);
@@ -1546,6 +1551,7 @@ export default async function handler(
             }
             
             await updateShootersForCompetition(updatedGame.competitionId);
+            await maybeAutoCompleteCompetition(updatedGame.competitionId);
             console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
           }
 

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '../../lib/prisma';
 import { API_CONFIG } from '../../lib/api-config';
+import { maybeAutoCompleteCompetition } from '../../lib/competition-completion';
 
 const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
 
@@ -195,6 +196,7 @@ export default async function handler(
             
             // Update shooters count for all users in this competition
             await updateShootersForCompetition(updatedGame.competitionId);
+            await maybeAutoCompleteCompetition(updatedGame.competitionId);
             
             console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} (${scoringSystem})`);
           }
@@ -409,7 +411,8 @@ export default async function handler(
           
           // Update shooters count for all users in this competition
           await updateShootersForCompetition(updatedGame.competitionId);
-          
+          await maybeAutoCompleteCompetition(updatedGame.competitionId);
+
           console.log(`💰 Calculated points for ${bets.length} bets in game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} (${scoringSystem})`);
         }
 
@@ -523,6 +526,7 @@ export default async function handler(
             
             // Update shooters count for all users in this competition
             await updateShootersForCompetition(updatedGame.competitionId);
+            await maybeAutoCompleteCompetition(updatedGame.competitionId);
             
             console.log(`💰 Calculated points for ${bets.length} bets in auto-finished game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} (${scoringSystem})`);
           }

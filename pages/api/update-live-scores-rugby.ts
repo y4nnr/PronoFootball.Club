@@ -10,6 +10,7 @@ import { prisma } from '../../lib/prisma';
 import { RugbyAPI } from '../../lib/api-rugby-v1';
 import { API_CONFIG } from '../../lib/api-config';
 import { matchTeamsWithOpenAI } from '../../lib/openai-team-matcher';
+import { maybeAutoCompleteCompetition } from '../../lib/competition-completion';
 
 const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
 
@@ -385,6 +386,7 @@ export default async function handler(
             }
             
             await updateShootersForCompetition(updatedGame.competitionId);
+            await maybeAutoCompleteCompetition(updatedGame.competitionId);
             console.log(`💰 Calculated points for ${bets.length} bets in auto-finished rugby game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
           }
 
@@ -1186,6 +1188,7 @@ export default async function handler(
               }
               
               await updateShootersForCompetition(matchingGame.competitionId);
+              await maybeAutoCompleteCompetition(matchingGame.competitionId);
               console.log(`💰 Calculated points for ${bets.length} bets in force-finished game`);
             }
             
@@ -1387,6 +1390,7 @@ export default async function handler(
           }
           
           await updateShootersForCompetition(updatedGame.competitionId);
+          await maybeAutoCompleteCompetition(updatedGame.competitionId);
           console.log(`💰 Calculated points for ${bets.length} bets in rugby game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
         }
 
@@ -1740,6 +1744,7 @@ export default async function handler(
                         }
                         
                         await updateShootersForCompetition(aiMatchingGame.competitionId);
+                        await maybeAutoCompleteCompetition(aiMatchingGame.competitionId);
                         console.log(`💰 Calculated points for ${bets.length} bets in OpenAI-matched finished game`);
                       }
                     } catch (error) {
@@ -1855,6 +1860,7 @@ export default async function handler(
             }
             
             await updateShootersForCompetition(updatedGame.competitionId);
+            await maybeAutoCompleteCompetition(updatedGame.competitionId);
             console.log(`💰 Calculated points for ${bets.length} bets in auto-finished rugby game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name}`);
           }
 
