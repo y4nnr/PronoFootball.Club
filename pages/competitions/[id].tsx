@@ -1404,7 +1404,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                   <ChartBarIcon className="h-6 w-6 text-white" />
                 </div>
                 <span className="md:hidden">
-                  {showAllGames ? 'Tous les Matchs' : 'Matchs à Parier'}
+                  {showAllGames ? 'Tous les Matchs' : 'Matchs à venir'}
                 </span>
                 <span className="hidden md:inline">
                   {showAllGames ? t('competition.allCompetitionGames') : t('competition.gamesAvailableForBetting')}
