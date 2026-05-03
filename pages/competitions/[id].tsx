@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import PlayersPerformanceWidget from '../../components/PlayersPerformanceWidget';
 import RankingEvolutionWidget from '../../components/RankingEvolutionWidget';
-import PlayerPointsProgressionWidget from '../../components/PlayerPointsProgressionWidget';
+import PlayerPointsByGameDayWidget from '../../components/PlayerPointsByGameDayWidget';
 import GameCard from '../../components/GameCard';
 import FinalWinnerPredictionWidget from '../../components/FinalWinnerPredictionWidget';
 
@@ -1384,10 +1384,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
         )}
 
-        {/* Player Points Progression Widget - Only show if there are finished games - Hidden on mobile */}
+        {/* Points par Journée — toggle between Progression and Chandelles - Hidden on mobile */}
         {playersPerformance.length > 0 && (
           <div className="hidden md:block">
-            <PlayerPointsProgressionWidget
+            <PlayerPointsByGameDayWidget
               competitionId={competition.id}
               currentUserId={currentUserId}
             />

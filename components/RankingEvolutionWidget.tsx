@@ -352,91 +352,54 @@ const RankingEvolutionWidget = memo(({
               );
             })}
 
-            {/* X-axis labels (dates) */}
+            {/* X-axis labels (dates) - stacked: day on top, month below */}
             {rankingData.map((dataPoint, index) => {
               // On mobile, show fewer ticks (every other one if more than 8 data points)
               if (isMobile && rankingData.length > 8 && index % 2 !== 0 && index !== rankingData.length - 1) {
                 return null;
               }
-              
-              // Fix: Use proper scaling for single data point
-              const x = rankingData.length === 1 
-                ? padding.left + (plotWidth / 2) // Center single point
+
+              const x = rankingData.length === 1
+                ? padding.left + (plotWidth / 2)
                 : padding.left + ((index * plotWidth) / Math.max(1, rankingData.length - 1));
-              
-              // Check if labels would overlap (rough estimation)
-              const labelSpacing = plotWidth / Math.max(1, rankingData.length - 1);
-              const shouldRotate = labelSpacing < 40 || isMobile; // Rotate if spacing is too small or on mobile
-              
-              // Format the date from the dataPoint
+
               const date = new Date(dataPoint.date);
               const day = String(date.getDate()).padStart(2, '0');
               const month = String(date.getMonth() + 1).padStart(2, '0');
-              const dateLabel = `${day}/${month}`;
-              
+
               return (
                 <g key={`x-label-${index}`}>
-                  {/* Date label */}
                   <text
                     x={x}
-                    y={chartHeight - padding.bottom + 16}
-                    textAnchor={shouldRotate ? "end" : "middle"}
-                    style={{ 
-                      fontSize: '13px', 
+                    y={chartHeight - padding.bottom + 14}
+                    textAnchor="middle"
+                    style={{
+                      fontSize: '13px',
                       fill: isDarkMode ? '#D1D5DB' : '#374151',
                       fontWeight: 600,
                       fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
                       textRendering: 'geometricPrecision',
                       shapeRendering: 'geometricPrecision',
-                      transform: shouldRotate ? `rotate(-28 ${x} ${chartHeight - padding.bottom + 16})` : 'none',
-                      transformOrigin: `${x}px ${chartHeight - padding.bottom + 16}px`
                     }}
                   >
-                    {dateLabel}
+                    {day}
                   </text>
-                </g>
-              );
-            })}
-
-            {/* Separators between dates */}
-            {rankingData.map((dataPoint, index) => {
-              // Don't show separator for the last data point
-              if (index === rankingData.length - 1) return null;
-              
-              // Calculate midpoint between current and next date
-              const currentX = rankingData.length === 1 
-                ? padding.left + (plotWidth / 2)
-                : padding.left + ((index * plotWidth) / Math.max(1, rankingData.length - 1));
-              
-              const nextX = rankingData.length === 1 
-                ? padding.left + (plotWidth / 2)
-                : padding.left + (((index + 1) * plotWidth) / Math.max(1, rankingData.length - 1));
-              
-              const separatorX = (currentX + nextX) / 2;
-              
-              // Check if labels would overlap (rough estimation)
-              const labelSpacing = plotWidth / Math.max(1, rankingData.length - 1);
-              const shouldRotate = labelSpacing < 40 || isMobile;
-              
-              return (
-                <text
-                  key={`separator-${index}`}
-                  x={separatorX}
-                  y={chartHeight - padding.bottom + 16}
-                  textAnchor="middle"
-                    style={{ 
-                      fontSize: '13px', 
-                      fill: isDarkMode ? '#4B5563' : '#E5E7EB',
-                      fontWeight: 300,
+                  <text
+                    x={x}
+                    y={chartHeight - padding.bottom + 28}
+                    textAnchor="middle"
+                    style={{
+                      fontSize: '11px',
+                      fill: isDarkMode ? '#9CA3AF' : '#6B7280',
+                      fontWeight: 500,
                       fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
                       textRendering: 'geometricPrecision',
                       shapeRendering: 'geometricPrecision',
-                      transform: shouldRotate ? `rotate(-28 ${separatorX} ${chartHeight - padding.bottom + 16})` : 'none',
-                      transformOrigin: `${separatorX}px ${chartHeight - padding.bottom + 16}px`
                     }}
-                >
-                  |
-                </text>
+                  >
+                    {month}
+                  </text>
+                </g>
               );
             })}
 
