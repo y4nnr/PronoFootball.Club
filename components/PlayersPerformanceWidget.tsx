@@ -95,10 +95,10 @@ const PlayerPerformanceRow = memo(({
         </div>
       </div>
 
-      {/* Performance Indicators */}
+      {/* Performance Indicators - oldest on left, most recent on right (convention) */}
       <div className="flex space-x-1 flex-1 justify-start">
         {Array.from({ length: 10 }).map((_, index) => {
-          const game = player.lastGamesPerformance[index];
+          const game = player.lastGamesPerformance[9 - index];
           return game ? (() => {
             const darkColor = getPerformanceCardColor(game.result, game.points);
             return (
@@ -184,6 +184,14 @@ const PlayersPerformanceWidget = memo(({
   // Get the games from the first player (all players have the same games)
   const games = playersPerformance[0]?.lastGamesPerformance || [];
 
+  // Sort players by total points across the displayed 10 games (descending),
+  // tiebreak alphabetically. Matches the "Total" column users see on the right.
+  const sortedPlayers = [...playersPerformance].sort((a, b) => {
+    const aTotal = a.lastGamesPerformance.reduce((s, g) => s + (g.points || 0), 0);
+    const bTotal = b.lastGamesPerformance.reduce((s, g) => s + (g.points || 0), 0);
+    return bTotal - aTotal || a.userName.localeCompare(b.userName);
+  });
+
   return (
     <div className="bg-white dark:bg-[rgb(58,58,58)] border border-gray-200 dark:border-gray-600 rounded-lg shadow-2xl dark:shadow-dark-xl mb-8 w-full overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       {/* Header Section */}
@@ -212,7 +220,7 @@ const PlayersPerformanceWidget = memo(({
           {/* Performance columns header */}
           <div className="flex space-x-1 flex-1 justify-start min-w-0">
             {Array.from({ length: 10 }).map((_, index) => {
-              const game = games[index];
+              const game = games[9 - index];
               return game ? (
                 <div
                   key={game.gameId}
@@ -272,13 +280,36 @@ const PlayersPerformanceWidget = memo(({
 
       {/* Players Performance Rows */}
       <div className="space-y-0">
-        {playersPerformance.map((player) => (
+        {sortedPlayers.map((player) => (
           <PlayerPerformanceRow
             key={player.userId}
             player={player}
             currentUserId={currentUserId}
           />
         ))}
+      </div>
+
+      {/* Date axis: stacked day on top, month below — matches Évolution du Classement / Points par Journée */}
+      <div className="flex items-start py-1 px-3 mt-1">
+        <div className="w-32 flex-shrink-0" />
+        <div className="flex space-x-1 flex-1 justify-start">
+          {Array.from({ length: 10 }).map((_, index) => {
+            const game = games[9 - index];
+            if (!game) {
+              return <div key={`date-empty-${index}`} className="flex-1 min-w-0" />;
+            }
+            const d = new Date(game.date);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            return (
+              <div key={`date-${game.gameId}`} className="flex-1 min-w-0 text-center">
+                <div className="text-[13px] font-semibold leading-tight text-gray-700 dark:text-gray-300">{day}</div>
+                <div className="text-[11px] font-medium leading-tight text-gray-500 dark:text-gray-400">{month}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="ml-3 w-16 flex-shrink-0" />
       </div>
       </div>
 

@@ -141,7 +141,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
   const [maxDayPoints, setMaxDayPoints] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<'progression' | 'candles'>('progression');
+  const [view, setView] = useState<'progression' | 'candles'>('candles');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -213,16 +213,6 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
         </div>
         <div className="flex items-center bg-gray-200 dark:bg-[rgb(50,50,50)] rounded-lg p-1">
           <button
-            onClick={() => { setView('progression'); }}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition ${
-              view === 'progression'
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-            }`}
-          >
-            Progression
-          </button>
-          <button
             onClick={() => { setView('candles'); setSelectedDate(null); }}
             className={`px-3 py-1 text-xs font-medium rounded-md transition ${
               view === 'candles'
@@ -231,6 +221,16 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
             }`}
           >
             Chandelles
+          </button>
+          <button
+            onClick={() => { setView('progression'); }}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition ${
+              view === 'progression'
+                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+            }`}
+          >
+            Progression
           </button>
         </div>
       </div>
@@ -243,7 +243,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
         {view === 'progression' ? (
           <p>Cliquez sur une journée pour afficher le classement intermédiaire</p>
         ) : (
-          <p>Points marqués par chaque joueur sur chaque journée. Hauteur proportionnelle au maximum observé ({maxDayPoints} pts).</p>
+          <p>Points marqués par chaque joueur sur chaque journée.</p>
         )}
       </div>
     </div>
@@ -409,7 +409,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
 
   // ---------- Candles view body ----------
   const trackHeight = 90;
-  const minColumnWidth = 24;
+  const minColumnWidth = 16;
 
   const CandlesBody = (
     <div className="p-4 overflow-x-auto">
@@ -419,7 +419,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
             key={player.userId}
             className={`flex items-end space-x-4 border-b border-gray-300 dark:border-gray-600 pb-2 ${idx === 0 ? 'border-t border-gray-300 dark:border-gray-600 pt-2' : 'pt-1'}`}
           >
-            <div className="flex items-center space-x-3 w-36 flex-shrink-0 pb-1">
+            <div className="flex items-center space-x-3 w-32 flex-shrink-0 pb-1">
               <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[rgb(40,40,40)] flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
                 {player.rank}
               </div>
@@ -439,7 +439,8 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
             >
               {dates.map(date => {
                 const points = player.daily.get(date) || 0;
-                const heightPct = (points / maxDayPoints) * 100;
+                // Cap candle height to 80% of the track — reserves room for the points label above
+                const heightPct = (points / maxDayPoints) * 80;
                 const color = getColor(date);
                 const key = `${player.userId}|${date}`;
                 const isHovered = hoveredKey === key;
@@ -467,7 +468,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
                           }}
                         />
                         <div
-                          className={`absolute text-[10px] font-bold pointer-events-none ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}
+                          className={`absolute text-[10px] font-bold leading-none pointer-events-none ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}
                           style={{ bottom: `calc(${heightPct}% + 2px)` }}
                         >
                           {points}
@@ -513,7 +514,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
 
       {/* Date axis: stacked day on top, month below — same layout as Évolution du Classement */}
       <div className="flex items-start space-x-4 pt-2">
-        <div className="w-36 flex-shrink-0" />
+        <div className="w-32 flex-shrink-0" />
         <div className="flex-1 flex" style={{ minWidth: dates.length * minColumnWidth }}>
           {dates.map(date => {
             const d = new Date(date);
