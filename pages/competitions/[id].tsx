@@ -586,9 +586,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[rgb(20,20,20)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 phoneLand:py-2">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 phoneLand:mb-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               {competition.logo ? (
@@ -1362,9 +1362,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
           )}
         </div>
 
-        {/* Players Performance Widget - Only show if there are finished games - Hidden on mobile */}
+        {/* Players Performance Widget - shown on md+ portrait and any landscape (incl. phone landscape) */}
         {playersPerformance.length > 0 && (
-          <div className="hidden md:block">
+          <div className="hidden md:block landscape:block">
             <PlayersPerformanceWidget
               playersPerformance={playersPerformance}
               competitionName={competition.name}
@@ -1374,9 +1374,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
         )}
 
-        {/* Ranking Evolution Widget - Only show if there are finished games - Hidden on mobile */}
+        {/* Ranking Evolution Widget - shown on md+ portrait and any landscape (incl. phone landscape) */}
         {playersPerformance.length > 0 && (
-          <div className="hidden md:block">
+          <div className="hidden md:block landscape:block">
             <RankingEvolutionWidget
               competitionId={competition.id}
               currentUserId={currentUserId}
@@ -1384,9 +1384,9 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
         )}
 
-        {/* Points par Journée — toggle between Progression and Chandelles - Hidden on mobile */}
+        {/* Points par Journée — shown on md+ portrait and any landscape (incl. phone landscape) */}
         {playersPerformance.length > 0 && (
-          <div className="hidden md:block">
+          <div className="hidden md:block landscape:block">
             <PlayerPointsByGameDayWidget
               competitionId={competition.id}
               currentUserId={currentUserId}

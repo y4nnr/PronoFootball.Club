@@ -10,6 +10,7 @@ module.exports = {
     extend: {
       screens: {
         'tablet': '820px', // Custom breakpoint for tablet/desktop transition
+        'phoneLand': { 'raw': '(orientation: landscape) and (max-height: 500px)' }, // phone in landscape (height-based, catches wide modern phones)
       },
       colors: {
         primary: {

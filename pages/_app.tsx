@@ -13,17 +13,21 @@ function App({ Component, pageProps }: AppProps) {
   const isLoginPage = router.pathname === '/' || router.pathname === '/login';
   const isAboutPage = router.pathname === '/about';
   const isBettingPage = router.pathname.startsWith('/betting');
-  
+  // Phone-landscape chrome trimming is scoped to the competition detail page only.
+  const isCompetitionDetailPage = router.pathname === '/competitions/[id]';
+  const phoneLandHide = isCompetitionDetailPage ? 'phoneLand:hidden' : '';
+  const phoneLandMainPadding = isCompetitionDetailPage ? 'phoneLand:pt-0 phoneLand:pb-0' : '';
+
   return (
     <SessionProvider session={pageProps.session}>
       <ThemeProvider>
         <LanguageProvider>
           <div className={`min-h-screen antialiased text-gray-900 dark:text-gray-100 flex flex-col ${isLoginPage || isAboutPage ? 'bg-neutral-900' : 'bg-white dark:bg-[rgb(12,12,12)]'}`}>
-            <Navbar />
-            <main className={`${isLoginPage || isAboutPage ? '' : isBettingPage ? 'pt-24 pb-16 md:pb-0' : 'pt-16 pb-16 md:pt-24 md:pb-0'} flex-1`}>
+            <div className={phoneLandHide}><Navbar /></div>
+            <main className={`${isLoginPage || isAboutPage ? '' : isBettingPage ? `pt-24 pb-16 md:pb-0 ${phoneLandMainPadding}` : `pt-16 pb-16 md:pt-24 md:pb-0 ${phoneLandMainPadding}`} flex-1`}>
               <Component {...pageProps} />
             </main>
-            {!isLoginPage && !isAboutPage && <div className="hidden md:block"><Footer /></div>}
+            {!isLoginPage && !isAboutPage && <div className={`hidden md:block ${phoneLandHide}`}><Footer /></div>}
           </div>
         </LanguageProvider>
       </ThemeProvider>
