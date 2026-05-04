@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from './auth/[...nextauth]';
 import { prisma } from '../../lib/prisma';
 import { computeFinalStandings } from '../../lib/competition-completion';
+import { computeStandingsAtDate } from '../../lib/classement';
 
 type NewsItem = {
   date: string;
@@ -28,57 +29,36 @@ function formatDisplayDate(date: Date) {
   });
 }
 
-// Helper function to get ranking evolution data (reusing logic from ranking-evolution API)
+// Per-matchday ranking snapshots used by the daily news prompt.
+// Delegates the actual sort + position assignment to computeStandingsAtDate so
+// the news matches what the user sees on the Classement (4-criterion logic).
 async function getRankingEvolution(competitionId: string) {
+  const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+
   const finishedGames = await prisma.game.findMany({
     where: {
       competitionId,
-      status: { in: ['FINISHED', 'LIVE'] },
+      status: 'FINISHED',
+      AND: [
+        { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+        { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+      ],
     },
     orderBy: { date: 'asc' },
-    select: {
-      id: true,
-      date: true,
-      status: true,
-    },
+    select: { id: true, date: true },
   });
 
-  if (finishedGames.length === 0) {
-    return [];
-  }
+  if (finishedGames.length === 0) return [];
 
-  const competitionUsers = await prisma.competitionUser.findMany({
-    where: { competitionId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          profilePictureUrl: true,
-        },
-      },
-    },
-  });
-
-  const userMap = new Map();
-  competitionUsers.forEach(cu => {
-    userMap.set(cu.userId, {
-      name: cu.user.name,
-      profilePictureUrl: cu.user.profilePictureUrl
-    });
-  });
-
-  const userIds = competitionUsers.map(cu => cu.userId);
-
-  // Group games by date (matchday)
   const gamesByDate = new Map<string, typeof finishedGames>();
   finishedGames.forEach(game => {
     const dateKey = game.date.toISOString().split('T')[0];
-    if (!gamesByDate.has(dateKey)) {
-      gamesByDate.set(dateKey, []);
-    }
+    if (!gamesByDate.has(dateKey)) gamesByDate.set(dateKey, []);
     gamesByDate.get(dateKey)!.push(game);
   });
+
+  const sortedDates = Array.from(gamesByDate.keys()).sort();
+  const limitedDates = sortedDates.slice(-20); // Last 20 matchdays
 
   const rankingEvolution: Array<{
     date: string;
@@ -90,54 +70,23 @@ async function getRankingEvolution(competitionId: string) {
     }[];
   }> = [];
 
-  const sortedDates = Array.from(gamesByDate.keys()).sort();
-  const limitedDates = sortedDates.slice(-20); // Last 20 matchdays
-
   for (const dateKey of limitedDates) {
     const gamesOnDate = gamesByDate.get(dateKey)!;
     const latestGameOnDate = gamesOnDate[gamesOnDate.length - 1];
-    
-    const betsUpToDate = await prisma.bet.findMany({
-      where: {
-        game: {
-          competitionId,
-          date: { lte: latestGameOnDate.date },
-          status: { in: ['FINISHED', 'LIVE'] },
-        },
-        userId: { in: userIds },
-      },
-      select: {
-        userId: true,
-        points: true,
-      },
-    });
 
-    const userPoints = new Map<string, number>();
-    userIds.forEach(userId => userPoints.set(userId, 0));
-    
-    betsUpToDate.forEach(bet => {
-      const currentPoints = userPoints.get(bet.userId) || 0;
-      userPoints.set(bet.userId, currentPoints + (bet.points || 0));
+    const standings = await computeStandingsAtDate(competitionId, {
+      upToDate: latestGameOnDate.date,
+      treatAsCompleted: false,
     });
-
-    const rankings = Array.from(userPoints.entries())
-      .map(([userId, totalPoints]) => {
-        const userData = userMap.get(userId);
-        return {
-          userId,
-          userName: userData?.name || 'Unknown',
-          totalPoints,
-        };
-      })
-      .sort((a, b) => b.totalPoints - a.totalPoints)
-      .map((user, index) => ({
-        ...user,
-        position: index + 1,
-      }));
 
     rankingEvolution.push({
       date: latestGameOnDate.date.toISOString(),
-      rankings,
+      rankings: standings.map(s => ({
+        userId: s.userId,
+        userName: s.userName,
+        position: s.position,
+        totalPoints: s.totalPoints,
+      })),
     });
   }
 
