@@ -250,11 +250,24 @@ footer.footer-with-border {
   }
 
   .dark .shadow-dark-modern-lg {
-    box-shadow: 
+    box-shadow:
       0 10px 15px -3px rgba(0, 0, 0, 0.4),
       0 4px 6px -2px rgba(0, 0, 0, 0.3),
       0 0 0 1px rgba(255, 255, 255, 0.05) !important;
   }
+
+  /* News date-range pill: hide the native calendar indicator (we render our own icon) */
+  .news-date-input::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  .news-date-input::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+  .news-date-input::-webkit-datetime-edit { padding: 0; }
+  .dark .news-date-input { color-scheme: dark; }
 }
 
 @keyframes avatar-shrink-bounce {
