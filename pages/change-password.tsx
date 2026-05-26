@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from "next-auth/react";
 import ChangePasswordForm from '../components/ChangePasswordForm';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
+  const { status } = useSession();
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
 
   useEffect(() => {
