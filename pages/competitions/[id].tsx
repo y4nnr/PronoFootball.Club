@@ -11,6 +11,7 @@ import RankingEvolutionWidget from '../../components/RankingEvolutionWidget';
 import PlayerPointsByGameDayWidget from '../../components/PlayerPointsByGameDayWidget';
 import GameCard from '../../components/GameCard';
 import FinalWinnerPredictionWidget from '../../components/FinalWinnerPredictionWidget';
+import FinalWinnerPicksWidget, { FinalWinnerPicksData } from '../../components/FinalWinnerPicksWidget';
 
 interface CompetitionUser {
   id: string;
@@ -143,6 +144,8 @@ interface CompetitionDetailsProps {
     games: { id: string; label: string }[];
     ecartByUser: Record<string, Record<string, number>>;
   };
+  /** Champions League: every participant's final-winner pick + the actual winning team if known */
+  finalWinnerPicks?: FinalWinnerPicksData;
 }
 
 // Deterministic date formatting to avoid hydration errors
@@ -156,7 +159,7 @@ function formatDateTime(dateString: string) {
   return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
-export default function CompetitionDetails({ competition, competitionStats, games, currentUserId, isUserMember, finishedGamesCount = 0, tieBreakerFirstPlace, tieBreakerLastPlace }: CompetitionDetailsProps) {
+export default function CompetitionDetails({ competition, competitionStats, games, currentUserId, isUserMember, finishedGamesCount = 0, tieBreakerFirstPlace, tieBreakerLastPlace, finalWinnerPicks }: CompetitionDetailsProps) {
   const { t } = useTranslation('common');
   const [showAllGames, setShowAllGames] = useState(false);
   const [expandFirstTieBreaker, setExpandFirstTieBreaker] = useState(false);
@@ -952,6 +955,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
               )}
             </div>
           </div>
+        )}
+
+        {/* Champions League: everyone's final-winner pick (visible once any pick exists) */}
+        {finalWinnerPicks && finalWinnerPicks.picks.length > 0 && (
+          <FinalWinnerPicksWidget data={finalWinnerPicks} />
         )}
 
         {/* Current Ranking Section - Always visible for better UX */}
@@ -1942,6 +1950,101 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
+    // Champions League: everyone's pick for the final winner, plus the actual winner if known.
+    // For penalty-decided finals (FT draw), derive the actual winner from any bet on the final
+    // that carries the +5 bonus — that team is whoever those users predicted.
+    let finalWinnerPicks: {
+      picks: Array<{ userId: string; userName: string; profilePictureUrl: string | null; team: { id: string; name: string; logo: string | null } | null }>;
+      actualWinnerTeam: { id: string; name: string; logo: string | null } | null;
+      finalLabel: string | null;
+      decidedOnPenalties: boolean;
+    } | undefined;
+
+    if (competition.name.includes('Champions League')) {
+      const compUsersWithPicks = await prisma.competitionUser.findMany({
+        where: { competitionId: competition.id },
+        select: {
+          userId: true,
+          user: { select: { name: true, profilePictureUrl: true } },
+          finalWinnerTeam: { select: { id: true, name: true, logo: true } },
+        },
+      });
+
+      const finalByMatchday = await prisma.game.findFirst({
+        where: {
+          competitionId: competition.id,
+          matchday: { gte: 13 },
+          AND: [
+            { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+            { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+          ],
+        },
+        orderBy: { date: 'desc' },
+        select: {
+          id: true, status: true, homeScore: true, awayScore: true, decidedBy: true,
+          homeTeam: { select: { id: true, name: true, logo: true } },
+          awayTeam: { select: { id: true, name: true, logo: true } },
+        },
+      });
+      const finalByDate = finalByMatchday ? null : await prisma.game.findFirst({
+        where: {
+          competitionId: competition.id,
+          AND: [
+            { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+            { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+          ],
+        },
+        orderBy: [{ date: 'desc' }, { id: 'desc' }],
+        select: {
+          id: true, status: true, homeScore: true, awayScore: true, decidedBy: true,
+          homeTeam: { select: { id: true, name: true, logo: true } },
+          awayTeam: { select: { id: true, name: true, logo: true } },
+        },
+      });
+      const finalGame = finalByMatchday ?? finalByDate;
+
+      let actualWinnerTeam: { id: string; name: string; logo: string | null } | null = null;
+      let decidedOnPenalties = false;
+      if (finalGame && finalGame.status === 'FINISHED' && finalGame.homeScore !== null && finalGame.awayScore !== null) {
+        if (finalGame.homeScore > finalGame.awayScore) {
+          actualWinnerTeam = finalGame.homeTeam;
+        } else if (finalGame.awayScore > finalGame.homeScore) {
+          actualWinnerTeam = finalGame.awayTeam;
+        } else {
+          // FT draw → look for users with a bonus-bearing bet on the final and use their predicted team
+          const bonusBet = await prisma.bet.findFirst({
+            where: { gameId: finalGame.id, points: { gte: 5 } },
+            select: { userId: true },
+          });
+          if (bonusBet) {
+            const owner = compUsersWithPicks.find(cu => cu.userId === bonusBet.userId);
+            if (owner?.finalWinnerTeam) {
+              actualWinnerTeam = owner.finalWinnerTeam;
+              decidedOnPenalties = true;
+            }
+          }
+        }
+      }
+
+      const finalLabel = finalGame
+        ? `Finale : ${finalGame.homeTeam.name} - ${finalGame.awayTeam.name}`
+        : null;
+
+      finalWinnerPicks = {
+        picks: compUsersWithPicks.map(cu => ({
+          userId: cu.userId,
+          userName: cu.user.name,
+          profilePictureUrl: cu.user.profilePictureUrl ?? null,
+          team: cu.finalWinnerTeam
+            ? { id: cu.finalWinnerTeam.id, name: cu.finalWinnerTeam.name, logo: cu.finalWinnerTeam.logo }
+            : null,
+        })),
+        actualWinnerTeam,
+        finalLabel,
+        decidedOnPenalties,
+      };
+    }
+
     // Check if user is a member of this competition
     const isUserMember = competition.users.some(
       (compUser) => compUser.user.id === session.user.id
@@ -1964,6 +2067,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         finishedGamesCount: finishedGameIds.length,
         ...(tieBreakerFirstPlace && { tieBreakerFirstPlace: JSON.parse(JSON.stringify(tieBreakerFirstPlace)) }),
         ...(tieBreakerLastPlace && { tieBreakerLastPlace: JSON.parse(JSON.stringify(tieBreakerLastPlace)) }),
+        ...(finalWinnerPicks && { finalWinnerPicks: JSON.parse(JSON.stringify(finalWinnerPicks)) }),
       },
     };
   } catch (error) {

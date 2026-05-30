@@ -6,15 +6,20 @@ const FINAL_WINNER_BONUS_POINTS = 5;
 /**
  * Awards 5 points to users who correctly predicted the final winner of Champions League
  * This should be called when a game finishes and is determined to be the final
- * 
+ *
  * IDEMPOTENCY: This function is idempotent - it checks if points have already been awarded
  * to prevent duplicate awarding if called multiple times.
+ *
+ * penaltyWinnerTeamId: optional override for finals decided on penalties. When the FT score
+ * is a draw, the function would otherwise skip (CL finals can't draw at FT alone). Pass the
+ * actual winning team's id (set by admin) so bonus still fires after a shootout.
  */
 export async function awardFinalWinnerPoints(
   gameId: string,
   competitionId: string,
   homeScore: number,
-  awayScore: number
+  awayScore: number,
+  penaltyWinnerTeamId?: string
 ): Promise<void> {
   try {
     // Get competition to check if it's Champions League
@@ -121,12 +126,13 @@ export async function awardFinalWinnerPoints(
       winnerTeamId = game.homeTeamId;
     } else if (awayScore > homeScore) {
       winnerTeamId = game.awayTeamId;
+    } else if (penaltyWinnerTeamId === game.homeTeamId || penaltyWinnerTeamId === game.awayTeamId) {
+      // FT draw decided on penalties — caller (admin) provides the actual winning team
+      winnerTeamId = penaltyWinnerTeamId;
+      console.log(`🏆 Final ended ${homeScore}-${awayScore} at FT, penalty winner = ${winnerTeamId === game.homeTeamId ? game.homeTeam.name : game.awayTeam.name}`);
     } else {
-      // Draw - Champions League finals can't end in draws (they go to penalties)
-      // Check if the game was decided by penalties (statusDetail might indicate this)
-      // For now, if it's a draw, we'll skip (the actual winner would be determined by penalties)
-      // TODO: In the future, we might need to check statusDetail or decidedBy fields
-      console.log(`⚠️ Final game ended in a draw (${homeScore}-${awayScore}), no winner points awarded. If decided by penalties, winner should be determined separately.`);
+      // Draw with no override — Champions League finals can't end in a true draw; bail until admin sets penaltyWinnerTeamId
+      console.log(`⚠️ Final game ended in a draw (${homeScore}-${awayScore}) and no penaltyWinnerTeamId provided. Bonus skipped — set the penalty winner and re-run.`);
       return;
     }
 
