@@ -174,12 +174,18 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
                               className={`flex-shrink-0 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition-colors disabled:opacity-60 ${
                                 isPaid
                                   ? 'bg-green-600 text-white hover:bg-green-700'
-                                  : 'bg-primary-600 dark:bg-accent-dark-600 text-white hover:bg-primary-700 dark:hover:bg-accent-dark-700'
+                                  : 'bg-amber-500 text-white hover:bg-amber-600 ring-1 ring-amber-300 dark:ring-amber-700'
                               }`}
-                              title={isPaid ? 'Annuler la confirmation' : "Confirmer que j'ai payé"}
+                              title={isPaid ? 'Annuler la confirmation' : 'Cliquer pour confirmer le paiement'}
                             >
-                              <CheckCircleIcon className="h-4 w-4" />
-                              {isPaid ? 'Payé' : "J'ai payé"}
+                              {isPaid ? (
+                                <>
+                                  <CheckCircleIcon className="h-4 w-4" />
+                                  Payé
+                                </>
+                              ) : (
+                                'Cliquer pour confirmer'
+                              )}
                             </button>
                           ) : (
                             isPaid && <CheckCircleIcon className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
