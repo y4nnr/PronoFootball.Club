@@ -268,6 +268,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
   const [userIsMember, setUserIsMember] = useState(isUserMember);
   const [joiningCompetition, setJoiningCompetition] = useState(false);
 
+  // Lookup of each user's final-winner pick (for the desktop classement column when COMPLETED).
+  const finalPicksByUserId = new Map(
+    (finalWinnerPicks?.picks ?? []).map(p => [p.userId, p])
+  );
+
   // Placeholder team names – games with these are part of total count but must not count as "played" in the progress bar.
   const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
   const isPlaceholderGame = (g: Game) => PLACEHOLDER_TEAM_NAMES.includes(g.homeTeam?.name ?? '') || PLACEHOLDER_TEAM_NAMES.includes(g.awayTeam?.name ?? '');
@@ -965,9 +970,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
           <PodiumPayoutWidget data={podiumPayout} />
         )}
 
-        {/* Champions League: everyone's final-winner pick (visible once any pick exists) */}
+        {/* Champions League: everyone's final-winner pick.
+            When COMPLETED, the desktop classement has a dedicated column → hide this card on desktop. */}
         {finalWinnerPicks && finalWinnerPicks.picks.length > 0 && (
-          <FinalWinnerPicksWidget data={finalWinnerPicks} />
+          <div className={(competition.status === 'COMPLETED' || competition.status === 'completed') ? 'md:hidden' : ''}>
+            <FinalWinnerPicksWidget data={finalWinnerPicks} />
+          </div>
         )}
 
         {/* Current Ranking Section - Always visible for better UX */}
@@ -1210,6 +1218,13 @@ export default function CompetitionDetails({ competition, competitionStats, game
                         </div>
                       </div>
                     </th>
+                    {(competition.status === 'COMPLETED' || competition.status === 'completed') && finalWinnerPicks && (
+                      <th className="hidden md:table-cell w-24 px-4 py-3 text-center border-l border-gray-300 dark:border-gray-600">
+                        <span className="text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Pari Vainqueur
+                        </span>
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-[rgb(20,20,20)] divide-y divide-gray-200 dark:divide-gray-600">
@@ -1297,6 +1312,28 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       <td className="px-2 md:px-4 py-2 md:py-4 whitespace-nowrap text-center">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.shooters || 0}</div>
                       </td>
+                      {(competition.status === 'COMPLETED' || competition.status === 'completed') && finalWinnerPicks && (() => {
+                        const pick = finalPicksByUserId.get(player.userId);
+                        const actualWinnerId = finalWinnerPicks.actualWinnerTeam?.id ?? null;
+                        const isCorrect = !!(pick?.team && actualWinnerId && pick.team.id === actualWinnerId);
+                        return (
+                          <td className="hidden md:table-cell px-4 py-3 whitespace-nowrap text-center border-l border-gray-200 dark:border-gray-600">
+                            {pick?.team ? (
+                              <div className="inline-flex items-center justify-center" title={`${pick.team.name}${isCorrect ? ' ✓' : ''}`}>
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 ${isCorrect ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-[rgb(40,40,40)]'}`}>
+                                  {pick.team.logo ? (
+                                    <img src={pick.team.logo} alt={pick.team.name} className="w-6 h-6 object-contain" />
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-gray-700 dark:text-gray-200">{pick.team.name.slice(0, 3).toUpperCase()}</span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-gray-400 dark:text-gray-500">—</span>
+                            )}
+                          </td>
+                        );
+                      })()}
                     </tr>
                     );
                   })}
