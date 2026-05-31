@@ -124,7 +124,11 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
                 <Avatar name={pos.winner.userName} url={pos.winner.profilePictureUrl} size="lg" />
                 <div className="min-w-0">
                   <p className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">{pos.winner.userName}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">reçoit {pos.prize}{currency}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {pos.prize - entryFee > 0
+                      ? `reçoit ${pos.prize - entryFee}${currency}`
+                      : `récupère sa mise (${entryFee}${currency})`}
+                  </p>
                 </div>
               </div>
 
