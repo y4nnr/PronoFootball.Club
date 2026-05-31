@@ -184,7 +184,7 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
                                   Payé
                                 </>
                               ) : (
-                                'Cliquer pour confirmer'
+                                'Confirmer'
                               )}
                             </button>
                           ) : (
