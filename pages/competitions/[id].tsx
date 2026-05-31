@@ -12,6 +12,7 @@ import PlayerPointsByGameDayWidget from '../../components/PlayerPointsByGameDayW
 import GameCard from '../../components/GameCard';
 import FinalWinnerPredictionWidget from '../../components/FinalWinnerPredictionWidget';
 import FinalWinnerPicksWidget, { FinalWinnerPicksData } from '../../components/FinalWinnerPicksWidget';
+import PodiumPayoutWidget, { PodiumPayoutData } from '../../components/PodiumPayoutWidget';
 
 interface CompetitionUser {
   id: string;
@@ -146,6 +147,8 @@ interface CompetitionDetailsProps {
   };
   /** Champions League: every participant's final-winner pick + the actual winning team if known */
   finalWinnerPicks?: FinalWinnerPicksData;
+  /** Cagnotte: who-pays-whom allocation for the top-3 podium (only when COMPLETED and prize math matches) */
+  podiumPayout?: PodiumPayoutData;
 }
 
 // Deterministic date formatting to avoid hydration errors
@@ -159,7 +162,7 @@ function formatDateTime(dateString: string) {
   return `${day}/${month}/${year} ${hour}:${minute}`;
 }
 
-export default function CompetitionDetails({ competition, competitionStats, games, currentUserId, isUserMember, finishedGamesCount = 0, tieBreakerFirstPlace, tieBreakerLastPlace, finalWinnerPicks }: CompetitionDetailsProps) {
+export default function CompetitionDetails({ competition, competitionStats, games, currentUserId, isUserMember, finishedGamesCount = 0, tieBreakerFirstPlace, tieBreakerLastPlace, finalWinnerPicks, podiumPayout }: CompetitionDetailsProps) {
   const { t } = useTranslation('common');
   const [showAllGames, setShowAllGames] = useState(false);
   const [expandFirstTieBreaker, setExpandFirstTieBreaker] = useState(false);
@@ -955,6 +958,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
               )}
             </div>
           </div>
+        )}
+
+        {/* Cagnotte: who pays whom for the top-3 podium */}
+        {podiumPayout && podiumPayout.positions.length === 3 && (
+          <PodiumPayoutWidget data={podiumPayout} />
         )}
 
         {/* Champions League: everyone's final-winner pick (visible once any pick exists) */}
@@ -1950,6 +1958,45 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
+    // Cagnotte: 50€ entry per player; prizes 300 / 100 / 50. Only show when COMPLETED, ≥3 participants,
+    // and the entry math matches the prize total (so we don't display nonsense for differently-sized comps).
+    let podiumPayout: PodiumPayoutData | undefined;
+    if (isCompleted && competition.name.includes('Champions League') && competitionStats.length >= 3) {
+      const ENTRY = 50;
+      const CURRENCY = '€';
+      const PRIZES: [number, number, number] = [300, 100, 50];
+      const totalPot = competitionStats.length * ENTRY;
+      const totalPrizes = PRIZES[0] + PRIZES[1] + PRIZES[2];
+      if (totalPot === totalPrizes) {
+        const winners = competitionStats.slice(0, 3);
+        // Sort non-podium by classement position ascending (4th, 5th, …)
+        const losers = competitionStats.slice(3).sort((a, b) => a.position - b.position);
+        // Each podium keeps their own entry, so they need (prize - entry)/entry loser payments.
+        const slots = PRIZES.map(p => (p - ENTRY) / ENTRY) as [number, number, number];
+        let cursor = 0;
+        const payersBuckets = slots.map(n => {
+          const slice = losers.slice(cursor, cursor + n);
+          cursor += n;
+          return slice;
+        });
+        podiumPayout = {
+          entryFee: ENTRY,
+          currency: CURRENCY,
+          positions: winners.map((w, idx) => ({
+            rank: (idx + 1) as 1 | 2 | 3,
+            prize: PRIZES[idx],
+            winner: { userId: w.userId, userName: w.userName, profilePictureUrl: w.profilePictureUrl ?? null },
+            payers: payersBuckets[idx].map(p => ({
+              userId: p.userId,
+              userName: p.userName,
+              profilePictureUrl: p.profilePictureUrl ?? null,
+              amount: ENTRY,
+            })),
+          })),
+        };
+      }
+    }
+
     // Champions League: everyone's pick for the final winner, plus the actual winner if known.
     // For penalty-decided finals (FT draw), derive the actual winner from any bet on the final
     // that carries the +5 bonus — that team is whoever those users predicted.
@@ -2068,6 +2115,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         ...(tieBreakerFirstPlace && { tieBreakerFirstPlace: JSON.parse(JSON.stringify(tieBreakerFirstPlace)) }),
         ...(tieBreakerLastPlace && { tieBreakerLastPlace: JSON.parse(JSON.stringify(tieBreakerLastPlace)) }),
         ...(finalWinnerPicks && { finalWinnerPicks: JSON.parse(JSON.stringify(finalWinnerPicks)) }),
+        ...(podiumPayout && { podiumPayout: JSON.parse(JSON.stringify(podiumPayout)) }),
       },
     };
   } catch (error) {
