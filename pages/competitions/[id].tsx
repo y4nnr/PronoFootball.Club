@@ -967,7 +967,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
         {/* Cagnotte: who pays whom for the top-3 podium */}
         {podiumPayout && podiumPayout.positions.length === 3 && (
-          <PodiumPayoutWidget data={podiumPayout} />
+          <PodiumPayoutWidget data={podiumPayout} competitionId={competition.id} currentUserId={currentUserId} />
         )}
 
         {/* Champions League: everyone's final-winner pick.
@@ -2005,6 +2005,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       const totalPot = competitionStats.length * ENTRY;
       const totalPrizes = PRIZES[0] + PRIZES[1] + PRIZES[2];
       if (totalPot === totalPrizes) {
+        const paidRows = await prisma.competitionUser.findMany({
+          where: { competitionId: competition.id },
+          select: { userId: true, podiumPaidAt: true },
+        });
+        const paidAtByUserId = new Map(paidRows.map(r => [r.userId, r.podiumPaidAt ? r.podiumPaidAt.toISOString() : null] as const));
+
         const winners = competitionStats.slice(0, 3);
         // Sort non-podium by classement position ascending (4th, 5th, …)
         const losers = competitionStats.slice(3).sort((a, b) => a.position - b.position);
@@ -2028,6 +2034,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
               userName: p.userName,
               profilePictureUrl: p.profilePictureUrl ?? null,
               amount: ENTRY,
+              paidAt: paidAtByUserId.get(p.userId) ?? null,
             })),
           })),
         };

@@ -71,6 +71,7 @@ model CompetitionUser {
   updatedAt         DateTime    @updatedAt
   shooters          Int         @default(0)
   finalWinnerTeamId String?     // User's prediction for the final winner (Champions League only)
+  podiumPaidAt      DateTime?   // Self-confirmation that the user has paid their 50€ entry fee (cagnotte tracking)
   competition       Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   finalWinnerTeam   Team?       @relation("FinalWinnerPrediction", fields: [finalWinnerTeamId], references: [id], onDelete: SetNull)
