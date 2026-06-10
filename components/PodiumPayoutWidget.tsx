@@ -171,11 +171,16 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
                   </div>
                   <div className="px-3 md:px-4 py-3 flex-1 flex flex-col items-center justify-center gap-1">
                     <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">{fmt(prize)}{currency}</p>
-                    <p className={`text-[10px] md:text-xs font-medium ${net > 0 ? 'text-green-600 dark:text-green-400' : net < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                      {net > 0 && `gain net : +${fmt(net)}${currency}`}
-                      {net === 0 && `récupère sa mise`}
-                      {net < 0 && `perte : ${fmt(net)}${currency}`}
-                    </p>
+                    {net > 0 && (
+                      <p className="text-[10px] md:text-xs font-medium text-green-600 dark:text-green-400">
+                        gain net : +{fmt(net)}{currency}
+                      </p>
+                    )}
+                    {net === 0 && (
+                      <p className="text-[10px] md:text-xs font-medium text-gray-500 dark:text-gray-400">
+                        récupère sa mise
+                      </p>
+                    )}
                   </div>
                 </div>
               );
