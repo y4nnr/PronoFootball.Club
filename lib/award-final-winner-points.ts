@@ -1,18 +1,19 @@
 import { prisma } from './prisma';
 
 const PLACEHOLDER_TEAM_NAME = 'xxxx';
+const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
 const FINAL_WINNER_BONUS_POINTS = 5;
 
 /**
- * Awards 5 points to users who correctly predicted the final winner of Champions League
- * This should be called when a game finishes and is determined to be the final
+ * Awards +5 points to users who correctly predicted the final winner of a competition
+ * (Champions League, World Cup, …). Only fires for competitions with finalWinnerEnabled=true
+ * and only when the given game is actually the last one in the schedule.
  *
- * IDEMPOTENCY: This function is idempotent - it checks if points have already been awarded
- * to prevent duplicate awarding if called multiple times.
+ * Idempotent: checks for prior bonus before adding (avoids double-award on retry).
  *
  * penaltyWinnerTeamId: optional override for finals decided on penalties. When the FT score
- * is a draw, the function would otherwise skip (CL finals can't draw at FT alone). Pass the
- * actual winning team's id (set by admin) so bonus still fires after a shootout.
+ * is a draw, the function otherwise skips. Pass the actual winning team id so bonus still
+ * fires after a shootout.
  */
 export async function awardFinalWinnerPoints(
   gameId: string,
@@ -22,14 +23,13 @@ export async function awardFinalWinnerPoints(
   penaltyWinnerTeamId?: string
 ): Promise<void> {
   try {
-    // Get competition to check if it's Champions League
+    // Skip if the competition doesn't opt into the final-winner bonus
     const competition = await prisma.competition.findUnique({
       where: { id: competitionId },
-      select: { id: true, name: true }
+      select: { id: true, name: true, finalWinnerEnabled: true }
     });
 
-    if (!competition || !competition.name.includes('Champions League')) {
-      // Not a Champions League competition, skip
+    if (!competition || !competition.finalWinnerEnabled) {
       return;
     }
 
@@ -46,66 +46,38 @@ export async function awardFinalWinnerPoints(
       return;
     }
 
-    // Check if this is the final game
-    // 
-    // HOW TO MARK THE FINAL GAME:
-    // Option 1 (Recommended): Set matchday to a high number (e.g., 99) when creating/editing the final game
-    //   - Why 99? It's clearly not a real matchday number (Champions League typically uses 1-16)
-    //   - It's easy to remember and clearly indicates "this is the final"
-    //   - Any number >= 13 will work, but 99 is a safe convention that won't conflict
-    //
-    // Option 2: Use the actual Champions League matchday number if known
-    //   - Group stage: matchdays 1-6
-    //   - Round of 16: matchdays 7-10
-    //   - Quarter-finals: matchdays 11-12
-    //   - Semi-finals: matchdays 13-14
-    //   - Final: typically matchday 15 or 16
-    //   - So matchday 15 or 16 would also work, but 99 is clearer as a marker
-    //
-    // Option 3: Don't set matchday - system will detect final as the last game by date
-    //   - Less reliable if games are rescheduled or created out of order
-    //
-    // Priority 1: Explicit matchday marking (matchday >= 13, recommended: matchday = 99 for clarity)
-    // Priority 2: Date-based detection (last game by date, excluding placeholders)
-    
+    // Guard: if any game (placeholder or not) is scheduled AFTER this one, this isn't the final.
+    // This prevents the bonus firing on the last group game while knockout placeholders are still pending.
+    const laterGameCount = await prisma.game.count({
+      where: { competitionId, date: { gt: game.date } },
+    });
+    if (laterGameCount > 0) {
+      console.log(`⏭️  Game ${gameId} is not the final — ${laterGameCount} game(s) scheduled after it`);
+      return;
+    }
+
     let isFinal = false;
-    
-    // First, check if this specific game is explicitly marked as final by matchday
-    // Any matchday >= 13 will work, but 99 is recommended as a clear marker
     if (game.matchday !== null && game.matchday >= 13) {
       isFinal = true;
       console.log(`🏆 Game identified as final by explicit matchday: ${game.matchday}`);
     } else {
-      // Fallback: Check if this is the last game by date (excluding placeholders)
-      // This works even if the final game is created later and has an earlier date
+      // Fallback: this is the last non-placeholder game by date.
       const allGames = await prisma.game.findMany({
-        where: { 
+        where: {
           competitionId,
-          // Exclude placeholder games from final detection
-          homeTeam: {
-            name: { not: { in: [PLACEHOLDER_TEAM_NAME, 'xxxx2'] } }
-          },
-          awayTeam: {
-            name: { not: { in: [PLACEHOLDER_TEAM_NAME, 'xxxx2'] } }
-          }
+          homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } },
+          awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } },
         },
-        orderBy: [
-          { date: 'desc' },
-          { id: 'desc' } // Secondary sort for consistency
-        ]
+        orderBy: [{ date: 'desc' }, { id: 'desc' }],
       });
-
-      // The final is the last game (most recent date) without placeholder teams
       const finalGame = allGames.length > 0 ? allGames[0] : null;
       isFinal = finalGame?.id === gameId;
-      
       if (isFinal) {
-        console.log(`🏆 Game identified as final by date (last game in competition)`);
+        console.log(`🏆 Game identified as final by date (last non-placeholder game)`);
         console.log(`💡 Tip: Set matchday = 99 on this game to explicitly mark it as final`);
       }
     }
 
-    // If this game is not the final, skip
     if (!isFinal) {
       console.log(`⏭️  Game ${gameId} is not the final, skipping final winner points`);
       return;

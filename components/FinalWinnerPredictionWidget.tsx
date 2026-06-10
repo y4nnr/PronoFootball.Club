@@ -13,12 +13,14 @@ interface FinalWinnerPredictionWidgetProps {
   competitionId: string;
   competitionName: string;
   currentUserId: string;
+  /** Whether this competition has finalWinnerEnabled — when false, the widget renders nothing */
+  enabled: boolean;
 }
 
 export default function FinalWinnerPredictionWidget({
   competitionId,
-  competitionName,
-  currentUserId
+  currentUserId,
+  enabled
 }: FinalWinnerPredictionWidgetProps) {
   const { t } = useTranslation('common');
   const [prediction, setPrediction] = useState<Team | null>(null);
@@ -31,8 +33,7 @@ export default function FinalWinnerPredictionWidget({
   const [submitting, setSubmitting] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
 
-  // Only show for Champions League
-  if (!competitionName.includes('Champions League')) {
+  if (!enabled) {
     return null;
   }
 

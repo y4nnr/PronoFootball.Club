@@ -133,17 +133,34 @@ export async function maybeAutoCompleteCompetition(competitionId: string): Promi
     const status = comp.status.toLowerCase();
     if (status === 'completed' || status === 'cancelled') return;
 
-    const pending = await prisma.game.count({
-      where: {
-        competitionId,
-        status: { in: ['UPCOMING', 'LIVE', 'RESCHEDULED'] },
-        AND: [
-          { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
-          { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
-        ],
-      },
-    });
-    if (pending > 0) return;
+    // Pending = (a) any non-placeholder game still waiting AND
+    //           (b) any FUTURE-dated placeholder game (a knockout slot whose teams aren't filled yet).
+    // Past-dated placeholders (legacy CL abandoned slots) don't block completion.
+    const now = new Date();
+    const [pendingReal, pendingFuturePlaceholder] = await Promise.all([
+      prisma.game.count({
+        where: {
+          competitionId,
+          status: { in: ['UPCOMING', 'LIVE', 'RESCHEDULED'] },
+          AND: [
+            { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+            { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
+          ],
+        },
+      }),
+      prisma.game.count({
+        where: {
+          competitionId,
+          status: { in: ['UPCOMING', 'LIVE', 'RESCHEDULED'] },
+          date: { gt: now },
+          OR: [
+            { homeTeam: { name: { in: PLACEHOLDER_TEAM_NAMES } } },
+            { awayTeam: { name: { in: PLACEHOLDER_TEAM_NAMES } } },
+          ],
+        },
+      }),
+    ]);
+    if (pendingReal + pendingFuturePlaceholder > 0) return;
 
     const finished = await prisma.game.count({
       where: { competitionId, status: 'FINISHED' },

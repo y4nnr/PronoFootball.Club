@@ -126,6 +126,8 @@ interface CompetitionDetailsProps {
       users: number;
     };
     logo?: string;
+    finalWinnerEnabled?: boolean;
+    finalWinnerLockAt?: string | null;
   };
   competitionStats: CompetitionStats[];
   games: Game[];
@@ -773,11 +775,12 @@ export default function CompetitionDetails({ competition, competitionStats, game
             </div>
           </div>
 
-          {/* Final Winner Prediction Widget - Only for Champions League */}
+          {/* Final Winner Prediction Widget — shown for any competition with finalWinnerEnabled */}
           <FinalWinnerPredictionWidget
             competitionId={competition.id}
             competitionName={competition.name}
             currentUserId={currentUserId}
+            enabled={!!competition.finalWinnerEnabled}
           />
         </div>
 
@@ -1750,6 +1753,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         status: true,
         sportType: true,
         logo: true,
+        finalWinnerEnabled: true,
+        finalWinnerLockAt: true,
         winner: {
           select: { id: true, name: true }
         },
@@ -1998,7 +2003,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Cagnotte: 50€ entry per player; prizes 300 / 100 / 50. Only show when COMPLETED, ≥3 participants,
     // and the entry math matches the prize total (so we don't display nonsense for differently-sized comps).
     let podiumPayout: PodiumPayoutData | undefined;
-    if (isCompleted && competition.name.includes('Champions League') && competitionStats.length >= 3) {
+    if (isCompleted && competition.finalWinnerEnabled && competitionStats.length >= 3) {
       const ENTRY = 50;
       const CURRENCY = '€';
       const PRIZES: [number, number, number] = [300, 100, 50];
@@ -2051,7 +2056,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       decidedOnPenalties: boolean;
     } | undefined;
 
-    if (competition.name.includes('Champions League')) {
+    if (competition.finalWinnerEnabled) {
       const compUsersWithPicks = await prisma.competitionUser.findMany({
         where: { competitionId: competition.id },
         select: {
