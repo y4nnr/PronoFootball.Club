@@ -508,13 +508,19 @@ export default function CompetitionDetails({ competition, competitionStats, game
 
 
 
+  // Until any game has finished, every player has 0 points → position is uninformative; show a neutral dash.
+  const notStarted = finishedGamesCount === 0;
+
   const getPositionColor = (position: number) => {
+    if (notStarted) {
+      return 'bg-gray-100 dark:bg-[rgb(40,40,40)] text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700';
+    }
     const isLast = position === maxPosition;
     switch (position) {
       case 1: return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-500/50';
       case 2: return 'bg-slate-200 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-slate-400 dark:border-slate-600/50'; // Silver/metallic gray for 2nd place
       case 3: return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-500/50';
-      default: 
+      default:
         if (isLast) {
           return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-500/50'; // Pizza (last place)
         }
@@ -523,6 +529,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
   };
 
   const getPositionIcon = (position: number) => {
+    if (notStarted) return '–';
     if (position === 1) return '🏆';
     if (position === 2) return '🥈';
     if (position === 3) return '🥉';
