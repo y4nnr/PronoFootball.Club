@@ -990,10 +990,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
           <PodiumPayoutWidget data={podiumPayout} competitionId={competition.id} currentUserId={currentUserId} />
         )}
 
-        {/* Champions League: everyone's final-winner pick.
-            When COMPLETED, the desktop classement has a dedicated column → hide this card on desktop. */}
+        {/* Everyone's final-winner pick — only rendered once the final has kicked off (SSR enforces privacy).
+            Desktop has the "Pari Vainqueur" column in the classement → hide the card on md+ to avoid duplication. */}
         {finalWinnerPicks && finalWinnerPicks.picks.length > 0 && (
-          <div className={(competition.status === 'COMPLETED' || competition.status === 'completed') ? 'md:hidden' : ''}>
+          <div className="md:hidden">
             <FinalWinnerPicksWidget data={finalWinnerPicks} />
           </div>
         )}
@@ -1238,7 +1238,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                         </div>
                       </div>
                     </th>
-                    {(competition.status === 'COMPLETED' || competition.status === 'completed') && finalWinnerPicks && (
+                    {finalWinnerPicks && (
                       <th className="hidden md:table-cell w-24 px-4 py-3 text-center border-l border-gray-300 dark:border-gray-600">
                         <span className="text-[10px] lg:text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           Pari Vainqueur
@@ -1332,7 +1332,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       <td className="px-2 md:px-4 py-2 md:py-4 whitespace-nowrap text-center">
                         <div className="text-[10px] md:text-sm text-gray-900 dark:text-gray-100">{player.shooters || 0}</div>
                       </td>
-                      {(competition.status === 'COMPLETED' || competition.status === 'completed') && finalWinnerPicks && (() => {
+                      {finalWinnerPicks && (() => {
                         const pick = finalPicksByUserId.get(player.userId);
                         const actualWinnerId = finalWinnerPicks.actualWinnerTeam?.id ?? null;
                         const isCorrect = !!(pick?.team && actualWinnerId && pick.team.id === actualWinnerId);
@@ -2113,15 +2113,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     } | undefined;
 
     if (competition.finalWinnerEnabled) {
-      const compUsersWithPicks = await prisma.competitionUser.findMany({
-        where: { competitionId: competition.id },
-        select: {
-          userId: true,
-          user: { select: { name: true, profilePictureUrl: true } },
-          finalWinnerTeam: { select: { id: true, name: true, logo: true } },
-        },
-      });
-
       // Find the final game: prefer the matchday>=13 game even if it still has placeholder teams
       // (so the widget knows "we have a final scheduled but it isn't real yet"), and ONLY set
       // actualWinnerTeam below if that game has real teams AND is FINISHED.
@@ -2129,7 +2120,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         where: { competitionId: competition.id, matchday: { gte: 13 } },
         orderBy: { date: 'desc' },
         select: {
-          id: true, status: true, homeScore: true, awayScore: true, decidedBy: true,
+          id: true, status: true, date: true, homeScore: true, awayScore: true, decidedBy: true,
           homeTeam: { select: { id: true, name: true, logo: true } },
           awayTeam: { select: { id: true, name: true, logo: true } },
         },
@@ -2144,7 +2135,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
         orderBy: [{ date: 'desc' }, { id: 'desc' }],
         select: {
-          id: true, status: true, homeScore: true, awayScore: true, decidedBy: true,
+          id: true, status: true, date: true, homeScore: true, awayScore: true, decidedBy: true,
           homeTeam: { select: { id: true, name: true, logo: true } },
           awayTeam: { select: { id: true, name: true, logo: true } },
         },
@@ -2155,6 +2146,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         !PLACEHOLDER_TEAM_NAMES.includes(finalGame.homeTeam.name) &&
         !PLACEHOLDER_TEAM_NAMES.includes(finalGame.awayTeam.name)
       );
+      // Privacy: do not reveal anyone else's pick (or your own to others) until the final game has kicked off.
+      // Before that point, finalWinnerPicks stays undefined so both the picks widget and the desktop
+      // classement "Pari Vainqueur" column hide automatically.
+      const picksRevealed = !!(finalGame && new Date() >= finalGame.date);
+      if (!picksRevealed) {
+        finalWinnerPicks = undefined;
+      } else {
+      const compUsersWithPicks = await prisma.competitionUser.findMany({
+        where: { competitionId: competition.id },
+        select: {
+          userId: true,
+          user: { select: { name: true, profilePictureUrl: true } },
+          finalWinnerTeam: { select: { id: true, name: true, logo: true } },
+        },
+      });
 
       let actualWinnerTeam: { id: string; name: string; logo: string | null } | null = null;
       let decidedOnPenalties = false;
@@ -2196,6 +2202,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         finalLabel,
         decidedOnPenalties,
       };
+      } // end of picksRevealed branch
     }
 
     // Check if user is a member of this competition
