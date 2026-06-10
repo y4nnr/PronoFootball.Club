@@ -28,6 +28,7 @@ export default function FinalWinnerPredictionWidget({
   const [deadline, setDeadline] = useState<Date | null>(null);
   const [deadlinePassed, setDeadlinePassed] = useState(false);
   const [selectionLocked, setSelectionLocked] = useState(false);
+  const [lockAt, setLockAt] = useState<Date | null>(null);
   const [nextGame, setNextGame] = useState<{ id: string; date: string; homeTeam: string; awayTeam: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -52,6 +53,7 @@ export default function FinalWinnerPredictionWidget({
         setDeadline(data.deadline ? new Date(data.deadline) : null);
         setDeadlinePassed(data.deadlinePassed);
         setSelectionLocked(!!data.selectionLocked);
+        setLockAt(data.lockAt ? new Date(data.lockAt) : null);
         setNextGame(data.nextGame);
         if (data.prediction) {
           setSelectedTeamId(data.prediction.id);
@@ -206,10 +208,20 @@ export default function FinalWinnerPredictionWidget({
       </div>
 
       {/* Footer */}
-      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3">
+      <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3 space-y-0.5">
         <p className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">
           Prédisez le vainqueur final et gagnez <span className="text-primary-600 dark:text-accent-dark-400">5 points</span> bonus
         </p>
+        {lockAt && (
+          <p className="text-[11px] text-gray-600 dark:text-gray-300 text-center">
+            {selectionLocked ? 'Sélection verrouillée depuis le' : 'Date limite :'}{' '}
+            <span className="font-semibold">
+              {lockAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' })}
+              {' à '}
+              {lockAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}
+            </span>
+          </p>
+        )}
       </div>
     </div>
   );

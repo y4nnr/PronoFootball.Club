@@ -82,6 +82,7 @@ export default async function handler(
         deadline: deadline?.toISOString() || null,
         deadlinePassed,
         selectionLocked,
+        lockAt: lockAt?.toISOString() || null,
         availableTeams,
         nextGame: nextGame ? {
           id: nextGame.id,
