@@ -91,9 +91,7 @@ function ConfirmButton({ paid, submitting, onClick }: { paid: boolean; submittin
 
 export default function PodiumPayoutWidget({ data, competitionId, currentUserId }: Props) {
   const initial: Record<string, string | null> = {};
-  if (data.mode === 'pre') {
-    data.participants.forEach(p => { initial[p.userId] = p.paidAt; });
-  } else {
+  if (data.mode === 'settled') {
     data.positions.forEach(pos => pos.payers.forEach(p => { initial[p.userId] = p.paidAt; }));
   }
   const [paidState, setPaidState] = useState<Record<string, string | null>>(initial);
@@ -120,9 +118,53 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
     }
   };
 
-  const paidCount = Object.values(paidState).filter(Boolean).length;
-  const collectedSoFar = paidCount * entryFee;
+  // PRE-COMPLETION: compact projected-prize widget, no payment talk.
+  if (data.mode === 'pre') {
+    return (
+      <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl border border-gray-300 dark:border-gray-600 overflow-hidden mb-8 shadow">
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3 flex items-center gap-3">
+          <div className="p-1.5 bg-primary-600 dark:bg-accent-dark-600 rounded-full flex items-center justify-center">
+            <BanknotesIcon className="h-4 w-4 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm md:text-base font-bold text-gray-900 dark:text-gray-100">Cagnotte</h3>
+            <p className="text-[11px] md:text-xs text-gray-600 dark:text-gray-300">
+              {participantCount} joueur{participantCount > 1 ? 's' : ''} · Mise {entryFee}{currency} · Total <span className="font-semibold">{fmt(pot)}{currency}</span>
+            </p>
+          </div>
+        </div>
 
+        {participantCount < 3 ? (
+          <div className="px-4 py-3 text-xs md:text-sm text-gray-600 dark:text-gray-300">
+            Les prix s'afficheront dès qu'il y aura au moins <span className="font-semibold">3 joueurs</span>.
+          </div>
+        ) : (
+          <div className="p-3 grid grid-cols-3 gap-2">
+            {([0, 1, 2] as const).map(idx => {
+              const rank = (idx + 1) as 1 | 2 | 3;
+              const styles = RANK_STYLES[rank];
+              return (
+                <div key={rank} className={`rounded-lg border ${styles.ring} ${styles.chip} px-3 py-2 text-center`}>
+                  <div className="text-xl leading-none">{MEDAL_EMOJI[rank]}</div>
+                  <div className="text-[10px] md:text-xs font-semibold uppercase tracking-wide mt-1">{percentages[idx]}%</div>
+                  <div className="text-sm md:text-base font-bold mt-0.5">{fmt(prizes[idx])}{currency}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {participantCount >= 3 && adjusted && (
+          <p className="px-4 pb-2 text-[10px] md:text-[11px] text-amber-700 dark:text-amber-300">
+            Répartition ajustée pour que le 3ᵉ ne perde pas sa mise.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // SETTLED MODE: full podium with winners, payer chunks, and per-user payment confirmation.
+  const paidCount = Object.values(paidState).filter(Boolean).length;
   return (
     <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
       <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
@@ -134,12 +176,6 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
         </h3>
         <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 ml-12">
           Mise : {entryFee}{currency} · {participantCount} joueurs · Cagnotte totale : <span className="font-semibold">{fmt(pot)}{currency}</span>
-          {data.mode === 'pre' && (
-            <>
-              {' · '}
-              <span>Payée à ce jour : <span className="font-semibold">{fmt(collectedSoFar)}{currency}</span></span>
-            </>
-          )}
         </p>
         {adjusted && (
           <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1 ml-12">
@@ -148,24 +184,14 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
         )}
       </div>
 
-      {/* Projected/final prize summary — only render once we have enough players for a podium */}
-      {participantCount < 3 && (
-        <div className="px-6 py-4 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-700">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            Le podium des prix s'affichera dès qu'il y aura au moins <span className="font-semibold">3 joueurs</span>.
-            En attendant, la cagnotte croît à mesure que chacun rejoint la compétition.
-          </p>
-        </div>
-      )}
-      {participantCount >= 3 && (
       <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         {([0, 1, 2] as const).map(idx => {
           const rank = (idx + 1) as 1 | 2 | 3;
           const styles = RANK_STYLES[rank];
           const prize = prizes[idx];
           const net = nets[idx];
-          const winner = data.mode === 'settled' ? data.positions[idx]?.winner : null;
-          const payers = data.mode === 'settled' ? data.positions[idx]?.payers ?? [] : [];
+          const winner = data.positions[idx]?.winner;
+          const payers = data.positions[idx]?.payers ?? [];
           const paidNum = payers.filter(p => !!paidState[p.userId]).length;
           return (
             <div key={rank} className={`rounded-xl border-2 ${styles.ring} bg-white/70 dark:bg-[rgb(48,48,48)] overflow-hidden flex flex-col`}>
@@ -177,7 +203,6 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
                 </div>
               </div>
 
-              {/* Winner row only in settled mode */}
               {winner && (
                 <div className="px-4 py-3 flex items-center gap-3 border-b border-gray-200 dark:border-gray-600">
                   <Avatar name={winner.userName} url={winner.profilePictureUrl} size="lg" />
@@ -190,81 +215,40 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
                 </div>
               )}
 
-              {/* Settled-mode payer list per podium */}
-              {data.mode === 'settled' && (
-                <div className="px-4 py-3 flex-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                    {payers.length === 0
-                      ? 'Aucun versement à recevoir'
-                      : `${paidNum}/${payers.length} payé${paidNum > 1 ? 's' : ''} · ${payers.length * entryFee}${currency}`}
-                  </p>
-                  {payers.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">Récupère sa mise ({entryFee}{currency})</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {payers.map(payer => {
-                        const isPaid = !!paidState[payer.userId];
-                        const isSelf = payer.userId === currentUserId;
-                        return (
-                          <li key={payer.userId} className={`flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors ${isPaid ? 'bg-green-50 dark:bg-green-900/25 border border-green-200 dark:border-green-700' : 'border border-transparent'}`}>
-                            <Avatar name={payer.userName} url={payer.profilePictureUrl} size="md" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{payer.userName}</p>
-                              <PaidPill paid={isPaid} />
-                            </div>
-                            <span className="flex-shrink-0 text-xs font-mono font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md px-2 py-0.5">{payer.amount}{currency}</span>
-                            {isSelf
-                              ? <ConfirmButton paid={isPaid} submitting={submitting} onClick={togglePaid} />
-                              : isPaid && <CheckCircleIcon className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              )}
-
-              {/* Pre-mode: just the projected net */}
-              {data.mode === 'pre' && (
-                <div className="px-4 py-3 flex-1">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Gain net projeté : <span className="font-semibold text-gray-700 dark:text-gray-200">{net > 0 ? `${fmt(net)}${currency}` : '—'}</span>
-                  </p>
-                </div>
-              )}
+              <div className="px-4 py-3 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                  {payers.length === 0
+                    ? 'Aucun versement à recevoir'
+                    : `${paidNum}/${payers.length} payé${paidNum > 1 ? 's' : ''} · ${payers.length * entryFee}${currency}`}
+                </p>
+                {payers.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 italic">Récupère sa mise ({entryFee}{currency})</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {payers.map(payer => {
+                      const isPaid = !!paidState[payer.userId];
+                      const isSelf = payer.userId === currentUserId;
+                      return (
+                        <li key={payer.userId} className={`flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors ${isPaid ? 'bg-green-50 dark:bg-green-900/25 border border-green-200 dark:border-green-700' : 'border border-transparent'}`}>
+                          <Avatar name={payer.userName} url={payer.profilePictureUrl} size="md" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{payer.userName}</p>
+                            <PaidPill paid={isPaid} />
+                          </div>
+                          <span className="flex-shrink-0 text-xs font-mono font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md px-2 py-0.5">{payer.amount}{currency}</span>
+                          {isSelf
+                            ? <ConfirmButton paid={isPaid} submitting={submitting} onClick={togglePaid} />
+                            : isPaid && <CheckCircleIcon className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
-      )}
-
-      {/* Pre-mode: full participant roster with paid status + Confirmer on own row */}
-      {data.mode === 'pre' && (
-        <div className="px-4 md:px-6 pb-6">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
-            Statut des paiements ({paidCount}/{participantCount} payés)
-          </h4>
-          <ul className="space-y-2">
-            {data.participants.map(p => {
-              const isPaid = !!paidState[p.userId];
-              const isSelf = p.userId === currentUserId;
-              return (
-                <li key={p.userId} className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${isPaid ? 'bg-green-50 dark:bg-green-900/25 border border-green-200 dark:border-green-700' : 'border border-gray-200 dark:border-gray-700'}`}>
-                  <Avatar name={p.userName} url={p.profilePictureUrl} size="md" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{p.userName}</p>
-                    <PaidPill paid={isPaid} />
-                  </div>
-                  <span className="flex-shrink-0 text-xs font-mono font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md px-2 py-0.5">{entryFee}{currency}</span>
-                  {isSelf
-                    ? <ConfirmButton paid={isPaid} submitting={submitting} onClick={togglePaid} />
-                    : isPaid && <CheckCircleIcon className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }
