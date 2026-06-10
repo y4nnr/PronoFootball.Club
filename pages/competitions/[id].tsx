@@ -2035,7 +2035,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Pre-completion: show pot, projected prizes, and the per-player paid-status list.
     // Settled (COMPLETED): show podium + per-payer chunks computed dynamically.
     let podiumPayout: PodiumPayoutData | undefined;
-    if (competition.finalWinnerEnabled && competitionStats.length >= 3) {
+    if (competition.finalWinnerEnabled && competitionStats.length >= 1) {
       const { computeCagnotte } = await import('../../lib/cagnotte');
       const result = computeCagnotte({
         participantCount: competitionStats.length,

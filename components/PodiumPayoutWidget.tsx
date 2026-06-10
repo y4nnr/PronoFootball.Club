@@ -148,7 +148,16 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
         )}
       </div>
 
-      {/* Projected/final prize summary, always 3 cards */}
+      {/* Projected/final prize summary — only render once we have enough players for a podium */}
+      {participantCount < 3 && (
+        <div className="px-6 py-4 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-700">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            Le podium des prix s'affichera dès qu'il y aura au moins <span className="font-semibold">3 joueurs</span>.
+            En attendant, la cagnotte croît à mesure que chacun rejoint la compétition.
+          </p>
+        </div>
+      )}
+      {participantCount >= 3 && (
       <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         {([0, 1, 2] as const).map(idx => {
           const rank = (idx + 1) as 1 | 2 | 3;
@@ -227,6 +236,7 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
           );
         })}
       </div>
+      )}
 
       {/* Pre-mode: full participant roster with paid status + Confirmer on own row */}
       {data.mode === 'pre' && (
