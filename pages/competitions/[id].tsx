@@ -2058,7 +2058,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         percentages: result.percentages,
         prizes: result.prizes,
         nets: result.nets,
-        adjusted: result.adjusted,
+        adjusted: result.customSplit,
       };
 
       if (isCompleted) {

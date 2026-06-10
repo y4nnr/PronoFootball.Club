@@ -25,7 +25,7 @@ type CommonFields = {
   percentages: [number, number, number];
   prizes: [number, number, number];
   nets: [number, number, number];
-  adjusted: boolean;
+  adjusted: boolean; // true when admin override percentages are in effect
 };
 
 export type PodiumPayoutData = CommonFields &
@@ -156,7 +156,7 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
 
         {participantCount >= 3 && adjusted && (
           <p className="px-4 pb-2 text-[10px] md:text-[11px] text-amber-700 dark:text-amber-300">
-            Répartition ajustée pour que le 3ᵉ ne perde pas sa mise.
+            Répartition personnalisée par l'admin.
           </p>
         )}
       </div>
@@ -179,7 +179,7 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
         </p>
         {adjusted && (
           <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1 ml-12">
-            Avec ce nombre de joueurs, la répartition ajustée garantit que le 3ᵉ ne perde pas sa mise (1ᵉʳ &gt; 2ᵉ &gt; 3ᵉ).
+            Répartition personnalisée définie par l'admin.
           </p>
         )}
       </div>

@@ -1,41 +1,35 @@
 /**
  * Cagnotte math: compute prize amounts + per-podium payer chunks for a competition.
  *
- * Inputs
- * - participantCount (N): how many CompetitionUser rows exist
- * - entryFee: EUR each participant has paid into the pot
- * - percentages: [first, second, third] each 0-100, summing to 100 (admin override or default 67/22/11)
+ * Default distribution (no admin override) scales linearly with player count so that
+ * the well-known N=9 split (300 / 100 / 50 with a 50€ entry) is reached, and N=3 gives
+ * the natural 100 / 50 / 0 (winner takes 2× entry, 2nd breaks even, 3rd loses entry).
  *
- * Default percentages are the 6/2/1 grid (rounded to whole integers).
+ *   prize₁ = entryFee × (2N / 3)
+ *   prize₂ = entryFee × (N + 3) / 6
+ *   prize₃ = entryFee × (N − 3) / 6
  *
- * Adjustment: if applying the percentages would make 3rd's prize less than the entry fee
- * (so 3rd loses money), we fall back to a "5/1/0 surplus" split — 3rd takes their entry
- * back (net 0), and the remaining pot − 3·entryFee is split 5:1 between 1st and 2nd. That
- * preserves the order 1st > 2nd > 3rd ≥ 0 net for any N ≥ 3.
+ * The sum is exactly N × entryFee (the pot). 1st's percentage is fixed at 66.67 %.
+ * 2nd's percentage falls from 33.33 % (N=3) toward 16.67 % (N → ∞).
+ * 3rd's percentage rises from 0 % (N=3) toward 16.67 % (N → ∞), hitting 11.11 % at N=9.
  *
- * Allocation: chunks_i = round((prize_i − entryFee) / entryFee). Each loser pays entryFee
- * to exactly one podium position. If the chunk sum doesn't match N−3 due to rounding,
- * the difference is absorbed by 1st place (they keep the same prize either way; only the
- * "who pays whom" assignment shifts).
+ * Admin can override with explicit prizePctFirst/Second/Third percentages — those are
+ * used as-is (admin's responsibility to keep 1st > 2nd > 3rd and the sum at 100).
+ *
+ * Allocation (settled-mode chunks): how many losers pay each podium = round((prize − entry) / entry).
+ * Rounding drift is absorbed by 1st place.
  */
-
-export const DEFAULT_PRIZE_PCT_FIRST = 67;
-export const DEFAULT_PRIZE_PCT_SECOND = 22;
-export const DEFAULT_PRIZE_PCT_THIRD = 11;
 
 export type CagnotteResult = {
   pot: number;
   entryFee: number;
   participantCount: number;
-  percentages: [number, number, number];
-  /** Applied (post-adjustment) gross prizes; rounded to cents in display, kept precise here. */
+  percentages: [number, number, number]; // rounded for display
   prizes: [number, number, number];
-  /** Net = prize − entryFee. 3rd is always ≥ 0. */
   nets: [number, number, number];
-  /** Number of losers paying each podium position (settled-mode allocation). Sum = max(0, N-3). */
   chunks: [number, number, number];
-  /** True when the percentages had to be adjusted because the user-configured split made 3rd lose money. */
-  adjusted: boolean;
+  /** True when admin override was used (otherwise the dynamic default formula). */
+  customSplit: boolean;
 };
 
 export function computeCagnotte(input: {
@@ -49,31 +43,37 @@ export function computeCagnotte(input: {
   const F = Math.max(0, input.entryFee);
   const pot = N * F;
 
-  const pct1 = input.prizePctFirst ?? DEFAULT_PRIZE_PCT_FIRST;
-  const pct2 = input.prizePctSecond ?? DEFAULT_PRIZE_PCT_SECOND;
-  const pct3 = input.prizePctThird ?? DEFAULT_PRIZE_PCT_THIRD;
+  const adminSet =
+    input.prizePctFirst != null && input.prizePctSecond != null && input.prizePctThird != null;
 
-  let p1 = (pot * pct1) / 100;
-  let p2 = (pot * pct2) / 100;
-  let p3 = (pot * pct3) / 100;
-  let adjusted = false;
-
-  // Fallback if 3rd would lose money: 3rd takes own entry back, surplus = pot - 3F split 5:1.
-  if (p3 < F && N >= 3) {
-    adjusted = true;
-    const surplus = pot - 3 * F;
-    p1 = F + (surplus * 5) / 6;
-    p2 = F + (surplus * 1) / 6;
-    p3 = F;
+  let p1: number, p2: number, p3: number;
+  if (adminSet) {
+    p1 = (pot * (input.prizePctFirst as number)) / 100;
+    p2 = (pot * (input.prizePctSecond as number)) / 100;
+    p3 = (pot * (input.prizePctThird as number)) / 100;
+  } else if (N >= 3) {
+    p1 = (F * 2 * N) / 3;
+    p2 = (F * (N + 3)) / 6;
+    p3 = (F * (N - 3)) / 6;
+  } else {
+    // Not enough players for a podium yet. Return entry-back placeholders; the widget skips
+    // the prize boxes anyway for N < 3.
+    p1 = F; p2 = F; p3 = F;
   }
 
+  // Display percentages (rounded; admin override displays its own configured values)
+  const displayPct = adminSet
+    ? [input.prizePctFirst as number, input.prizePctSecond as number, input.prizePctThird as number]
+    : (pot > 0
+        ? [Math.round((p1 / pot) * 100), Math.round((p2 / pot) * 100), Math.round((p3 / pot) * 100)]
+        : [0, 0, 0]);
+
+  // Chunk allocation (losers paying each podium). Negative net → 0 chunks for that podium.
   const losers = Math.max(0, N - 3);
   let c1 = Math.round((p1 - F) / F);
   let c2 = Math.round((p2 - F) / F);
   let c3 = Math.round((p3 - F) / F);
-  // Clip individual chunks at >=0 (shouldn't ever go negative after the adjustment, but defensive).
   c1 = Math.max(0, c1); c2 = Math.max(0, c2); c3 = Math.max(0, c3);
-  // Reconcile rounding drift by absorbing the delta into 1st.
   const drift = losers - (c1 + c2 + c3);
   c1 = Math.max(0, c1 + drift);
 
@@ -81,10 +81,10 @@ export function computeCagnotte(input: {
     pot,
     entryFee: F,
     participantCount: N,
-    percentages: [pct1, pct2, pct3],
+    percentages: [displayPct[0], displayPct[1], displayPct[2]] as [number, number, number],
     prizes: [p1, p2, p3],
     nets: [p1 - F, p2 - F, p3 - F],
     chunks: [c1, c2, c3],
-    adjusted,
+    customSplit: adminSet,
   };
 }
