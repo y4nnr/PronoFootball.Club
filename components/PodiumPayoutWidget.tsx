@@ -118,47 +118,97 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
     }
   };
 
-  // PRE-COMPLETION: compact projected-prize widget, no payment talk.
+  // PRE-COMPLETION: prize-only widget, no payment talk.
   if (data.mode === 'pre') {
     return (
-      <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl border border-gray-300 dark:border-gray-600 overflow-hidden mb-8 shadow">
-        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-4 py-3 flex items-center gap-3">
-          <div className="p-1.5 bg-primary-600 dark:bg-accent-dark-600 rounded-full flex items-center justify-center">
-            <BanknotesIcon className="h-4 w-4 text-white" />
+      <div className="bg-white dark:bg-[rgb(58,58,58)] rounded-xl shadow-2xl dark:shadow-dark-xl border border-gray-300 dark:border-gray-600 overflow-hidden mb-8" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+        {/* Header */}
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-gray-300 dark:border-accent-dark-500 px-6 py-4">
+          <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+            <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+              <BanknotesIcon className="h-6 w-6 text-white" />
+            </div>
+            Cagnotte
+          </h3>
+        </div>
+
+        {/* Pot summary band */}
+        <div className="px-6 py-4 grid grid-cols-3 gap-4 bg-gray-50 dark:bg-[rgb(48,48,48)] border-b border-gray-200 dark:border-gray-700 text-center">
+          <div>
+            <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Joueurs</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-gray-100 mt-0.5">{participantCount}</p>
           </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm md:text-base font-bold text-gray-900 dark:text-gray-100">Cagnotte</h3>
-            <p className="text-[11px] md:text-xs text-gray-600 dark:text-gray-300">
-              {participantCount} joueur{participantCount > 1 ? 's' : ''} · Mise {entryFee}{currency} · Total <span className="font-semibold">{fmt(pot)}{currency}</span>
-            </p>
+          <div>
+            <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Mise</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-gray-100 mt-0.5">{entryFee}{currency}</p>
+          </div>
+          <div>
+            <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total en jeu</p>
+            <p className="text-lg md:text-2xl font-bold text-primary-600 dark:text-accent-dark-400 mt-0.5">{fmt(pot)}{currency}</p>
           </div>
         </div>
 
+        {/* Prize cards (or wait-for-3-players notice) */}
         {participantCount < 3 ? (
-          <div className="px-4 py-3 text-xs md:text-sm text-gray-600 dark:text-gray-300">
-            Les prix s'afficheront dès qu'il y aura au moins <span className="font-semibold">3 joueurs</span>.
+          <div className="px-6 py-6 text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Les prix s'afficheront dès qu'il y aura au moins <span className="font-semibold">3 joueurs</span> inscrits.
+            </p>
           </div>
         ) : (
-          <div className="p-3 grid grid-cols-3 gap-2">
+          <div className="p-4 md:p-6 grid grid-cols-3 gap-3 md:gap-4">
             {([0, 1, 2] as const).map(idx => {
               const rank = (idx + 1) as 1 | 2 | 3;
               const styles = RANK_STYLES[rank];
+              const prize = prizes[idx];
+              const net = nets[idx];
               return (
-                <div key={rank} className={`rounded-lg border ${styles.ring} ${styles.chip} px-3 py-2 text-center`}>
-                  <div className="text-xl leading-none">{MEDAL_EMOJI[rank]}</div>
-                  <div className="text-[10px] md:text-xs font-semibold uppercase tracking-wide mt-1">{percentages[idx]}%</div>
-                  <div className="text-sm md:text-base font-bold mt-0.5">{fmt(prizes[idx])}{currency}</div>
+                <div key={rank} className={`rounded-xl border-2 ${styles.ring} bg-white dark:bg-[rgb(48,48,48)] overflow-hidden flex flex-col`}>
+                  <div className={`px-3 md:px-4 py-3 ${styles.chip} text-center`}>
+                    <div className="text-2xl md:text-3xl leading-none">{MEDAL_EMOJI[rank]}</div>
+                    <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wide mt-1.5">{styles.label}</p>
+                    <p className="text-[10px] md:text-xs opacity-80">{percentages[idx]}% de la cagnotte</p>
+                  </div>
+                  <div className="px-3 md:px-4 py-3 flex-1 flex flex-col items-center justify-center gap-1">
+                    <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">{fmt(prize)}{currency}</p>
+                    <p className={`text-[10px] md:text-xs font-medium ${net > 0 ? 'text-green-600 dark:text-green-400' : net < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                      {net > 0 && `gain net : +${fmt(net)}${currency}`}
+                      {net === 0 && `récupère sa mise`}
+                      {net < 0 && `perte : ${fmt(net)}${currency}`}
+                    </p>
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
 
-        {participantCount >= 3 && adjusted && (
-          <p className="px-4 pb-2 text-[10px] md:text-[11px] text-amber-700 dark:text-amber-300">
-            Répartition personnalisée par l'admin.
-          </p>
+        {adjusted && (
+          <div className="px-6 py-3 bg-amber-50 dark:bg-amber-900/20 border-t border-amber-200 dark:border-amber-700">
+            <p className="text-xs text-amber-800 dark:text-amber-200">
+              <span className="font-semibold">Répartition personnalisée</span> définie par l'administrateur de la compétition.
+            </p>
+          </div>
         )}
+
+        {/* How it works */}
+        <div className="px-6 py-4 bg-gray-50 dark:bg-[rgb(48,48,48)] border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Comment ça marche</p>
+          <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1.5 list-disc pl-4">
+            <li>Chaque joueur verse une mise de <span className="font-semibold">{entryFee}{currency}</span> en début de saison. La cagnotte grandit à mesure que les joueurs rejoignent.</li>
+            {!adjusted && (
+              <li>Le <span className="font-semibold">1<sup>er</sup></span> reçoit toujours <span className="font-semibold">2/3</span> de la cagnotte (~67 %). La part du 2<sup>e</sup> et du 3<sup>e</sup> évolue avec le nombre de joueurs jusqu'à la répartition <span className="font-mono">6 / 2 / 1 × mise</span> à 9 joueurs (300 / 100 / 50 €).</li>
+            )}
+            <li>Les <span className="font-semibold">versements entre joueurs</span> sont organisés à la fin de la compétition. Chacun pourra confirmer son paiement directement depuis cette page.</li>
+          </ul>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3">
+          <p className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">
+            Cagnotte estimée à <span className="text-primary-600 dark:text-accent-dark-400">{fmt(pot)}{currency}</span>. Les chiffres se réajustent automatiquement à chaque nouvel inscrit.
+          </p>
+        </div>
       </div>
     );
   }
