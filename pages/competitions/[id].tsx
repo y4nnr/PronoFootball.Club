@@ -129,6 +129,10 @@ interface CompetitionDetailsProps {
     logo?: string;
     finalWinnerEnabled?: boolean;
     finalWinnerLockAt?: string | null;
+    entryFee?: number;
+    prizePctFirst?: number | null;
+    prizePctSecond?: number | null;
+    prizePctThird?: number | null;
   };
   competitionStats: CompetitionStats[];
   games: Game[];
@@ -981,8 +985,8 @@ export default function CompetitionDetails({ competition, competitionStats, game
           </div>
         )}
 
-        {/* Cagnotte: who pays whom for the top-3 podium */}
-        {podiumPayout && podiumPayout.positions.length === 3 && (
+        {/* Cagnotte: in-play during the season, dynamic podium when COMPLETED */}
+        {podiumPayout && (
           <PodiumPayoutWidget data={podiumPayout} competitionId={competition.id} currentUserId={currentUserId} />
         )}
 
@@ -1777,6 +1781,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         logo: true,
         finalWinnerEnabled: true,
         finalWinnerLockAt: true,
+        entryFee: true,
+        prizePctFirst: true,
+        prizePctSecond: true,
+        prizePctThird: true,
         winner: {
           select: { id: true, name: true }
         },
@@ -2023,47 +2031,72 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    // Cagnotte: 50€ entry per player; prizes 300 / 100 / 50. Only show when COMPLETED, ≥3 participants,
-    // and the entry math matches the prize total (so we don't display nonsense for differently-sized comps).
+    // Cagnotte: dynamic prize distribution based on entryFee + percentages (admin-overridable).
+    // Pre-completion: show pot, projected prizes, and the per-player paid-status list.
+    // Settled (COMPLETED): show podium + per-payer chunks computed dynamically.
     let podiumPayout: PodiumPayoutData | undefined;
-    if (isCompleted && competition.finalWinnerEnabled && competitionStats.length >= 3) {
-      const ENTRY = 50;
-      const CURRENCY = '€';
-      const PRIZES: [number, number, number] = [300, 100, 50];
-      const totalPot = competitionStats.length * ENTRY;
-      const totalPrizes = PRIZES[0] + PRIZES[1] + PRIZES[2];
-      if (totalPot === totalPrizes) {
-        const paidRows = await prisma.competitionUser.findMany({
-          where: { competitionId: competition.id },
-          select: { userId: true, podiumPaidAt: true },
-        });
-        const paidAtByUserId = new Map(paidRows.map(r => [r.userId, r.podiumPaidAt ? r.podiumPaidAt.toISOString() : null] as const));
+    if (competition.finalWinnerEnabled && competitionStats.length >= 3) {
+      const { computeCagnotte } = await import('../../lib/cagnotte');
+      const result = computeCagnotte({
+        participantCount: competitionStats.length,
+        entryFee: competition.entryFee ?? 50,
+        prizePctFirst: competition.prizePctFirst ?? null,
+        prizePctSecond: competition.prizePctSecond ?? null,
+        prizePctThird: competition.prizePctThird ?? null,
+      });
+      const paidRows = await prisma.competitionUser.findMany({
+        where: { competitionId: competition.id },
+        select: { userId: true, podiumPaidAt: true },
+      });
+      const paidAtByUserId = new Map(paidRows.map(r => [r.userId, r.podiumPaidAt ? r.podiumPaidAt.toISOString() : null] as const));
 
+      const baseFields = {
+        entryFee: result.entryFee,
+        currency: '€',
+        pot: result.pot,
+        participantCount: result.participantCount,
+        percentages: result.percentages,
+        prizes: result.prizes,
+        nets: result.nets,
+        adjusted: result.adjusted,
+      };
+
+      if (isCompleted) {
         const winners = competitionStats.slice(0, 3);
-        // Sort non-podium by classement position ascending (4th, 5th, …)
         const losers = competitionStats.slice(3).sort((a, b) => a.position - b.position);
-        // Each podium keeps their own entry, so they need (prize - entry)/entry loser payments.
-        const slots = PRIZES.map(p => (p - ENTRY) / ENTRY) as [number, number, number];
+        const [c1, c2, c3] = result.chunks;
         let cursor = 0;
-        const payersBuckets = slots.map(n => {
+        const buckets = [c1, c2, c3].map(n => {
           const slice = losers.slice(cursor, cursor + n);
           cursor += n;
           return slice;
         });
         podiumPayout = {
-          entryFee: ENTRY,
-          currency: CURRENCY,
+          ...baseFields,
+          mode: 'settled',
           positions: winners.map((w, idx) => ({
             rank: (idx + 1) as 1 | 2 | 3,
-            prize: PRIZES[idx],
+            prize: result.prizes[idx],
+            net: result.nets[idx],
             winner: { userId: w.userId, userName: w.userName, profilePictureUrl: w.profilePictureUrl ?? null },
-            payers: payersBuckets[idx].map(p => ({
+            payers: buckets[idx].map(p => ({
               userId: p.userId,
               userName: p.userName,
               profilePictureUrl: p.profilePictureUrl ?? null,
-              amount: ENTRY,
+              amount: result.entryFee,
               paidAt: paidAtByUserId.get(p.userId) ?? null,
             })),
+          })),
+        };
+      } else {
+        podiumPayout = {
+          ...baseFields,
+          mode: 'pre',
+          participants: competitionStats.map(p => ({
+            userId: p.userId,
+            userName: p.userName,
+            profilePictureUrl: p.profilePictureUrl ?? null,
+            paidAt: paidAtByUserId.get(p.userId) ?? null,
           })),
         };
       }

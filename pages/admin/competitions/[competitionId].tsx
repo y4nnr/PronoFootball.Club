@@ -62,6 +62,10 @@ export default function CompetitionDetail() {
     endDate: '',
     logo: '',
     status: '',
+    entryFee: '50',
+    prizePctFirst: '',
+    prizePctSecond: '',
+    prizePctThird: '',
   });
   const [competitionError, setCompetitionError] = useState<string | null>(null);
 
@@ -357,6 +361,10 @@ export default function CompetitionDetail() {
       endDate: competition.endDate.slice(0, 10),
       logo: competition.logo || '',
       status: competition.status,
+      entryFee: String((competition as any).entryFee ?? 50),
+      prizePctFirst:  (competition as any).prizePctFirst  != null ? String((competition as any).prizePctFirst)  : '',
+      prizePctSecond: (competition as any).prizePctSecond != null ? String((competition as any).prizePctSecond) : '',
+      prizePctThird:  (competition as any).prizePctThird  != null ? String((competition as any).prizePctThird)  : '',
     });
     setShowEditCompetitionModal(true);
     setCompetitionError(null);
@@ -377,10 +385,19 @@ export default function CompetitionDetail() {
     }
 
     try {
+      // Convert cagnotte fields to numbers / nulls before posting
+      const allPctEmpty = !editCompetitionData.prizePctFirst && !editCompetitionData.prizePctSecond && !editCompetitionData.prizePctThird;
+      const payload = {
+        ...editCompetitionData,
+        entryFee: editCompetitionData.entryFee === '' ? 50 : Number(editCompetitionData.entryFee),
+        prizePctFirst:  allPctEmpty ? null : Number(editCompetitionData.prizePctFirst),
+        prizePctSecond: allPctEmpty ? null : Number(editCompetitionData.prizePctSecond),
+        prizePctThird:  allPctEmpty ? null : Number(editCompetitionData.prizePctThird),
+      };
       const response = await fetch(`/api/admin/competitions/${competitionId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editCompetitionData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -1227,6 +1244,69 @@ export default function CompetitionDetail() {
                     <p className="text-xs text-gray-500 mt-1">
                       {t('admin.statusHelp')}
                     </p>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Cagnotte</h4>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Mise par joueur (€)</label>
+                      <input
+                        type="number"
+                        name="entryFee"
+                        min={0}
+                        step={1}
+                        value={editCompetitionData.entryFee}
+                        onChange={handleCompetitionInputChange}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-gray-800"
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-xs text-gray-500 mb-2">
+                        Répartition des prix (%). Laisser vide pour utiliser le défaut <span className="font-mono">67 / 22 / 11</span>.
+                        La somme doit faire 100 et respecter 1ᵉʳ &gt; 2ᵉ &gt; 3ᵉ.
+                      </p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">1ᵉʳ</label>
+                          <input
+                            type="number"
+                            name="prizePctFirst"
+                            min={0}
+                            max={100}
+                            value={editCompetitionData.prizePctFirst}
+                            onChange={handleCompetitionInputChange}
+                            placeholder="67"
+                            className="w-full border border-gray-300 rounded px-2 py-2 text-gray-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">2ᵉ</label>
+                          <input
+                            type="number"
+                            name="prizePctSecond"
+                            min={0}
+                            max={100}
+                            value={editCompetitionData.prizePctSecond}
+                            onChange={handleCompetitionInputChange}
+                            placeholder="22"
+                            className="w-full border border-gray-300 rounded px-2 py-2 text-gray-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">3ᵉ</label>
+                          <input
+                            type="number"
+                            name="prizePctThird"
+                            min={0}
+                            max={100}
+                            value={editCompetitionData.prizePctThird}
+                            onChange={handleCompetitionInputChange}
+                            placeholder="11"
+                            className="w-full border border-gray-300 rounded px-2 py-2 text-gray-800"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 

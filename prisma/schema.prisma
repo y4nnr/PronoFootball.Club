@@ -58,6 +58,10 @@ model Competition {
   externalSeason String?          // For Rugby: cached season partition key (e.g., "2024" for 2024/25 season)
   finalWinnerEnabled Boolean      @default(false) // Whether this competition supports the +5 final-winner bonus + prediction widget
   finalWinnerLockAt  DateTime?    // When the final-winner prediction selection is locked (no more changes after this)
+  entryFee       Int               @default(50)  // EUR each participant pays into the pot (admin-overridable)
+  prizePctFirst  Int?              // Override of the 1st-place percentage of the pot (1-100). null = use 67% default.
+  prizePctSecond Int?              // 2nd-place percentage; null = 22% default
+  prizePctThird  Int?              // 3rd-place percentage; null = 11% default
   lastPlace     User?             @relation("CompetitionLastPlace", fields: [lastPlaceId], references: [id])
   winner        User?             @relation("CompetitionWinner", fields: [winnerId], references: [id])
   users         CompetitionUser[]

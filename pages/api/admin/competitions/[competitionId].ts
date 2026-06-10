@@ -55,7 +55,7 @@ export default async function handler(
   } else if (req.method === 'PUT') {
     // Handle updating competition details
     const { competitionId } = req.query;
-    const { name, description, startDate, endDate, logo, status } = req.body;
+    const { name, description, startDate, endDate, logo, status, entryFee, prizePctFirst, prizePctSecond, prizePctThird } = req.body;
 
     if (!competitionId || Array.isArray(competitionId)) {
       return res.status(400).json({ error: 'Invalid competition ID' });
@@ -63,6 +63,29 @@ export default async function handler(
 
     if (!name || !startDate || !endDate) {
       return res.status(400).json({ error: 'Missing required fields: name, startDate, endDate' });
+    }
+
+    // Cagnotte validation — entryFee must be a positive integer, percentages (if any are set) must all be set and sum to 100
+    if (entryFee !== undefined && (!Number.isInteger(entryFee) || entryFee < 0)) {
+      return res.status(400).json({ error: 'entryFee must be a non-negative integer' });
+    }
+    const pctFields = [prizePctFirst, prizePctSecond, prizePctThird];
+    const someSet = pctFields.some(v => v !== null && v !== undefined && v !== '');
+    const allSet  = pctFields.every(v => v !== null && v !== undefined && v !== '');
+    if (someSet && !allSet) {
+      return res.status(400).json({ error: 'Set all three prize percentages or leave them all empty to use defaults' });
+    }
+    if (allSet) {
+      const nums = pctFields.map(v => Number(v));
+      if (nums.some(n => !Number.isInteger(n) || n < 0 || n > 100)) {
+        return res.status(400).json({ error: 'Each prize percentage must be an integer 0-100' });
+      }
+      if (nums[0] + nums[1] + nums[2] !== 100) {
+        return res.status(400).json({ error: 'Prize percentages must sum to 100' });
+      }
+      if (!(nums[0] > nums[1] && nums[1] > nums[2])) {
+        return res.status(400).json({ error: 'Percentages must satisfy 1st > 2nd > 3rd' });
+      }
     }
 
     try {
@@ -73,6 +96,17 @@ export default async function handler(
         endDate: new Date(endDate),
         logo: logo || null,
       };
+      if (entryFee !== undefined) updateData.entryFee = Number(entryFee);
+      if (someSet) {
+        updateData.prizePctFirst = Number(prizePctFirst);
+        updateData.prizePctSecond = Number(prizePctSecond);
+        updateData.prizePctThird = Number(prizePctThird);
+      } else if (req.body.prizePctFirst === null) {
+        // Explicit clearing — admin reset to defaults
+        updateData.prizePctFirst = null;
+        updateData.prizePctSecond = null;
+        updateData.prizePctThird = null;
+      }
 
       // Check if status is being changed to COMPLETED
       const competitionBeforeUpdate = await prisma.competition.findUnique({
