@@ -38,6 +38,7 @@ interface Game {
   id: string;
   date: string;
   status: string;
+  matchday?: number | null;
   homeScore?: number | null;
   awayScore?: number | null;
   liveHomeScore?: number | null;
@@ -278,6 +279,18 @@ export default function CompetitionDetails({ competition, competitionStats, game
   // Placeholder team names – games with these are part of total count but must not count as "played" in the progress bar.
   const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
   const isPlaceholderGame = (g: Game) => PLACEHOLDER_TEAM_NAMES.includes(g.homeTeam?.name ?? '') || PLACEHOLDER_TEAM_NAMES.includes(g.awayTeam?.name ?? '');
+  // Round label derived from matchday for placeholder/knockout games (WC 2026 convention: 4=R32, 5=R16, 6=QF, 7=SF, 8=3P, 99=Final).
+  const labelForMatchday = (md: number | null): string | null => {
+    switch (md) {
+      case 4: return '16ᵉ de finale';
+      case 5: return '8ᵉ de finale';
+      case 6: return 'Quart de finale';
+      case 7: return 'Demi-finale';
+      case 8: return '3ᵉ place';
+      case 99: return 'Finale';
+      default: return null;
+    }
+  };
   // Legacy: single placeholder name for lists that only check 'xxxx'
   const PLACEHOLDER_TEAM_NAME = 'xxxx';
 
@@ -1485,11 +1498,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 return <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('competition.noActiveGamesFound')}</div>;
               }
               const filteredGames = showAllGames ? games : games.filter(g => g.status === 'UPCOMING' || g.status === 'LIVE');
-              // Hide placeholder games (with TBD team names) from both views
-              const displayableGames = filteredGames.filter(g => 
-                g.homeTeam?.name !== PLACEHOLDER_TEAM_NAME &&
-                g.awayTeam?.name !== PLACEHOLDER_TEAM_NAME
-              );
+              // Show placeholder (TBD) games only in the "all games" view — hide them in the "upcoming bets" view
+              // since users can't bet on TBD knockout slots until the bracket fills.
+              const displayableGames = showAllGames
+                ? filteredGames
+                : filteredGames.filter(g => !isPlaceholderGame(g));
               // Sort finished games first (most recent first), then upcoming/live games chronologically
               const sortedGames = [...displayableGames].sort((a, b) => {
                 if (showAllGames) {
@@ -1513,6 +1526,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6">
                   {sortedGames.map((game) => {
                     try {
+                    const placeholder = isPlaceholderGame(game);
+                    const homeIsPh = PLACEHOLDER_TEAM_NAMES.includes(game.homeTeam?.name ?? '');
+                    const awayIsPh = PLACEHOLDER_TEAM_NAMES.includes(game.awayTeam?.name ?? '');
+                    const roundLabel = placeholder ? labelForMatchday(game.matchday ?? null) : null;
                     // Prepare game data for GameCard component
                     // Ensure date is a string (ISO format) and structure matches GameCard interface
                     const gameCardData = {
@@ -1520,14 +1537,14 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       externalStatus: (game as any).externalStatus || null,
                       date: typeof game.date === 'string' ? game.date : (game.date ? new Date(game.date).toISOString() : new Date().toISOString()),
                       homeTeam: {
-                        name: game.homeTeam?.name || '',
-                        logo: game.homeTeam?.logo || null,
-                        shortName: game.homeTeam?.shortName || null,
+                        name: homeIsPh ? 'À déterminer' : (game.homeTeam?.name || ''),
+                        logo: homeIsPh ? null : (game.homeTeam?.logo || null),
+                        shortName: homeIsPh ? '?' : (game.homeTeam?.shortName || null),
                       },
                       awayTeam: {
-                        name: game.awayTeam?.name || '',
-                        logo: game.awayTeam?.logo || null,
-                        shortName: game.awayTeam?.shortName || null,
+                        name: awayIsPh ? 'À déterminer' : (game.awayTeam?.name || ''),
+                        logo: awayIsPh ? null : (game.awayTeam?.logo || null),
+                        shortName: awayIsPh ? '?' : (game.awayTeam?.shortName || null),
                       },
                       homeScore: game.homeScore ?? undefined,
                       awayScore: game.awayScore ?? undefined,
@@ -1552,13 +1569,18 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       })),
                     };
                     
-                    // Only UPCOMING games are clickable for betting
-                    const isOpen = game.status === 'UPCOMING';
+                    // Only UPCOMING non-placeholder games are clickable for betting (can't bet on TBD)
+                    const isOpen = game.status === 'UPCOMING' && !placeholder;
                     const isFinished = game.status === 'FINISHED';
                     const isExpanded = expandedGames.has(game.id);
                     
                     return (
                       <div key={game.id} className="w-full">
+                        {roundLabel && (
+                          <div className="mb-1 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] md:text-xs font-semibold uppercase tracking-wider bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700">
+                            {roundLabel}
+                          </div>
+                        )}
                         {isFinished ? (
                           <div
                             onClick={(e) => {
@@ -1788,6 +1810,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         id: true,
         date: true,
         status: true,
+        matchday: true,
         homeScore: true,
         awayScore: true,
         liveHomeScore: true,
@@ -2066,15 +2089,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       });
 
+      // Find the final game: prefer the matchday>=13 game even if it still has placeholder teams
+      // (so the widget knows "we have a final scheduled but it isn't real yet"), and ONLY set
+      // actualWinnerTeam below if that game has real teams AND is FINISHED.
       const finalByMatchday = await prisma.game.findFirst({
-        where: {
-          competitionId: competition.id,
-          matchday: { gte: 13 },
-          AND: [
-            { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
-            { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
-          ],
-        },
+        where: { competitionId: competition.id, matchday: { gte: 13 } },
         orderBy: { date: 'desc' },
         select: {
           id: true, status: true, homeScore: true, awayScore: true, decidedBy: true,
@@ -2098,10 +2117,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       });
       const finalGame = finalByMatchday ?? finalByDate;
+      const finalHasRealTeams = !!(
+        finalGame &&
+        !PLACEHOLDER_TEAM_NAMES.includes(finalGame.homeTeam.name) &&
+        !PLACEHOLDER_TEAM_NAMES.includes(finalGame.awayTeam.name)
+      );
 
       let actualWinnerTeam: { id: string; name: string; logo: string | null } | null = null;
       let decidedOnPenalties = false;
-      if (finalGame && finalGame.status === 'FINISHED' && finalGame.homeScore !== null && finalGame.awayScore !== null) {
+      if (finalGame && finalHasRealTeams && finalGame.status === 'FINISHED' && finalGame.homeScore !== null && finalGame.awayScore !== null) {
         if (finalGame.homeScore > finalGame.awayScore) {
           actualWinnerTeam = finalGame.homeTeam;
         } else if (finalGame.awayScore > finalGame.homeScore) {
@@ -2122,7 +2146,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
       }
 
-      const finalLabel = finalGame
+      const finalLabel = finalGame && finalHasRealTeams
         ? `Finale : ${finalGame.homeTeam.name} - ${finalGame.awayTeam.name}`
         : null;
 
