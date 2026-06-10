@@ -220,7 +220,7 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
         {/* Footer */}
         <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-t border-gray-300 dark:border-accent-dark-500 px-6 py-3">
           <p className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">
-            Cagnotte estimée à <span className="text-primary-600 dark:text-accent-dark-400">{fmt(pot)}{currency}</span>. Les chiffres se réajustent automatiquement à chaque nouvel inscrit.
+            Les chiffres se réajustent automatiquement à chaque nouvel inscrit.
           </p>
         </div>
       </div>
