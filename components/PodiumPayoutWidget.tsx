@@ -152,7 +152,7 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
         {participantCount < 3 ? (
           <div className="px-6 py-6 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              Les prix s'afficheront dès qu'il y aura au moins <span className="font-semibold">3 joueurs</span> inscrits.
+              Les gains s'afficheront dès qu'il y aura au moins <span className="font-semibold">3 joueurs</span> inscrits.
             </p>
           </div>
         ) : (
