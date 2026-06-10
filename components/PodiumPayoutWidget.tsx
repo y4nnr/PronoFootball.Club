@@ -196,15 +196,24 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
           </div>
         )}
 
-        {/* How it works */}
+        {/* How it works — terser on mobile, full version on md+ */}
         <div className="px-6 py-4 bg-gray-50 dark:bg-[rgb(48,48,48)] border-t border-gray-200 dark:border-gray-700">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Comment ça marche</p>
           <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1.5 list-disc pl-4">
-            <li>Chaque joueur verse une mise de <span className="font-semibold">{entryFee}{currency}</span> en début de saison. La cagnotte grandit à mesure que les joueurs rejoignent.</li>
+            <li>
+              <span className="md:hidden">Mise de <span className="font-semibold">{entryFee}{currency}</span> par joueur.</span>
+              <span className="hidden md:inline">Chaque joueur verse une mise de <span className="font-semibold">{entryFee}{currency}</span> en début de saison. La cagnotte grandit à mesure que les joueurs rejoignent.</span>
+            </li>
             {!adjusted && (
-              <li>Le <span className="font-semibold">1<sup>er</sup></span> reçoit toujours <span className="font-semibold">2/3</span> de la cagnotte (~67 %). La part du 2<sup>e</sup> et du 3<sup>e</sup> évolue avec le nombre de joueurs jusqu'à la répartition <span className="font-mono">6 / 2 / 1 × mise</span> à 9 joueurs (300 / 100 / 50 €).</li>
+              <li>
+                <span className="md:hidden">Le <span className="font-semibold">1<sup>er</sup></span> prend <span className="font-semibold">2/3</span> de la cagnotte ; 2<sup>e</sup> et 3<sup>e</sup> évoluent avec le nombre de joueurs.</span>
+                <span className="hidden md:inline">Le <span className="font-semibold">1<sup>er</sup></span> reçoit toujours <span className="font-semibold">2/3</span> de la cagnotte (~67 %). La part du 2<sup>e</sup> et du 3<sup>e</sup> évolue avec le nombre de joueurs jusqu'à la répartition <span className="font-mono">6 / 2 / 1 × mise</span> à 9 joueurs (300 / 100 / 50 €).</span>
+              </li>
             )}
-            <li>Les <span className="font-semibold">versements entre joueurs</span> sont organisés à la fin de la compétition. Chacun pourra confirmer son paiement directement depuis cette page.</li>
+            <li>
+              <span className="md:hidden">Paiements organisés en fin de compétition.</span>
+              <span className="hidden md:inline">Les <span className="font-semibold">versements entre joueurs</span> sont organisés à la fin de la compétition. Chacun pourra confirmer son paiement directement depuis cette page.</span>
+            </li>
           </ul>
         </div>
 
