@@ -1,20 +1,17 @@
 /**
  * Cagnotte math: compute prize amounts + per-podium payer chunks for a competition.
  *
- * Default distribution (no admin override) scales linearly with player count so that
- * the well-known N=9 split (300 / 100 / 50 with a 50€ entry) is reached, and N=3 gives
- * the natural 100 / 50 / 0 (winner takes 2× entry, 2nd breaks even, 3rd loses entry).
+ * Default split (no admin override) is fixed across every competition for consistency:
+ *   1st = 2/3 of the pot  (≈ 66.67 %)
+ *   2nd = 2/9 of the pot  (≈ 22.22 %)
+ *   3rd = 1/9 of the pot  (≈ 11.11 %)
  *
- *   prize₁ = entryFee × (2N / 3)
- *   prize₂ = entryFee × (N + 3) / 6
- *   prize₃ = entryFee × (N − 3) / 6
+ * Same ratios as the canonical N=9 / 50 € CL split (300 / 100 / 50). For smaller
+ * pots the 3rd place can end up below entryFee (a "perte nette" is then displayed
+ * on the card); for larger pots all three positions are net-positive.
  *
- * The sum is exactly N × entryFee (the pot). 1st's percentage is fixed at 66.67 %.
- * 2nd's percentage falls from 33.33 % (N=3) toward 16.67 % (N → ∞).
- * 3rd's percentage rises from 0 % (N=3) toward 16.67 % (N → ∞), hitting 11.11 % at N=9.
- *
- * Admin can override with explicit prizePctFirst/Second/Third percentages — those are
- * used as-is (admin's responsibility to keep 1st > 2nd > 3rd and the sum at 100).
+ * Admin can override with explicit prizePctFirst/Second/Third percentages — those
+ * are used as-is (admin's responsibility to keep 1st > 2nd > 3rd and the sum at 100).
  *
  * Allocation (settled-mode chunks): how many losers pay each podium = round((prize − entry) / entry).
  * Rounding drift is absorbed by 1st place.
@@ -46,27 +43,22 @@ export function computeCagnotte(input: {
   const adminSet =
     input.prizePctFirst != null && input.prizePctSecond != null && input.prizePctThird != null;
 
+  // Default split: 2/3, 2/9, 1/9 (== 6/9, 2/9, 1/9). Use rational arithmetic to avoid drift.
   let p1: number, p2: number, p3: number;
   if (adminSet) {
     p1 = (pot * (input.prizePctFirst as number)) / 100;
     p2 = (pot * (input.prizePctSecond as number)) / 100;
     p3 = (pot * (input.prizePctThird as number)) / 100;
-  } else if (N >= 3) {
-    p1 = (F * 2 * N) / 3;
-    p2 = (F * (N + 3)) / 6;
-    p3 = (F * (N - 3)) / 6;
   } else {
-    // Not enough players for a podium yet. Return entry-back placeholders; the widget skips
-    // the prize boxes anyway for N < 3.
-    p1 = F; p2 = F; p3 = F;
+    p1 = (pot * 6) / 9;
+    p2 = (pot * 2) / 9;
+    p3 = (pot * 1) / 9;
   }
 
-  // Display percentages (rounded; admin override displays its own configured values)
+  // Display percentages: rounded to nearest integer for the chip on each podium card.
   const displayPct = adminSet
     ? [input.prizePctFirst as number, input.prizePctSecond as number, input.prizePctThird as number]
-    : (pot > 0
-        ? [Math.round((p1 / pot) * 100), Math.round((p2 / pot) * 100), Math.round((p3 / pot) * 100)]
-        : [0, 0, 0]);
+    : [67, 22, 11];
 
   // Chunk allocation (losers paying each podium). Negative net → 0 chunks for that podium.
   const losers = Math.max(0, N - 3);
