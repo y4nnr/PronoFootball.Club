@@ -211,8 +211,8 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
             </li>
             {!adjusted && (
               <li>
-                <span className="md:hidden">Le <span className="font-semibold">1<sup>er</sup></span> prend <span className="font-semibold">2/3</span> de la cagnotte ; 2<sup>e</sup> et 3<sup>e</sup> évoluent avec le nombre de joueurs.</span>
-                <span className="hidden md:inline">Le <span className="font-semibold">1<sup>er</sup></span> reçoit toujours <span className="font-semibold">2/3</span> de la cagnotte (~67 %). La part du 2<sup>e</sup> et du 3<sup>e</sup> évolue avec le nombre de joueurs jusqu'à la répartition <span className="font-mono">6 / 2 / 1 × mise</span> à 9 joueurs (300 / 100 / 50 €).</span>
+                <span className="md:hidden">Répartition fixe <span className="font-mono">67 / 22 / 11 %</span> entre 1<sup>er</sup>, 2<sup>e</sup> et 3<sup>e</sup>.</span>
+                <span className="hidden md:inline">La cagnotte est répartie selon la même grille pour toutes les compétitions : <span className="font-semibold">2/3</span> pour le 1<sup>er</sup>, <span className="font-semibold">2/9</span> pour le 2<sup>e</sup>, <span className="font-semibold">1/9</span> pour le 3<sup>e</sup> (soit <span className="font-mono">67 / 22 / 11 %</span>). À 9 joueurs et 50 € de mise, cela donne <span className="font-mono">300 / 100 / 50 €</span>.</span>
               </li>
             )}
             <li>
