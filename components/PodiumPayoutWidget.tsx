@@ -183,7 +183,7 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
                     )}
                     {net < 0 && (
                       <p className="text-[10px] md:text-xs font-medium text-red-500 dark:text-red-400">
-                        gain net : {fmt(net)}{currency}
+                        perte nette : {fmt(net)}{currency}
                       </p>
                     )}
                   </div>
