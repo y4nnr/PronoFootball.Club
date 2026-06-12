@@ -415,6 +415,9 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
   // ---------- Candles view body ----------
   const trackHeight = 90;
   const minColumnWidth = 16;
+  // Cap each candle's column so 1-2 completed days don't stretch into wide bars filling the whole row.
+  const maxColumnWidth = 40;
+  const candleTrackMaxWidth = dates.length * maxColumnWidth;
 
   const CandlesBody = (
     <div className="p-4 overflow-x-auto">
@@ -440,7 +443,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
 
             <div
               className="flex-1 flex items-end"
-              style={{ height: trackHeight, minWidth: dates.length * minColumnWidth }}
+              style={{ height: trackHeight, minWidth: dates.length * minColumnWidth, maxWidth: candleTrackMaxWidth }}
             >
               {dates.map(date => {
                 const points = player.daily.get(date) || 0;
@@ -453,7 +456,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
                   <div
                     key={date}
                     className="flex-1 h-full relative flex justify-center"
-                    style={{ minWidth: minColumnWidth }}
+                    style={{ minWidth: minColumnWidth, maxWidth: maxColumnWidth }}
                     onMouseEnter={() => setHoveredKey(key)}
                     onMouseLeave={() => setHoveredKey(null)}
                   >
@@ -520,7 +523,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
       {/* Date axis: stacked day on top, month below — same layout as Évolution du Classement */}
       <div className="flex items-start space-x-4 pt-2">
         <div className="w-32 flex-shrink-0" />
-        <div className="flex-1 flex" style={{ minWidth: dates.length * minColumnWidth }}>
+        <div className="flex-1 flex" style={{ minWidth: dates.length * minColumnWidth, maxWidth: candleTrackMaxWidth }}>
           {dates.map(date => {
             const d = new Date(date);
             const day = String(d.getDate()).padStart(2, '0');
@@ -529,7 +532,7 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
               <div
                 key={date}
                 className="flex-1 text-center"
-                style={{ minWidth: minColumnWidth }}
+                style={{ minWidth: minColumnWidth, maxWidth: maxColumnWidth }}
               >
                 <div className="text-[13px] font-semibold leading-tight text-gray-700 dark:text-gray-300">{day}</div>
                 <div className="text-[11px] font-medium leading-tight text-gray-500 dark:text-gray-400">{month}</div>
