@@ -95,10 +95,14 @@ const PlayerPerformanceRow = memo(({
         </div>
       </div>
 
-      {/* Performance Indicators - oldest on left, most recent on right (convention) */}
+      {/* Performance Indicators - oldest on left, most recent on right (convention).
+          Until 10 games have been played, fill from the LEFT and leave empty placeholders on the right
+          (the row reads chronologically left → right as games accumulate). */}
       <div className="flex space-x-1 flex-1 justify-start">
         {Array.from({ length: 10 }).map((_, index) => {
-          const game = player.lastGamesPerformance[9 - index];
+          const dataLen = player.lastGamesPerformance.length;
+          const dataIdx = dataLen - 1 - index;
+          const game = dataIdx >= 0 ? player.lastGamesPerformance[dataIdx] : undefined;
           return game ? (() => {
             const darkColor = getPerformanceCardColor(game.result, game.points);
             return (
@@ -220,7 +224,9 @@ const PlayersPerformanceWidget = memo(({
           {/* Performance columns header */}
           <div className="flex space-x-1 flex-1 justify-start min-w-0">
             {Array.from({ length: 10 }).map((_, index) => {
-              const game = games[9 - index];
+              const gamesLen = games.length;
+              const gamesIdx = gamesLen - 1 - index;
+              const game = gamesIdx >= 0 ? games[gamesIdx] : undefined;
               return game ? (
                 <div
                   key={game.gameId}
