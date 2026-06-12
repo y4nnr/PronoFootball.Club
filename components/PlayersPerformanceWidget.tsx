@@ -95,17 +95,14 @@ const PlayerPerformanceRow = memo(({
         </div>
       </div>
 
-      {/* Performance Indicators — newest on the LEFT, oldest on the RIGHT.
-          Until 10 games have been played, the filled slots cluster on the RIGHT side
-          (empty placeholders on the left) and new games push in from the right. */}
+      {/* Performance Indicators — newest on the LEFT, oldest on the rightmost filled slot.
+          Empty placeholders stay on the RIGHT until the row is full. New games push in from
+          the LEFT — slot 0 always holds the freshest result, the older ones shift right by one. */}
       <div className="flex space-x-1 flex-1 justify-start">
         {Array.from({ length: 10 }).map((_, index) => {
           // lastGamesPerformance is sorted date DESC → data[0] = newest, data[len-1] = oldest.
-          // For partial fill, leave the first (10 - len) slots empty, then place data[0] on the
-          // first filled slot (so newest sits to the LEFT of all the older ones).
-          const dataLen = player.lastGamesPerformance.length;
-          const dataIdx = index - (10 - dataLen);
-          const game = dataIdx >= 0 && dataIdx < dataLen ? player.lastGamesPerformance[dataIdx] : undefined;
+          // Each slot index maps 1:1 with the data index.
+          const game = index < player.lastGamesPerformance.length ? player.lastGamesPerformance[index] : undefined;
           return game ? (() => {
             const darkColor = getPerformanceCardColor(game.result, game.points);
             return (
@@ -227,9 +224,7 @@ const PlayersPerformanceWidget = memo(({
           {/* Performance columns header */}
           <div className="flex space-x-1 flex-1 justify-start min-w-0">
             {Array.from({ length: 10 }).map((_, index) => {
-              const gamesLen = games.length;
-              const gamesIdx = index - (10 - gamesLen);
-              const game = gamesIdx >= 0 && gamesIdx < gamesLen ? games[gamesIdx] : undefined;
+              const game = index < games.length ? games[index] : undefined;
               return game ? (
                 <div
                   key={game.gameId}
