@@ -95,14 +95,17 @@ const PlayerPerformanceRow = memo(({
         </div>
       </div>
 
-      {/* Performance Indicators - oldest on left, most recent on right (convention).
-          Until 10 games have been played, fill from the LEFT and leave empty placeholders on the right
-          (the row reads chronologically left → right as games accumulate). */}
+      {/* Performance Indicators — newest on the LEFT, oldest on the RIGHT.
+          Until 10 games have been played, the filled slots cluster on the RIGHT side
+          (empty placeholders on the left) and new games push in from the right. */}
       <div className="flex space-x-1 flex-1 justify-start">
         {Array.from({ length: 10 }).map((_, index) => {
+          // lastGamesPerformance is sorted date DESC → data[0] = newest, data[len-1] = oldest.
+          // For partial fill, leave the first (10 - len) slots empty, then place data[0] on the
+          // first filled slot (so newest sits to the LEFT of all the older ones).
           const dataLen = player.lastGamesPerformance.length;
-          const dataIdx = dataLen - 1 - index;
-          const game = dataIdx >= 0 ? player.lastGamesPerformance[dataIdx] : undefined;
+          const dataIdx = index - (10 - dataLen);
+          const game = dataIdx >= 0 && dataIdx < dataLen ? player.lastGamesPerformance[dataIdx] : undefined;
           return game ? (() => {
             const darkColor = getPerformanceCardColor(game.result, game.points);
             return (
@@ -225,8 +228,8 @@ const PlayersPerformanceWidget = memo(({
           <div className="flex space-x-1 flex-1 justify-start min-w-0">
             {Array.from({ length: 10 }).map((_, index) => {
               const gamesLen = games.length;
-              const gamesIdx = gamesLen - 1 - index;
-              const game = gamesIdx >= 0 ? games[gamesIdx] : undefined;
+              const gamesIdx = index - (10 - gamesLen);
+              const game = gamesIdx >= 0 && gamesIdx < gamesLen ? games[gamesIdx] : undefined;
               return game ? (
                 <div
                   key={game.gameId}
