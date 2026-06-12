@@ -298,7 +298,12 @@ const PlayerPointsByGameDayWidget = memo(({ competitionId }: PlayerPointsByGameD
 
   // ---------- Progression view body ----------
   const maxTotalPoints = Math.max(...players.map(p => p.totalPoints), 1);
-  const availableBarWidth = 90;
+  // Cap the leader's bar at ~9% per completed game day (rounded up to 90 % once we have 10+ days).
+  // Without this cap, a single completed day stretches the leader's bar to fill the whole row,
+  // making one or two colored segments look disproportionately huge.
+  const MAX_BAR_WIDTH_PER_DATE = 9;
+  const FULL_BAR_WIDTH = 90;
+  const availableBarWidth = Math.min(FULL_BAR_WIDTH, Math.max(MAX_BAR_WIDTH_PER_DATE, dates.length * MAX_BAR_WIDTH_PER_DATE));
 
   const progressionPlayers = selectedDate
     ? players
