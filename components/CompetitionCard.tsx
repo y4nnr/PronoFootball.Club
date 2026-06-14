@@ -78,28 +78,29 @@ export default function CompetitionCard({ competition, actionLabel, actionIcon, 
           {/* Progress Bar */}
           {competition.totalGames !== undefined && competition.gamesPlayed !== undefined && competition.progressPercentage !== undefined ? (
             <div className="mt-2">
-            <div className="relative w-full bg-neutral-200 dark:bg-[rgb(40,40,40)] rounded-full h-8">
-              <div 
-                className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-white transition-all duration-300 ease-out flex items-center justify-center"
-                style={{ 
-                  width: `${competition.progressPercentage}%`,
-                  height: '100%',
-                  minWidth: competition.progressPercentage === 0 ? '0%' : 'auto'
-                }}
-              >
-                {competition.progressPercentage > 0 && (
-                  <span className="text-xs font-bold text-white dark:text-gray-200">
-                    {competition.progressPercentage}%
-                  </span>
-                )}
-              </div>
-              {/* Show percentage text outside the bar when it's 0% or too small to fit text */}
-              {competition.progressPercentage === 0 && (
-                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-bold text-neutral-800 dark:text-white">
-                  0%
-                </span>
-              )}
-            </div>
+              {(() => {
+                const pct = competition.progressPercentage!;
+                // Below 25 % the filled portion is too narrow to host the label without clipping —
+                // show it centered over the full bar, only move it inside the gradient at 25 %+.
+                const labelInside = pct >= 25;
+                return (
+                  <div className="relative w-full bg-neutral-200 dark:bg-[rgb(40,40,40)] rounded-full h-8">
+                    <div
+                      className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-white transition-all duration-300 ease-out flex items-center justify-center"
+                      style={{ width: `${pct}%`, height: '100%' }}
+                    >
+                      {labelInside && (
+                        <span className="text-xs font-bold text-white dark:text-gray-200">{pct}%</span>
+                      )}
+                    </div>
+                    {!labelInside && (
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-neutral-800 dark:text-white pointer-events-none">
+                        {pct}%
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
           </div>
           ) : (
             <div className="mt-2 flex items-center justify-center px-3 py-1.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-modern bg-primary-600 dark:bg-transparent border-2 border-transparent dark:border-accent-dark-500 text-white hover:bg-primary-700 dark:hover:bg-accent-dark-500/10">
