@@ -763,28 +763,33 @@ export default function CompetitionDetails({ competition, competitionStats, game
             </div>
             {/* Content Section */}
             <div className="px-6 py-4">
-              <div className="w-full bg-gray-200 dark:bg-[rgb(40,40,40)] rounded-full h-8 relative">
-                <div 
-                  className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-white transition-all duration-500 ease-out flex items-center justify-center"
-                  style={{ 
-                    width: `${competition._count.games > 0 ? (games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100 : 0}%`,
-                    height: '100%',
-                    minWidth: competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100 === 0 ? '0%' : 'auto'
-                  }}
-                >
-                  {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100 > 0 && (
-                    <span className="text-xs font-bold text-white dark:text-gray-200">
-                      {Math.round((games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100)}%
-                    </span>
-                  )}
-                </div>
-                {/* Show percentage text outside the bar when it's 0% or too small to fit text */}
-                {competition._count.games > 0 && (games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length / competition._count.games) * 100 === 0 && (
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs font-bold text-neutral-800 dark:text-white">
-                    0%
-                  </span>
-                )}
-              </div>
+              {(() => {
+                const finishedCount = games.filter(g => g.status === 'FINISHED' && !isPlaceholderGame(g)).length;
+                const totalCount = competition._count.games;
+                const pct = totalCount > 0 ? (finishedCount / totalCount) * 100 : 0;
+                const pctLabel = `${Math.round(pct)}%`;
+                // Below 25 % the filled portion is too narrow to host the label without clipping —
+                // show the label centered in the full bar instead, and only move it inside the
+                // gradient once we cross 25 %.
+                const labelInside = pct >= 25;
+                return (
+                  <div className="w-full bg-gray-200 dark:bg-[rgb(40,40,40)] rounded-full h-8 relative">
+                    <div
+                      className="absolute top-0 left-0 bottom-0 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 dark:[background:none] border-2 border-transparent dark:border-white transition-all duration-500 ease-out flex items-center justify-center"
+                      style={{ width: `${pct}%`, height: '100%' }}
+                    >
+                      {labelInside && (
+                        <span className="text-xs font-bold text-white dark:text-gray-200">{pctLabel}</span>
+                      )}
+                    </div>
+                    {!labelInside && (
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-neutral-800 dark:text-white pointer-events-none">
+                        {pctLabel}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
               <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
                 <span className="font-bold">0%</span>
                 <span className="font-bold">100%</span>
