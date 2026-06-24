@@ -26,6 +26,8 @@ type CommonFields = {
   prizes: [number, number, number];
   nets: [number, number, number];
   adjusted: boolean; // true when admin override percentages are in effect
+  /** Cagnotte gating: 1 = legacy %-based, 2 = rounded-€50 distribution. Defaults to 2 when omitted. */
+  version?: 1 | 2;
 };
 
 export type PodiumPayoutData = CommonFields &
@@ -155,9 +157,15 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
               Les gains s'afficheront dès qu'il y aura au moins <span className="font-semibold">3 joueurs</span> inscrits.
             </p>
           </div>
-        ) : (
-          <div className="p-4 md:p-6 grid grid-cols-3 gap-3 md:gap-4">
-            {([0, 1, 2] as const).map(idx => {
+        ) : (() => {
+          // v2 hides tiers whose prize is 0 (N < 6 cases) and drops the "% de la cagnotte" subtitle
+          // since rounded-€50 amounts don't follow a fixed proportional split.
+          const isV2 = (data.version ?? 2) === 2;
+          const tiers = ([0, 1, 2] as const).filter(idx => !(isV2 && prizes[idx] === 0));
+          const cols = tiers.length === 1 ? 'grid-cols-1 max-w-md mx-auto' : tiers.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' : 'grid-cols-3';
+          return (
+          <div className={`p-4 md:p-6 grid ${cols} gap-3 md:gap-4`}>
+            {tiers.map(idx => {
               const rank = (idx + 1) as 1 | 2 | 3;
               const styles = RANK_STYLES[rank];
               const prize = prizes[idx];
@@ -167,7 +175,7 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
                   <div className={`px-3 md:px-4 py-3 ${styles.chip} text-center`}>
                     <div className="text-2xl md:text-3xl leading-none">{MEDAL_EMOJI[rank]}</div>
                     <p className="text-[10px] md:text-xs font-semibold uppercase tracking-wide mt-1.5">{styles.label}</p>
-                    <p className="text-[10px] md:text-xs opacity-80">{percentages[idx]}% de la cagnotte</p>
+                    {!isV2 && <p className="text-[10px] md:text-xs opacity-80">{percentages[idx]}% de la cagnotte</p>}
                   </div>
                   <div className="px-3 md:px-4 py-3 flex-1 flex flex-col items-center justify-center gap-1">
                     <p className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">{fmt(prize)}{currency}</p>
@@ -191,7 +199,8 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
               );
             })}
           </div>
-        )}
+          );
+        })()}
 
         {adjusted && (
           <div className="px-6 py-3 bg-amber-50 dark:bg-amber-900/20 border-t border-amber-200 dark:border-amber-700">
@@ -209,15 +218,21 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
               <span className="md:hidden">Mise de <span className="font-semibold">{entryFee}{currency}</span> par joueur.</span>
               <span className="hidden md:inline">Chaque joueur verse une mise de <span className="font-semibold">{entryFee}{currency}</span> en début de saison. La cagnotte grandit à mesure que les joueurs rejoignent.</span>
             </li>
-            {!adjusted && (
+            {!adjusted && (data.version ?? 2) === 1 && (
               <li>
                 <span className="md:hidden">Répartition fixe <span className="font-mono">67 / 22 / 11 %</span> entre 1<sup>er</sup>, 2<sup>e</sup> et 3<sup>e</sup>.</span>
                 <span className="hidden md:inline">La cagnotte est répartie selon la même grille pour toutes les compétitions : <span className="font-semibold">67 %</span> pour le 1<sup>er</sup> / <span className="font-semibold">22 %</span> pour le 2<sup>e</sup> / <span className="font-semibold">11 %</span> pour le 3<sup>e</sup>.</span>
               </li>
             )}
+            {!adjusted && (data.version ?? 2) === 2 && (
+              <li>
+                <span className="md:hidden">Pot redistribué en tranches nettes de <span className="font-semibold">{entryFee}{currency}</span>.</span>
+                <span className="hidden md:inline">À la fin de la compétition, le pot est redistribué en tranches nettes de <span className="font-semibold">{entryFee}{currency}</span> vers le podium, calculées dynamiquement selon le nombre de joueurs.</span>
+              </li>
+            )}
             <li>
-              <span className="md:hidden">Paiements organisés en fin de compétition.</span>
-              <span className="hidden md:inline">Les <span className="font-semibold">versements entre joueurs</span> sont organisés à la fin de la compétition. Chacun pourra confirmer son paiement directement depuis cette page.</span>
+              <span className="md:hidden">{(data.version ?? 2) === 2 ? <>Chaque non-podium règle un seul chèque de <span className="font-semibold">{entryFee}{currency}</span>.</> : <>Paiements organisés en fin de compétition.</>}</span>
+              <span className="hidden md:inline">{(data.version ?? 2) === 2 ? <>Chaque non-podium règle un seul chèque de <span className="font-semibold">{entryFee}{currency}</span> au gagnant indiqué par le widget — aucun versement fractionné.</> : <>Les <span className="font-semibold">versements entre joueurs</span> sont organisés à la fin de la compétition. Chacun pourra confirmer son paiement directement depuis cette page.</>}</span>
             </li>
           </ul>
         </div>
@@ -267,7 +282,7 @@ export default function PodiumPayoutWidget({ data, competitionId, currentUserId 
               <div className={`px-4 py-3 ${styles.chip} flex items-center gap-3`}>
                 <span className="text-2xl">{MEDAL_EMOJI[rank]}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wide">{styles.label} · {percentages[idx]}%</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide">{styles.label}{(data.version ?? 2) === 1 ? ` · ${percentages[idx]}%` : ''}</p>
                   <p className="text-base font-bold truncate">{fmt(prize)}{currency}</p>
                 </div>
               </div>

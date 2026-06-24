@@ -1797,6 +1797,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         prizePctFirst: true,
         prizePctSecond: true,
         prizePctThird: true,
+        cagnotteVersion: true,
         winner: {
           select: { id: true, name: true }
         },
@@ -2055,6 +2056,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         prizePctFirst: competition.prizePctFirst ?? null,
         prizePctSecond: competition.prizePctSecond ?? null,
         prizePctThird: competition.prizePctThird ?? null,
+        version: (((competition as any).cagnotteVersion ?? 2) === 1 ? 1 : 2),
       });
       const paidRows = await prisma.competitionUser.findMany({
         where: { competitionId: competition.id },

@@ -27,6 +27,8 @@ export type CagnotteResult = {
   chunks: [number, number, number];
   /** True when admin override was used (otherwise the dynamic default formula). */
   customSplit: boolean;
+  /** Which gating version produced this result (1 = legacy %, 2 = rounded-€50). */
+  version: 1 | 2;
 };
 
 export function computeCagnotte(input: {
@@ -35,48 +37,85 @@ export function computeCagnotte(input: {
   prizePctFirst: number | null;
   prizePctSecond: number | null;
   prizePctThird: number | null;
+  /** Competition.cagnotteVersion — 1 = legacy percentage display, 2 = rounded-€50 distribution. Defaults to 2. */
+  version?: 1 | 2;
 }): CagnotteResult {
   const N = Math.max(0, input.participantCount);
   const F = Math.max(0, input.entryFee);
   const pot = N * F;
+  const version = input.version ?? 2;
 
   const adminSet =
     input.prizePctFirst != null && input.prizePctSecond != null && input.prizePctThird != null;
 
-  // Default split: 2/3, 2/9, 1/9 (== 6/9, 2/9, 1/9). Use rational arithmetic to avoid drift.
   let p1: number, p2: number, p3: number;
+  let displayPct: [number, number, number];
+  let chunks: [number, number, number];
+
   if (adminSet) {
+    // Admin override beats version routing — fixed percentages, classic chunk math.
     p1 = (pot * (input.prizePctFirst as number)) / 100;
     p2 = (pot * (input.prizePctSecond as number)) / 100;
     p3 = (pot * (input.prizePctThird as number)) / 100;
-  } else {
+    displayPct = [input.prizePctFirst as number, input.prizePctSecond as number, input.prizePctThird as number];
+    chunks = chunksFromPrizes(p1, p2, p3, F, N);
+  } else if (version === 1) {
+    // Legacy default split: 2/3, 2/9, 1/9.
     p1 = (pot * 6) / 9;
     p2 = (pot * 2) / 9;
     p3 = (pot * 1) / 9;
+    displayPct = [67, 22, 11];
+    chunks = chunksFromPrizes(p1, p2, p3, F, N);
+  } else {
+    // v2: rounded-€50 distribution.
+    const { computeDistribution, computePaymentGraph } = require('./cagnotte-rounded') as typeof import('./cagnotte-rounded');
+    const dist = computeDistribution(N);
+    if (dist.type !== 'computed') {
+      // Insufficient participants — return an empty result; widget will show "need ≥ 2 joueurs".
+      p1 = 0; p2 = 0; p3 = 0;
+      displayPct = [0, 0, 0];
+      chunks = [0, 0, 0];
+    } else {
+      p1 = dist.first;
+      p2 = dist.second ?? 0;
+      p3 = dist.third ?? 0;
+      // Percentages displayed are derived from the rounded prizes (no longer the rigid 67/22/11 grid).
+      displayPct = pot > 0
+        ? [Math.round(p1 / pot * 100), Math.round(p2 / pot * 100), Math.round(p3 / pot * 100)]
+        : [0, 0, 0];
+      // Re-use the rounded-distribution payment graph builder so chunk counts stay deterministic
+      // and consistent with the canonical assignment (worst loser → 1st first, etc.).
+      const fakeStandings = Array.from({ length: N }, (_, i) => ({ userId: 'p' + i, name: 'p' + i, rank: i + 1 }));
+      const graph = computePaymentGraph(dist, fakeStandings);
+      const winnerIds = [fakeStandings[0]?.userId, fakeStandings[1]?.userId, fakeStandings[2]?.userId];
+      chunks = [
+        graph.filter(e => e.to.userId === winnerIds[0]).length,
+        graph.filter(e => e.to.userId === winnerIds[1]).length,
+        graph.filter(e => e.to.userId === winnerIds[2]).length,
+      ] as [number, number, number];
+    }
   }
-
-  // Display percentages: rounded to nearest integer for the chip on each podium card.
-  const displayPct = adminSet
-    ? [input.prizePctFirst as number, input.prizePctSecond as number, input.prizePctThird as number]
-    : [67, 22, 11];
-
-  // Chunk allocation (losers paying each podium). Negative net → 0 chunks for that podium.
-  const losers = Math.max(0, N - 3);
-  let c1 = Math.round((p1 - F) / F);
-  let c2 = Math.round((p2 - F) / F);
-  let c3 = Math.round((p3 - F) / F);
-  c1 = Math.max(0, c1); c2 = Math.max(0, c2); c3 = Math.max(0, c3);
-  const drift = losers - (c1 + c2 + c3);
-  c1 = Math.max(0, c1 + drift);
 
   return {
     pot,
     entryFee: F,
     participantCount: N,
-    percentages: [displayPct[0], displayPct[1], displayPct[2]] as [number, number, number],
+    percentages: displayPct,
     prizes: [p1, p2, p3],
     nets: [p1 - F, p2 - F, p3 - F],
-    chunks: [c1, c2, c3],
+    chunks,
     customSplit: adminSet,
+    version,
   };
+}
+
+/** Legacy chunk math (used by v1 + admin-override branches). */
+function chunksFromPrizes(p1: number, p2: number, p3: number, F: number, N: number): [number, number, number] {
+  const losers = Math.max(0, N - 3);
+  let c1 = Math.max(0, Math.round((p1 - F) / F));
+  let c2 = Math.max(0, Math.round((p2 - F) / F));
+  let c3 = Math.max(0, Math.round((p3 - F) / F));
+  const drift = losers - (c1 + c2 + c3);
+  c1 = Math.max(0, c1 + drift);
+  return [c1, c2, c3];
 }

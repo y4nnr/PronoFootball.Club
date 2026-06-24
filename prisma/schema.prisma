@@ -62,6 +62,7 @@ model Competition {
   prizePctFirst  Int?              // Override of the 1st-place percentage of the pot (1-100). null = use 67% default.
   prizePctSecond Int?              // 2nd-place percentage; null = 22% default
   prizePctThird  Int?              // 3rd-place percentage; null = 11% default
+  cagnotteVersion Int              @default(2)   // 1 = legacy percentage display (frozen for already-COMPLETED comps); 2 = rounded-€50 distribution
   lastPlace     User?             @relation("CompetitionLastPlace", fields: [lastPlaceId], references: [id])
   winner        User?             @relation("CompetitionWinner", fields: [winnerId], references: [id])
   users         CompetitionUser[]
