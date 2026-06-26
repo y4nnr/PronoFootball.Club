@@ -43,18 +43,11 @@ export default async function handler(
       });
       const userPrediction = competitionUser?.finalWinnerTeam ?? null;
 
-      // Deadline for changing the prediction = whichever is earlier between the lock date
-      // and the first upcoming game's kick-off (so users can't change after games start either).
-      const nextGame = await prisma.game.findFirst({
-        where: { competitionId, status: { in: ['UPCOMING', 'LIVE', 'RESCHEDULED'] } },
-        include: {
-          homeTeam: { select: { id: true, name: true, logo: true, shortName: true } },
-          awayTeam: { select: { id: true, name: true, logo: true, shortName: true } },
-        },
-        orderBy: { date: 'asc' },
-      });
-      const deadline = nextGame ? new Date(nextGame.date) : null;
-      const deadlinePassed = deadline ? new Date() >= deadline : true;
+      // The final-winner prediction has a single deadline: competition.finalWinnerLockAt.
+      // It is NOT tied to whether a regular per-game match is currently live — those are
+      // unrelated bets handled by a different endpoint.
+      const deadline = lockAt;
+      const deadlinePassed = selectionLocked;
 
       // Eligible teams = every distinct team appearing in a non-placeholder game of this competition.
       const teamRows = await prisma.game.findMany({
@@ -84,12 +77,8 @@ export default async function handler(
         selectionLocked,
         lockAt: lockAt?.toISOString() || null,
         availableTeams,
-        nextGame: nextGame ? {
-          id: nextGame.id,
-          date: nextGame.date,
-          homeTeam: nextGame.homeTeam.name,
-          awayTeam: nextGame.awayTeam.name,
-        } : null,
+        // Kept for backwards compatibility with the widget; no longer used as a hard deadline.
+        nextGame: null,
       });
     }
 
@@ -102,16 +91,7 @@ export default async function handler(
       if (selectionLocked) {
         return res.status(400).json({ error: 'La sélection est verrouillée. Vous ne pouvez plus la modifier.' });
       }
-
-      // Kick-off cutoff: once the first upcoming game starts, no further changes (separate from the lock date)
-      const firstUpcoming = await prisma.game.findFirst({
-        where: { competitionId, status: { in: ['UPCOMING', 'LIVE'] } },
-        orderBy: { date: 'asc' },
-        select: { date: true },
-      });
-      if (firstUpcoming && new Date() >= firstUpcoming.date) {
-        return res.status(400).json({ error: 'Deadline has passed. Prediction cannot be changed.' });
-      }
+      // (No per-game cutoff — only competition.finalWinnerLockAt gates this endpoint.)
 
       // Verify team plays in this competition (appears in at least one non-placeholder game)
       const teamPlaysInComp = await prisma.game.findFirst({
