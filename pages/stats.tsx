@@ -1137,7 +1137,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               Gains En Carrière
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 ml-12">
-              Bilan financier sur l'ensemble des compétitions terminées
+              Bilan financier sur l'ensemble des compétitions terminées avec mise
             </p>
           </div>
           <div className="p-4 md:p-6">
