@@ -1021,40 +1021,32 @@ export default async function handler(
     }
 
     // 5) Fetch stored news from database
-    // Widget rule: include ALL ACTIVE/UPCOMING competitions, plus AT MOST ONE
-    // COMPLETED competition (the one with the latest endDate). This prevents
-    // multiple finished seasons from monopolising the 8-item widget cap.
-    // Generation above is unchanged: still only targets ACTIVE/UPCOMING.
-    type CompForFetch = { id: string; status: string; endDate: Date };
+    // Logged-in users: only ACTIVE competitions they belong to. COMPLETED comps drop out — the
+    // previous "include the most-recently-COMPLETED comp" carve-out caused CL 25/26 news to keep
+    // appearing in the widget after the season ended.
+    // Anonymous (automation) callers still iterate every non-cancelled comp so the news-cron can
+    // generate the finale prompt for a competition that has just auto-completed.
+    type CompForFetch = { id: string; status: string };
     let fetchCompetitions: CompForFetch[];
     if (userId) {
       const userCompetitionsForFetch = await prisma.competitionUser.findMany({
         where: {
           userId: userId,
-          competition: { status: { notIn: ['CANCELLED', 'cancelled'] } },
+          competition: { status: { in: ['ACTIVE', 'active'] } },
         },
         include: {
-          competition: { select: { id: true, status: true, endDate: true } },
+          competition: { select: { id: true, status: true } },
         },
       });
       fetchCompetitions = userCompetitionsForFetch.map(uc => uc.competition);
     } else {
       fetchCompetitions = await prisma.competition.findMany({
         where: { status: { notIn: ['CANCELLED', 'cancelled'] } },
-        select: { id: true, status: true, endDate: true },
+        select: { id: true, status: true },
       });
     }
 
-    const isCompleted = (s: string) => s.toLowerCase() === 'completed';
-    const activeOrUpcoming = fetchCompetitions.filter(c => !isCompleted(c.status));
-    const mostRecentCompleted = fetchCompetitions
-      .filter(c => isCompleted(c.status))
-      .sort((a, b) => b.endDate.getTime() - a.endDate.getTime())
-      .slice(0, 1);
-    const fetchCompetitionIds = [
-      ...activeOrUpcoming.map(c => c.id),
-      ...mostRecentCompleted.map(c => c.id),
-    ];
+    const fetchCompetitionIds = fetchCompetitions.map(c => c.id);
 
     let allNewsItems: NewsItem[] = [];
 
