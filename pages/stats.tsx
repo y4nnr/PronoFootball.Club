@@ -65,6 +65,7 @@ interface LeaderboardData {
     gameCount: number;
     logo?: string;
     sportType: string;
+    entryFee?: number;
   }>;
 }
 
@@ -103,7 +104,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
   const [breakdownLoading, setBreakdownLoading] = useState(false);
   const [selectedSportPersonal, setSelectedSportPersonal] = useState<'ALL' | 'FOOTBALL' | 'RUGBY'>('ALL');
   const [selectedSportGlobal, setSelectedSportGlobal] = useState<'ALL' | 'FOOTBALL' | 'RUGBY'>('ALL');
-  const [earnings, setEarnings] = useState<Array<{ userId: string; userName: string; profilePictureUrl: string | null; competitions: number; wins: number; seconds: number; thirds: number; netEur: number }> | null>(null);
+  const [earnings, setEarnings] = useState<Array<{ userId: string; userName: string; profilePictureUrl: string | null; competitions: number; wins: number; seconds: number; thirds: number; earnedEur: number; spentEur: number; netEur: number }> | null>(null);
   const [earningsLoading, setEarningsLoading] = useState(true);
 
 
@@ -965,12 +966,15 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                     <th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 dark:text-gray-300 uppercase tracking-wider">
                       {t('stats.participants')}
                     </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 dark:text-gray-300 uppercase tracking-wider">
+                      Argent
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-[rgb(58,58,58)] divide-y divide-neutral-200 dark:divide-gray-600">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center">
+                      <td colSpan={7} className="px-6 py-8 text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mx-auto"></div>
                         <p className="text-sm text-neutral-500 dark:text-gray-400 mt-2">{t('loading')}...</p>
                       </td>
@@ -1074,12 +1078,17 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                               <div className="text-sm font-medium text-neutral-900 dark:text-gray-100">{competition.participantCount}</div>
                             </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <span className={`text-sm font-bold ${(competition.entryFee ?? 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-neutral-400 dark:text-gray-500'}`}>
+                                {(competition.entryFee ?? 0) > 0 ? 'O' : 'N'}
+                              </span>
+                            </td>
                           </tr>
                         );
                       })
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-neutral-500 dark:text-gray-400">
+                      <td colSpan={7} className="px-6 py-8 text-center text-neutral-500 dark:text-gray-400">
                         {t('stats.noCompetitionHistory')}
                       </td>
                     </tr>
@@ -1148,6 +1157,8 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                       <th className="px-1 md:px-3 py-3 text-center text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider"><span className="hidden md:inline">🥇 1ʳᵉ</span><span className="md:hidden">🥇</span></th>
                       <th className="px-1 md:px-3 py-3 text-center text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider"><span className="hidden md:inline">🥈 2ᵉ</span><span className="md:hidden">🥈</span></th>
                       <th className="px-1 md:px-3 py-3 text-center text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider"><span className="hidden md:inline">🥉 3ᵉ</span><span className="md:hidden">🥉</span></th>
+                      <th className="px-2 md:px-4 py-3 text-right text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider">Gagné</th>
+                      <th className="px-2 md:px-4 py-3 text-right text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider">Dépensé</th>
                       <th className="px-2 md:px-4 py-3 text-right text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider">Net</th>
                     </tr>
                   </thead>
@@ -1171,6 +1182,8 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                           <td className="px-1 md:px-3 py-2 md:py-3 text-center text-xs md:text-sm text-neutral-700 dark:text-gray-300">{r.wins}</td>
                           <td className="px-1 md:px-3 py-2 md:py-3 text-center text-xs md:text-sm text-neutral-700 dark:text-gray-300">{r.seconds}</td>
                           <td className="px-1 md:px-3 py-2 md:py-3 text-center text-xs md:text-sm text-neutral-700 dark:text-gray-300">{r.thirds}</td>
+                          <td className="px-2 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm font-mono text-green-600 dark:text-green-400">+{r.earnedEur}€</td>
+                          <td className="px-2 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm font-mono text-red-500 dark:text-red-400">−{r.spentEur}€</td>
                           <td className={`px-2 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm font-bold font-mono ${r.netEur > 0 ? 'text-green-600 dark:text-green-400' : r.netEur < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
                             {r.netEur > 0 ? '+' : ''}{r.netEur}€
                           </td>

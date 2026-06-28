@@ -473,7 +473,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           participantCount,
           gameCount,
           logo: comp.logo,
-          sportType: comp.sportType
+          sportType: comp.sportType,
+          entryFee: comp.entryFee
         };
       })
     );

@@ -3,17 +3,19 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '../../../lib/prisma';
 import { computeFinalStandings } from '../../../lib/competition-completion';
-import { computeDistribution, CAGNOTTE_STAKE } from '../../../lib/cagnotte-rounded';
+import { computeDistribution } from '../../../lib/cagnotte-rounded';
 
 type Row = {
   userId: string;
   userName: string;
   profilePictureUrl: string | null;
-  competitions: number;   // total completed comps the user participated in
-  wins: number;           // 1st-place finishes
+  competitions: number;   // money competitions the user participated in (entryFee > 0 only)
+  wins: number;           // 1st-place finishes (money comps only)
   seconds: number;
   thirds: number;
-  netEur: number;         // sum of (prize_for_rank - entryFee) across all comps they played; non-podium = -entryFee
+  earnedEur: number;      // total prize money received (gross)
+  spentEur: number;       // total entry fees paid
+  netEur: number;         // earnedEur - spentEur
 };
 
 /**
@@ -33,9 +35,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   if (!session?.user?.id) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
+    // Only competitions that actually had money in play (entryFee > 0) feed the bilan.
+    // Six Nations 2026 — flagged with entryFee = 0 — is intentionally excluded.
     const comps = await prisma.competition.findMany({
-      where: { status: 'COMPLETED' },
-      select: { id: true },
+      where: { status: 'COMPLETED', entryFee: { gt: 0 } },
+      select: { id: true, entryFee: true },
     });
 
     // Pull every non-admin user up front so we can attach profile pictures + names cleanly.
@@ -59,6 +63,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           wins: 0,
           seconds: 0,
           thirds: 0,
+          earnedEur: 0,
+          spentEur: 0,
           netEur: 0,
         };
         agg.set(userId, row);
@@ -73,15 +79,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       if (dist.type !== 'computed') continue;
 
       const prizes: [number, number | null, number | null] = [dist.first, dist.second, dist.third];
+      const stake = c.entryFee;
 
       standings.forEach((s, idx) => {
         const row = ensure(s.user.id);
         if (!row) return;
         row.competitions += 1;
+        row.spentEur += stake;
         const podiumIdx = idx < 3 ? idx : -1;
         const prize = podiumIdx >= 0 ? prizes[podiumIdx] ?? 0 : 0;
-        const net = prize - CAGNOTTE_STAKE;
-        row.netEur += net;
+        row.earnedEur += prize;
+        row.netEur += prize - stake;
         if (idx === 0) row.wins += 1;
         else if (idx === 1) row.seconds += 1;
         else if (idx === 2) row.thirds += 1;
