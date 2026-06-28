@@ -1125,10 +1125,10 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
                 <BanknotesIcon className="h-6 w-6 text-white" />
               </div>
-              Gains Cumulés
+              Gains En Carrière
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 ml-12">
-              Bilan financier sur l'ensemble des compétitions terminées · mise 50 € · répartition en tranches nettes de 50 €
+              Bilan financier sur l'ensemble des compétitions terminées
             </p>
           </div>
           <div className="p-4 md:p-6">
