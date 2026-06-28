@@ -85,6 +85,13 @@ function normalizeTeam(team: Team): Team {
   return team;
 }
 
+// Two-character logo fallback rendered when a team has no logo image. Prefers shortName so
+// placeholder teams (shortName = '?') show '?' rather than the first two letters of the
+// "À déterminer" name.
+function logoFallback(team: Team): string {
+  return (team.shortName || team.name).substring(0, 2).toUpperCase();
+}
+
 // Abbreviate team names for mobile display - 3 letters only
 function abbreviateTeamName(team: Team): string {
   // Use shortName from database if available, take first 3 letters
@@ -486,7 +493,7 @@ export default function GameCard({ game: rawGame, currentUserId, href, context =
               </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">
-                {game.homeTeam.name.substring(0, 2).toUpperCase()}
+                {logoFallback(game.homeTeam)}
               </div>
             )}
             <div className="min-h-[32px] flex items-center justify-center w-full px-1">
@@ -502,7 +509,7 @@ export default function GameCard({ game: rawGame, currentUserId, href, context =
                 <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-full h-full object-contain" />
               </div>
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.homeTeam.name.substring(0,2).toUpperCase()}</div>
+              <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{logoFallback(game.homeTeam)}</div>
             )}
             <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs lg:text-sm text-center truncate max-w-[90px]">{game.homeTeam.name}</span>
           </div>
@@ -537,7 +544,7 @@ export default function GameCard({ game: rawGame, currentUserId, href, context =
               </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">
-                {game.awayTeam.name.substring(0, 2).toUpperCase()}
+                {logoFallback(game.awayTeam)}
               </div>
             )}
             <div className="min-h-[32px] flex items-center justify-center w-full px-1">
@@ -553,7 +560,7 @@ export default function GameCard({ game: rawGame, currentUserId, href, context =
                 <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-full h-full object-contain" />
               </div>
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{game.awayTeam.name.substring(0,2).toUpperCase()}</div>
+              <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm text-gray-700 dark:text-gray-300 font-bold mb-2 flex-shrink-0 border-2 border-gray-300 dark:border-gray-600">{logoFallback(game.awayTeam)}</div>
             )}
             <span className="text-gray-900 dark:text-gray-100 font-semibold text-xs lg:text-sm text-center truncate max-w-[90px]">{game.awayTeam.name}</span>
           </div>
