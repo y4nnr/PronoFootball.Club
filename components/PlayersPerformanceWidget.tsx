@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import Link from 'next/link';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -79,8 +80,8 @@ const PlayerPerformanceRow = memo(({
     <div className={`flex items-center py-2 px-3 rounded-md transition-all ${
       isCurrentUser ? 'bg-blue-50 ring-1 ring-blue-200 dark:!bg-gray-700 dark:ring-1 dark:ring-accent-dark-500/50' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
     }`}>
-      {/* Player Profile */}
-      <div className="flex items-center space-x-2.5 min-w-0 w-32">
+      {/* Player Profile — clickable → player profile page */}
+      <Link href={`/players/${player.userId}`} className="flex items-center space-x-2.5 min-w-0 w-32 hover:opacity-80 transition-opacity">
         <img
           src={player.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player.userName.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
           alt={player.userName}
@@ -93,7 +94,7 @@ const PlayerPerformanceRow = memo(({
             {player.userName}
           </h3>
         </div>
-      </div>
+      </Link>
 
       {/* Performance Indicators — newest on the LEFT, oldest on the rightmost filled slot.
           Empty placeholders stay on the RIGHT until the row is full. New games push in from

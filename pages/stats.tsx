@@ -1169,14 +1169,14 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                         <tr key={r.userId} className={`${isCurrent ? 'bg-blue-50 dark:bg-gray-800/95' : ''} hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors`}>
                           <td className="px-2 md:px-4 py-2 md:py-3 text-center text-xs md:text-sm font-semibold text-neutral-700 dark:text-gray-200">{i + 1}</td>
                           <td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
+                            <Link href={`/players/${r.userId}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                               <img
                                 src={r.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(r.userName.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
                                 alt={r.userName}
                                 className="w-7 h-7 md:w-9 md:h-9 rounded-full object-cover border border-neutral-200 dark:border-transparent flex-shrink-0"
                               />
-                              <span className="text-xs md:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{r.userName}</span>
-                            </div>
+                              <span className="text-xs md:text-sm font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-primary-600 dark:group-hover:text-accent-dark-400">{r.userName}</span>
+                            </Link>
                           </td>
                           <td className="px-2 md:px-4 py-2 md:py-3 text-center text-xs md:text-sm text-neutral-700 dark:text-gray-300">{r.competitions}</td>
                           <td className="px-1 md:px-3 py-2 md:py-3 text-center text-xs md:text-sm text-neutral-700 dark:text-gray-300">{r.wins}</td>

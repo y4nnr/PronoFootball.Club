@@ -1309,10 +1309,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
                         </div>
                       </td>
                       <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
-                        {/* Mobile & Desktop: Name next to profile pic */}
-                        <div className="flex items-center min-w-0">
-                          <img 
-                            src={getUserAvatar(player.userName, player.profilePictureUrl)} 
+                        {/* Mobile & Desktop: Name next to profile pic — clickable → player profile */}
+                        <Link href={`/players/${player.userId}`} className="flex items-center min-w-0 hover:opacity-80 transition-opacity">
+                          <img
+                            src={getUserAvatar(player.userName, player.profilePictureUrl)}
                             alt={player.userName}
                             className="w-7 h-7 md:w-10 md:h-10 rounded-full mr-1.5 md:mr-3 object-cover border-2 border-gray-200 dark:border-gray-600 flex-shrink-0"
                           />
@@ -1321,7 +1321,7 @@ export default function CompetitionDetails({ competition, competitionStats, game
                             {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === 1 && <div className="text-[9px] md:text-xs text-yellow-600 dark:text-yellow-400 font-medium">{t('competition.champion')}</div>}
                             {(competition.status === 'COMPLETED' || competition.status === 'completed') && player.position === maxPosition && <div className="text-[9px] md:text-xs text-red-600 dark:text-red-400 font-medium">{t('competition.dinnerHost')}</div>}
                           </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="px-2 md:px-4 py-1 md:py-3 whitespace-nowrap text-center border-r border-gray-200 dark:border-gray-600">
                         <div className="text-[10px] md:text-sm font-bold text-gray-900 dark:text-gray-100">{player.totalPoints}</div>
