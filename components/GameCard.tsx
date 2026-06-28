@@ -75,6 +75,16 @@ function formatTime(dateString: string) {
   return `${hour}:${minute}`;
 }
 
+// Placeholder team names used in the DB when a knockout slot's opponent isn't decided yet.
+// Renders consistently as "À déterminer" across every place the card is used.
+const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+function normalizeTeam(team: Team): Team {
+  if (PLACEHOLDER_TEAM_NAMES.includes(team.name)) {
+    return { name: 'À déterminer', logo: null, shortName: '?' };
+  }
+  return team;
+}
+
 // Abbreviate team names for mobile display - 3 letters only
 function abbreviateTeamName(team: Team): string {
   // Use shortName from database if available, take first 3 letters
@@ -114,7 +124,15 @@ function abbreviateCompetitionName(competitionName: string): string {
   return name;
 }
 
-export default function GameCard({ game, currentUserId, href, context = 'home', isHighlighted = false, highlightType = 'score' }: GameCardProps) {
+export default function GameCard({ game: rawGame, currentUserId, href, context = 'home', isHighlighted = false, highlightType = 'score' }: GameCardProps) {
+  // Swap any xxxx / xxxx2 placeholder team with the "À déterminer" rendering before anything else
+  // touches game.homeTeam / game.awayTeam. Downstream code (abbreviateTeamName, logos, names…) all
+  // pick up the normalized version automatically.
+  const game = {
+    ...rawGame,
+    homeTeam: normalizeTeam(rawGame.homeTeam),
+    awayTeam: normalizeTeam(rawGame.awayTeam),
+  };
   const { t } = useTranslation();
   const isOpen = game.status === 'UPCOMING' || game.status === 'RESCHEDULED';
   const isClickable = game.status === 'UPCOMING' || game.status === 'RESCHEDULED'; // UPCOMING and RESCHEDULED games are clickable
