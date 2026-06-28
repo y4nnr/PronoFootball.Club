@@ -44,14 +44,13 @@ export default async function handler(
     }> = [];
 
     if (userId) {
-      // User is logged in - filter by their competitions
+      // User is logged in — only ACTIVE competitions the user is a member of populate the news page.
+      // Past (COMPLETED) and cancelled comps stay out so the feed reflects what's in flight now.
       const userCompetitions = await prisma.competitionUser.findMany({
         where: {
           userId: userId,
           competition: {
-            status: {
-              notIn: ['CANCELLED', 'cancelled'],
-            },
+            status: { in: ['ACTIVE', 'active'] },
           },
         },
         include: {
