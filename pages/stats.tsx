@@ -967,7 +967,7 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
                       {t('stats.participants')}
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 dark:text-gray-300 uppercase tracking-wider">
-                      Argent
+                      Cagnotte
                     </th>
                   </tr>
                 </thead>
