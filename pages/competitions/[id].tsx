@@ -283,6 +283,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
   // Placeholder team names – games with these are part of total count but must not count as "played" in the progress bar.
   const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
   const isPlaceholderGame = (g: Game) => PLACEHOLDER_TEAM_NAMES.includes(g.homeTeam?.name ?? '') || PLACEHOLDER_TEAM_NAMES.includes(g.awayTeam?.name ?? '');
+  // A "fully placeholder" game has neither team set yet (e.g. an R16 slot before any quarter-finalist is known).
+  // Partials (one real team + one TBD) are bettable — users can predict a score and the bet stays valid once
+  // the other side is filled in (same game id).
+  const isFullyPlaceholderGame = (g: Game) => PLACEHOLDER_TEAM_NAMES.includes(g.homeTeam?.name ?? '') && PLACEHOLDER_TEAM_NAMES.includes(g.awayTeam?.name ?? '');
   // Round label derived from matchday for placeholder/knockout games (WC 2026 convention: 4=R32, 5=R16, 6=QF, 7=SF, 8=3P, 99=Final).
   const labelForMatchday = (md: number | null): string | null => {
     switch (md) {
@@ -1514,11 +1518,11 @@ export default function CompetitionDetails({ competition, competitionStats, game
                 return <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('competition.noActiveGamesFound')}</div>;
               }
               const filteredGames = showAllGames ? games : games.filter(g => g.status === 'UPCOMING' || g.status === 'LIVE');
-              // Show placeholder (TBD) games only in the "all games" view — hide them in the "upcoming bets" view
-              // since users can't bet on TBD knockout slots until the bracket fills.
+              // In "tous les matchs" view: show everything. In the betting view: hide only games whose
+              // BOTH teams are still TBD — partials (England vs À déterminer) are bettable already.
               const displayableGames = showAllGames
                 ? filteredGames
-                : filteredGames.filter(g => !isPlaceholderGame(g));
+                : filteredGames.filter(g => !isFullyPlaceholderGame(g));
               // Sort finished games first (most recent first), then upcoming/live games chronologically
               const sortedGames = [...displayableGames].sort((a, b) => {
                 if (showAllGames) {
@@ -1585,8 +1589,10 @@ export default function CompetitionDetails({ competition, competitionStats, game
                       })),
                     };
                     
-                    // Only UPCOMING non-placeholder games are clickable for betting (can't bet on TBD)
-                    const isOpen = game.status === 'UPCOMING' && !placeholder;
+                    // UPCOMING games are clickable for betting unless BOTH teams are still TBD.
+                    // A partial (one real team + one TBD) is bettable: users pick a score against the
+                    // known team and the bet remains valid when the opponent is filled in.
+                    const isOpen = game.status === 'UPCOMING' && !isFullyPlaceholderGame(game);
                     const isFinished = game.status === 'FINISHED';
                     const isExpanded = expandedGames.has(game.id);
                     

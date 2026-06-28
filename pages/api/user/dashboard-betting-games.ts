@@ -147,8 +147,9 @@ export default async function handler(
           date: {
             gte: dateFilter
           },
-          // Exclude placeholder teams (used as TBD when qualifiers are unknown)
-          AND: [
+          // Include partial-placeholder games (one real team + one TBD) so users can already place a
+          // score against, e.g., "England vs À déterminer". Only games with BOTH sides still TBD are hidden.
+          OR: [
             { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
             { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
           ]
@@ -223,7 +224,8 @@ export default async function handler(
           date: {
             gte: dateFilter
           },
-          AND: [
+          // Partials (one real team + one TBD) count: only fully-TBD games are excluded.
+          OR: [
             { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
             { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
           ]
@@ -240,7 +242,8 @@ export default async function handler(
 date: {
             gte: dateFilter
           },
-          AND: [
+          // Partials (one real team + one TBD) count: only fully-TBD games are excluded.
+          OR: [
             { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
             { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
           ]
