@@ -14,7 +14,8 @@ import {
   CheckCircleIcon,
   UserIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline';
 import React from 'react';
 import axios from 'axios';
@@ -102,6 +103,8 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
   const [breakdownLoading, setBreakdownLoading] = useState(false);
   const [selectedSportPersonal, setSelectedSportPersonal] = useState<'ALL' | 'FOOTBALL' | 'RUGBY'>('ALL');
   const [selectedSportGlobal, setSelectedSportGlobal] = useState<'ALL' | 'FOOTBALL' | 'RUGBY'>('ALL');
+  const [earnings, setEarnings] = useState<Array<{ userId: string; userName: string; profilePictureUrl: string | null; competitions: number; wins: number; seconds: number; thirds: number; netEur: number }> | null>(null);
+  const [earningsLoading, setEarningsLoading] = useState(true);
 
 
   const fetchLeaderboardData = async () => {
@@ -120,6 +123,19 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/stats/total-earnings');
+        if (r.ok) {
+          const data = await r.json();
+          setEarnings(data.rows ?? []);
+        }
+      } catch (e) { console.error('earnings fetch', e); }
+      finally { setEarningsLoading(false); }
+    })();
+  }, []);
 
   useEffect(() => {
     fetchLeaderboardData();
@@ -1098,6 +1114,75 @@ export default function Stats({ currentUser }: { currentUser: LeaderboardUser })
               </div>
             )}
           </div>
+          </div>
+        </section>
+
+        {/* Total Earnings — retroactive financial summary across every completed competition,
+            assuming a 50€ buy-in and the v2 rounded-€50 distribution. */}
+        <section className="bg-white dark:bg-[rgb(58,58,58)] rounded-2xl shadow-2xl border border-neutral-200/50 dark:border-gray-600 overflow-hidden mb-8">
+          <div className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(40,40,40)] border-b border-neutral-200 dark:border-accent-dark-500 px-6 py-4">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+              <div className="p-2 bg-primary-600 dark:bg-accent-dark-600 rounded-full shadow-lg mr-2 flex items-center justify-center">
+                <BanknotesIcon className="h-6 w-6 text-white" />
+              </div>
+              Gains Cumulés
+            </h2>
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 ml-12">
+              Bilan financier sur l'ensemble des compétitions terminées · mise 50 € · répartition en tranches nettes de 50 €
+            </p>
+          </div>
+          <div className="p-4 md:p-6">
+            {earningsLoading ? (
+              <div className="py-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                <p className="text-sm text-neutral-500 dark:text-gray-400 mt-2">Chargement…</p>
+              </div>
+            ) : (earnings && earnings.length > 0) ? (
+              <div className="overflow-x-auto rounded-xl border border-neutral-200 dark:border-gray-600">
+                <table className="min-w-full divide-y divide-neutral-200 dark:divide-gray-700">
+                  <thead className="bg-gradient-to-br from-primary-100 to-primary-200 dark:from-[rgb(40,40,40)] dark:to-[rgb(38,38,38)]">
+                    <tr>
+                      <th className="w-10 md:w-12 px-2 md:px-4 py-3 text-center text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider">#</th>
+                      <th className="px-2 md:px-4 py-3 text-left text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider">Joueur</th>
+                      <th className="px-2 md:px-4 py-3 text-center text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider">Comps</th>
+                      <th className="px-1 md:px-3 py-3 text-center text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider"><span className="hidden md:inline">🥇 1ʳᵉ</span><span className="md:hidden">🥇</span></th>
+                      <th className="px-1 md:px-3 py-3 text-center text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider"><span className="hidden md:inline">🥈 2ᵉ</span><span className="md:hidden">🥈</span></th>
+                      <th className="px-1 md:px-3 py-3 text-center text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider"><span className="hidden md:inline">🥉 3ᵉ</span><span className="md:hidden">🥉</span></th>
+                      <th className="px-2 md:px-4 py-3 text-right text-[10px] md:text-xs font-bold text-neutral-500 dark:text-gray-300 uppercase tracking-wider">Net</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-[rgb(58,58,58)] divide-y divide-neutral-200 dark:divide-gray-600">
+                    {earnings.map((r, i) => {
+                      const isCurrent = currentUser?.id === r.userId;
+                      return (
+                        <tr key={r.userId} className={`${isCurrent ? 'bg-blue-50 dark:bg-gray-800/95' : ''} hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors`}>
+                          <td className="px-2 md:px-4 py-2 md:py-3 text-center text-xs md:text-sm font-semibold text-neutral-700 dark:text-gray-200">{i + 1}</td>
+                          <td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={r.profilePictureUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(r.userName.toLowerCase())}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
+                                alt={r.userName}
+                                className="w-7 h-7 md:w-9 md:h-9 rounded-full object-cover border border-neutral-200 dark:border-transparent flex-shrink-0"
+                              />
+                              <span className="text-xs md:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{r.userName}</span>
+                            </div>
+                          </td>
+                          <td className="px-2 md:px-4 py-2 md:py-3 text-center text-xs md:text-sm text-neutral-700 dark:text-gray-300">{r.competitions}</td>
+                          <td className="px-1 md:px-3 py-2 md:py-3 text-center text-xs md:text-sm text-neutral-700 dark:text-gray-300">{r.wins}</td>
+                          <td className="px-1 md:px-3 py-2 md:py-3 text-center text-xs md:text-sm text-neutral-700 dark:text-gray-300">{r.seconds}</td>
+                          <td className="px-1 md:px-3 py-2 md:py-3 text-center text-xs md:text-sm text-neutral-700 dark:text-gray-300">{r.thirds}</td>
+                          <td className={`px-2 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm font-bold font-mono ${r.netEur > 0 ? 'text-green-600 dark:text-green-400' : r.netEur < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                            {r.netEur > 0 ? '+' : ''}{r.netEur}€
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-sm text-neutral-500 dark:text-gray-400">Aucune compétition terminée.</div>
+            )}
           </div>
         </section>
       </div>
