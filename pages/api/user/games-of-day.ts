@@ -98,13 +98,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           competitionId: {
             in: userCompetitionIds
           },
-          date: {
-            gte: startOfDay,
-            lt: endOfDay
-          },
-          status: {
-            in: ['UPCOMING', 'LIVE', 'FINISHED']
-          },
+          // Show: (a) any game scheduled today (regardless of UPCOMING/LIVE/FINISHED), OR
+          //       (b) any LIVE game regardless of when it kicked off — so a match that started late
+          //           yesterday and is still in play after midnight stays in "Matchs du jour" until
+          //           it finishes, instead of forcing users to jump to the competition page.
+          OR: [
+            {
+              date: { gte: startOfDay, lt: endOfDay },
+              status: { in: ['UPCOMING', 'LIVE', 'FINISHED'] }
+            },
+            { status: 'LIVE' }
+          ],
           AND: [
             { homeTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } },
             { awayTeam: { name: { notIn: PLACEHOLDER_TEAM_NAMES } } }
