@@ -23,6 +23,7 @@ interface Game {
   status: string;
   homeScore: number | null;
   awayScore: number | null;
+  penaltyWinnerTeamId?: string | null;
 }
 
 interface Team {
@@ -265,17 +266,19 @@ export default function CompetitionDetail() {
     }
     setIsSubmitting(true);
     try {
+      const payload = {
+        homeTeamId: editGame.homeTeam.id,
+        awayTeamId: editGame.awayTeam.id,
+        date: editGame.date,
+        homeScore: editGame.homeScore,
+        awayScore: editGame.awayScore,
+        status: editGame.status,
+        penaltyWinnerTeamId: (editGame as any).penaltyWinnerTeamId ?? null,
+      };
       const response = await fetch(`/api/admin/games/${editGame.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          homeTeamId: editGame.homeTeam.id,
-          awayTeamId: editGame.awayTeam.id,
-          date: editGame.date,
-          homeScore: editGame.homeScore,
-          awayScore: editGame.awayScore,
-          status: editGame.status,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) {
         const data = await response.json();
@@ -1134,6 +1137,30 @@ export default function CompetitionDetail() {
                 />
                   </div>
                 </div>
+            {/* Penalty-shootout winner — only relevant for the final of a competition with
+                finalWinnerEnabled, when regulation ends in a draw. Setting it here powers the
+                +5 final-winner bonus (lib/award-final-winner-points.ts). */}
+            <div className="mb-4">
+              <label className="block mb-1 text-gray-700 font-medium">
+                Vainqueur aux tirs au but <span className="text-xs text-gray-500 font-normal">(finale uniquement, si match nul + penalties)</span>
+              </label>
+              <select
+                className="w-full border rounded px-2 py-1 text-gray-800"
+                value={(editGame as any).penaltyWinnerTeamId ?? ''}
+                onChange={e => setEditGame({ ...editGame, penaltyWinnerTeamId: e.target.value || null } as any)}
+              >
+                <option value="">— Aucun (match décidé en temps réglementaire ou prolongations) —</option>
+                {editGame.homeTeam?.id && (
+                  <option value={editGame.homeTeam.id}>{editGame.homeTeam.name} (domicile)</option>
+                )}
+                {editGame.awayTeam?.id && (
+                  <option value={editGame.awayTeam.id}>{editGame.awayTeam.name} (extérieur)</option>
+                )}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                À renseigner uniquement si la finale a été décidée aux tirs au but. Cela permet d'attribuer le bonus de 5 points aux joueurs ayant misé sur le bon vainqueur.
+              </p>
+            </div>
             <div className="flex justify-end gap-2">
                   <button
                 className="px-4 py-2 bg-gray-300 rounded"

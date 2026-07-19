@@ -69,9 +69,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'PUT') {
-    const { homeTeamId, awayTeamId, date, homeScore, awayScore, status, externalId } = req.body;
+    const { homeTeamId, awayTeamId, date, homeScore, awayScore, status, externalId, penaltyWinnerTeamId } = req.body;
     if (!homeTeamId || !awayTeamId || !date) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+    // Penalty winner (used for the final-winner +5 bonus when a draw is decided on penalties)
+    // must be one of the two teams playing.
+    if (penaltyWinnerTeamId !== undefined && penaltyWinnerTeamId !== null && penaltyWinnerTeamId !== '') {
+      if (penaltyWinnerTeamId !== homeTeamId && penaltyWinnerTeamId !== awayTeamId) {
+        return res.status(400).json({ error: 'penaltyWinnerTeamId must match homeTeamId or awayTeamId' });
+      }
     }
     try {
       const now = new Date();
@@ -108,6 +115,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         homeScore: normalizedHomeScore,
         awayScore: normalizedAwayScore,
       };
+
+      // Persist penalty-winner override (only field used for the +5 final-winner bonus in
+      // draw-then-penalties scenarios). Explicit null / empty string clears it.
+      if (penaltyWinnerTeamId !== undefined) {
+        updateData.penaltyWinnerTeamId = penaltyWinnerTeamId || null;
+      }
       
       // Allow setting externalId explicitly (for fixing mismatched games)
       if (externalId !== undefined) {
@@ -189,21 +202,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Update shooters count for all users in this competition
       await updateShootersForCompetition(updatedGame.competitionId);
 
-      // Award final winner points if this is the Champions League final
+      // Award final winner points if this competition opts in (finalWinnerEnabled).
+      // Passes the stored penaltyWinnerTeamId so a draw decided on penalties still awards the +5.
       if (gameStatus === GameStatus.FINISHED && normalizedHomeScore !== undefined && normalizedHomeScore !== null && normalizedAwayScore !== undefined && normalizedAwayScore !== null) {
         const { awardFinalWinnerPoints } = await import('../../../../lib/award-final-winner-points');
         await awardFinalWinnerPoints(
           gameId,
           updatedGame.competitionId,
           normalizedHomeScore,
-          normalizedAwayScore
+          normalizedAwayScore,
+          (updatedGame as any).penaltyWinnerTeamId ?? undefined
         );
       }
 
       // Auto-complete the competition if every non-placeholder game is now FINISHED.
       // MUST run after awardFinalWinnerPoints so winner/lastPlace use post-bonus points.
-      const { maybeAutoCompleteCompetition } = await import('../../../../lib/competition-completion');
+      const { maybeAutoCompleteCompetition, setCompetitionWinnerAndLastPlace } = await import('../../../../lib/competition-completion');
       await maybeAutoCompleteCompetition(updatedGame.competitionId);
+
+      // If the comp was already COMPLETED before this edit (e.g. auto-completed by an earlier
+      // live-sync flip when the final was still a draw at FT, before penaltyWinnerTeamId was
+      // set), `maybeAutoCompleteCompetition` short-circuits and does NOT refresh the standings.
+      // Force a re-computation so the winner/lastPlace on the Competition row reflect the
+      // post-bonus points every time the final is edited.
+      const compAfter = await prisma.competition.findUnique({
+        where: { id: updatedGame.competitionId },
+        select: { status: true },
+      });
+      if (compAfter && (compAfter.status === 'COMPLETED' || compAfter.status === 'completed')) {
+        await setCompetitionWinnerAndLastPlace(updatedGame.competitionId);
+      }
 
       return res.status(200).json(updatedGame);
     } catch (error) {

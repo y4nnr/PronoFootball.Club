@@ -154,18 +154,13 @@ export async function awardFinalWinnerPoints(
             continue;
           }
 
-          // Check if existing bet already has bonus points added
-          // LIMITATION: We can't perfectly detect if bonus was already added to an existing bet
-          // because we modify the bet in place. We use a heuristic:
-          // - If bet has points >= (max normal points + bonus), assume bonus already added
-          // - Max normal bet is 3 points, bonus is 5, so threshold is 8
-          // - This is not perfect: if user had 0-2 points, we might add bonus twice
-          // - TODO: Future improvement: Add a flag field or separate tracking table
-          const maxNormalPoints = 3;
-          const bonusThreshold = maxNormalPoints + FINAL_WINNER_BONUS_POINTS;
-          
-          if (existingBet.points >= bonusThreshold) {
-            console.log(`⏭️  Final winner bonus likely already awarded to user ${prediction.user.name} (bet has ${existingBet.points} points, threshold: ${bonusThreshold})`);
+          // Idempotency: any bet already carrying at least FINAL_WINNER_BONUS_POINTS is assumed to
+          // already include the bonus (max non-bonus score is 3). The previous 8-pt threshold
+          // could double-award when the base was 0-2 (0+5, 1+5, 2+5 all < 8 → re-detected as
+          // "no bonus yet"). This still holds up because bets are recalculated to 0-3 pts before
+          // this function runs whenever the score changes.
+          if (existingBet.points >= FINAL_WINNER_BONUS_POINTS) {
+            console.log(`⏭️  Final winner bonus likely already awarded to user ${prediction.user.name} (bet has ${existingBet.points} points, threshold: ${FINAL_WINNER_BONUS_POINTS})`);
             continue;
           }
 

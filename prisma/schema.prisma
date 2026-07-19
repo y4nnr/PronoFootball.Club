@@ -98,6 +98,7 @@ model Team {
   sportType             SportType?        // Optional: Can be null if team plays multiple sports or sport is unknown
   awayGames              Game[]            @relation("AwayTeam")
   homeGames              Game[]            @relation("HomeTeam")
+  penaltyWonGames        Game[]            @relation("GamePenaltyWinner")
   finalWinnerPredictions CompetitionUser[] @relation("FinalWinnerPrediction")
 
   @@unique([name, sportType]) // Allow same name for different sports
@@ -125,10 +126,12 @@ model Game {
   decidedBy      String? // How the game was decided (FT, AET, PEN)
   finishedAt     DateTime? // When the game was first marked as finished
   elapsedMinute  Int? // Current minute of the match (0-90+) - V2 feature
+  penaltyWinnerTeamId String? // For draw-then-penalties games (esp. the final): the team that actually won the shootout. Used by awardFinalWinnerPoints to award the +5 bonus.
   bets           Bet[]
   awayTeam       Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
   competition    Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
   homeTeam       Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  penaltyWinner  Team?       @relation("GamePenaltyWinner", fields: [penaltyWinnerTeamId], references: [id], onDelete: SetNull)
 }
 
 model Bet {

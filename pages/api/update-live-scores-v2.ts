@@ -1431,13 +1431,20 @@ export default async function handler(
           await updateShootersForCompetition(updatedGame.competitionId);
           console.log(`💰 Calculated points for ${bets.length} bets in game ${updatedGame.homeTeam.name} vs ${updatedGame.awayTeam.name} (${scoringSystem})`);
           
-          // Award final winner points if this is the Champions League final
+          // Award final winner points if this competition opts in (finalWinnerEnabled).
+          // Re-reads the game to pick up any pre-set penaltyWinnerTeamId — admins can populate
+          // that field ahead of the live-sync flip when the shootout result is already known.
           const { awardFinalWinnerPoints } = await import('../../lib/award-final-winner-points');
+          const finalGameRow = await prisma.game.findUnique({
+            where: { id: matchingGame.id },
+            select: { penaltyWinnerTeamId: true },
+          });
           await awardFinalWinnerPoints(
             matchingGame.id,
             matchingGame.competitionId,
             externalHomeScore,
-            externalAwayScore
+            externalAwayScore,
+            finalGameRow?.penaltyWinnerTeamId ?? undefined
           );
 
           // Auto-complete the competition (after the +5 bonus, so winner uses post-bonus points)
