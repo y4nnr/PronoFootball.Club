@@ -98,8 +98,89 @@ export default async function handler(
     const mode = await getLiveScoreMode();
     if (mode === 'FINAL_ONLY') {
       const now = new Date();
-      // Window: pull candidate games where kickoff is between 95 and 240 min ago (slight pre-window
-      // margin to catch tick latency; shouldPollForFinalScore() enforces the precise T1/T2 rules).
+
+      // ======================================================================
+      // Pre-matchday fixture auto-sync
+      // ======================================================================
+      // When a game is scheduled to start in the next hour AND lacks an externalId,
+      // run one date-based fixture fetch to backfill externalIds for every game
+      // that day. Rate-limited to once per calendar day (UTC) via AppSetting so we
+      // never spend more than 1 call/day on this.
+      try {
+        const soonStart = now;
+        const soonEnd = new Date(now.getTime() + 60 * 60_000);
+        const missingExternalId = await prisma.game.count({
+          where: {
+            status: { in: ['UPCOMING'] },
+            competition: { sportType: 'FOOTBALL' },
+            date: { gte: soonStart, lte: soonEnd },
+            externalId: null,
+          },
+        });
+        if (missingExternalId > 0) {
+          const today = now.toISOString().slice(0, 10); // YYYY-MM-DD UTC
+          const lastSyncKey = 'fixtureBackfillDate';
+          const row = await prisma.appSetting.findUnique({ where: { key: lastSyncKey } });
+          if (row?.value !== today) {
+            console.log(`[FINAL_ONLY] Pre-matchday sync: ${missingExternalId} game(s) start in <1h without externalId. Fetching ${today}...`);
+            const resp = await fetch(`https://v3.football.api-sports.io/fixtures?date=${today}`, {
+              headers: { 'x-apisports-key': apiKey },
+            });
+            const data = await resp.json();
+            const fixtures = Array.isArray(data?.response) ? data.response : [];
+            const { normalizeTeamName } = await import('../../lib/live-score-mode');
+
+            // Load today's UPCOMING games with team info
+            const dayStart = new Date(`${today}T00:00:00.000Z`);
+            const dayEnd = new Date(`${today}T23:59:59.999Z`);
+            const todayGames = await prisma.game.findMany({
+              where: {
+                status: { in: ['UPCOMING', 'LIVE'] },
+                competition: { sportType: 'FOOTBALL' },
+                date: { gte: dayStart, lte: dayEnd },
+                externalId: null,
+              },
+              include: {
+                homeTeam: { select: { id: true, name: true } },
+                awayTeam: { select: { id: true, name: true } },
+              },
+            });
+            let matched = 0;
+            for (const g of todayGames) {
+              const hn = normalizeTeamName(g.homeTeam.name);
+              const an = normalizeTeamName(g.awayTeam.name);
+              const fx = fixtures.find((f: any) => {
+                const fh = normalizeTeamName(f?.teams?.home?.name ?? '');
+                const fa = normalizeTeamName(f?.teams?.away?.name ?? '');
+                return (fh === hn || fh.includes(hn) || hn.includes(fh)) &&
+                       (fa === an || fa.includes(an) || an.includes(fa));
+              });
+              if (fx) {
+                await prisma.game.update({
+                  where: { id: g.id },
+                  data: { externalId: String(fx.fixture.id) },
+                });
+                matched++;
+              } else {
+                console.log(`[FINAL_ONLY] Pre-matchday sync: no API match for ${g.homeTeam.name} vs ${g.awayTeam.name}`);
+              }
+            }
+            // Record that today's backfill has run (even on partial match) so we don't spam.
+            await prisma.appSetting.upsert({
+              where: { key: lastSyncKey },
+              create: { key: lastSyncKey, value: today },
+              update: { value: today },
+            });
+            console.log(`[FINAL_ONLY] Pre-matchday sync: matched ${matched}/${todayGames.length} games.`);
+          }
+        }
+      } catch (err) {
+        console.error('[FINAL_ONLY] Pre-matchday sync error (non-fatal):', err);
+      }
+
+      // Candidate games: those whose kickoff was between 95 and 240 min ago.
+      // shouldPollForFinalScore() then enforces the precise P1-P4 window logic plus the
+      // "already-polled-this-window" rate limit.
       const windowStart = new Date(now.getTime() - 240 * 60_000);
       const windowEnd = new Date(now.getTime() - 95 * 60_000);
       const candidates = await prisma.game.findMany({

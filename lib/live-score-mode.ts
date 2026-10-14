@@ -55,36 +55,58 @@ export async function setLiveScoreMode(mode: LiveScoreMode): Promise<void> {
  * Returns `true` if the external API should be queried for this game on the current tick,
  * `false` to skip.
  *
- * We use `game.lastSyncAt` as a cheap "did we poll already in this window?" marker.
- * Windows are open-ended on the right (once T1 passes, we keep trying until a tick picks it up)
- * but we rate-limit per game to one poll every 5 min to avoid wasting calls when the cron fires
- * every 20s.
+ * We use `game.lastSyncAt` as a cheap "did we poll already in this window?" marker, combined
+ * with the current time to determine which of the 4 scheduled polls (football) or 2 (rugby)
+ * windows we're in. Each window opens once and the per-game rate-limit prevents repeat polls
+ * within the same window.
+ *
+ * Football cadence (per game, 4 polls total):
+ *   P1 kickoff + 95 min  — catches most FT finishes
+ *   P2 kickoff + 105 min — late FT + games entering ET
+ *   P3 kickoff + 125 min — ET winners
+ *   P4 kickoff + 140 min — penalty shootouts
+ *
+ * Rugby cadence (per game, 2 polls total):
+ *   P1 kickoff + 100 min
+ *   P2 kickoff + 120 min
+ *
+ * Hard cap: if a game is still LIVE at kickoff + 240 min we stop polling (abandoned / data error).
  */
+const FOOTBALL_POLL_MINUTES = [95, 105, 125, 140] as const;
+const RUGBY_POLL_MINUTES = [100, 120] as const;
+const HARD_CAP_MINUTES = 240;
+const MIN_POLL_SPACING_MINUTES = 8; // between polls on the same game
+
 export function shouldPollForFinalScore(
   game: { date: Date; status: string; lastSyncAt: Date | null },
   sportType: 'FOOTBALL' | 'RUGBY',
   now: Date = new Date()
 ): boolean {
-  // Only check UPCOMING / LIVE games — once FINISHED we never poll again.
   if (game.status !== 'UPCOMING' && game.status !== 'LIVE') return false;
 
   const minutesSinceKickoff = (now.getTime() - game.date.getTime()) / 60_000;
-  const T1 = sportType === 'RUGBY' ? 100 : 110;
-  const T2 = sportType === 'RUGBY' ? 120 : 150;
-  // Hard cap: if we're beyond kickoff + 240 min and still haven't got a FINISHED, stop trying.
-  const HARD_CAP = 240;
+  if (minutesSinceKickoff < 0) return false;
+  if (minutesSinceKickoff > HARD_CAP_MINUTES) return false;
 
-  if (minutesSinceKickoff < T1) return false;
-  if (minutesSinceKickoff > HARD_CAP) return false;
+  const windows = sportType === 'RUGBY' ? RUGBY_POLL_MINUTES : FOOTBALL_POLL_MINUTES;
 
-  // Rate-limit: don't poll the same game more than once every 5 minutes.
+  // Find the latest poll window we've crossed; return true only if that window hasn't been
+  // polled yet (based on lastSyncAt being older than the window's open time).
+  let activeWindow: number | null = null;
+  for (const w of windows) {
+    if (minutesSinceKickoff >= w) activeWindow = w;
+  }
+  if (activeWindow === null) return false;
+
+  const windowOpenTime = new Date(game.date.getTime() + activeWindow * 60_000);
+  // Already polled during this window → skip.
+  if (game.lastSyncAt && game.lastSyncAt >= windowOpenTime) return false;
+
+  // Minimum spacing between any two polls on the same game.
   if (game.lastSyncAt) {
     const minutesSinceLastSync = (now.getTime() - game.lastSyncAt.getTime()) / 60_000;
-    if (minutesSinceLastSync < 5) return false;
+    if (minutesSinceLastSync < MIN_POLL_SPACING_MINUTES) return false;
   }
 
-  // In the T1 window (T1 ≤ x < T2): poll on the first tick that enters the window, then wait.
-  // In the T2 window (x ≥ T2): poll until FINISHED or HARD_CAP.
-  // The 5-min rate-limit covers both cases; just return true if we've reached T1.
-  return minutesSinceKickoff >= T1;
+  return true;
 }
