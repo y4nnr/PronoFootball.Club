@@ -4,6 +4,7 @@ import { ApiSportsV2 } from '../../lib/api-sports-api-v2';
 import { API_CONFIG } from '../../lib/api-config';
 import { matchTeamsWithOpenAI } from '../../lib/openai-team-matcher';
 import { maybeAutoCompleteCompetition } from '../../lib/competition-completion';
+import { getLiveScoreMode, shouldPollForFinalScore } from '../../lib/live-score-mode';
 
 const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
 
@@ -86,6 +87,158 @@ export default async function handler(
     }
 
     const apiSports = new ApiSportsV2(apiKey);
+
+    // ========================================================================
+    // FINAL_ONLY mode (free-tier friendly)
+    // ========================================================================
+    // When liveScoreMode = FINAL_ONLY we only poll each game around its scheduled end,
+    // in a two-tier schedule: T1 at kickoff+110min (catches FT + most ET), T2 at
+    // kickoff+150min (catches penalties). Rate-limited to one poll per game every 5 min.
+    // See lib/live-score-mode.ts for the window logic.
+    const mode = await getLiveScoreMode();
+    if (mode === 'FINAL_ONLY') {
+      const now = new Date();
+      // Window: pull candidate games where kickoff is between 95 and 240 min ago (slight pre-window
+      // margin to catch tick latency; shouldPollForFinalScore() enforces the precise T1/T2 rules).
+      const windowStart = new Date(now.getTime() - 240 * 60_000);
+      const windowEnd = new Date(now.getTime() - 95 * 60_000);
+      const candidates = await prisma.game.findMany({
+        where: {
+          status: { in: ['UPCOMING', 'LIVE'] },
+          competition: { sportType: 'FOOTBALL' },
+          date: { gte: windowStart, lte: windowEnd },
+          externalId: { not: null },
+        },
+        select: {
+          id: true, status: true, date: true, lastSyncAt: true, externalId: true,
+          competitionId: true,
+          homeTeam: { select: { id: true, name: true } },
+          awayTeam: { select: { id: true, name: true } },
+          competition: { select: { sportType: true } },
+        },
+      });
+      const dueGames = candidates.filter(g =>
+        shouldPollForFinalScore(
+          { date: g.date, status: g.status, lastSyncAt: g.lastSyncAt },
+          'FOOTBALL',
+          now
+        )
+      );
+      console.log(`[FINAL_ONLY] candidates=${candidates.length} due=${dueGames.length}`);
+      if (dueGames.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'FINAL_ONLY mode — no games due for a final-score poll',
+          mode: 'FINAL_ONLY',
+          updatedGames: [],
+          hasUpdates: false,
+          lastSync: now.toISOString(),
+        });
+      }
+
+      const updatedGames: any[] = [];
+      const { calculateBetPoints, getScoringSystemForSport } = await import('../../lib/scoring-systems');
+      const { awardFinalWinnerPoints } = await import('../../lib/award-final-winner-points');
+
+      for (const g of dueGames) {
+        try {
+          const externalIdNum = Number(g.externalId);
+          if (!Number.isFinite(externalIdNum)) {
+            console.warn(`[FINAL_ONLY] game ${g.id} externalId ${g.externalId} isn't numeric — skipping`);
+            await prisma.game.update({ where: { id: g.id }, data: { lastSyncAt: now } });
+            continue;
+          }
+          const match = await apiSports.getMatchById(externalIdNum);
+          if (!match) {
+            // Mark lastSyncAt so we respect the 5-min rate-limit even on a miss.
+            await prisma.game.update({ where: { id: g.id }, data: { lastSyncAt: now } });
+            continue;
+          }
+          const extStatus = match.externalStatus;        // raw API status code: FT, AET, PEN, HT, etc.
+          const mappedStatus = match.status;              // our mapped status: UPCOMING | LIVE | FINISHED
+          const home: number | null = match.score?.fullTime?.home ?? null;
+          const away: number | null = match.score?.fullTime?.away ?? null;
+          // decidedBy: distinguish how the game ended so the finale UI stays accurate
+          const extDecidedBy =
+            extStatus === 'PEN' ? 'PEN' :
+            extStatus === 'AET' ? 'AET' :
+            extStatus === 'FT'  ? 'FT'  : null;
+
+          const data: any = {
+            lastSyncAt: now,
+            externalStatus: extStatus,
+          };
+          if (mappedStatus === 'FINISHED' && home !== null && away !== null) {
+            data.status = 'FINISHED';
+            data.homeScore = home;
+            data.awayScore = away;
+            data.decidedBy = extDecidedBy ?? 'FT';
+            data.finishedAt = now;
+          }
+
+          const updated = await prisma.game.update({
+            where: { id: g.id },
+            data,
+            include: { competition: { select: { sportType: true } } },
+          });
+
+          if (data.status === 'FINISHED' && home !== null && away !== null) {
+            // Recompute bets using the sport's scoring system.
+            const scoring = getScoringSystemForSport(updated.competition.sportType);
+            const bets = await prisma.bet.findMany({ where: { gameId: g.id } });
+            for (const bet of bets) {
+              const points = calculateBetPoints(
+                { score1: bet.score1, score2: bet.score2 },
+                { home, away },
+                scoring
+              );
+              await prisma.bet.update({ where: { id: bet.id }, data: { points } });
+            }
+            await updateShootersForCompetition(g.competitionId);
+            // Final-winner bonus (reads penaltyWinnerTeamId if set) + auto-completion.
+            const fg = await prisma.game.findUnique({
+              where: { id: g.id },
+              select: { penaltyWinnerTeamId: true },
+            });
+            await awardFinalWinnerPoints(
+              g.id,
+              g.competitionId,
+              home,
+              away,
+              fg?.penaltyWinnerTeamId ?? undefined
+            );
+            await maybeAutoCompleteCompetition(g.competitionId);
+            console.log(`[FINAL_ONLY] ✅ FINISHED ${g.homeTeam.name} ${home}-${away} ${g.awayTeam.name}`);
+          } else {
+            console.log(`[FINAL_ONLY] ⏳ not yet FINISHED: ${g.homeTeam.name} vs ${g.awayTeam.name} (ext=${extStatus})`);
+          }
+
+          updatedGames.push({
+            id: g.id,
+            homeTeam: g.homeTeam.name,
+            awayTeam: g.awayTeam.name,
+            status: data.status ?? g.status,
+            score: data.status === 'FINISHED' ? `${home}-${away}` : null,
+          });
+        } catch (err) {
+          console.error(`[FINAL_ONLY] error polling game ${g.id}:`, err);
+          await prisma.game.update({ where: { id: g.id }, data: { lastSyncAt: now } });
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `FINAL_ONLY mode — polled ${dueGames.length} game(s)`,
+        mode: 'FINAL_ONLY',
+        updatedGames,
+        hasUpdates: updatedGames.some(g => g.status === 'FINISHED'),
+        lastSync: now.toISOString(),
+        attribution: apiSports.getAttributionText(),
+      });
+    }
+    // ========================================================================
+    // LIVE mode — existing full real-time behavior continues below
+    // ========================================================================
 
     // FIRST: Check database to see if there are any LIVE games before calling API
     // IMPORTANT: We ONLY check for LIVE games - another service handles UPCOMING -> LIVE transitions

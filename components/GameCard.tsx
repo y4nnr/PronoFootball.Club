@@ -78,6 +78,20 @@ function formatTime(dateString: string) {
 // Placeholder team names used in the DB when a knockout slot's opponent isn't decided yet.
 // Renders consistently as "À déterminer" across every place the card is used.
 const PLACEHOLDER_TEAM_NAMES = ['xxxx', 'xxx2', 'xxxx2'];
+
+// A game is "waiting for its final score" when the game-status-worker has flipped it to LIVE
+// at kickoff, but no live-score sync has populated any live data yet. In FINAL_ONLY mode this
+// is the normal state throughout a match (we poll only around the end); in LIVE mode it would
+// be a transient state (first ~20 seconds). Either way, rendering a muted badge beats a pulsing
+// red one over a '-' score for the whole 90 minutes.
+function waitingForFinalScore(game: { liveHomeScore?: number; liveAwayScore?: number; elapsedMinute?: number | null; externalStatus?: string | null }): boolean {
+  return (
+    game.liveHomeScore == null &&
+    game.liveAwayScore == null &&
+    (game.elapsedMinute == null || game.elapsedMinute === 0) &&
+    (game.externalStatus == null || game.externalStatus === 'NS')
+  );
+}
 function normalizeTeam(team: Team): Team {
   if (PLACEHOLDER_TEAM_NAMES.includes(team.name)) {
     return { name: 'À déterminer', logo: null, shortName: '?' };
@@ -364,8 +378,8 @@ export default function GameCard({ game: rawGame, currentUserId, href, context =
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
           {game.status === 'LIVE' ? (
             <div className="flex items-center gap-1.5 justify-end flex-wrap">
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 dark:bg-red-600 text-white font-bold shadow-md">
+              <div className={`w-2 h-2 ${waitingForFinalScore(game) ? 'bg-gray-400' : 'bg-red-500 animate-pulse'} rounded-full`}></div>
+              <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap ${waitingForFinalScore(game) ? 'bg-gray-500 dark:bg-gray-600' : 'bg-red-500 dark:bg-red-600'} text-white font-bold shadow-md`}>
                 {t('live')}
               </span>
               {game.externalStatus === 'HT' ? (
@@ -392,6 +406,10 @@ export default function GameCard({ game: rawGame, currentUserId, href, context =
               ) : (game.externalStatus === '1H' || game.externalStatus === '2H') ? (
                 <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
                   {game.externalStatus === '1H' ? '1/2' : '2/2'}
+                </span>
+              ) : waitingForFinalScore(game) ? (
+                <span className="inline-flex items-center justify-center px-2.5 py-1 bg-gray-500 dark:bg-gray-600 text-white rounded-full text-[10px] font-semibold shadow-md">
+                  Score à venir
                 </span>
               ) : null}
             </div>
@@ -431,8 +449,8 @@ export default function GameCard({ game: rawGame, currentUserId, href, context =
         <div className="flex items-center gap-2 ml-1.5 md:ml-0 flex-shrink-0">
           {game.status === 'LIVE' ? (
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap bg-red-500 dark:bg-red-600 text-white font-bold shadow-md">
+              <div className={`w-2 h-2 ${waitingForFinalScore(game) ? 'bg-gray-400' : 'bg-red-500 animate-pulse'} rounded-full`}></div>
+              <span className={`inline-block px-2.5 py-1 text-[10px] rounded-full whitespace-nowrap ${waitingForFinalScore(game) ? 'bg-gray-500 dark:bg-gray-600' : 'bg-red-500 dark:bg-red-600'} text-white font-bold shadow-md`}>
                 {t('live')}
               </span>
               {game.externalStatus === 'HT' ? (
@@ -459,6 +477,10 @@ export default function GameCard({ game: rawGame, currentUserId, href, context =
               ) : (game.externalStatus === '1H' || game.externalStatus === '2H') ? (
                 <span className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-1 bg-gray-800 text-white rounded-full text-[11px] font-bold animate-pulse shadow-md">
                   {game.externalStatus === '1H' ? '1/2' : '2/2'}
+                </span>
+              ) : waitingForFinalScore(game) ? (
+                <span className="inline-flex items-center justify-center px-2.5 py-1 bg-gray-500 dark:bg-gray-600 text-white rounded-full text-[10px] font-semibold shadow-md">
+                  Score à venir
                 </span>
               ) : null}
             </div>

@@ -4,6 +4,91 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import React from "react";
 
+// Admin toggle for the live-score polling mode.
+// LIVE: real-time polling every 20s (burns API quota).
+// FINAL_ONLY: polls each game only at kickoff+110min and kickoff+150min to minimize external API calls.
+function LiveScoreModeToggle() {
+  const [mode, setMode] = useState<'LIVE' | 'FINAL_ONLY' | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/admin/settings/live-score-mode');
+        if (r.ok) {
+          const data = await r.json();
+          setMode(data.mode);
+        }
+      } catch (e) { console.error(e); }
+    })();
+  }, []);
+
+  const toggle = async (next: 'LIVE' | 'FINAL_ONLY') => {
+    setSaving(true); setError(null);
+    try {
+      const r = await fetch('/api/admin/settings/live-score-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: next }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        setError(err.error ?? 'Erreur lors de la mise à jour');
+        return;
+      }
+      setMode(next);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (mode === null) return null;
+  const isLive = mode === 'LIVE';
+
+  return (
+    <section className="mb-6 bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-600">
+      <div className="flex items-start justify-between gap-6">
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mode de synchronisation des scores</h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {isLive
+              ? 'Scores mis à jour en direct toutes les 20 secondes. Consomme fortement le quota API.'
+              : "Scores récupérés uniquement à la fin de chaque match (110 et 150 min après le coup d'envoi). Économise le quota API."}
+          </p>
+          {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
+        </div>
+        <div className="flex-shrink-0 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => toggle('FINAL_ONLY')}
+            disabled={saving || !isLive}
+            className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+              !isLive
+                ? 'bg-emerald-600 text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            } disabled:opacity-60`}
+          >
+            Final uniquement
+          </button>
+          <button
+            type="button"
+            onClick={() => toggle('LIVE')}
+            disabled={saving || isLive}
+            className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+              isLive
+                ? 'bg-primary-600 dark:bg-accent-dark-600 text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            } disabled:opacity-60`}
+          >
+            Temps réel
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 interface ExternalMatch {
   id: number | null;
   status: string | null;
@@ -391,6 +476,7 @@ export default function AdminLiveSync() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <LiveScoreModeToggle />
         <section className="mb-6 bg-white dark:bg-[rgb(38,38,38)] rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-600">
           <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Filters</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
