@@ -1,6 +1,20 @@
 import { prisma } from './prisma';
 
 /**
+ * Normalize a team name for fuzzy matching against the external API.
+ * Handles diacritics, Nordic letters (ø, å, æ) that NFD doesn't decompose,
+ * and strips non-alphanumeric so "Bodø/Glimt" and "Bodo/Glimt" collapse to "bodoglimt".
+ */
+export function normalizeTeamName(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/ø/g, 'o').replace(/å/g, 'a').replace(/æ/g, 'ae')
+    .replace(/ß/g, 'ss').replace(/ñ/g, 'n')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+/**
  * Live-score polling mode.
  *
  *   LIVE        — poll every 20s (as fast as the cron fires). Updates scores, elapsed minute,
