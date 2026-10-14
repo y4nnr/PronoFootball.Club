@@ -436,19 +436,19 @@ async function generateSummaryForMatchDay(params: {
   const contextForAI = {
     classementAvant: rankingBefore ? rankingBefore.rankings.map(r => ({
       pseudo: r.userName,
-      points: r.totalPoints,
+      pointsTotauxCumules: r.totalPoints,       // cumulative total points BEFORE today's games
       position: r.position,
     })) : [],
     classementApres: rankingAfter.rankings.map(r => ({
       pseudo: r.userName,
-      points: r.totalPoints,
+      pointsTotauxCumules: r.totalPoints,     // cumulative total points across all games in the comp so far
       position: r.position,
     })),
     performancesDuJour: playerPerformances.map(p => ({
       pseudo: p.userName,
-      pointsMarques: p.pointsOnDay,
-      scoresExacts: p.exactScores,
-      shooters: p.shooters,
+      pointsMarquesCeJour: p.pointsOnDay,     // ONLY points gained today — never confuse with pointsTotauxCumules
+      scoresExactsCeJour: p.exactScores,
+      shootersCeJour: p.shooters,
       positionAvant: p.positionBefore,
       positionApres: p.positionAfter,
       changementPosition: p.positionChange,
@@ -510,19 +510,27 @@ Règle CRITIQUE sur les shooters (à relire attentivement) :
 - Quand on mentionne des shooters (valeur > 0), formuler comme une sanction : "s'offre un shooter de plus", "addition qui s'alourdit", sans moraliser.
 
 Tu reçois pour cela :
-- Le classement AVANT et APRÈS la journée (joueurs, points, position)
-- Les performances du jour : pointsMarques, scoresExacts, shooters (nombre de matchs non pariés ce jour), changementPosition
-- Les matchs joués aujourd'hui avec leur score
+- classementApres[i].pointsTotauxCumules = TOTAL cumulé sur TOUTE la compétition (pas sur ce jour).
+- performancesDuJour[i].pointsMarquesCeJour = points gagnés UNIQUEMENT ce jour.
+- performancesDuJour[i].shootersCeJour = nombre de matchs non pariés CE JOUR (pas depuis le début).
+
+DISTINCTION CRITIQUE À NE JAMAIS CONFONDRE :
+- "en tête avec X points" doit TOUJOURS citer pointsTotauxCumules (le total au classement général).
+- "a marqué X points aujourd'hui/ce jour" cite pointsMarquesCeJour.
+- Un leader avec pointsTotauxCumules=25 et pointsMarquesCeJour=6 doit être présenté comme "en tête avec vingt-cinq points, dont six gagnés aujourd'hui" ou simplement "en tête avec vingt-cinq points" — JAMAIS "en tête avec six points".
+- Même règle pour les shooters : shootersCeJour = compte du jour seulement. Si un joueur n'a shooté 0 fois aujourd'hui mais en a 9 au total, NE PAS écrire "9 shooters" dans le résumé du jour.
 
 Exemples de bonnes phrases :
-- "Nono prend la tête grâce à deux scores exacts, pendant que Yann chute à la quatrième place et s'offre deux shooters de plus." (OK si Yann a shooters > 0)
-- "Steph confirme sa forme avec six points, mais la journée sourit aussi à Keke qui remonte dans le top trois."
-- "Renato garde la première place avec un point, tandis que Yann et Steph font journée blanche sans marquer." (OK si shooters = 0)
+- "Nono prend la tête grâce à deux scores exacts, pendant que Yann chute à la quatrième place et s'offre deux shooters de plus." (OK si Yann a shootersCeJour > 0)
+- "Steph empoche six points et grimpe dans le top trois, mais Renato reste leader avec vingt-cinq points au total."
+- "Renato garde la première place avec vingt-cinq points, tandis que Yann et Steph font journée blanche sans marquer." (OK si shootersCeJour = 0)
 - "Peu avaient vu la victoire de Galatasaray : carnage dans les pronos, sauf Fifi qui engrange trois points et grimpe."
 
 Exemples à NE PAS faire :
-- ❌ "Yann reste muet et continue d'accumuler les shooters" — si shooters = 0 dans les données.
-- ❌ "Steph s'offre une addition salée" — si Steph n'a pas de shooters ce jour.
+- ❌ "Renato conserve la première place avec six points" si pointsTotauxCumules=25 et pointsMarquesCeJour=6 — c'est confondre "points du jour" avec "total au classement".
+- ❌ "Yann reste muet et continue d'accumuler les shooters" — si shootersCeJour = 0 dans les données.
+- ❌ "Steph s'offre une addition salée" — si Steph n'a pas de shootersCeJour ce jour.
+- ❌ "Baptiste enchaîne neuf shooters" si shootersCeJour=0 — même si le total compétition est 9, le résumé parle uniquement du jour.
 
 Données (format JSON compact) :
 ${JSON.stringify(contextForAI, null, 2)}
