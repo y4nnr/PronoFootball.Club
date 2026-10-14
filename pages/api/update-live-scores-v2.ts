@@ -145,25 +145,54 @@ export default async function handler(
                 awayTeam: { select: { id: true, name: true } },
               },
             });
-            let matched = 0;
+            // Fuzzy-match our games to API fixtures with THREE safety guards:
+            //  (1) prefer exact normalized match, fall back to substring only if no exact exists;
+            //  (2) require BOTH home AND away teams to match (never trust a one-sided match);
+            //  (3) ensure the assigned externalId is unique across today's games — if two of our
+            //      games would end up pointing to the same API fixture, bail on both to avoid
+            //      silently writing the wrong externalId (the yesterday-Bodø bug class).
+            const scoreMatch = (dbName: string, apiName: string): number => {
+              const d = normalizeTeamName(dbName);
+              const a = normalizeTeamName(apiName);
+              if (d === a) return 3;              // exact normalized
+              if (d && a && (d.includes(a) || a.includes(d))) return 1; // substring
+              return 0;
+            };
+            const proposals: Array<{ gameId: string; fixtureId: string; score: number; label: string }> = [];
             for (const g of todayGames) {
-              const hn = normalizeTeamName(g.homeTeam.name);
-              const an = normalizeTeamName(g.awayTeam.name);
-              const fx = fixtures.find((f: any) => {
-                const fh = normalizeTeamName(f?.teams?.home?.name ?? '');
-                const fa = normalizeTeamName(f?.teams?.away?.name ?? '');
-                return (fh === hn || fh.includes(hn) || hn.includes(fh)) &&
-                       (fa === an || fa.includes(an) || an.includes(fa));
-              });
-              if (fx) {
-                await prisma.game.update({
-                  where: { id: g.id },
-                  data: { externalId: String(fx.fixture.id) },
+              let best: { fx: any; score: number } | null = null;
+              for (const f of fixtures) {
+                const homeScore = scoreMatch(g.homeTeam.name, f?.teams?.home?.name ?? '');
+                const awayScore = scoreMatch(g.awayTeam.name, f?.teams?.away?.name ?? '');
+                if (homeScore === 0 || awayScore === 0) continue; // both must match
+                const total = homeScore + awayScore;
+                if (!best || total > best.score) best = { fx: f, score: total };
+              }
+              if (best) {
+                proposals.push({
+                  gameId: g.id,
+                  fixtureId: String(best.fx.fixture.id),
+                  score: best.score,
+                  label: `${g.homeTeam.name} vs ${g.awayTeam.name}`,
                 });
-                matched++;
               } else {
                 console.log(`[FINAL_ONLY] Pre-matchday sync: no API match for ${g.homeTeam.name} vs ${g.awayTeam.name}`);
               }
+            }
+            // Guard (3): detect fixture-id collisions and reject them all.
+            const fixtureCounts = new Map<string, number>();
+            proposals.forEach(p => fixtureCounts.set(p.fixtureId, (fixtureCounts.get(p.fixtureId) ?? 0) + 1));
+            let matched = 0;
+            for (const p of proposals) {
+              if ((fixtureCounts.get(p.fixtureId) ?? 0) > 1) {
+                console.warn(`[FINAL_ONLY] Pre-matchday sync: SKIP ${p.label} — fixture ${p.fixtureId} matched by >1 of our games (collision)`);
+                continue;
+              }
+              await prisma.game.update({
+                where: { id: p.gameId },
+                data: { externalId: p.fixtureId },
+              });
+              matched++;
             }
             // Record that today's backfill has run (even on partial match) so we don't spam.
             await prisma.appSetting.upsert({
