@@ -1,7 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '../../../lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Admin-only: this endpoint returns a user's full bet history including UPCOMING games.
+  // Without this gate, any unauthenticated visitor could enumerate everyone's picks.
+  const session = await getServerSession(req, res, authOptions);
+  const role = (session?.user as any)?.role;
+  if (!session || typeof role !== 'string' || role.toLowerCase() !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
   const { competitionId, userName } = req.query;
   if (!competitionId || typeof competitionId !== 'string' || !userName || typeof userName !== 'string') {
     return res.status(400).json({ error: 'Missing or invalid competitionId or userName' });

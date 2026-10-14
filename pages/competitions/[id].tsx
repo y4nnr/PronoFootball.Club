@@ -1891,10 +1891,32 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       });
     }
 
-    // Merge bets back into games
+    // Merge bets back into games — redact other users' scores HERE on the server, before
+    // the data crosses to the client via __NEXT_DATA__. Reveal only when BOTH:
+    //   (1) game is LIVE or FINISHED, AND
+    //   (2) kickoff time has actually passed.
+    // The current user ALWAYS sees their own bet (useful for the betting UI).
+    const nowForBetReveal = new Date();
+    const viewerId = session.user.id;
     const gamesMap = new Map(gamesWithBets.map(g => [g.id, g.bets]));
     games.forEach(game => {
-      (game as any).bets = gamesMap.get(game.id) || [];
+      const bets = gamesMap.get(game.id) || [];
+      const kickoffPassed = new Date(game.date) <= nowForBetReveal;
+      const revealScores =
+        kickoffPassed && (game.status === 'LIVE' || game.status === 'FINISHED');
+      (game as any).bets = bets.map((bet: any) => {
+        const isSelf = bet.userId === viewerId;
+        if (revealScores || isSelf) return bet;
+        // Hide other users' scores + points for games that haven't actually kicked off yet
+        return {
+          id: bet.id,
+          userId: bet.userId,
+          score1: null,
+          score2: null,
+          points: null,
+          user: bet.user,
+        };
+      });
     });
 
     // Classement: only count games without placeholder teams (xxxx, xxx2, xxxx2)
