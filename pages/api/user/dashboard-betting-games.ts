@@ -287,11 +287,15 @@ date: {
     }
 
     // Format the response
+    const nowForBets = new Date();
     const bettingGames: BettingGame[] = games.map(game => {
       const currentUserBet = game.bets.find(bet => bet.userId === user.id);
       const betCount = game.bets.length;
-      // Include all bets with minimal user info; hide scores until LIVE/FINISHED
-      
+      // Privacy hard-gate: never reveal other users' bets until kickoff time has passed AND
+      // the game is LIVE/FINISHED. Status alone is unreliable (data corruption, buggy writes).
+      const betsRevealed =
+        (game.status === 'LIVE' || game.status === 'FINISHED') && game.date <= nowForBets;
+
       return {
         id: game.id,
         date: game.date.toISOString(),
@@ -333,9 +337,9 @@ date: {
             name: bet.user.name,
             profilePictureUrl: bet.user.profilePictureUrl || undefined
           },
-          // Show actual scores for LIVE/FINISHED games, hide for UPCOMING
-          score1: (game.status === 'LIVE' || game.status === 'FINISHED') ? bet.score1 : null,
-          score2: (game.status === 'LIVE' || game.status === 'FINISHED') ? bet.score2 : null,
+          // Scores revealed ONLY once kickoff has passed AND game is LIVE/FINISHED.
+          score1: betsRevealed ? bet.score1 : null,
+          score2: betsRevealed ? bet.score2 : null,
           // We do not send createdAt here to keep payload small
         })),
         betCount,

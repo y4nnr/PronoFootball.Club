@@ -1576,17 +1576,24 @@ export default function CompetitionDetails({ competition, competitionStats, game
                         name: competition.name,
                         logo: competition.logo || null,
                       },
-                      bets: ((game as any).bets || []).map((bet: any) => ({
-                        id: bet.id,
-                        userId: bet.userId,
-                        score1: bet.score1,
-                        score2: bet.score2,
-                        points: bet.points,
-                        user: {
-                          name: bet.user?.name || '',
-                          profilePictureUrl: bet.user?.profilePictureUrl || undefined,
-                        },
-                      })),
+                      bets: (() => {
+                        // Privacy hard-gate: only expose bet scores after kickoff. Status alone
+                        // is unreliable — a buggy write could flip a future game to LIVE and
+                        // leak everyone's picks. game.date <= now is the real safeguard.
+                        const kickoffPassed = new Date(game.date) <= new Date();
+                        const revealScores = kickoffPassed && (game.status === 'LIVE' || game.status === 'FINISHED');
+                        return ((game as any).bets || []).map((bet: any) => ({
+                          id: bet.id,
+                          userId: bet.userId,
+                          score1: revealScores ? bet.score1 : (bet.userId === currentUserId ? bet.score1 : null),
+                          score2: revealScores ? bet.score2 : (bet.userId === currentUserId ? bet.score2 : null),
+                          points: revealScores ? bet.points : null,
+                          user: {
+                            name: bet.user?.name || '',
+                            profilePictureUrl: bet.user?.profilePictureUrl || undefined,
+                          },
+                        }));
+                      })(),
                     };
                     
                     // UPCOMING games are clickable for betting unless BOTH teams are still TBD.

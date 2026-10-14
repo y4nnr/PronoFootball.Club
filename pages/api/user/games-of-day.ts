@@ -182,8 +182,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
 
     // Format the response with same structure as dashboard-betting-games
+    const now = new Date();
     const formattedGames: BettingGame[] = games.map(game => {
       const currentUserBet = game.bets.find(bet => bet.userId === user.id);
+      // Privacy hard-gate: never reveal other users' bets until the game has ACTUALLY started
+      // (kickoff time has passed). Status alone can be wrong — e.g. a buggy data write that
+      // flips a future game to LIVE prematurely. The kickoff-time check is the real safeguard.
+      const betsRevealed =
+        (game.status === 'LIVE' || game.status === 'FINISHED') && game.date <= now;
       
       return {
         id: game.id,
@@ -219,7 +225,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           score2: currentUserBet.score2,
           points: currentUserBet.points
         } : null,
-        // All users' bets - show actual scores for LIVE/FINISHED games, hide for UPCOMING
+        // All users' bets — scores revealed ONLY once kickoff time has passed AND status is
+        // LIVE/FINISHED. Both conditions required: time guards against stale/corrupted status.
         allUserBets: game.bets.map(bet => ({
           id: bet.id,
           userId: bet.userId,
@@ -229,10 +236,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             profilePictureUrl: bet.user.profilePictureUrl || undefined
           },
           createdAt: bet.createdAt.toISOString(),
-          // Show actual scores for LIVE/FINISHED games, hide for UPCOMING
-          score1: (game.status === 'LIVE' || game.status === 'FINISHED') ? bet.score1 : null,
-          score2: (game.status === 'LIVE' || game.status === 'FINISHED') ? bet.score2 : null,
-          points: bet.points // Include points for color coding in finished games
+          score1: betsRevealed ? bet.score1 : null,
+          score2: betsRevealed ? bet.score2 : null,
+          points: betsRevealed ? bet.points : null,
         }))
       };
     });
